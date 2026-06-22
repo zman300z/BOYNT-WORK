@@ -944,11 +944,17 @@ html { scroll-behavior: auto; }
   .nav-logo { font-size:22px; letter-spacing:3px; }
   .nav-toggle { display:flex; }
   .nav-links {
-    position:fixed; top:0; right:0; bottom:0;
+    /* Explicit full-viewport height: once the nav bar gains a backdrop-filter
+       on scroll, it becomes the containing block for this fixed menu, so
+       top/bottom:0 would collapse it to the nav's height and crop the links.
+       A fixed height anchored at the top spans the screen in both states. */
+    position:fixed; top:0; right:0;
+    height:100svh; height:100dvh;
     width:min(280px,82vw);
     background:rgba(248,245,240,0.98); backdrop-filter:blur(14px);
     flex-direction:column; align-items:flex-start; justify-content:center;
     gap:26px; padding:80px 36px; margin:0;
+    overflow-y:auto;
     transform:translateX(100%); transition:transform .38s cubic-bezier(.25,.46,.45,.94);
     z-index:130; box-shadow:-12px 0 40px rgba(0,0,0,.12);
   }
