@@ -570,33 +570,40 @@ html { scroll-behavior: auto; }
 /* Scroll indicator */
 .scroll-hint {
   position: absolute;
-  bottom: 30px; left: 50%;
+  bottom: 34px; left: 50%;
   transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
   z-index: 30;
   opacity: 1;
-  padding: 12px 22px 14px;
-  background: rgba(0,8,16,0.30);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 34px;
-  backdrop-filter: blur(3px);
   transition: opacity 0.4s;
-}
-.scroll-hint-line {
-  width: 13px; height: 13px;
-  border-right: 2px solid rgba(255,255,255,0.95);
-  border-bottom: 2px solid rgba(255,255,255,0.95);
-  animation: chevBounce 1.5s ease-in-out infinite;
-}
-@keyframes chevBounce {
-  0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.55; }
-  50%      { transform: translateY(7px) rotate(45deg); opacity: 1; }
 }
 .scroll-hint span {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 1px 10px rgba(0,0,0,0.9);
+  font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+  color: #6dd4ec;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.85), 0 0 22px rgba(74,184,212,0.45);
+}
+/* On-brand water motif: a glowing droplet falling down a thin track */
+.scroll-hint-line {
+  position: relative;
+  width: 1.5px; height: 52px;
+  background: linear-gradient(to bottom, rgba(109,212,236,0) 0%, rgba(109,212,236,0.4) 100%);
+  border-radius: 2px; overflow: hidden;
+}
+.scroll-hint-line::after {
+  content: '';
+  position: absolute; left: 50%; top: -30%;
+  width: 6px; height: 6px; margin-left: -3px;
+  border-radius: 50%;
+  background: #6dd4ec;
+  box-shadow: 0 0 10px rgba(109,212,236,0.95), 0 0 22px rgba(74,184,212,0.6);
+  animation: dropFall 1.9s ease-in infinite;
+}
+@keyframes dropFall {
+  0%   { top: -30%; opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { top: 112%; opacity: 0; }
 }
 
 /* Persistent "skip the intro" button — always visible during the intro */
@@ -948,8 +955,11 @@ html { scroll-behavior: auto; }
   .nav-links.open { transform:translateX(0); }
   .nav-links a { font-size:17px; letter-spacing:2px; opacity:.85; color:var(--ink); }
   .nav-cta { padding:11px 24px; font-size:15px; }
+  /* Backdrop sits BELOW the nav (z-index 100) so the slide-out menu —
+     which lives inside <nav> — stays tappable. Otherwise the backdrop
+     swallows every tap and just closes the menu. */
   .nav-backdrop {
-    position:fixed; inset:0; background:rgba(15,12,10,.45); z-index:125;
+    position:fixed; inset:0; background:rgba(15,12,10,.45); z-index:90;
     opacity:0; pointer-events:none; transition:opacity .35s;
   }
   .nav-backdrop.open { opacity:1; pointer-events:all; }
@@ -1099,7 +1109,7 @@ html { scroll-behavior: auto; }
 
     <!-- Scroll hint (beginning) -->
     <div class="scroll-hint" id="scrollHint">
-      <span>Scroll to begin</span>
+      <span>Scroll to dive in</span>
       <div class="scroll-hint-line"></div>
     </div>
 

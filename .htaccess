@@ -1,0 +1,33 @@
+# ===========================================================================
+# BOYNT — cache rules
+# Goal: visitors ALWAYS get the latest version of the site without having to
+# clear their browser history. Upload this file into public_html (same folder
+# as index.html). The filename must be exactly ".htaccess" (with the dot, no
+# extension).
+# ===========================================================================
+
+# --- Browser caching --------------------------------------------------------
+# "no-cache" does NOT mean "never store" — it means the browser must check with
+# the server every time before reusing a saved copy. If the file is unchanged
+# the server replies "304 Not Modified" (fast, no re-download). If you've
+# uploaded a new version, the browser fetches it. So updates show immediately.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # The PHP checkout endpoint should never be cached.
+  <FilesMatch "\.php$">
+    Header set Cache-Control "no-store"
+  </FilesMatch>
+</IfModule>
+
+# --- Hostinger / LiteSpeed server cache ------------------------------------
+# Stops Hostinger's server-side cache from serving an old copy of the page
+# after you upload a new one.
+<IfModule LiteSpeed>
+  CacheDisable public /
+</IfModule>
+
+# --- Make sure index.html is the homepage ----------------------------------
+DirectoryIndex index.html index.php
