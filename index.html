@@ -1105,7 +1105,7 @@ html { scroll-behavior: auto; }
         <div class="stat"><div class="stat-num">UV400</div><div class="stat-label">Lens Protection</div></div>
         <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Polarized</div></div>
         <div class="stat"><div class="stat-num">3</div><div class="stat-label">Styles</div></div>
-        <div class="stat"><div class="stat-num">10</div><div class="stat-label">Colorways</div></div>
+        <div class="stat"><div class="stat-num">5</div><div class="stat-label">Colorways</div></div>
       </div>
     </div>
   </div>
@@ -1334,7 +1334,7 @@ html { scroll-behavior: auto; }
     <div class="feature-item reveal reveal-delay-3">
       <div class="feature-icon">🎨</div>
       <div class="feature-name">Everyday Style</div>
-      <div class="feature-desc">Three distinct frames, ten colorways. Looks as good at a coffee shop as it does on the boat.</div>
+      <div class="feature-desc">Three distinct frames, five colorways. Looks as good at a coffee shop as it does on the boat.</div>
     </div>
   </div>
 </div>
@@ -1415,8 +1415,9 @@ html { scroll-behavior: auto; }
     </div>
     <div>
       <p class="footer-col-title">Get In Touch</p>
-      <div class="footer-contact-item">📧 <a href="mailto:Zacharybriss@gmail.com" style="color:rgba(255,255,255,.6);text-decoration:none;">Zacharybriss@gmail.com</a></div>
+      <div class="footer-contact-item">📧 <a href="mailto:boyntsuns@gmail.com" style="color:rgba(255,255,255,.6);text-decoration:none;">boyntsuns@gmail.com</a></div>
       <div class="footer-contact-item">📞 <a href="tel:4437872943" style="color:rgba(255,255,255,.6);text-decoration:none;">(443) 787-2943</a></div>
+      <div class="footer-contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg> <a href="https://instagram.com/boynt_llc" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);text-decoration:none;">@boynt_llc</a></div>
       <div class="footer-contact-item" style="margin-top:20px;color:rgba(255,255,255,.4);font-size:12px;">BOYNT · Est. 2026 · USA</div>
     </div>
   </div>
@@ -1568,7 +1569,6 @@ if (eggBubbles) {
     </div>
     <button class="panel-add-btn" id="panelAddBtn" onclick="handleAddToCart()">Add to Cart</button>
     <button class="panel-wishlist-btn">♡ Save to Wishlist</button>
-    <p class="panel-shipping">🚚 Free shipping on orders over $50</p>
   </div>
 </div>
 
@@ -1584,7 +1584,6 @@ if (eggBubbles) {
       <span class="label">Subtotal</span>
       <span class="amount" id="cartSubtotal">$0</span>
     </div>
-    <p class="cart-ship-note" id="cartShipNote"></p>
     <button class="cart-checkout" id="cartCheckout" onclick="checkout()">Checkout</button>
     <p class="cart-checkout-msg" id="cartCheckoutMsg"></p>
   </div>
@@ -2072,8 +2071,7 @@ document.querySelectorAll('#navLinks a').forEach(a =>
 const CART_CONFIG = {
   // Endpoint that creates the Stripe Checkout Session.
   // On Hostinger, upload create-checkout-session.php next to index.html and leave this.
-  checkoutEndpoint: 'create-checkout-session.php',
-  freeShipThreshold: 50
+  checkoutEndpoint: 'create-checkout-session.php'
 };
 
 let cart = [];
@@ -2146,9 +2144,6 @@ function renderCart() {
     </div>`).join('');
   const total = cartTotal();
   document.getElementById('cartSubtotal').textContent = '$' + total;
-  const left = CART_CONFIG.freeShipThreshold - total;
-  document.getElementById('cartShipNote').textContent =
-    left > 0 ? `Add $${left} more for free shipping.` : '✓ You qualify for free shipping!';
 }
 
 // Overlay / Escape should close whichever surface is open
