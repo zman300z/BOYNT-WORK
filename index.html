@@ -567,36 +567,40 @@ html { scroll-behavior: auto; }
   width: 100%;
 }
 
-/* Scroll indicator */
-.scroll-hint {
+/* ── Big centered START cue (shown at the very top, fades as you scroll) ── */
+.start-cue {
   position: absolute;
-  bottom: 34px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  z-index: 30;
-  opacity: 1;
-  transition: opacity 0.4s;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+  z-index: 32;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.3s;
 }
-.scroll-hint span {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
-  color: #6dd4ec;
-  text-shadow: 0 1px 12px rgba(0,0,0,0.85), 0 0 22px rgba(74,184,212,0.45);
+.start-cue .cue-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(34px, 8vw, 64px);
+  letter-spacing: 5px;
+  color: #ffffff;
+  line-height: 1;
+  text-shadow: 0 3px 36px rgba(0,0,0,0.95), 0 0 34px rgba(74,184,212,0.55);
 }
-/* On-brand water motif: a glowing droplet falling down a thin track */
-.scroll-hint-line {
+.start-cue .cue-text em { color: #6dd4ec; font-style: normal; }
+/* On-brand water motif: a glowing droplet falling down a track */
+.start-cue .cue-track {
   position: relative;
-  width: 1.5px; height: 52px;
-  background: linear-gradient(to bottom, rgba(109,212,236,0) 0%, rgba(109,212,236,0.4) 100%);
+  width: 2px; height: 70px;
+  background: linear-gradient(to bottom, rgba(109,212,236,0) 0%, rgba(109,212,236,0.5) 100%);
   border-radius: 2px; overflow: hidden;
 }
-.scroll-hint-line::after {
+.start-cue .cue-track::after {
   content: '';
   position: absolute; left: 50%; top: -30%;
-  width: 6px; height: 6px; margin-left: -3px;
+  width: 9px; height: 9px; margin-left: -4.5px;
   border-radius: 50%;
   background: #6dd4ec;
-  box-shadow: 0 0 10px rgba(109,212,236,0.95), 0 0 22px rgba(74,184,212,0.6);
+  box-shadow: 0 0 14px rgba(109,212,236,0.95), 0 0 28px rgba(74,184,212,0.65);
   animation: dropFall 1.9s ease-in infinite;
 }
 @keyframes dropFall {
@@ -604,6 +608,34 @@ html { scroll-behavior: auto; }
   18%  { opacity: 1; }
   82%  { opacity: 1; }
   100% { top: 112%; opacity: 0; }
+}
+
+/* ── Bottom KEEP-SCROLLING hint (appears once the story is underway) ── */
+.scroll-hint {
+  position: absolute;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  z-index: 30;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.scroll-hint span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 1px 12px rgba(0,0,0,0.85);
+}
+.scroll-hint-line {
+  width: 11px; height: 11px;
+  border-right: 2px solid #6dd4ec;
+  border-bottom: 2px solid #6dd4ec;
+  filter: drop-shadow(0 0 6px rgba(109,212,236,0.7));
+  animation: chevDown 1.5s ease-in-out infinite;
+}
+@keyframes chevDown {
+  0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; }
+  50%      { transform: translateY(6px) rotate(45deg); opacity: 1; }
 }
 
 /* Persistent "skip the intro" button — always visible during the intro */
@@ -1113,9 +1145,15 @@ html { scroll-behavior: auto; }
     <!-- Persistent skip — lets people jump straight to the shop any time -->
     <button class="skip-intro" id="skipIntro" onclick="enterSite(null)">Skip Intro →</button>
 
-    <!-- Scroll hint (beginning) -->
+    <!-- Big centered start cue — fades away the moment you start scrolling -->
+    <div class="start-cue" id="startCue">
+      <div class="cue-text">SCROLL TO <em>DIVE IN</em></div>
+      <div class="cue-track"></div>
+    </div>
+
+    <!-- Keep-scrolling hint (bottom) — appears once the story is underway -->
     <div class="scroll-hint" id="scrollHint">
-      <span>Scroll to dive in</span>
+      <span>Keep scrolling</span>
       <div class="scroll-hint-line"></div>
     </div>
 
@@ -1674,6 +1712,7 @@ for (let i = 0; i < 28; i++) {
 const intro      = document.getElementById('cinematic-intro');
 const mainSite   = document.getElementById('main-site');
 const scrollHint = document.getElementById('scrollHint');
+const startCue   = document.getElementById('startCue');
 const enterBtn   = document.getElementById('enterBtn');
 const boyntReveal = document.getElementById('boyntReveal');
 const sceneGlasses = document.getElementById('sceneGlasses');
@@ -1809,8 +1848,14 @@ function updateIntro() {
     if (phase >= 6)  { clearAll(); }
   }
 
-  // ── SCROLL HINT ── keep it visible through the story, fade only near the end
-  scrollHint.style.opacity = p < 0.80 ? 1 : Math.max(0, 1 - (p - 0.80) / 0.06);
+  // ── START CUE ── big centered "Scroll to dive in", fades the instant you scroll
+  if (startCue) startCue.style.opacity = Math.max(0, 1 - p / 0.05).toFixed(3);
+
+  // ── KEEP-SCROLLING HINT ── hidden at the very top (start cue owns that moment),
+  // appears once scrolling begins, stays through the story, fades near the end.
+  scrollHint.style.opacity = (p < 0.05 ? 0
+    : p < 0.80 ? 1
+    : Math.max(0, 1 - (p - 0.80) / 0.06)).toFixed(3);
 
   // ── ENTER BUTTON ──
   if (p > 0.86) {
@@ -1934,7 +1979,11 @@ function enterSite(sectionId) {
 // ── MAIN SITE SCROLL ─────────────────────────────────────────────────────────
 let isLocked = false; // kept for enterSite compatibility
 
-window.addEventListener('scroll', () => {
+// Scroll work is throttled to one update per animation frame so the heavy
+// per-frame DOM updates can't pile up on every scroll event — this is what
+// makes the intro feel smooth (especially the start of scroll on mobile).
+let scrollTicking = false;
+function handleScroll() {
   if (!introComplete) {
     updateIntro();
     return;
@@ -1951,7 +2000,12 @@ window.addEventListener('scroll', () => {
     const pImg = document.getElementById('parallaxImg');
     if (pImg) pImg.style.transform = `translateY(${ratio * 60}px)`;
   }
-});
+}
+window.addEventListener('scroll', () => {
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => { handleScroll(); scrollTicking = false; });
+}, { passive: true });
 
 // Init on load
 updateIntro();
