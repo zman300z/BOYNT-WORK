@@ -8,17 +8,27 @@
      redirects the customer to Stripe's hosted, PCI-compliant payment page.
 
    HOW TO TURN IT ON  (see STRIPE_SETUP.md for the friendly version)
-     1. Paste your Stripe SECRET key below (starts with sk_live_ or sk_test_).
-     2. Set the two URLs to your real domain.
-     3. Upload this file into the SAME folder as index.html on Hostinger.
+     Do NOT put your secret key in this file — this file is tracked in git
+     and gets replaced on every deploy. Instead, create ONE extra file named
+     stripe-config.php in this same folder on the server:
+
+         <?php
+         $STRIPE_SECRET_KEY = 'sk_live_YOUR_REAL_KEY';
+
+     That file is never in git and never touched by deploys.
    No Composer / no SDK needed — it talks to Stripe directly.
    =========================================================================== */
 
-// ---- 1. YOUR KEYS & URLS ---------------------------------------------------
+// ---- 1. KEY & URLS ----------------------------------------------------------
+// Placeholder only. The real key comes from stripe-config.php (see above).
 $STRIPE_SECRET_KEY = 'sk_test_REPLACE_WITH_YOUR_SECRET_KEY';
 
 $SUCCESS_URL = 'https://boynt.com/?checkout=success';
 $CANCEL_URL  = 'https://boynt.com/?checkout=cancel';
+
+// Load the real key (and optional URL overrides) from the untracked config.
+$__cfg = __DIR__ . '/stripe-config.php';
+if (file_exists($__cfg)) { require $__cfg; }
 
 // ---- 2. PRICE LIST (the source of truth) -----------------------------------
 // Prices are set HERE on the server, in dollars. The browser cannot change

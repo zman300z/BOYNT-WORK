@@ -1,2 +1,5 @@
 # Deployment bundles (regenerable from committed files)
 *.zip
+
+# Stripe secret key lives on the server only — never in this public repo
+stripe-config.php

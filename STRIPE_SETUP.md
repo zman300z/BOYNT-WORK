@@ -20,18 +20,18 @@ You do **not** need to be technical. Follow these steps in order.
    - ⚠️ The secret key is like a password. Never paste it into the website's
      HTML or share it. It only ever goes in `create-checkout-session.php`.
 
-## Step 3 — Put your key in the PHP file
-1. Open `create-checkout-session.php`.
-2. Find this line near the top:
+## Step 3 — Create the key file on the server
+Your key goes in its OWN small file on Hostinger (never in git — the repo is
+public, and deploys would overwrite it).
+
+1. In Hostinger File Manager, go to `public_html`.
+2. Create a new file named exactly: `stripe-config.php`
+3. Put exactly this inside it (with your real key):
    ```php
-   $STRIPE_SECRET_KEY = 'sk_test_REPLACE_WITH_YOUR_SECRET_KEY';
+   <?php
+   $STRIPE_SECRET_KEY = 'sk_live_YOUR_REAL_KEY_HERE';
    ```
-3. Replace the placeholder with your real secret key.
-4. Update the two URLs just below it to your real domain, e.g.:
-   ```php
-   $SUCCESS_URL = 'https://boynt.com/?checkout=success';
-   $CANCEL_URL  = 'https://boynt.com/?checkout=cancel';
-   ```
+4. Save. That's it — `create-checkout-session.php` picks it up automatically.
 
 ## Step 4 — Upload both files to Hostinger
 Using Hostinger's **File Manager** (hPanel → Files → File Manager), upload into
