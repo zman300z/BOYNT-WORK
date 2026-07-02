@@ -18,7 +18,8 @@ You do **not** need to be technical. Follow these steps in order.
 2. You'll see a **Secret key**. It starts with `sk_test_...` (test mode) or
    `sk_live_...` (live mode). Click **Reveal** and copy it.
    - ⚠️ The secret key is like a password. Never paste it into the website's
-     HTML or share it. It only ever goes in `create-checkout-session.php`.
+     HTML, into GitHub, or share it. It only ever goes in `stripe-config.php`
+     on the server (next step).
 
 ## Step 3 — Create the key file on the server
 Your key goes in its OWN small file on Hostinger (never in git — the repo is
