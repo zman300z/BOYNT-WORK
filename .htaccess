@@ -20,6 +20,12 @@
   <FilesMatch "\.php$">
     Header set Cache-Control "no-store"
   </FilesMatch>
+
+  # Photos & icons: cache for 30 days (they rarely change, and this makes
+  # repeat visits nearly instant).
+  <FilesMatch "\.(webp|jpg|jpeg|png|svg)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
 </IfModule>
 
 # --- Hostinger / LiteSpeed server cache ------------------------------------
