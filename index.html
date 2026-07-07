@@ -1018,6 +1018,132 @@ html { scroll-behavior: auto; }
 .toast.success { background:#1d5c38; }
 
 /* ============================================================
+   KICKSTARTER PAGE — full-screen takeover, surfaces from below
+   ============================================================ */
+.nav-ks {
+  color:#05ce78 !important; opacity:1 !important; font-weight:600;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.nav-ks::before {
+  content:''; width:7px; height:7px; border-radius:50%;
+  background:#05ce78; box-shadow:0 0 8px rgba(5,206,120,.9);
+  animation:ksPulse 1.6s ease-in-out infinite;
+}
+@keyframes ksPulse {
+  0%,100% { transform:scale(1); opacity:1; }
+  50%     { transform:scale(1.5); opacity:.55; }
+}
+
+.ks-page {
+  position:fixed; inset:0; z-index:700;
+  background:
+    radial-gradient(ellipse at 50% 115%, #0d4a6b 0%, #061a2e 45%, #000810 100%);
+  color:#fff;
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  transform:translateY(102%);
+  transition:transform .55s cubic-bezier(.22,.9,.3,1);
+  visibility:hidden;
+}
+.ks-page.open { transform:translateY(0); visibility:visible; }
+
+.ks-bubbles { position:fixed; inset:0; overflow:hidden; pointer-events:none; }
+
+.ks-close {
+  position:fixed; top:18px; right:18px; z-index:10;
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.25);
+  color:#fff; font-size:20px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s, transform .2s;
+}
+.ks-close:hover { background:rgba(255,255,255,.18); transform:rotate(90deg); }
+
+.ks-inner {
+  position:relative; max-width:720px; margin:0 auto;
+  padding:72px 24px 80px; text-align:center;
+}
+.ks-glasses { width:min(340px,62vw); margin:0 auto 8px; }
+.ks-glasses img {
+  width:100%; height:auto; display:block; border-radius:6px;
+  filter:drop-shadow(0 24px 60px rgba(5,206,120,.25));
+  animation:ksBob 4.5s ease-in-out infinite;
+}
+@keyframes ksBob {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50%     { transform:translateY(-12px) rotate(1deg); }
+}
+.ks-eyebrow {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px; letter-spacing:5px; text-transform:uppercase;
+  color:#05ce78; margin-bottom:14px;
+  text-shadow:0 0 24px rgba(5,206,120,.5);
+}
+.ks-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(46px,9vw,86px); letter-spacing:3px; line-height:.95;
+  margin-bottom:18px;
+}
+.ks-title em { color:#05ce78; font-style:normal; }
+.ks-sub {
+  font-size:16px; font-weight:300; line-height:1.7;
+  color:rgba(255,255,255,.75); max-width:520px; margin:0 auto 34px;
+}
+.ks-cta {
+  display:inline-block; background:#05ce78; color:#04120b;
+  font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:3px;
+  padding:18px 46px; border-radius:3px; text-decoration:none;
+  box-shadow:0 12px 44px rgba(5,206,120,.4);
+  transition:transform .15s, box-shadow .2s, background .2s;
+}
+.ks-cta:hover { transform:translateY(-2px); background:#12e88c; box-shadow:0 16px 54px rgba(5,206,120,.55); }
+.ks-account-note {
+  font-size:12.5px; color:rgba(255,255,255,.5); margin-top:14px; font-weight:300;
+}
+
+.ks-divider {
+  display:flex; align-items:center; gap:16px;
+  margin:52px auto 26px; max-width:460px;
+}
+.ks-divider::before, .ks-divider::after {
+  content:''; flex:1; height:1px; background:rgba(255,255,255,.15);
+}
+.ks-divider span {
+  font-family:'Barlow Condensed',sans-serif; font-size:13px;
+  letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.6);
+  white-space:nowrap;
+}
+.ks-alt-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  max-width:560px; margin:0 auto 40px;
+}
+.ks-alt {
+  display:block; background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.14); border-radius:6px;
+  padding:18px 16px; text-decoration:none; text-align:center;
+  transition:border-color .2s, background .2s, transform .15s;
+}
+.ks-alt:hover { border-color:#6dd4ec; background:rgba(109,212,236,.08); transform:translateY(-2px); }
+.ks-alt-label {
+  font-family:'Barlow Condensed',sans-serif; font-size:11px;
+  letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.45);
+  margin-bottom:6px;
+}
+.ks-alt-value { font-size:15px; color:#6dd4ec; font-weight:400; word-break:break-word; }
+.ks-thanks { font-size:13.5px; font-weight:300; color:rgba(255,255,255,.55); line-height:1.7; max-width:440px; margin:0 auto 34px; }
+.ks-back {
+  background:none; border:1px solid rgba(255,255,255,.25); color:rgba(255,255,255,.75);
+  font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:2px;
+  text-transform:uppercase; padding:12px 30px; border-radius:30px; cursor:pointer;
+  transition:border-color .2s, color .2s;
+}
+.ks-back:hover { border-color:#fff; color:#fff; }
+
+@media (max-width:600px) {
+  .ks-alt-grid { grid-template-columns:1fr; }
+  .ks-inner { padding:64px 18px 64px; }
+}
+
+/* ============================================================
    REDUCED MOTION — respect the OS "reduce motion" setting
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1027,6 +1153,9 @@ html { scroll-behavior: auto; }
   .cursor, .cursor-trail { display:none; }
   .start-cue .cue-track::after, .scroll-hint-line { animation:none; }
   .reveal { transition:none; }
+  .ks-glasses img, .nav-ks::before { animation:none; }
+  .ks-bubbles { display:none; }
+  .ks-page { transition:none; }
 }
 
 /* ============================================================
@@ -1155,6 +1284,7 @@ html { scroll-behavior: auto; }
     <a href="#about"       class="nav-link-intro" data-section="about">Our Story</a>
     <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
+    <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
     <a href="#shop"        class="nav-cta nav-link-intro" data-section="shop">Shop Now</a>
   </div>
   <div class="nav-actions">
@@ -1571,6 +1701,7 @@ html { scroll-behavior: auto; }
       <div class="footer-contact-item">📧 <a href="mailto:boyntsuns@gmail.com" style="color:rgba(255,255,255,.6);text-decoration:none;">boyntsuns@gmail.com</a></div>
       <div class="footer-contact-item">📞 <a href="tel:4437872943" style="color:rgba(255,255,255,.6);text-decoration:none;">(443) 787-2943</a></div>
       <div class="footer-contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg> <a href="https://instagram.com/boynt_llc" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);text-decoration:none;">@boynt_llc</a></div>
+      <div class="footer-contact-item">🚀 <a href="#kickstarter" onclick="openKickstarter(event)" style="color:#05ce78;text-decoration:none;">Back us on Kickstarter</a></div>
       <div class="footer-contact-item" style="margin-top:20px;color:rgba(255,255,255,.4);font-size:12px;">BOYNT · Est. 2026 · USA</div>
     </div>
   </div>
@@ -1739,6 +1870,44 @@ if (eggBubbles) {
     </div>
     <button class="cart-checkout" id="cartCheckout" onclick="checkout()">Checkout</button>
     <p class="cart-checkout-msg" id="cartCheckoutMsg"></p>
+  </div>
+</div>
+
+<!-- KICKSTARTER PAGE (full-screen takeover) -->
+<div class="ks-page" id="ksPage" aria-hidden="true">
+  <div class="ks-bubbles" id="ksBubbles"></div>
+  <button class="ks-close" onclick="closeKickstarter()" aria-label="Close">✕</button>
+  <div class="ks-inner">
+    <div class="ks-glasses">
+      <img src="glasses-float.webp" alt="BOYNT floating sunglasses on the water" loading="lazy" decoding="async">
+    </div>
+    <p class="ks-eyebrow">● Now Live</p>
+    <h2 class="ks-title">BOYNT IS ON<br><em>KICKSTARTER.</em></h2>
+    <p class="ks-sub">We're raising the funds for our first full production run — polarized, UV400 sunglasses that actually float, built for life on the water. Back the campaign and you're not just pre-ordering a pair: you're putting BOYNT on the map.</p>
+    <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
+    <p class="ks-account-note">Heads up: pledging takes a free Kickstarter account — it's quick to make.</p>
+
+    <div class="ks-divider"><span>No account? No problem</span></div>
+    <div class="ks-alt-grid">
+      <a class="ks-alt" href="https://venmo.com/u/Zachary-Brisson-2" target="_blank" rel="noopener">
+        <div class="ks-alt-label">Venmo</div>
+        <div class="ks-alt-value">@Zachary-Brisson-2</div>
+      </a>
+      <a class="ks-alt" href="https://instagram.com/boynt_llc" target="_blank" rel="noopener">
+        <div class="ks-alt-label">Instagram</div>
+        <div class="ks-alt-value">@boynt_llc</div>
+      </a>
+      <a class="ks-alt" href="mailto:boyntsuns@gmail.com">
+        <div class="ks-alt-label">Email</div>
+        <div class="ks-alt-value">boyntsuns@gmail.com</div>
+      </a>
+      <a class="ks-alt" href="tel:4437872943">
+        <div class="ks-alt-label">Call or Text</div>
+        <div class="ks-alt-value">(443) 787-2943</div>
+      </a>
+    </div>
+    <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every pledge, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
+    <button class="ks-back" onclick="closeKickstarter()">← Back to the site</button>
   </div>
 </div>
 
@@ -2363,6 +2532,49 @@ async function checkout() {
 
 // Initialise cart badge on load
 updateCartCount();
+
+// ── KICKSTARTER PAGE ─────────────────────────────────────────────────────────
+let _ksBubbled = false;
+function openKickstarter(e) {
+  if (e) e.preventDefault();
+  toggleMenu(false); // close mobile menu if open
+  const p = document.getElementById('ksPage');
+  p.classList.add('open');
+  p.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  if (location.hash !== '#kickstarter') history.replaceState(null, '', '#kickstarter');
+  if (!_ksBubbled) {
+    _ksBubbled = true;
+    const wrap = document.getElementById('ksBubbles');
+    for (let i = 0; i < 14; i++) {
+      const b = document.createElement('div');
+      const size = 4 + Math.random() * 12;
+      b.style.cssText = `
+        position:absolute; width:${size}px; height:${size}px; border-radius:50%;
+        background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.6), rgba(5,206,120,.15));
+        border:1px solid rgba(255,255,255,.25);
+        left:${Math.random()*100}%; bottom:${Math.random()*15}%;
+        animation:bubbleRise ${6+Math.random()*9}s linear ${Math.random()*7}s infinite;
+        --drift:${(Math.random()-.5)*60}px;`;
+      wrap.appendChild(b);
+    }
+  }
+}
+function closeKickstarter() {
+  const p = document.getElementById('ksPage');
+  p.classList.remove('open');
+  p.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (location.hash === '#kickstarter') history.replaceState(null, '', location.pathname);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeKickstarter(); });
+// Deep link: boynt.com/#kickstarter opens the page directly (great for sharing)
+if (location.hash === '#kickstarter') openKickstarter();
+// Browser back/forward keeps the page state honest
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#kickstarter') openKickstarter();
+  else closeKickstarter();
+});
 
 // ── CHECKOUT RETURN ──────────────────────────────────────────────────────────
 // Stripe sends buyers back to /?checkout=success or /?checkout=cancel.
