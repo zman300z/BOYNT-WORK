@@ -1129,6 +1129,41 @@ html { scroll-behavior: auto; }
   margin-bottom:6px;
 }
 .ks-alt-value { font-size:15px; color:#6dd4ec; font-weight:400; word-break:break-word; }
+/* Live funding progress — appears only when stats are reachable */
+.ks-progress { max-width:460px; margin:0 auto 30px; }
+.ks-progress-top { display:flex; align-items:baseline; justify-content:center; gap:10px; margin-bottom:10px; }
+.ks-progress-pct {
+  font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px;
+  color:#05ce78; line-height:1; text-shadow:0 0 30px rgba(5,206,120,.45);
+}
+.ks-progress-label {
+  font-family:'Barlow Condensed',sans-serif; font-size:13px;
+  letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.55);
+}
+.ks-bar {
+  height:10px; border-radius:6px; overflow:hidden;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.12);
+}
+.ks-bar-fill {
+  position:relative; height:100%; width:0;
+  background:linear-gradient(90deg, #05ce78, #6dd4ec);
+  border-radius:6px;
+  transition:width 1.2s cubic-bezier(.25,.8,.35,1);
+}
+.ks-bar-fill::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(110deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+  background-size:200% 100%;
+  animation:ksBarSheen 2.4s linear infinite;
+}
+@keyframes ksBarSheen { from{background-position:180% 0} to{background-position:-80% 0} }
+.ks-progress-stats {
+  margin-top:10px; font-size:13px; font-weight:300;
+  color:rgba(255,255,255,.6); letter-spacing:.3px;
+}
+.ks-progress-stats strong { color:#fff; font-weight:500; }
+
 /* Founders Wall — permanent plaques for First Wave backers */
 .ks-wall-intro {
   font-size:13.5px; font-weight:300; color:rgba(255,255,255,.55);
@@ -1195,7 +1230,7 @@ html { scroll-behavior: auto; }
   .cursor, .cursor-trail { display:none; }
   .start-cue .cue-track::after, .scroll-hint-line { animation:none; }
   .reveal { transition:none; }
-  .ks-glasses img, .nav-ks::before { animation:none; }
+  .ks-glasses img, .nav-ks::before, .ks-bar-fill::after { animation:none; }
   .ks-bubbles { display:none; }
   .ks-page { transition:none; }
 }
@@ -1926,6 +1961,15 @@ if (eggBubbles) {
     <p class="ks-eyebrow">● Now Live</p>
     <h2 class="ks-title">BOYNT IS ON<br><em>KICKSTARTER.</em></h2>
     <p class="ks-sub">We're raising the funds for our first full production run — polarized, UV400 sunglasses that actually float, built for life on the water. Back the campaign and you're not just pre-ordering a pair: you're putting BOYNT on the map.</p>
+    <div class="ks-progress" id="ksProgress" hidden>
+      <div class="ks-progress-top">
+        <span class="ks-progress-pct" id="ksPct">0%</span>
+        <span class="ks-progress-label">funded</span>
+      </div>
+      <div class="ks-bar"><div class="ks-bar-fill" id="ksBarFill"></div></div>
+      <div class="ks-progress-stats"><strong id="ksPledged">—</strong> pledged of <span id="ksGoal">—</span> goal &nbsp;·&nbsp; <strong id="ksBackers">—</strong> backers</div>
+    </div>
+
     <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
     <p class="ks-account-note">Heads up: pledging takes a free Kickstarter account — it's quick to make.</p>
 
@@ -2597,9 +2641,34 @@ updateCartCount();
 
 // ── KICKSTARTER PAGE ─────────────────────────────────────────────────────────
 let _ksBubbled = false;
+// Live funding numbers via kickstarter-stats.php (5-min server cache).
+// If the relay is missing or Kickstarter blocks it, the bar stays hidden.
+let _ksStatsLoaded = false;
+async function loadKsStats() {
+  if (_ksStatsLoaded) return;
+  try {
+    const r = await fetch('kickstarter-stats.php', { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d || !(d.goal > 0) || d.pledged == null) return;
+    const pct = Math.min(100, Math.round(d.pledged / d.goal * 100));
+    const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+    document.getElementById('ksPct').textContent = pct + '%';
+    document.getElementById('ksPledged').textContent = fmt(d.pledged);
+    document.getElementById('ksGoal').textContent = fmt(d.goal);
+    document.getElementById('ksBackers').textContent = d.backers_count;
+    document.getElementById('ksProgress').hidden = false;
+    requestAnimationFrame(() => {
+      document.getElementById('ksBarFill').style.width = Math.max(2, pct) + '%';
+    });
+    _ksStatsLoaded = true;
+  } catch (e) { /* leave the bar hidden */ }
+}
+
 function openKickstarter(e) {
   if (e) e.preventDefault();
   toggleMenu(false); // close mobile menu if open
+  loadKsStats();
   const p = document.getElementById('ksPage');
   p.classList.add('open');
   p.setAttribute('aria-hidden', 'false');
