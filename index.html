@@ -1034,6 +1034,24 @@ html { scroll-behavior: auto; }
   50%     { transform:scale(1.5); opacity:.55; }
 }
 
+/* Founder Wall nav link — gold with a tiny crown */
+.nav-fw {
+  color:#f5c04a !important; opacity:1 !important; font-weight:600;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.nav-fw::before { content:'👑'; font-size:11px; line-height:1; }
+
+/* Teaser link on the Kickstarter page pointing to the wall */
+.ks-wall-link {
+  display:inline-block; margin:0 auto 36px;
+  font-family:'Barlow Condensed',sans-serif; font-size:13px;
+  letter-spacing:2px; text-transform:uppercase; text-decoration:none;
+  color:#f5c04a; border:1px solid rgba(245,192,74,.5);
+  border-radius:30px; padding:11px 26px;
+  transition:background .2s, border-color .2s, transform .15s;
+}
+.ks-wall-link:hover { background:rgba(245,192,74,.1); border-color:#f5c04a; transform:translateY(-2px); }
+
 .ks-page {
   position:fixed; inset:0; z-index:700;
   background:
@@ -1362,6 +1380,7 @@ html { scroll-behavior: auto; }
     <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
     <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
+    <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founder Wall</a>
     <a href="#shop"        class="nav-cta nav-link-intro" data-section="shop">Shop Now</a>
   </div>
   <div class="nav-actions">
@@ -1779,6 +1798,7 @@ html { scroll-behavior: auto; }
       <div class="footer-contact-item">📞 <a href="tel:4437872943" style="color:rgba(255,255,255,.6);text-decoration:none;">(443) 787-2943</a></div>
       <div class="footer-contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg> <a href="https://instagram.com/boynt_llc" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);text-decoration:none;">@boynt_llc</a></div>
       <div class="footer-contact-item">🚀 <a href="#kickstarter" onclick="openKickstarter(event)" style="color:#05ce78;text-decoration:none;">Back us on Kickstarter</a></div>
+      <div class="footer-contact-item">👑 <a href="#founders" onclick="openFounderWall(event)" style="color:#f5c04a;text-decoration:none;">The Founders Wall</a></div>
       <div class="footer-contact-item" style="margin-top:20px;color:rgba(255,255,255,.4);font-size:12px;">BOYNT · Est. 2026 · USA</div>
     </div>
   </div>
@@ -1983,8 +2003,21 @@ if (eggBubbles) {
         <div class="ks-alt-value">(443) 787-2943</div>
       </a>
     </div>
-    <div class="ks-divider"><span>The Founders Wall</span></div>
-    <p class="ks-wall-intro">Every backer earns a permanent spot on this wall — the people who put BOYNT on the water first, in the order they showed up.</p>
+    <a class="ks-wall-link" href="#founders" onclick="closeKickstarter(); openFounderWall(event);">👑 Meet our backers — The Founders Wall →</a>
+
+    <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every pledge, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
+    <button class="ks-back" onclick="closeKickstarter()">← Back to the site</button>
+  </div>
+</div>
+
+<!-- FOUNDER WALL PAGE (full-screen takeover) -->
+<div class="ks-page" id="fwPage" aria-hidden="true">
+  <div class="ks-bubbles" id="fwBubbles"></div>
+  <button class="ks-close" onclick="closeFounderWall()" aria-label="Close">✕</button>
+  <div class="ks-inner">
+    <p class="ks-eyebrow" style="color:#f5c04a;">👑 Our Backers</p>
+    <h2 class="ks-title">THE FOUNDERS<br><em style="color:#f5c04a;">WALL.</em></h2>
+    <p class="ks-sub">The people who believed first. Every backer earns a permanent spot on this wall, in the order they showed up — and we mean permanent.</p>
 
     <div class="ks-founder legend" onclick="ksCelebrate(event)" title="Click me 🎉">
       <div class="ks-crown">👑</div>
@@ -2037,8 +2070,11 @@ if (eggBubbles) {
       </a>
     </div>
 
-    <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every pledge, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
-    <button class="ks-back" onclick="closeKickstarter()">← Back to the site</button>
+    <p class="ks-thanks">Want your name up here forever? Back the campaign — every founder is added to the wall in the order they arrive. 🌊</p>
+    <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
+    <div style="margin-top:26px;">
+      <button class="ks-back" onclick="closeFounderWall()">← Back to the site</button>
+    </div>
   </div>
 </div>
 
@@ -2733,13 +2769,52 @@ function closeKickstarter() {
   document.body.style.overflow = '';
   if (location.hash === '#kickstarter') history.replaceState(null, '', location.pathname);
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeKickstarter(); });
-// Deep link: boynt.com/#kickstarter opens the page directly (great for sharing)
+// ── FOUNDER WALL PAGE ─── same surfacing behavior, gold edition ──────────────
+let _fwBubbled = false;
+function openFounderWall(e) {
+  if (e) e.preventDefault();
+  toggleMenu(false); // close mobile menu if open
+  const p = document.getElementById('fwPage');
+  p.classList.add('open');
+  p.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  if (location.hash !== '#founders') history.replaceState(null, '', '#founders');
+  if (!_fwBubbled) {
+    _fwBubbled = true;
+    const wrap = document.getElementById('fwBubbles');
+    for (let i = 0; i < 14; i++) {
+      const b = document.createElement('div');
+      const size = 4 + Math.random() * 12;
+      b.style.cssText = `
+        position:absolute; width:${size}px; height:${size}px; border-radius:50%;
+        background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.6), rgba(245,192,74,.18));
+        border:1px solid rgba(255,255,255,.25);
+        left:${Math.random()*100}%; bottom:${Math.random()*15}%;
+        animation:bubbleRise ${6+Math.random()*9}s linear ${Math.random()*7}s infinite;
+        --drift:${(Math.random()-.5)*60}px;`;
+      wrap.appendChild(b);
+    }
+  }
+}
+function closeFounderWall() {
+  const p = document.getElementById('fwPage');
+  p.classList.remove('open');
+  p.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (location.hash === '#founders') history.replaceState(null, '', location.pathname);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); }
+});
+// Deep links: boynt.com/#kickstarter and boynt.com/#founders open their pages directly
 if (location.hash === '#kickstarter') openKickstarter();
-// Browser back/forward keeps the page state honest
+if (location.hash === '#founders') openFounderWall();
+// Browser back/forward keeps page state honest
 window.addEventListener('hashchange', () => {
-  if (location.hash === '#kickstarter') openKickstarter();
-  else closeKickstarter();
+  if (location.hash === '#kickstarter') { closeFounderWall(); openKickstarter(); }
+  else if (location.hash === '#founders') { closeKickstarter(); openFounderWall(); }
+  else { closeKickstarter(); closeFounderWall(); }
 });
 
 // ── CHECKOUT RETURN ──────────────────────────────────────────────────────────
