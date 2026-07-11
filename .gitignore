@@ -3,6 +3,3 @@
 
 # Stripe secret key lives on the server only — never in this public repo
 stripe-config.php
-
-# Kickstarter stats cache written by kickstarter-stats.php
-ks-stats-cache.json
