@@ -1239,6 +1239,77 @@ html { scroll-behavior: auto; }
 }
 
 /* ============================================================
+   BOYNT POPUPS — "shop's not open yet" + checkout intercept.
+   A cream card bobbing on the waves, funneling to Kickstarter.
+   ============================================================ */
+.bp-overlay {
+  position:fixed; inset:0; background:rgba(3,10,18,.62);
+  backdrop-filter:blur(4px); z-index:1300;
+  opacity:0; pointer-events:none; transition:opacity .35s ease;
+}
+.bp-overlay.show { opacity:1; pointer-events:all; }
+.bp-card {
+  position:fixed; left:50%; top:50%; z-index:1310;
+  width:min(430px, calc(100vw - 36px));
+  transform:translate(-50%,-42%) scale(.95); opacity:0;
+  transition:transform .45s cubic-bezier(.2,.9,.3,1.15), opacity .35s ease;
+  pointer-events:none;
+}
+.bp-card.show { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:all; }
+/* the wave bob lives on an inner wrapper so it can't fight the entrance */
+.bp-float {
+  position:relative; background:var(--white); color:var(--ink);
+  border-radius:10px; padding:38px 30px 30px; text-align:center;
+  box-shadow:0 30px 80px rgba(0,8,16,.5), 0 0 0 1px rgba(255,255,255,.08);
+  animation:bpBob 4.2s ease-in-out infinite;
+  overflow:hidden;
+}
+@keyframes bpBob {
+  0%,100% { transform:rotate(-1.4deg) translateY(0); }
+  50%     { transform:rotate(1.4deg) translateY(-7px); }
+}
+/* little wave strip lapping at the bottom of the card */
+.bp-float::after {
+  content:''; position:absolute; left:0; right:0; bottom:0; height:7px;
+  background:linear-gradient(90deg, var(--ocean-light), #05ce78, var(--ocean-light));
+  background-size:200% 100%;
+  animation:bpWaveSlide 5s linear infinite;
+}
+@keyframes bpWaveSlide { from{background-position:0 0} to{background-position:200% 0} }
+.bp-close {
+  position:absolute; top:10px; right:12px;
+  background:none; border:none; cursor:pointer;
+  font-size:19px; color:var(--ink); opacity:.4; transition:opacity .2s, transform .2s;
+  width:36px; height:36px;
+}
+.bp-close:hover { opacity:1; transform:rotate(90deg); }
+.bp-emoji { font-size:40px; line-height:1; margin-bottom:12px; }
+.bp-title {
+  font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:2px;
+  line-height:1.05; color:var(--ink); margin-bottom:12px;
+}
+.bp-title em { color:var(--ocean); font-style:normal; }
+.bp-body {
+  font-size:14px; font-weight:300; line-height:1.65; color:var(--ink-soft);
+  margin-bottom:22px;
+}
+.bp-cta {
+  display:block; width:100%; padding:15px 18px; margin-bottom:10px;
+  background:#05ce78; color:#04140b; text-decoration:none;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px;
+  border-radius:4px; transition:background .2s, transform .15s;
+  box-shadow:0 8px 26px rgba(5,206,120,.35);
+}
+.bp-cta:hover { background:#06e988; transform:translateY(-2px); }
+.bp-later {
+  background:none; border:none; cursor:pointer; width:100%;
+  font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--mist); padding:9px;
+  transition:color .2s;
+}
+.bp-later:hover { color:var(--ink); }
+
+/* ============================================================
    REDUCED MOTION — respect the OS "reduce motion" setting
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1251,6 +1322,8 @@ html { scroll-behavior: auto; }
   .ks-glasses img, .nav-ks::before { animation:none; }
   .ks-bubbles { display:none; }
   .ks-page { transition:none; }
+  .bp-float, .bp-float::after { animation:none; }
+  .bp-card { transition:opacity .35s ease; }
 }
 
 /* ============================================================
@@ -2078,6 +2151,19 @@ if (eggBubbles) {
   </div>
 </div>
 
+<!-- BOYNT POPUPS: preview notice + checkout intercept -->
+<div class="bp-overlay" id="bpOverlay" onclick="closeBoyntPopup()"></div>
+<div class="bp-card" id="bpCard" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="bp-float">
+    <button class="bp-close" onclick="closeBoyntPopup()" aria-label="Close">✕</button>
+    <div class="bp-emoji" id="bpEmoji">🕶️</div>
+    <h3 class="bp-title" id="bpTitle"></h3>
+    <p class="bp-body" id="bpBody"></p>
+    <a class="bp-cta" id="bpCta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener"></a>
+    <button class="bp-later" id="bpLater" onclick="closeBoyntPopup()"></button>
+  </div>
+</div>
+
 <div class="site-transition" id="siteTransition">
   <div class="st-deep"  id="stDeep"></div>
   <div class="st-mid"   id="stMid"></div>
@@ -2364,6 +2450,8 @@ function enterSite(sectionId) {
   setTimeout(() => {
     intro.style.display = 'none';
     mainSite.classList.add('visible');
+    // Greet first-time visitors once the water transition has fully cleared
+    setTimeout(() => showBoyntPopup('welcome'), 1500);
     const target = _pendingSection ? document.getElementById(_pendingSection) : null;
     if (target) {
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -2692,8 +2780,8 @@ async function checkout() {
     throw new Error(data.error || 'No checkout URL returned');
   } catch (err) {
     console.error('Checkout error:', err);
-    msg.textContent = "Checkout isn't live yet — finish Stripe setup (see STRIPE_SETUP.md).";
     btn.disabled = false; btn.textContent = 'Checkout';
+    showBoyntPopup('checkout'); // shop isn't open yet — nudge to Kickstarter
   }
 }
 
@@ -2804,8 +2892,50 @@ function closeFounderWall() {
   if (location.hash === '#founders') history.replaceState(null, '', location.pathname);
 }
 
+// ── BOYNT POPUPS ─── preview notice + checkout intercept, both → Kickstarter ─
+const BP_COPY = {
+  welcome: {
+    emoji: '🕶️',
+    title: "THE SHOP'S STILL IN <em>DRY DOCK.</em>",
+    body: "You're looking at the full BOYNT lineup — but the register isn't wired up just yet. Want to help us launch faster and lock in a pair before everyone else? That's exactly what our Kickstarter is for. (Backers get their name on the Founders Wall. Forever.)",
+    cta: '🚀 Check Out the Kickstarter',
+    later: "I'm just here to float around →"
+  },
+  checkout: {
+    emoji: '🛟',
+    title: "OUR CHECKOUT IS STILL <em>LEARNING TO FLOAT.</em>",
+    body: "Sorry, sailor — checkout is under construction below deck, so you can't buy from the site quite yet. Your cart is safe and dry right where you left it. Want a pair the fastest way possible? Back us on Kickstarter — we'll even put your name on the Founders Wall.",
+    cta: '🚀 Claim a Pair on Kickstarter',
+    later: 'No worries — my cart can wait'
+  }
+};
+function showBoyntPopup(kind) {
+  if (kind === 'welcome') {
+    try {
+      if (sessionStorage.getItem('boynt_welcomed')) return;
+      sessionStorage.setItem('boynt_welcomed', '1');
+    } catch (err) { /* private mode etc. — just show it */ }
+  }
+  const c = BP_COPY[kind]; if (!c) return;
+  document.getElementById('bpEmoji').textContent = c.emoji;
+  document.getElementById('bpTitle').innerHTML = c.title;
+  document.getElementById('bpBody').textContent = c.body;
+  document.getElementById('bpCta').textContent = c.cta;
+  document.getElementById('bpLater').textContent = c.later;
+  document.getElementById('bpOverlay').classList.add('show');
+  const card = document.getElementById('bpCard');
+  card.classList.add('show');
+  card.setAttribute('aria-hidden', 'false');
+}
+function closeBoyntPopup() {
+  document.getElementById('bpOverlay').classList.remove('show');
+  const card = document.getElementById('bpCard');
+  card.classList.remove('show');
+  card.setAttribute('aria-hidden', 'true');
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); }
+  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); closeBoyntPopup(); }
 });
 // Deep links: boynt.com/#kickstarter and boynt.com/#founders open their pages directly
 if (location.hash === '#kickstarter') openKickstarter();
