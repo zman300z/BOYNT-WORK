@@ -41,9 +41,9 @@ $PRICES = [
   'The Drifters — Matte Black'    => 30,
   'The Drifters — Seafoam'        => 32,
   'The Drifters — Storm Grey'     => 35,
-  'The Current — Matte Black'     => 35,
-  'The Current — Deep Ocean Blue' => 38,
-  'The Current — Driftwood Sand'  => 40,
+  'The Currents — Matte Black'     => 35,
+  'The Currents — Deep Ocean Blue' => 38,
+  'The Currents — Driftwood Sand'  => 40,
 ];
 
 // ---------------------------------------------------------------------------

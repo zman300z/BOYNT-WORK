@@ -48,9 +48,9 @@
         {"@type":"Product","position":4,"name":"The Drifters — Matte Black","image":"https://boynt.com/drifters-matte-black.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"Round-frame polarized UV400 sunglasses that float. Built for the water.","offers":{"@type":"Offer","price":"30","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
         {"@type":"Product","position":5,"name":"The Drifters — Seafoam","image":"https://boynt.com/drifters-seafoam.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"Round-frame polarized UV400 sunglasses that float. Built for the water.","offers":{"@type":"Offer","price":"32","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
         {"@type":"Product","position":6,"name":"The Drifters — Storm Grey","image":"https://boynt.com/drifters-storm-grey.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"Round-frame polarized UV400 sunglasses that float. Built for the water.","offers":{"@type":"Offer","price":"35","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
-        {"@type":"Product","position":7,"name":"The Current — Matte Black","image":"https://boynt.com/current-matte-black.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"35","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
-        {"@type":"Product","position":8,"name":"The Current — Deep Ocean Blue","image":"https://boynt.com/current-ocean-blue.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"38","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
-        {"@type":"Product","position":9,"name":"The Current — Driftwood Sand","image":"https://boynt.com/current-driftwood.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"40","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}}
+        {"@type":"Product","position":7,"name":"The Currents — Matte Black","image":"https://boynt.com/current-matte-black.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"35","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
+        {"@type":"Product","position":8,"name":"The Currents — Deep Ocean Blue","image":"https://boynt.com/current-ocean-blue.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"38","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}},
+        {"@type":"Product","position":9,"name":"The Currents — Driftwood Sand","image":"https://boynt.com/current-driftwood.webp","brand":{"@type":"Brand","name":"BOYNT"},"description":"High-performance wraparound polarized UV400 sunglasses that float.","offers":{"@type":"Offer","price":"40","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://boynt.com/#shop"}}
       ]
     }
   ]
@@ -123,7 +123,7 @@ nav.scrolled { background:rgba(248,245,240,0.94); backdrop-filter:blur(12px); bo
 .proof-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(52px,5vw,80px); letter-spacing:2px; color:var(--white); line-height:.95; margin-bottom:28px; }
 .proof-title em { color:var(--ocean-light); font-style:normal; }
 .proof-body { font-size:16px; font-weight:300; line-height:1.75; color:rgba(255,255,255,.6); max-width:400px; margin-bottom:40px; }
-.proof-stats { display:flex; gap:40px; }
+.proof-stats { display:flex; gap:40px; flex-wrap:wrap; }
 .stat { }
 .stat-num { font-family:'Bebas Neue',sans-serif; font-size:44px; color:var(--ocean-light); line-height:1; }
 .stat-label { font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); margin-top:4px; }
@@ -253,7 +253,8 @@ footer { background:var(--ink); color:var(--white); }
   /* Kill the sticky title so it can't overlap the body text once stacked */
   .about-left { position:static; top:auto; }
   .about-inner { gap:56px; }
-  .collections,.shop,.about,.features-strip,section[data-pad] { padding:80px 24px; }
+  .collections,.shop,.about,.features-strip { padding:80px 24px; }
+  section[data-pad] { padding:80px 24px !important; }
   .collection-info { padding:48px 32px; }
   .proof-content { padding:48px 32px; }
   .features-grid { grid-template-columns:1fr 1fr; }
@@ -1147,7 +1148,7 @@ html { scroll-behavior: auto; }
   margin-bottom:6px;
 }
 .ks-alt-value { font-size:15px; color:#6dd4ec; font-weight:400; word-break:break-word; }
-/* Founders Wall — permanent plaques for First Wave backers */
+/* Founding Backers Wall — permanent plaques for backers */
 .ks-wall-intro {
   font-size:13.5px; font-weight:300; color:rgba(255,255,255,.55);
   line-height:1.65; max-width:420px; margin:0 auto 24px;
@@ -1338,13 +1339,10 @@ html { scroll-behavior: auto; }
 }
 
 /* ============================================================
-   PHONE / SMALL SCREENS  (<=600px)
+   COMPACT NAV  (<=1000px) — hamburger for phones AND tablets;
+   the full desktop link row no longer fits below this width.
    ============================================================ */
-@media (max-width:600px) {
-  /* Use dynamic viewport height so mobile browser chrome doesn't clip */
-  .cinematic-sticky { height:100svh; height:100dvh; }
-  #easter-egg { min-height:100svh; min-height:100dvh; }
-
+@media (max-width:1000px) {
   /* NAV → hamburger */
   nav { padding:0 18px; height:60px; }
   .nav-logo { font-size:22px; letter-spacing:3px; }
@@ -1375,6 +1373,15 @@ html { scroll-behavior: auto; }
     opacity:0; pointer-events:none; transition:opacity .35s;
   }
   .nav-backdrop.open { opacity:1; pointer-events:all; }
+}
+
+/* ============================================================
+   PHONE / SMALL SCREENS  (<=600px)
+   ============================================================ */
+@media (max-width:600px) {
+  /* Use dynamic viewport height so mobile browser chrome doesn't clip */
+  .cinematic-sticky { height:100svh; height:100dvh; }
+  #easter-egg { min-height:100svh; min-height:100dvh; }
 
   /* SECTION PADDING — tighten everything */
   .collections, .shop, .about, .features-strip,
@@ -1453,7 +1460,7 @@ html { scroll-behavior: auto; }
     <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
     <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
-    <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founder Wall</a>
+    <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founding Backers</a>
     <a href="#shop"        class="nav-cta nav-link-intro" data-section="shop">Shop Now</a>
   </div>
   <div class="nav-actions">
@@ -1575,7 +1582,7 @@ html { scroll-behavior: auto; }
       <div class="proof-stats reveal reveal-delay-3">
         <div class="stat"><div class="stat-num">UV400</div><div class="stat-label">Lens Protection</div></div>
         <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Polarized</div></div>
-        <div class="stat"><div class="stat-num">3</div><div class="stat-label">Styles</div></div>
+        <div class="stat"><div class="stat-num">3</div><div class="stat-label">Frame Styles</div></div>
         <div class="stat"><div class="stat-num">5</div><div class="stat-label">Colorways</div></div>
       </div>
     </div>
@@ -1716,16 +1723,16 @@ html { scroll-behavior: auto; }
   </div>
 </div>
 
-<!-- THE CURRENT COLLECTION -->
+<!-- THE CURRENTS COLLECTION -->
 <section data-pad style="padding:120px 80px;background:var(--cream);">
   <div class="collection-block">
     <div class="collection-intro reveal">
       <div class="collection-hero-img">
-        <img src="current-hero.webp" alt="Paddleboarder wearing The Current floating sunglasses by BOYNT" loading="lazy" decoding="async"/>
+        <img src="current-hero.webp" alt="Paddleboarder wearing The Currents floating sunglasses by BOYNT" loading="lazy" decoding="async"/>
       </div>
       <div class="collection-info">
         <p class="collection-tagline">Style 03</p>
-        <h3 class="collection-name">THE CURRENT</h3>
+        <h3 class="collection-name">THE CURRENTS</h3>
         <p class="collection-desc">High-performance wraparound frames for serious water sport athletes. Maximum coverage, zero compromise on style. Built for anglers, kayakers, and paddleboarders who demand the most.</p>
         <p class="collection-price-range">Starting at <strong>$35</strong> · Available in 3 colors</p>
         <div class="color-swatches">
@@ -1733,33 +1740,33 @@ html { scroll-behavior: auto; }
           <div class="swatch" style="background:#1a3f7a;background:linear-gradient(135deg,#1a3f7a,#1a6bcc)"><span class="swatch-tooltip">Deep Ocean Blue</span></div>
           <div class="swatch" style="background:#c9a96e"><span class="swatch-tooltip">Driftwood Sand</span></div>
         </div>
-        <a href="#shop" class="btn-primary" data-open-panel="current">Shop The Current</a>
+        <a href="#shop" class="btn-primary" data-open-panel="current">Shop The Currents</a>
       </div>
     </div>
     <div class="product-grid">
       <div class="product-card reveal" data-product="current" data-color="0">
         <div class="product-badge">Floats</div>
-        <div class="product-card-img"><img src="current-matte-black.webp" alt="The Current in Matte Black — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
+        <div class="product-card-img"><img src="current-matte-black.webp" alt="The Currents in Matte Black — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
         <div class="product-card-info">
-          <div class="product-card-name">The Current</div>
+          <div class="product-card-name">The Currents</div>
           <div class="product-card-color">Matte Black</div>
           <div class="product-card-price">$35</div>
         </div>
       </div>
       <div class="product-card reveal reveal-delay-1" data-product="current" data-color="1">
         <div class="product-badge">Floats</div>
-        <div class="product-card-img"><img src="current-ocean-blue.webp" alt="The Current in Deep Ocean Blue — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
+        <div class="product-card-img"><img src="current-ocean-blue.webp" alt="The Currents in Deep Ocean Blue — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
         <div class="product-card-info">
-          <div class="product-card-name">The Current</div>
+          <div class="product-card-name">The Currents</div>
           <div class="product-card-color">Deep Ocean Blue</div>
           <div class="product-card-price">$38</div>
         </div>
       </div>
       <div class="product-card reveal reveal-delay-2" data-product="current" data-color="2">
         <div class="product-badge">Floats</div>
-        <div class="product-card-img"><img src="current-driftwood.webp" alt="The Current in Driftwood Sand — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
+        <div class="product-card-img"><img src="current-driftwood.webp" alt="The Currents in Driftwood Sand — polarized floating sunglasses" loading="lazy" decoding="async"/></div>
         <div class="product-card-info">
-          <div class="product-card-name">The Current</div>
+          <div class="product-card-name">The Currents</div>
           <div class="product-card-color">Driftwood Sand</div>
           <div class="product-card-price">$40</div>
         </div>
@@ -1843,9 +1850,9 @@ html { scroll-behavior: auto; }
     <div class="product-card reveal reveal-delay-3" data-product="drifters" data-color="0"><div class="product-badge">Floats</div><div class="product-card-img"><img src="drifters-matte-black.webp" alt="The Drifters in Matte Black — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Drifters</div><div class="product-card-color">Matte Black</div><div class="product-card-price">$30</div></div></div>
     <div class="product-card reveal" data-product="drifters" data-color="1"><div class="product-badge">Floats</div><div class="product-card-img"><img src="drifters-seafoam.webp" alt="The Drifters in Seafoam — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Drifters</div><div class="product-card-color">Seafoam</div><div class="product-card-price">$32</div></div></div>
     <div class="product-card reveal reveal-delay-1" data-product="drifters" data-color="2"><div class="product-badge">Floats</div><div class="product-card-img"><img src="drifters-storm-grey.webp" alt="The Drifters in Storm Grey — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Drifters</div><div class="product-card-color">Storm Grey</div><div class="product-card-price">$35</div></div></div>
-    <div class="product-card reveal reveal-delay-2" data-product="current" data-color="0"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-matte-black.webp" alt="The Current in Matte Black — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Current</div><div class="product-card-color">Matte Black</div><div class="product-card-price">$35</div></div></div>
-    <div class="product-card reveal reveal-delay-3" data-product="current" data-color="1"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-ocean-blue.webp" alt="The Current in Deep Ocean Blue — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Current</div><div class="product-card-color">Deep Ocean Blue</div><div class="product-card-price">$38</div></div></div>
-    <div class="product-card reveal" data-product="current" data-color="2"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-driftwood.webp" alt="The Current in Driftwood Sand — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Current</div><div class="product-card-color">Driftwood Sand</div><div class="product-card-price">$40</div></div></div>
+    <div class="product-card reveal reveal-delay-2" data-product="current" data-color="0"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-matte-black.webp" alt="The Currents in Matte Black — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Currents</div><div class="product-card-color">Matte Black</div><div class="product-card-price">$35</div></div></div>
+    <div class="product-card reveal reveal-delay-3" data-product="current" data-color="1"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-ocean-blue.webp" alt="The Currents in Deep Ocean Blue — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Currents</div><div class="product-card-color">Deep Ocean Blue</div><div class="product-card-price">$38</div></div></div>
+    <div class="product-card reveal" data-product="current" data-color="2"><div class="product-badge">Floats</div><div class="product-card-img"><img src="current-driftwood.webp" alt="The Currents in Driftwood Sand — polarized floating sunglasses" loading="lazy" decoding="async"/></div><div class="product-card-info"><div class="product-card-name">The Currents</div><div class="product-card-color">Driftwood Sand</div><div class="product-card-price">$40</div></div></div>
   </div>
 </section>
 
@@ -1861,7 +1868,7 @@ html { scroll-behavior: auto; }
       <ul class="footer-links">
         <li><a href="#collections">The Classics — $25–$35</a></li>
         <li><a href="#collections">The Drifters — $30–$35</a></li>
-        <li><a href="#collections">The Current — $35–$40</a></li>
+        <li><a href="#collections">The Currents — $35–$40</a></li>
         <li><a href="#shop">Shop All</a></li>
       </ul>
     </div>
@@ -1871,7 +1878,7 @@ html { scroll-behavior: auto; }
       <div class="footer-contact-item">📞 <a href="tel:4437872943" style="color:rgba(255,255,255,.6);text-decoration:none;">(443) 787-2943</a></div>
       <div class="footer-contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg> <a href="https://instagram.com/boynt_llc" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);text-decoration:none;">@boynt_llc</a></div>
       <div class="footer-contact-item">🚀 <a href="#kickstarter" onclick="openKickstarter(event)" style="color:#05ce78;text-decoration:none;">Back us on Kickstarter</a></div>
-      <div class="footer-contact-item">👑 <a href="#founders" onclick="openFounderWall(event)" style="color:#f5c04a;text-decoration:none;">The Founders Wall</a></div>
+      <div class="footer-contact-item">👑 <a href="#founders" onclick="openFounderWall(event)" style="color:#f5c04a;text-decoration:none;">The Founding Backers Wall</a></div>
       <div class="footer-contact-item" style="margin-top:20px;color:rgba(255,255,255,.4);font-size:12px;">BOYNT · Est. 2026 · USA</div>
     </div>
   </div>
@@ -1882,7 +1889,7 @@ html { scroll-behavior: auto; }
 </footer>
 
 <!-- EASTER EGG SECTION -->
-<section id="easter-egg" style="
+<section id="easter-egg" data-pad style="
   background: #000810;
   min-height: 100vh;
   display: flex;
@@ -2076,7 +2083,7 @@ if (eggBubbles) {
         <div class="ks-alt-value">(443) 787-2943</div>
       </a>
     </div>
-    <a class="ks-wall-link" href="#founders" onclick="closeKickstarter(); openFounderWall(event);">👑 Meet our backers — The Founders Wall →</a>
+    <a class="ks-wall-link" href="#founders" onclick="closeKickstarter(); openFounderWall(event);">👑 Meet our backers — The Founding Backers Wall →</a>
 
     <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every pledge, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
     <button class="ks-back" onclick="closeKickstarter()">← Back to the site</button>
@@ -2089,61 +2096,61 @@ if (eggBubbles) {
   <button class="ks-close" onclick="closeFounderWall()" aria-label="Close">✕</button>
   <div class="ks-inner">
     <p class="ks-eyebrow" style="color:#f5c04a;">👑 Our Backers</p>
-    <h2 class="ks-title">THE FOUNDERS<br><em style="color:#f5c04a;">WALL.</em></h2>
+    <h2 class="ks-title">THE FOUNDING BACKERS<br><em style="color:#f5c04a;">WALL.</em></h2>
     <p class="ks-sub">The people who believed first. Every backer earns a permanent spot on this wall, in the order they showed up — and we mean permanent.</p>
 
     <div class="ks-founder legend" onclick="ksCelebrate(event)" title="Click me 🎉">
       <div class="ks-crown">👑</div>
-      <div class="ks-founder-num">Founder #007</div>
+      <div class="ks-founder-num">Founding Backer #007</div>
       <div class="ks-founder-name">Lawrence (Papaw)</div>
       <div class="ks-legend-badge">★ Legendary Backer ★</div>
-      <div class="ks-founder-tier">Founder Delivers</div>
+      <div class="ks-founder-tier">Founding Backer Delivers</div>
     </div>
 
     <div class="ks-wall">
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #001</div>
+        <div class="ks-founder-num">Founding Backer #001</div>
         <div class="ks-founder-name">Tzvi Alexander Lowy</div>
         <div class="ks-founder-tier">First Wave Backer</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #002</div>
+        <div class="ks-founder-num">Founding Backer #002</div>
         <div class="ks-founder-name">Ryne</div>
         <div class="ks-founder-tier">First Wave Backer</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #003</div>
+        <div class="ks-founder-num">Founding Backer #003</div>
         <div class="ks-founder-name">Nicholas Coffey</div>
         <div class="ks-founder-tier">First Wave Backer</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #004</div>
+        <div class="ks-founder-num">Founding Backer #004</div>
         <div class="ks-founder-name">Hanna</div>
         <div class="ks-founder-tier">Wave Maker</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #005</div>
+        <div class="ks-founder-num">Founding Backer #005</div>
         <div class="ks-founder-name">Patrick Rager</div>
         <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #006</div>
+        <div class="ks-founder-num">Founding Backer #006</div>
         <div class="ks-founder-name">Joy Brisson</div>
-        <div class="ks-founder-tier">Founders Edition</div>
+        <div class="ks-founder-tier">Founding Backers Edition</div>
       </div>
       <div class="ks-founder">
-        <div class="ks-founder-num">Founder #008</div>
+        <div class="ks-founder-num">Founding Backer #008</div>
         <div class="ks-founder-name">Adam Carson</div>
         <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
       </div>
       <a class="ks-founder ghost" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">
-        <div class="ks-founder-num">Founder #009</div>
+        <div class="ks-founder-num">Founding Backer #009</div>
         <div class="ks-founder-name">Your Name Here</div>
         <div class="ks-founder-tier">Claim your spot →</div>
       </a>
     </div>
 
-    <p class="ks-thanks">Want your name up here forever? Back the campaign — every founder is added to the wall in the order they arrive. 🌊</p>
+    <p class="ks-thanks">Want your name up here forever? Back the campaign — every Founding Backer is added to the wall in the order they arrive. 🌊</p>
     <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
     <div style="margin-top:26px;">
       <button class="ks-back" onclick="closeFounderWall()">← Back to the site</button>
@@ -2182,8 +2189,12 @@ if (eggBubbles) {
 const cur = document.getElementById('cur');
 const curT = document.getElementById('curT');
 let mx=0, my=0, tx=0, ty=0;
-document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
-(function animT(){ tx+=(mx-tx)*.13; ty+=(my-ty)*.13; curT.style.left=tx+'px'; curT.style.top=ty+'px'; requestAnimationFrame(animT); })();
+// Touch devices: the custom cursor is hidden by CSS — skip its JS too
+const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+if (!isTouchDevice) {
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+  (function animT(){ tx+=(mx-tx)*.13; ty+=(my-ty)*.13; curT.style.left=tx+'px'; curT.style.top=ty+'px'; requestAnimationFrame(animT); })();
+}
 
 // ── PROGRESS + NAV ──────────────────────────────────────────────────────────
 const prog = document.getElementById('prog');
@@ -2515,7 +2526,7 @@ updateIntro();
 function navigateToSection(sectionId) {
   const target = document.getElementById(sectionId);
   if (!target) return;
-  const navH = window.innerWidth <= 600 ? 60 : 68;
+  const navH = window.innerWidth <= 1000 ? 60 : 68;
   const y = target.getBoundingClientRect().top + window.pageYOffset - navH;
   window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
 }
@@ -2571,7 +2582,7 @@ const PRODUCTS = {
     ]
   },
   current: {
-    name: 'The Current',
+    name: 'The Currents',
     desc: 'High-performance wraparound frames for serious water sport athletes.',
     colors: [
       { name: 'Matte Black',     price: 35, swatch: '#2a2a2a', img: 'current-matte-black.webp' },
@@ -2897,14 +2908,14 @@ const BP_COPY = {
   welcome: {
     emoji: '🕶️',
     title: "HEY — GLAD YOU <em>DRIFTED IN.</em>",
-    body: "Take your time and look around — this is a preview of the BOYNT lineup while we get the store ready. If you want to help us launch faster (and grab a pair before everyone else), our Kickstarter is live right now. Every backer gets a permanent spot on our Founders Wall.",
+    body: "Take your time and look around — this is a preview of the BOYNT lineup while we get the store ready. If you want to help us launch faster (and grab a pair before everyone else), our Kickstarter is live right now. Every backer gets a permanent spot on our Founding Backers Wall.",
     cta: '🚀 Check Out the Kickstarter',
     later: 'All good — just looking around →'
   },
   checkout: {
     emoji: '🛟',
     title: "OUR CHECKOUT IS STILL <em>LEARNING TO FLOAT.</em>",
-    body: "We're putting the finishing touches on the store, so you can't order from the site quite yet — your cart will be waiting right here when it opens. Can't wait? Backing us on Kickstarter is the fastest way to get a pair, and it puts your name on the Founders Wall.",
+    body: "We're putting the finishing touches on the store, so you can't order from the site quite yet — your cart will be waiting right here when it opens. Can't wait? Backing us on Kickstarter is the fastest way to get a pair, and it puts your name on the Founding Backers Wall.",
     cta: '🚀 Claim a Pair on Kickstarter',
     later: "No rush — I'll hang onto my cart"
   }
