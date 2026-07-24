@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChessSweeper — Chess × Minesweeper</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#1a1f35; --panel2:#232a48; --ink:#e8ecf8; --muted:#9aa4c8;
+    --light:#e9d7b8; --dark:#7c6b52; --accent:#ffcc4d; --danger:#ff5d5d; --good:#4dd07a;
+    --sel:#4d9bff; --move:#3fb950; --hint:#e3b341;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(160deg,#0b0e1a,#141a30); color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:18px;
+  }
+  h1{margin:4px 0 2px; font-size:26px; letter-spacing:.5px}
+  h1 .a{color:var(--accent)} h1 .b{color:var(--danger)}
+  .sub{color:var(--muted); margin:0 0 14px; font-size:13px}
+  .wrap{display:flex; gap:22px; flex-wrap:wrap; justify-content:center; align-items:flex-start}
+  .boardbox{position:relative}
+  #board{
+    display:grid; grid-template-columns:repeat(8,58px); grid-template-rows:repeat(8,58px);
+    border:5px solid #0a0d18; border-radius:8px; box-shadow:0 12px 40px rgba(0,0,0,.55);
+    touch-action:manipulation;
+  }
+  .sq{position:relative; display:flex; align-items:center; justify-content:center;
+      font-size:40px; cursor:pointer; user-select:none; line-height:1;}
+  .sq.light{background:var(--light)} .sq.dark{background:var(--dark)}
+  .sq .pc{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35)); z-index:3}
+  .sq.wpiece .pc{color:#fbfbff; text-shadow:0 0 2px #000,0 1px 2px #000}
+  .sq.bpiece .pc{color:#20242e; text-shadow:0 0 2px #ffffffaa}
+  .sq.sel{outline:4px solid var(--sel); outline-offset:-4px; z-index:4}
+  .sq.lastmove::after{content:""; position:absolute; inset:0; background:var(--accent); opacity:.22}
+  .sq .dot{position:absolute; width:18px; height:18px; border-radius:50%; background:rgba(63,185,80,.85); z-index:2}
+  .sq.cap .dot{width:100%; height:100%; border-radius:0; background:transparent;
+      box-shadow:inset 0 0 0 5px rgba(63,185,80,.7)}
+  .sq .clue{position:absolute; top:3px; left:5px; font-size:14px; font-weight:800; z-index:2}
+  .sq.dark .clue{color:#fff8e6}
+  .sq .flag{position:absolute; top:2px; right:3px; font-size:16px; z-index:5}
+  .sq.mine-boom{animation:boom .6s ease}
+  .sq .boom{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:42px; z-index:6}
+  @keyframes boom{0%{background:#fff}40%{background:var(--danger)}100%{background:transparent}}
+  .sq.check{box-shadow:inset 0 0 0 4px var(--danger)}
+  .coord{position:absolute; font-size:10px; color:#00000066; font-weight:700}
+  .coord.file{bottom:1px; right:3px} .coord.rank{top:1px; left:3px}
+  .sq.light .coord{color:#0000004d} .sq.dark .coord{color:#ffffff66}
+
+  .panel{background:var(--panel); border:1px solid #2a3355; border-radius:12px; padding:16px; width:280px}
+  .panel h2{margin:0 0 10px; font-size:15px; color:var(--accent); text-transform:uppercase; letter-spacing:1px}
+  .row{margin-bottom:12px}
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:5px}
+  select,button{font-family:inherit; font-size:14px; border-radius:8px; border:1px solid #33406b;
+     background:var(--panel2); color:var(--ink); padding:9px 10px; width:100%; cursor:pointer}
+  select:focus,button:focus{outline:2px solid var(--sel)}
+  button.primary{background:var(--accent); color:#241c00; font-weight:800; border:none}
+  button.primary:hover{filter:brightness(1.08)}
+  .seg{display:flex; gap:6px}
+  .seg button{flex:1; padding:8px 4px; font-size:13px}
+  .seg button.on{background:var(--sel); color:#fff; border-color:var(--sel); font-weight:700}
+  .status{background:var(--panel2); border-radius:8px; padding:11px 12px; font-size:14px; min-height:20px}
+  .status.turnw{border-left:4px solid #fff}
+  .status.turnb{border-left:4px solid #333}
+  .status.win{border-left:4px solid var(--good); color:var(--good); font-weight:700}
+  .status.lose{border-left:4px solid var(--danger); color:var(--danger); font-weight:700}
+  .capbar{display:flex; flex-wrap:wrap; gap:1px; min-height:26px; font-size:20px; background:var(--panel2); border-radius:6px; padding:4px 6px}
+  .legend{font-size:12px; color:var(--muted); line-height:1.55}
+  .legend b{color:var(--ink)}
+  .stat{display:flex; justify-content:space-between; font-size:13px; padding:2px 0}
+  .stat span:last-child{color:var(--accent); font-weight:700}
+  details{font-size:12px; color:var(--muted)} details summary{cursor:pointer; color:var(--accent); margin-bottom:6px}
+  details p{margin:6px 0} details b{color:var(--ink)}
+  .thinking{color:var(--hint); font-style:italic}
+  @media(max-width:640px){
+    #board{grid-template-columns:repeat(8,40px); grid-template-rows:repeat(8,40px)}
+    .sq{font-size:28px} .sq .boom{font-size:30px}
+  }
+</style>
+</head>
+<body>
+  <h1><span class="a">♞ Chess</span><span class="b">Sweeper ♟</span></h1>
+  <p class="sub">Regular chess — but the board is riddled with hidden mines. Step on one and your piece is gone.</p>
+
+  <div class="wrap">
+    <div class="boardbox">
+      <div id="board" aria-label="game board"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Game</h2>
+      <div class="row">
+        <label>Mode</label>
+        <div class="seg" id="modeSeg">
+          <button data-mode="bot" class="on">1 Player (vs Bot)</button>
+          <button data-mode="hot">2 Players</button>
+        </div>
+      </div>
+      <div class="row" id="diffRow">
+        <label>Bot difficulty</label>
+        <div class="seg" id="diffSeg">
+          <button data-diff="easy">Easy</button>
+          <button data-diff="medium" class="on">Medium</button>
+          <button data-diff="hard">Hard</button>
+        </div>
+      </div>
+      <div class="row" id="sideRow">
+        <label>You play as</label>
+        <div class="seg" id="sideSeg">
+          <button data-side="w" class="on">♔ White</button>
+          <button data-side="b">♚ Black</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Mines on board</label>
+        <select id="mineCount">
+          <option value="4">4 — Cautious</option>
+          <option value="7" selected>7 — Standard</option>
+          <option value="10">10 — Dangerous</option>
+          <option value="14">14 — Chaos</option>
+        </select>
+      </div>
+      <div class="row"><button class="primary" id="newBtn">⟳ New Game</button></div>
+
+      <h2>Status</h2>
+      <div class="row"><div class="status turnw" id="status">Press New Game to start.</div></div>
+      <div class="row">
+        <div class="stat"><span>Mines total</span><span id="stMines">–</span></div>
+        <div class="stat"><span>Mines detonated</span><span id="stBoom">0</span></div>
+        <div class="stat"><span>Flags placed</span><span id="stFlags">0</span></div>
+      </div>
+      <div class="row">
+        <label>Captured by White ▸</label>
+        <div class="capbar" id="capW"></div>
+      </div>
+      <div class="row">
+        <label>Captured by Black ▸</label>
+        <div class="capbar" id="capB"></div>
+      </div>
+
+      <details>
+        <summary>How to play</summary>
+        <p><b>Chess rules apply</b> in full: castling, en passant, promotion, check &amp; checkmate.</p>
+        <p><b>Hidden mines</b> are buried on the middle of the board. Move a piece onto a mine and that piece is <b>destroyed</b> (yours or the enemy's).</p>
+        <p><b>Minesweeper clues:</b> when a piece lands safely, the square reveals a number = mines touching it (including diagonals). Use it to read the field.</p>
+        <p><b>Right-click / long-press</b> a square to plant a 🚩 flag on a suspected mine.</p>
+        <p><b>Lose your king to a mine → you lose.</b> Kings are not immune!</p>
+      </details>
+    </div>
+  </div>
+
+<script>
+"use strict";
+/* ===================== ChessSweeper engine ===================== */
+
+const FILES = "abcdefgh";
+const START = [
+  "rnbqkbnr",
+  "pppppppp",
+  "........",
+  "........",
+  "........",
+  "........",
+  "PPPPPPPP",
+  "RNBQKBNR"
+];
+// Internal board: index 0..63, row 0 = rank 8 (black back rank), row 7 = rank 1.
+// Pieces: uppercase = White, lowercase = Black.
+
+const VAL = {p:100,n:320,b:330,r:500,q:900,k:20000};
+const GLYPH = {
+  P:"♙",N:"♘",B:"♗",R:"♖",Q:"♕",K:"♔",
+  p:"♟",n:"♞",b:"♝",r:"♜",q:"♛",k:"♚"
+};
+
+let S = null; // game state
+
+function idx(r,c){return r*8+c;}
+function rc(i){return [i/8|0, i%8];}
+function inB(r,c){return r>=0&&r<8&&c>=0&&c<8;}
+function isW(p){return p!=="."&&p===p.toUpperCase();}
+function isB(p){return p!=="."&&p===p.toLowerCase();}
+function colorOf(p){return p==="."?null:(isW(p)?"w":"b");}
+
+function freshState(opts){
+  const board = [];
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++) board[idx(r,c)] = START[r][c];
+  // place mines only on rows 2..5 (empty middle), never on start squares
+  const mineSquares = [];
+  for(let r=2;r<=5;r++) for(let c=0;c<8;c++) mineSquares.push(idx(r,c));
+  shuffle(mineSquares);
+  const mines = new Set(mineSquares.slice(0, opts.mines));
+  return {
+    board,
+    turn:"w",
+    mines,
+    clues:new Map(),      // square -> adjacent mine count (revealed & cleared)
+    flags:new Set(),
+    booms:0,
+    castling:{wK:true,wQ:true,bK:true,bQ:true},
+    ep:null,              // en-passant target square index
+    last:null,            // {from,to}
+    capturedW:[], capturedB:[],
+    over:false, result:null,
+    mode:opts.mode, diff:opts.diff, human:opts.side,
+    mineTotal:opts.mines
+  };
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}}
+
+function adjMines(state,i){
+  const [r,c]=rc(i); let n=0;
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc)continue;
+    const rr=r+dr,cc=c+dc;
+    if(inB(rr,cc)&&state.mines.has(idx(rr,cc)))n++;
+  }
+  return n;
+}
+
+/* ---------- Move generation ---------- */
+// Move: {from,to,piece,capture,flags:{ep,castle,promo,double}}
+function genPseudo(state,color){
+  const b=state.board, moves=[];
+  const own = color==="w"?isW:isB;
+  const opp = color==="w"?isB:isW;
+  const dir = color==="w"?-1:1;               // white moves up (toward row 0)
+  const startRow = color==="w"?6:1;
+  const promoRow = color==="w"?0:7;
+
+  for(let i=0;i<64;i++){
+    const p=b[i]; if(p==="."||!own(p))continue;
+    const [r,c]=rc(i); const t=p.toLowerCase();
+    if(t==="p"){
+      const one=idx(r+dir,c);
+      if(inB(r+dir,c)&&b[one]==="."){
+        pushPawn(moves,i,one,p,false,r+dir===promoRow);
+        const two=idx(r+2*dir,c);
+        if(r===startRow&&b[two]==="."){
+          moves.push({from:i,to:two,piece:p,capture:false,flags:{double:true}});
+        }
+      }
+      for(const dc of [-1,1]){
+        const rr=r+dir,cc=c+dc;
+        if(!inB(rr,cc))continue;
+        const j=idx(rr,cc);
+        if(opp(b[j])) pushPawn(moves,i,j,p,true,rr===promoRow);
+        else if(state.ep===j) moves.push({from:i,to:j,piece:p,capture:true,flags:{ep:true}});
+      }
+    } else if(t==="n"){
+      for(const[dr,dc]of[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]){
+        const rr=r+dr,cc=c+dc; if(!inB(rr,cc))continue;
+        const j=idx(rr,cc); if(own(b[j]))continue;
+        moves.push({from:i,to:j,piece:p,capture:b[j]!==".",flags:{}});
+      }
+    } else if(t==="k"){
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc)continue; const rr=r+dr,cc=c+dc; if(!inB(rr,cc))continue;
+        const j=idx(rr,cc); if(own(b[j]))continue;
+        moves.push({from:i,to:j,piece:p,capture:b[j]!==".",flags:{}});
+      }
+      // castling
+      addCastling(state,moves,color,i);
+    } else {
+      const dirs = t==="b"?[[-1,-1],[-1,1],[1,-1],[1,1]]
+                 : t==="r"?[[-1,0],[1,0],[0,-1],[0,1]]
+                 : [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]];
+      for(const[dr,dc]of dirs){
+        let rr=r+dr,cc=c+dc;
+        while(inB(rr,cc)){
+          const j=idx(rr,cc);
+          if(b[j]==="."){moves.push({from:i,to:j,piece:p,capture:false,flags:{}});}
+          else{ if(opp(b[j]))moves.push({from:i,to:j,piece:p,capture:true,flags:{}}); break;}
+          rr+=dr;cc+=dc;
+        }
+      }
+    }
+  }
+  return moves;
+}
+function pushPawn(moves,from,to,p,capture,promo){
+  if(promo){
+    for(const pr of ["q","r","b","n"]){
+      const P = p===p.toUpperCase()?pr.toUpperCase():pr;
+      moves.push({from,to,piece:p,capture,flags:{promo:P}});
+    }
+  } else moves.push({from,to,piece:p,capture,flags:{}});
+}
+function addCastling(state,moves,color,ki){
+  const b=state.board;
+  const rights=state.castling;
+  const homeRow = color==="w"?7:1*7; // white king starts idx 60 (row7,col4); black row0
+  const row = color==="w"?7:0;
+  const kExpected = idx(row,4);
+  if(ki!==kExpected)return;
+  if(inCheck(state,color))return;
+  const K = color==="w"?rights.wK:rights.bK;
+  const Q = color==="w"?rights.wQ:rights.bQ;
+  const rShort = idx(row,7), rLong = idx(row,0);
+  const enemy = color==="w"?"b":"w";
+  if(K && b[rShort]===(color==="w"?"R":"r")){
+    if(b[idx(row,5)]==="."&&b[idx(row,6)]==="."&&
+       !attacked(state,idx(row,5),enemy)&&!attacked(state,idx(row,6),enemy)){
+      moves.push({from:ki,to:idx(row,6),piece:b[ki],capture:false,flags:{castle:"K"}});
+    }
+  }
+  if(Q && b[rLong]===(color==="w"?"R":"r")){
+    if(b[idx(row,1)]==="."&&b[idx(row,2)]==="."&&b[idx(row,3)]==="."&&
+       !attacked(state,idx(row,3),enemy)&&!attacked(state,idx(row,2),enemy)){
+      moves.push({from:ki,to:idx(row,2),piece:b[ki],capture:false,flags:{castle:"Q"}});
+    }
+  }
+}
+
+function findKing(state,color){
+  const K=color==="w"?"K":"k";
+  for(let i=0;i<64;i++)if(state.board[i]===K)return i;
+  return -1;
+}
+function inCheck(state,color){
+  const k=findKing(state,color);
+  if(k<0)return false;
+  return attacked(state,k,color==="w"?"b":"w");
+}
+// is square i attacked by `by` color?
+function attacked(state,i,by){
+  const b=state.board; const [r,c]=rc(i);
+  const pd = by==="w"?1:-1; // white pawns attack from below (toward smaller row) => a white pawn on r+1 attacks r
+  for(const dc of[-1,1]){const rr=r+pd,cc=c+dc; if(inB(rr,cc)){const p=b[idx(rr,cc)]; if(p===(by==="w"?"P":"p"))return true;}}
+  for(const[dr,dc]of[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]){
+    const rr=r+dr,cc=c+dc; if(inB(rr,cc)){const p=b[idx(rr,cc)];if(p===(by==="w"?"N":"n"))return true;}
+  }
+  for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){
+    let rr=r+dr,cc=c+dc;
+    while(inB(rr,cc)){const p=b[idx(rr,cc)];if(p!=="."){if((by==="w"&&(p==="R"||p==="Q"))||(by==="b"&&(p==="r"||p==="q")))return true;break;}rr+=dr;cc+=dc;}
+  }
+  for(const[dr,dc]of[[-1,-1],[-1,1],[1,-1],[1,1]]){
+    let rr=r+dr,cc=c+dc;
+    while(inB(rr,cc)){const p=b[idx(rr,cc)];if(p!=="."){if((by==="w"&&(p==="B"||p==="Q"))||(by==="b"&&(p==="b"||p==="q")))return true;break;}rr+=dr;cc+=dc;}
+  }
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;if(inB(rr,cc)){const p=b[idx(rr,cc)];if(p===(by==="w"?"K":"k"))return true;}
+  }
+  return false;
+}
+
+// Apply move to a *copy* for legality/search (no mine logic here — mines resolved separately on real board)
+function applyMove(state,m){
+  const s=cloneLite(state);
+  const b=s.board; const color=colorOf(m.piece);
+  const row = color==="w"?7:0;
+  b[m.from]=".";
+  // en passant capture
+  if(m.flags.ep){
+    const dir=color==="w"?1:-1; // captured pawn is behind target
+    b[idx((m.to/8|0)+dir,m.to%8)]=".";
+  }
+  // place piece / promotion
+  b[m.to]=m.flags.promo?m.flags.promo:m.piece;
+  // castling rook move
+  if(m.flags.castle==="K"){b[idx(row,7)]=".";b[idx(row,5)]=color==="w"?"R":"r";}
+  if(m.flags.castle==="Q"){b[idx(row,0)]=".";b[idx(row,3)]=color==="w"?"R":"r";}
+  // update castling rights
+  updateRights(s,m,color);
+  // ep target
+  s.ep = m.flags.double ? idx((m.from/8|0)+(color==="w"?-1:1), m.from%8) : null;
+  s.turn = color==="w"?"b":"w";
+  return s;
+}
+function updateRights(s,m,color){
+  const r=s.castling;
+  const p=m.piece.toLowerCase();
+  if(p==="k"){ if(color==="w"){r.wK=r.wQ=false;} else {r.bK=r.bQ=false;} }
+  const wR=idx(7,7),wRq=idx(7,0),bR=idx(0,7),bRq=idx(0,0);
+  if(m.from===wR||m.to===wR)r.wK=false;
+  if(m.from===wRq||m.to===wRq)r.wQ=false;
+  if(m.from===bR||m.to===bR)r.bK=false;
+  if(m.from===bRq||m.to===bRq)r.bQ=false;
+}
+function cloneLite(state){
+  return {
+    board:state.board.slice(),
+    turn:state.turn,
+    mines:state.mines,          // shared (read-only during search)
+    clues:state.clues,
+    castling:{...state.castling},
+    ep:state.ep
+  };
+}
+
+function legalMoves(state,color){
+  const out=[];
+  for(const m of genPseudo(state,color)){
+    const s=applyMove(state,m);
+    if(!inCheck(s,color))out.push(m);
+  }
+  return out;
+}
+
+/* ===================== UI / real game ===================== */
+const boardEl=document.getElementById("board");
+const statusEl=document.getElementById("status");
+let sel=null, legalForSel=[], busy=false;
+const opts={mode:"bot",diff:"medium",side:"w",mines:7};
+
+function buildBoardDOM(){
+  boardEl.innerHTML="";
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const d=document.createElement("div");
+    d.className="sq "+(((r+c)%2===0)?"light":"dark");
+    d.dataset.i=idx(r,c);
+    d.addEventListener("click",onClick);
+    d.addEventListener("contextmenu",onFlag);
+    // long-press for touch flagging
+    let t=null;
+    d.addEventListener("touchstart",e=>{t=setTimeout(()=>{onFlag(e);t=null;},450);},{passive:true});
+    d.addEventListener("touchend",()=>{if(t){clearTimeout(t);t=null;}});
+    boardEl.appendChild(d);
+  }
+}
+buildBoardDOM();
+
+function orientRows(){ // if human plays black, flip
+  return S && S.human==="b"
+    ? [7,6,5,4,3,2,1,0]
+    : [0,1,2,3,4,5,6,7];
+}
+function orientCols(){ return S && S.human==="b" ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7]; }
+
+function render(){
+  const cells=boardEl.children;
+  const rows=orientRows(), cols=orientCols();
+  let n=0;
+  const checkColor = S.over?null:(inCheck(S,S.turn)?S.turn:null);
+  const kSq = checkColor?findKing(S,checkColor):-1;
+  for(const r of rows)for(const c of cols){
+    const i=idx(r,c);
+    const cell=cells[n++];
+    const p=S.board[i];
+    cell.className="sq "+(((r+c)%2===0)?"light":"dark");
+    cell.innerHTML="";
+    if(S.last&&(S.last.from===i||S.last.to===i))cell.classList.add("lastmove");
+    if(i===kSq)cell.classList.add("check");
+    if(sel===i)cell.classList.add("sel");
+    // coords
+    if(c===cols[cols.length-1]||true){}
+    if(r===(S.human==="b"?0:7)){const co=document.createElement("span");co.className="coord file";co.textContent=FILES[c];cell.appendChild(co);}
+    if(c===(S.human==="b"?7:0)){const co=document.createElement("span");co.className="coord rank";co.textContent=(8-r);cell.appendChild(co);}
+    // clue number
+    if(S.clues.has(i)){
+      const cl=document.createElement("span");cl.className="clue";
+      const v=S.clues.get(i);
+      cl.textContent=v>0?v:"";
+      cl.style.color=clueColor(v, (r+c)%2===0);
+      cell.appendChild(cl);
+    }
+    // flag
+    if(S.flags.has(i)){const f=document.createElement("span");f.className="flag";f.textContent="🚩";cell.appendChild(f);}
+    // piece
+    if(p!=="."){
+      const pc=document.createElement("span");pc.className="pc";pc.textContent=GLYPH[p];
+      cell.classList.add(isW(p)?"wpiece":"bpiece");
+      cell.appendChild(pc);
+    }
+    // move hints
+    const lm=legalForSel.find(m=>m.to===i);
+    if(lm){
+      cell.classList.add(lm.capture?"cap":"");
+      const dot=document.createElement("span");dot.className="dot";cell.appendChild(dot);
+    }
+  }
+  // panels
+  document.getElementById("stMines").textContent=S.mineTotal;
+  document.getElementById("stBoom").textContent=S.booms;
+  document.getElementById("stFlags").textContent=S.flags.size;
+  renderCaps();
+}
+function clueColor(v,lightSq){
+  const map={1:"#1f6feb",2:"#2e8b3d",3:"#d1242f",4:"#8250df",5:"#bf5b00",6:"#0aa2c0",7:"#333",8:"#777"};
+  return map[v]|| (lightSq?"#333":"#eee");
+}
+function renderCaps(){
+  document.getElementById("capW").innerHTML=S.capturedW.map(p=>GLYPH[p]).join("");
+  document.getElementById("capB").innerHTML=S.capturedB.map(p=>GLYPH[p]).join("");
+}
+
+function setStatus(text,cls){
+  statusEl.textContent=text;
+  statusEl.className="status "+(cls||"");
+}
+
+/* ---------- interaction ---------- */
+function humanTurn(){ return !S.over && (S.mode==="hot" || S.turn===S.human); }
+
+function onClick(e){
+  if(!S||S.over||busy)return;
+  if(!humanTurn())return;
+  const i=+e.currentTarget.dataset.i;
+  const p=S.board[i];
+  if(sel!==null){
+    const mv=legalForSel.find(m=>m.to===i);
+    if(mv){ doHumanMove(mv); return; }
+  }
+  if(p!=="."&&colorOf(p)===S.turn){
+    sel=i;
+    legalForSel=legalMoves(S,S.turn).filter(m=>m.from===i);
+    render();
+  } else { sel=null; legalForSel=[]; render(); }
+}
+
+function onFlag(e){
+  e.preventDefault();
+  if(!S||S.over)return;
+  const i=+e.currentTarget.dataset.i;
+  if(S.flags.has(i))S.flags.delete(i); else S.flags.add(i);
+  render();
+}
+
+async function doHumanMove(m){
+  sel=null; legalForSel=[];
+  await makeMove(m);
+  if(S.over)return;
+  if(S.mode==="bot"&&S.turn!==S.human){
+    await botMove();
+  }
+}
+
+/* ---------- the real move (resolves mines) ---------- */
+async function makeMove(m){
+  const color=colorOf(m.piece);
+  const b=S.board;
+  const row=color==="w"?7:0;
+  const dest=m.to;
+
+  // remove flag on destination
+  S.flags.delete(dest);
+
+  // handle normal capture (record) BEFORE moving
+  let capturedPiece=null;
+  if(m.flags.ep){
+    const dir=color==="w"?1:-1;
+    const capSq=idx((dest/8|0)+dir,dest%8);
+    capturedPiece=b[capSq]; b[capSq]=".";
+  } else if(b[dest]!=="."){
+    capturedPiece=b[dest];
+  }
+  if(capturedPiece) recordCapture(color,capturedPiece);
+
+  // move piece
+  b[m.from]=".";
+  const placed = m.flags.promo?m.flags.promo:m.piece;
+  b[dest]=placed;
+  if(m.flags.castle==="K"){b[idx(row,7)]=".";b[idx(row,5)]=color==="w"?"R":"r";}
+  if(m.flags.castle==="Q"){b[idx(row,0)]=".";b[idx(row,3)]=color==="w"?"R":"r";}
+  updateRights(S,m,color);
+  S.ep = m.flags.double?idx((m.from/8|0)+(color==="w"?-1:1),m.from%8):null;
+  S.last={from:m.from,to:dest};
+
+  // MINE CHECK on destination
+  let kingLost=false;
+  if(S.mines.has(dest)){
+    S.mines.delete(dest);
+    S.booms++;
+    const victim=b[dest];
+    if(victim.toLowerCase()==="k")kingLost=true;
+    b[dest]="."; // piece destroyed
+    S.mineTotalActive=S.mines.size;
+    await boomFX(dest);
+    if(kingLost){
+      S.turn=color==="w"?"b":"w";
+      render();
+      const humanWins = (color!==S.human && S.mode==="bot");
+      finish(`💥 ${color==="w"?"White":"Black"}'s KING stepped on a mine!`,
+             color, /*loserColor*/ color);
+      return;
+    }
+  } else {
+    // safe landing -> reveal clue for this square
+    S.clues.set(dest,adjMines(S,dest));
+  }
+
+  S.turn=color==="w"?"b":"w";
+  render();
+  checkEnd();
+}
+
+function recordCapture(byColor,piece){
+  if(byColor==="w")S.capturedW.push(piece); else S.capturedB.push(piece);
+}
+
+function boomFX(i){
+  return new Promise(res=>{
+    const rows=orientRows(),cols=orientCols();
+    let n=0,target=null;
+    for(const r of rows)for(const c of cols){ if(idx(r,c)===i)target=boardEl.children[n]; n++; }
+    if(!target){res();return;}
+    target.classList.add("mine-boom");
+    const b=document.createElement("span");b.className="boom";b.textContent="💥";
+    target.appendChild(b);
+    setTimeout(()=>{res();},560);
+  });
+}
+
+function checkEnd(){
+  if(S.over)return;
+  const moves=legalMoves(S,S.turn);
+  if(moves.length===0){
+    if(inCheck(S,S.turn)){
+      const winner=S.turn==="w"?"b":"w";
+      finish(`♛ Checkmate! ${winner==="w"?"White":"Black"} wins.`, winner, S.turn);
+    } else {
+      finish("½ Stalemate — draw.", null, null);
+    }
+    return;
+  }
+  // king missing safety (shouldn't happen except via mine handled elsewhere)
+  updateTurnStatus();
+}
+function updateTurnStatus(){
+  const chk=inCheck(S,S.turn)?" — CHECK!":"";
+  const who=S.turn==="w"?"White":"Black";
+  let tag="";
+  if(S.mode==="bot"){ tag = S.turn===S.human?" (your move)":" (bot thinking…)"; }
+  setStatus(`${who} to move${chk}${tag}`, S.turn==="w"?"turnw":"turnb");
+}
+
+function finish(msg,winnerColor,loserColor){
+  S.over=true; S.result=msg; sel=null; legalForSel=[];
+  render();
+  let cls="win";
+  if(S.mode==="bot"){
+    if(winnerColor===null)cls="";
+    else cls = winnerColor===S.human?"win":"lose";
+  }
+  setStatus(msg,cls);
+}
+
+/* ===================== BOT ===================== */
+async function botMove(){
+  busy=true; updateTurnStatus();
+  await sleep(220);
+  const color=S.turn;
+  const moves=legalMoves(S,color);
+  if(moves.length===0){ busy=false; checkEnd(); return; }
+  let choice;
+  if(S.diff==="easy") choice=pickEasy(moves,color);
+  else if(S.diff==="medium") choice=pickMedium(moves,color);
+  else choice=pickHard(moves,color);
+  busy=false;
+  await makeMove(choice);
+}
+
+// Mine-risk estimate from PUBLIC info only (clues + known cleared squares). Bot cannot see real mines.
+function mineRisk(square){
+  // Cleared squares (have a clue) are guaranteed safe.
+  if(S.clues.has(square))return 0;
+  const [r,c]=rc(square);
+  // Only middle rows can hold mines
+  if(r<2||r>5)return 0;
+  // If a neighboring cleared clue says 0, this square is provably safe.
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;
+    if(inB(rr,cc)&&S.clues.has(idx(rr,cc))&&S.clues.get(idx(rr,cc))===0)return 0;
+  }
+  // baseline probability of an unknown middle square holding a mine
+  const unknownMid = countUnknownMid();
+  const minesLeft = S.mines.size;
+  let base = unknownMid>0 ? minesLeft/unknownMid : 0;
+  // bump risk if adjacent to high clues
+  let bump=0,seen=0;
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;
+    if(inB(rr,cc)&&S.clues.has(idx(rr,cc))){seen++;bump+=S.clues.get(idx(rr,cc));}
+  }
+  if(seen>0)base=Math.min(0.95,base*0.5+ (bump/seen)/8);
+  return base;
+}
+function countUnknownMid(){
+  let n=0;
+  for(let r=2;r<=5;r++)for(let c=0;c<8;c++){const i=idx(r,c);if(!S.clues.has(i))n++;}
+  return n||1;
+}
+
+function pickEasy(moves,color){
+  // prefer captures sometimes, avoid obvious king-onto-known-mine, else random
+  const safeish=moves.filter(m=>!(m.piece.toLowerCase()==="k"&&mineRisk(m.to)>0.5));
+  const pool=safeish.length?safeish:moves;
+  const caps=pool.filter(m=>m.capture);
+  if(caps.length&&Math.random()<0.6)return caps[Math.random()*caps.length|0];
+  return pool[Math.random()*pool.length|0];
+}
+
+function pickMedium(moves,color){
+  let best=-1e9,bestMoves=[];
+  for(const m of moves){
+    const s=applyMove(S,m);
+    let sc=-evaluate(s.board, color==="w"?"b":"w"); // opponent to move; static eval from our side
+    sc=evaluate(s.board,color);
+    if(m.capture)sc+=VAL[(S.board[m.to]||"p").toLowerCase()]*0.9;
+    // mine risk penalty (scaled by piece value)
+    const risk=mineRisk(m.to);
+    sc-=risk*VAL[m.piece.toLowerCase()]*(m.piece.toLowerCase()==="k"?4:1.1);
+    // small randomness
+    sc+=Math.random()*8;
+    if(sc>best){best=sc;bestMoves=[m];}
+    else if(sc===best)bestMoves.push(m);
+  }
+  return bestMoves[Math.random()*bestMoves.length|0];
+}
+
+function pickHard(moves,color){
+  // alpha-beta minimax, depth 3, with mine-risk shaping at root
+  const enemy=color==="w"?"b":"w";
+  orderMoves(moves,color);
+  let best=-1e9, bestMoves=[], alpha=-1e9,beta=1e9;
+  for(const m of moves){
+    const s=applyMove(S,m);
+    let sc=-negamax(s,enemy,color,2,-beta,-alpha);
+    const risk=mineRisk(m.to);
+    sc-=risk*VAL[m.piece.toLowerCase()]*(m.piece.toLowerCase()==="k"?5:1.15);
+    // reward moving onto provably-safe cleared squares slightly (map control)
+    sc+=Math.random()*4;
+    if(sc>best){best=sc;bestMoves=[m];}
+    else if(Math.abs(sc-best)<0.5)bestMoves.push(m);
+    if(sc>alpha)alpha=sc;
+  }
+  return bestMoves[Math.random()*bestMoves.length|0];
+}
+
+function negamax(state,color,rootPov,depth,alpha,beta){
+  if(depth===0) return colorSign(color,rootPov)*evaluate(state.board,rootPov);
+  const moves=legalMoves(state,color);
+  if(moves.length===0){
+    if(inCheck(state,color)) return colorSign(color,rootPov)*(-99999); // side to move is mated => bad for them
+    return 0; // stalemate
+  }
+  orderMoves(moves,color);
+  let best=-1e9;
+  const enemy=color==="w"?"b":"w";
+  for(const m of moves){
+    const s=applyMove(state,m);
+    const sc=-negamax(s,enemy,rootPov,depth-1,-beta,-alpha);
+    if(sc>best)best=sc;
+    if(best>alpha)alpha=best;
+    if(alpha>=beta)break;
+  }
+  return best;
+}
+function colorSign(color,rootPov){return color===rootPov?1:-1;}
+
+function orderMoves(moves,color){
+  moves.sort((a,b)=>scoreMoveOrder(b)-scoreMoveOrder(a));
+}
+function scoreMoveOrder(m){
+  let s=0;
+  if(m.capture)s+=10+VAL[(S.board[m.to]||"p").toLowerCase()]/100;
+  if(m.flags.promo)s+=9;
+  return s;
+}
+
+// Material + piece-square eval from perspective of `pov` color.
+const PST_PAWN=[0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10,
+ 5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5, 5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0];
+const PST_KNIGHT=[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,
+ -30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50];
+const PST_CENTER=[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,
+ -10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20];
+
+function evaluate(b,pov){
+  let score=0;
+  for(let i=0;i<64;i++){
+    const p=b[i]; if(p===".")continue;
+    const t=p.toLowerCase(); const w=isW(p);
+    let v=VAL[t];
+    const pstI = w?i:(63-i);
+    if(t==="p")v+=PST_PAWN[pstI];
+    else if(t==="n")v+=PST_KNIGHT[pstI];
+    else if(t==="b"||t==="q")v+=PST_CENTER[pstI]*0.5;
+    score += w? v : -v;
+  }
+  return pov==="w"?score:-score;
+}
+
+/* ===================== controls ===================== */
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+document.getElementById("modeSeg").addEventListener("click",e=>{
+  const btn=e.target.closest("button"); if(!btn)return;
+  opts.mode=btn.dataset.mode;
+  segSet("modeSeg",btn);
+  document.getElementById("diffRow").style.display = opts.mode==="bot"?"":"none";
+  document.getElementById("sideRow").style.display = opts.mode==="bot"?"":"none";
+});
+document.getElementById("diffSeg").addEventListener("click",e=>{
+  const btn=e.target.closest("button"); if(!btn)return; opts.diff=btn.dataset.diff; segSet("diffSeg",btn);
+});
+document.getElementById("sideSeg").addEventListener("click",e=>{
+  const btn=e.target.closest("button"); if(!btn)return; opts.side=btn.dataset.side; segSet("sideSeg",btn);
+});
+document.getElementById("mineCount").addEventListener("change",e=>{opts.mines=+e.target.value;});
+document.getElementById("newBtn").addEventListener("click",newGame);
+function segSet(id,btn){[...document.getElementById(id).children].forEach(b=>b.classList.remove("on"));btn.classList.add("on");}
+
+async function newGame(){
+  busy=false; sel=null; legalForSel=[];
+  S=freshState(opts);
+  render();
+  updateTurnStatus();
+  // if human is black and vs bot, bot (white) moves first
+  if(S.mode==="bot"&&S.turn!==S.human){ await botMove(); }
+}
+
+// start one automatically
+newGame();
+</script>
+</body>
+</html>
