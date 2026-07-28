@@ -1,7 +1,7 @@
 <style>
   @font-face {
-    font-family: 'Great Vibes';
-    src: url('node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff2') format('woff2');
+    font-family: 'Parisienne';
+    src: url('node_modules/@fontsource/parisienne/files/parisienne-latin-400-normal.woff2') format('woff2');
   }
   @font-face {
     font-family: 'Poppins';
@@ -18,31 +18,51 @@
 </style>
 
 <svg id="logo" viewBox="0 0 1000 900" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <!-- waterline wave -->
+    <path id="w1" d="M 190 452 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0" fill="none"/>
+    <!-- lens masks: white circle with glare streak cut out -->
+    <mask id="lensL">
+      <circle cx="351" cy="347" r="100" fill="#fff"/>
+      <path d="M 280 322 Q 289 270 362 264" stroke="#000" stroke-width="20" stroke-linecap="round" fill="none"/>
+    </mask>
+    <mask id="lensR">
+      <circle cx="632" cy="334" r="96" fill="#fff"/>
+      <path d="M 566 308 Q 576 260 645 255" stroke="#000" stroke-width="19" stroke-linecap="round" fill="none"/>
+    </mask>
+    <!-- keeps the white waterline outside the lenses -->
+    <mask id="waveM">
+      <rect x="0" y="0" width="1000" height="900" fill="#fff"/>
+      <circle cx="351" cy="347" r="100" fill="#000"/>
+      <circle cx="632" cy="334" r="96" fill="#000"/>
+    </mask>
+  </defs>
+
   <!-- ESTD 2026 arched -->
-  <path id="arc" d="M 300 150 Q 500 72 700 150" fill="none"/>
-  <text font-family="Poppins" font-weight="600" font-size="44" letter-spacing="10" fill="#ffffff">
+  <path id="arc" d="M 320 110 Q 500 52 680 110" fill="none"/>
+  <text font-family="Poppins" font-weight="600" font-size="42" letter-spacing="9" fill="#ffffff">
     <textPath href="#arc" startOffset="50%" text-anchor="middle">ESTD 2026</textPath>
   </text>
 
-  <!-- Sunglasses: transparent lenses (shirt shows through), white frames -->
-  <circle cx="368" cy="340" r="108" stroke="#ffffff" stroke-width="11"/>
-  <circle cx="632" cy="340" r="108" stroke="#ffffff" stroke-width="11"/>
-  <!-- bridge -->
-  <path d="M 480 315 Q 500 288 520 315" stroke="#ffffff" stroke-width="11" stroke-linecap="round"/>
+  <!-- waterline outside lenses -->
+  <use href="#w1" stroke="#ffffff" stroke-width="8" stroke-linecap="round" mask="url(#waveM)"/>
 
-  <!-- glare swooshes (white) -->
-  <ellipse cx="332" cy="292" rx="46" ry="13" fill="#ffffff" transform="rotate(-24 332 292)"/>
-  <ellipse cx="596" cy="292" rx="46" ry="13" fill="#ffffff" transform="rotate(-24 596 292)"/>
+  <!-- lenses: solid white with glare + waterline cut out -->
+  <circle cx="351" cy="347" r="100" fill="#ffffff" mask="url(#lensL)"/>
+  <circle cx="632" cy="334" r="96" fill="#ffffff" mask="url(#lensR)"/>
+  <!-- rims -->
+  <circle cx="351" cy="347" r="100" stroke="#ffffff" stroke-width="7"/>
+  <circle cx="632" cy="334" r="96" stroke="#ffffff" stroke-width="7"/>
+  <!-- arched bridge -->
+  <path d="M 442 288 Q 492 233 540 276" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
 
-  <!-- waves -->
-  <path d="M 155 430 Q 176 410 197 430 T 239 430 T 281 430 T 323 430 T 365 430 T 407 430 T 449 430 T 491 430 T 533 430 T 575 430 T 617 430 T 659 430 T 701 430 T 743 430 T 785 430 T 827 430"
-        stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
-  <path d="M 260 478 Q 281 458 302 478 T 344 478 T 386 478 T 428 478 T 470 478 T 512 478 T 554 478 T 596 478 T 638 478 T 680 478 T 722 478"
-        stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
+  <!-- second wave -->
+  <path d="M 290 498 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0 q 30 -28 60 0"
+        stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
 
   <!-- Boynt script -->
-  <text x="500" y="690" font-family="'Great Vibes'" font-size="230" fill="#ffffff" text-anchor="middle">Boynt</text>
+  <text x="490" y="660" font-family="'Parisienne'" font-size="210" fill="#ffffff" text-anchor="middle">Boynt</text>
 
   <!-- Tagline -->
-  <text x="500" y="840" font-family="Poppins" font-weight="500" font-size="52" letter-spacing="7" fill="#ffffff" text-anchor="middle">SUNGLASSES THAT FLOAT</text>
+  <text x="500" y="830" font-family="Poppins" font-weight="500" font-size="55" letter-spacing="5" fill="#ffffff" text-anchor="middle">SUNGLASSES THAT FLOAT</text>
 </svg>
