@@ -18,7 +18,11 @@ Shopify has to exist before the site can be wired up.
 ---
 
 ## Step 1 — Create the Shopify store
-1. Go to <https://shopify.com> and start a store. Take the free trial.
+1. Go to <https://shopify.com> and start a store. The free trial is fine for
+   ALL the setup below.
+   - ⚠️ Know going in: the trial lets you **build** everything, but Shopify
+     won't take real customer orders until you choose a paid plan (**Basic**).
+     You'll do that in Step 6 — usually there's a cheap first-months promo.
 2. Name it **BOYNT**. (Customers won't see the `.myshopify.com` address if you
    do the optional subdomain step at the end.)
 3. "Clothing/apparel" is fine when it asks what you sell. Skip most of the
@@ -40,25 +44,27 @@ Keep the names similar like that — the website pairs them into **one shirt
 card with all 10 color swatches**, so shoppers see a single product.
 
 For each one, enable all the sizes you want to offer. S–2XL is standard.
-2XL and up usually cost you more; that's fine, the site shows correct
+Bigger sizes usually cost you more; that's fine — the site shows correct
 per-size pricing automatically.
 
 ## Step 4 — Publish both products
 Hit **Publish** on each. They land in Shopify with mockup photos, colors, and
 sizes already attached. Confirm in **Shopify → Products** that both arrived.
 
-## Step 5 — Set prices, payments, and shipping
+## Step 5 — Set prices, payments, shipping, tax
 1. **Prices** — Printify shows its cost per item. Roughly double it.
    Reference: ~$12–14 product + ~$4–5 shipping = ~$17–19 landed. Selling at
    $30 nets about $10–11 after Shopify's ~2.9% + 30¢ fee.
-2. **Shopify Payments** (Settings → Payments) — turn it on and enter your bank
-   details. It's Stripe underneath and avoids Shopify's surcharge for outside
-   processors.
+2. **Shopify Payments** (Settings → Payments) — turn it on and enter your
+   details and bank account. It's Stripe underneath and avoids Shopify's
+   surcharge for outside processors.
 3. **Shipping** (Settings → Shipping and delivery) — simplest for a new store:
    price shipping into the product and offer **free shipping** (one flat rate
    of $0). Fewer decisions for the buyer, better conversion, no rate math.
-4. **Printify payment method** — add the card Printify charges to produce each
-   order.
+4. **Taxes** (Settings → Taxes and duties) — make sure US tax collection is on
+   for your home state. Shopify calculates and collects it at checkout for you.
+5. **Printify payment method** — in Printify, add the card they'll charge to
+   produce each order.
 
 ### How the money actually moves
 Two separate transactions. Shopify and Printify never pay each other.
@@ -69,26 +75,55 @@ Two separate transactions. Shopify and Printify never pay each other.
 | Printify charges you | **~$18** on your card (shirt + printing + shipping) |
 | **You keep** | **~$11** |
 
-## Step 6 — Place a test order
-Order one shirt yourself, start to finish. Confirm:
+## Step 6 — Unlock the store (the two go-live switches)
+These two are what make checkout actually work for the public:
+
+1. **Pick the Basic plan** (Settings → Plan). Until a plan is active, Shopify
+   refuses real orders.
+2. **Turn OFF password protection**: **Online Store → Preferences →
+   Password protection** → untick "Restrict access…" → Save.
+   - New stores ship with a password page. Your customers never browse the
+     Shopify store, but the **checkout link counts as part of it** — with the
+     password on, everyone we send to pay hits a password screen instead of
+     a payment screen. One checkbox, easy to miss, looks like a total outage
+     if you don't know about it.
+
+## Step 7 — Place a test order
+Order one shirt yourself on the real checkout, start to finish. Confirm:
 - Payment goes through
 - The order appears in Printify as "in production"
-- Confirmation and tracking emails arrive
+- Confirmation and (later) tracking emails arrive
 
-Worth the ~$20. This is how you catch a problem before a customer does.
+Worth the ~$20. This is how you catch a problem before a customer does —
+and you get a shirt.
 
-## Step 7 — Send me two things
+## Step 8 — Create the site's read-access token (~6 clicks)
+This is how boynt.com is allowed to read your product list. It's Shopify's
+official method for exactly this.
+
+1. Shopify admin → **Settings → Apps and sales channels → Develop apps**
+2. Click **Allow custom app development** if it asks, then **Create an app**
+3. Name it `BOYNT Site` → **Create app**
+4. **Configuration → Storefront API integration → Configure** → check the
+   product-related boxes (anything like "unauthenticated_read_product_listings")
+   → **Save**
+5. **Install app** (top right)
+6. Under **API credentials**, copy the **Storefront API access token**
+
+✅ **This token is safe to send me in chat.** It's the *public* kind, designed
+to be embedded in websites — it can only read your public product list.
+(Totally different from the Stripe secret key, which stays off the record.)
+
+## Step 9 — Send me three things
 1. **Your store address** — e.g. `boynt-shop.myshopify.com`
-2. **Confirmation both shirt products are published and visible**
+2. **The Storefront API access token** from Step 8
+3. **Confirmation both shirt products are published**
 
-That's all. No variant IDs, no photos, no JSON — the site reads it from
-Shopify directly.
+Then I'll send back one updated `index.html` with the Merch section (live
+from Shopify), the shirt cart, the checkout handoff, and the sunglasses
+switched to "Coming Soon — Funding on Kickstarter."
 
-Then I'll send back one updated `index.html` with the Merch section, the
-shirt cart, the Shopify checkout handoff, and the sunglasses switched to
-"Coming Soon — Funding on Kickstarter."
-
-## Step 8 — (Optional, recommended) Checkout on your own domain
+## Step 10 — (Optional, recommended) Checkout on your own domain
 So the checkout page reads `shop.boynt.com` instead of `myshopify.com`:
 1. Shopify: **Settings → Domains → Connect existing domain** → `shop.boynt.com`
 2. Shopify gives you a CNAME record.
@@ -97,7 +132,7 @@ So the checkout page reads `shop.boynt.com` instead of `myshopify.com`:
 4. Wait for it to verify (usually minutes).
 
 `boynt.com` is untouched and stays on Hostinger. Only the `shop.` subdomain
-points at Shopify. If you do this, send me `shop.boynt.com` in Step 7 instead.
+points at Shopify. If you do this, tell me in Step 9 so I use it.
 
 ---
 
@@ -116,8 +151,3 @@ fulfilled through Kickstarter, not a website product.
 **The Stripe file** (`create-checkout-session.php`) goes dormant. Leave it on
 Hostinger; it's harmless and ready if you ever want to sell sunglasses
 directly from the site after the Kickstarter delivers.
-
-**One thing I need to verify** once your store exists: that Shopify lets
-boynt.com read product data across domains. I'm confident it does — it's a
-standard setup — but if it needs an extra step, it's a token you generate in
-Shopify settings in about two minutes.
