@@ -1313,13 +1313,88 @@ html { scroll-behavior: auto; }
 /* ============================================================
    MERCH — live from the Shopify store
    ============================================================ */
-.merch-status { text-align:center; color:var(--mist); font-weight:300; font-size:15px; padding:20px 0 50px; }
+.merch { background:var(--ink); color:var(--white); }
+.merch .section-label { color:var(--ocean-light); }
+.merch .section-title { color:var(--white); }
+.merch .section-sub { color:rgba(255,255,255,.55); }
+.merch-status { text-align:center; color:rgba(255,255,255,.5); font-weight:300; font-size:15px; padding:10px 0 40px; }
+
+.merch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:24px; }
+
+.m-card {
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
+  border-radius:6px; overflow:hidden; cursor:pointer;
+  transition:transform .3s cubic-bezier(.2,.8,.3,1), border-color .3s, box-shadow .3s;
+}
+.m-card:hover {
+  transform:translateY(-6px); border-color:rgba(109,212,236,.45);
+  box-shadow:0 22px 50px rgba(0,0,0,.45);
+}
+.m-card-media { position:relative; aspect-ratio:1/1; background:var(--white); overflow:hidden; }
+.m-card-media img {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:contain; padding:16px; transition:opacity .45s ease, transform .6s ease;
+}
+.m-front { opacity:1; }
+.m-back  { opacity:0; }
+.m-card:hover .m-front { opacity:0; }
+.m-card:hover .m-back  { opacity:1; transform:scale(1.03); }
+.m-card:hover .m-card-media img:only-child { transform:scale(1.04); opacity:1; }
+
+.m-badge, .m-badge2 {
+  position:absolute; top:12px; font-family:'Barlow Condensed',sans-serif;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:5px 10px; border-radius:2px; z-index:2;
+}
+.m-badge  { left:12px; background:#05ce78; color:#04140b; font-weight:600; }
+.m-badge2 { right:12px; background:var(--ink); color:var(--white); }
+.m-flip {
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--mist); opacity:.75; z-index:2; white-space:nowrap;
+}
+.m-card:hover .m-flip { opacity:0; }
+
+.m-card-body { padding:18px 20px 20px; }
+.m-card-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.m-card-name {
+  font-family:'Barlow Condensed',sans-serif; font-size:17px; letter-spacing:1.5px;
+  text-transform:uppercase; font-weight:500; color:var(--white); line-height:1.2;
+}
+.m-card-price { font-family:'Bebas Neue',sans-serif; font-size:23px; letter-spacing:1px; color:var(--ocean-light); flex-shrink:0; }
+.m-dots { display:flex; align-items:center; gap:6px; margin:12px 0 8px; flex-wrap:wrap; }
+.m-dot { width:15px; height:15px; border-radius:50%; border:1.5px solid rgba(255,255,255,.35); display:inline-block; }
+.m-dot-more { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:rgba(255,255,255,.5); letter-spacing:1px; }
+.m-card-meta { font-size:12px; font-weight:300; color:rgba(255,255,255,.45); letter-spacing:.3px; }
+
+/* panel: gallery + pickers */
+#mpView {
+  position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:3px;
+  text-transform:uppercase; color:var(--mist);
+}
+.m-thumbs { display:flex; gap:8px; padding:12px 32px 0; flex-wrap:wrap; }
+.m-thumb {
+  width:58px; padding:0; background:var(--white); cursor:pointer;
+  border:1.5px solid var(--cream); border-radius:4px; overflow:hidden;
+  transition:border-color .2s; position:relative;
+}
+.m-thumb img { width:100%; height:52px; object-fit:contain; padding:4px; display:block; }
+.m-thumb span {
+  display:block; font-family:'Barlow Condensed',sans-serif; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--mist);
+  padding:2px 0 3px; background:var(--cream);
+}
+.m-thumb.on { border-color:var(--ocean); }
+
 .m-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
 .m-chip {
+  display:inline-flex; align-items:center; gap:7px;
   font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:1px; text-transform:uppercase;
-  padding:8px 14px; border:1.5px solid var(--cream); background:none; border-radius:20px;
+  padding:7px 13px; border:1.5px solid var(--cream); background:none; border-radius:20px;
   cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s;
 }
+.m-chip-dot { width:13px; height:13px; border-radius:50%; border:1px solid rgba(0,0,0,.18); flex-shrink:0; }
 .m-chip:hover { border-color:var(--sand); }
 .m-chip.on { border-color:var(--ocean); background:rgba(26,107,138,.08); color:var(--ocean); font-weight:600; }
 .m-sizes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
@@ -1345,6 +1420,16 @@ html { scroll-behavior: auto; }
 
 /* extra nav link needs a little more room on smaller desktops */
 @media (max-width:1480px) { .nav-links { gap:24px; } }
+@media (max-width:600px) {
+  .merch-grid { grid-template-columns:1fr 1fr; gap:12px; }
+  .m-card-body { padding:12px 12px 14px; }
+  .m-card-name { font-size:14px; letter-spacing:1px; }
+  .m-card-price { font-size:19px; }
+  .m-card-meta { font-size:11px; }
+  .m-flip { display:none; }
+  .m-thumbs { padding:12px 20px 0; }
+}
+@media (max-width:380px) { .merch-grid { grid-template-columns:1fr; } }
 
 /* ============================================================
    REDUCED MOTION — respect the OS "reduce motion" setting
@@ -1493,8 +1578,8 @@ html { scroll-behavior: auto; }
   <div class="nav-links" id="navLinks">
     <a href="#collections" class="nav-link-intro" data-section="collections">Collections</a>
     <a href="#about"       class="nav-link-intro" data-section="about">Our Story</a>
-    <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#merch"       class="nav-link-intro" data-section="merch">Merch</a>
+    <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
     <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
     <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founding Backers</a>
@@ -1874,6 +1959,52 @@ html { scroll-behavior: auto; }
   </div>
 </section>
 
+<!-- MERCH SECTION -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
+    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
+    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
+    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
+    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
+    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
+  </div>
+</div>
+
+<section class="merch" id="merch" data-pad style="padding:120px 80px;">
+  <div class="section-header">
+    <p class="section-label reveal">Merch — Available Now</p>
+    <h2 class="section-title reveal reveal-delay-1">WEAR THE BRAND</h2>
+    <p class="section-sub reveal reveal-delay-2">Tees and caps, printed when you order and shipped straight to your door. The sunglasses are still funding — this you can grab today.</p>
+  </div>
+  <div class="merch-status" id="merchStatus">Loading the collection…</div>
+  <div class="merch-grid" id="merchGrid"></div>
+</section>
+
+<!-- MERCH PANEL (slide-in, mirrors the sunglasses panel) -->
+<div class="product-panel" id="merchPanel">
+  <button class="panel-close" onclick="closeMerchPanel()" aria-label="Close">✕</button>
+  <div class="panel-img-wrap">
+    <div class="panel-float-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>
+    <img id="mpImg" src="" alt="BOYNT merch">
+    <span id="mpView"></span>
+  </div>
+  <div class="m-thumbs" id="mpThumbs"></div>
+  <div class="panel-body">
+    <p class="panel-style-name">BOYNT Merch</p>
+    <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
+    <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:20px;"></div>
+    <div class="panel-divider"></div>
+    <div class="panel-swatch-label">Color</div>
+    <div class="m-chips" id="mpColorChips"></div>
+    <div class="panel-swatch-label">Size</div>
+    <div class="m-sizes" id="mpSizes"></div>
+    <button class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
+    <p class="panel-shipping">Printed on demand &middot; ships in a few days 🚚</p>
+  </div>
+</div>
+<!-- /MERCH SECTION -->
+
 <!-- SHOP ALL -->
 <section class="shop" id="shop">
   <div class="section-header">
@@ -1894,39 +2025,6 @@ html { scroll-behavior: auto; }
   </div>
 </section>
 
-<!-- MERCH SECTION -->
-<section class="merch" id="merch" data-pad style="padding:120px 80px;background:var(--cream);">
-  <div class="section-header">
-    <p class="section-label">Merch</p>
-    <h2 class="section-title">WEAR THE BRAND</h2>
-    <p class="section-sub">Shirts and caps, printed when you order and shipped straight to your door — available now.</p>
-  </div>
-  <div class="merch-status" id="merchStatus">Loading the collection…</div>
-  <div class="product-grid" id="merchGrid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));"></div>
-</section>
-
-<!-- MERCH PANEL (slide-in, mirrors the sunglasses panel) -->
-<div class="product-panel" id="merchPanel">
-  <button class="panel-close" onclick="closeMerchPanel()" aria-label="Close">✕</button>
-  <div class="panel-img-wrap">
-    <div class="panel-float-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>
-    <img id="mpImg" src="" alt="BOYNT merch">
-  </div>
-  <div class="panel-body">
-    <p class="panel-style-name">BOYNT Merch</p>
-    <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
-    <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:20px;"></div>
-    <div class="panel-divider"></div>
-    <div class="panel-swatch-label">Color</div>
-    <div class="m-chips" id="mpColorChips"></div>
-    <div class="panel-swatch-label">Size</div>
-    <div class="m-sizes" id="mpSizes"></div>
-    <button class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
-    <p class="panel-shipping">Printed on demand &middot; ships in a few days 🚚</p>
-  </div>
-</div>
-<!-- /MERCH SECTION -->
-
 <!-- FOOTER -->
 <footer id="contact">
   <div class="footer-top">
@@ -1940,8 +2038,8 @@ html { scroll-behavior: auto; }
         <li><a href="#collections">The Classics — $25–$35</a></li>
         <li><a href="#collections">The Drifters — $30–$35</a></li>
         <li><a href="#collections">The Currents — $35–$40</a></li>
-        <li><a href="#shop">Shop All</a></li>
         <li><a href="#merch">Merch — Ships Now</a></li>
+        <li><a href="#shop">Shop All Sunglasses</a></li>
       </ul>
     </div>
     <div>
@@ -3064,7 +3162,7 @@ function merchLog(msg) {
   console.log('[merch]', msg);
   if (new URLSearchParams(location.search).has('shopdebug')) {
     const s = document.getElementById('merchStatus');
-    if (s) { s.hidden = false; s.textContent = 'DEBUG: ' + msg; }
+    if (s) { s.hidden = false; s.style.whiteSpace = 'pre-wrap'; s.style.textAlign = 'left'; s.textContent += '\n' + msg; }
   }
 }
 
@@ -3085,9 +3183,31 @@ async function shopQuery(query) {
 
 const MERCH_QUERY = '{ products(first: 50, sortKey: CREATED_AT) { edges { node { '
   + 'title featuredImage { url } '
+  + 'images(first: 100) { edges { node { url altText } } } '
   + 'variants(first: 100) { edges { node { '
-  + 'id availableForSale price { amount } selectedOptions { name value } image { url } '
+  + 'id availableForSale price { amount } selectedOptions { name value } image { url altText } '
   + '} } } } } } }';
+
+// Common garment colour names → a swatch dot. Anything unknown falls back to sand.
+const COLOR_HEX = {
+  'black':'#1c1c1c','matte black':'#2a2a2a','vintage black':'#2b2b2b','dark grey heather':'#3f3f3f',
+  'charcoal':'#40444a','asphalt':'#4a4f55','storm':'#6b7f85','storm grey':'#8a9499','athletic heather':'#c8c9c7',
+  'heather grey':'#b7b9ba','grey':'#9aa0a3','gray':'#9aa0a3','ash':'#d6d6ce','white':'#f6f4ef','natural':'#efe7d6',
+  'ivory':'#f2ead9','bone':'#e8e0d0','sand':'#d9c5a0','sand dune':'#cbb894','driftwood sand':'#c9a96e','khaki':'#c3b091',
+  'tan':'#cdab7e','yam':'#b96a2e','burnt orange':'#b5521e','terracotta':'#b1573b','brick':'#9c4a3c','rust':'#a4553a',
+  'navy':'#1f2a44','true navy':'#1d2b4f','midnight':'#131a2b','ocean blue':'#1a4f8a','deep ocean blue':'#1a3f7a',
+  'blue jean':'#5c7ea3','light blue':'#a8c8e0','chambray':'#8fa9c4','denim':'#4a6b8a','royal':'#2f4fa3',
+  'seafoam':'#7bbfb0','mint':'#a9d8c8','sage':'#9caf88','moss':'#6f7a52','forest':'#22402f','green':'#3f6b4a',
+  'maroon':'#5f1f2b','cardinal':'#8c2233','red':'#b4262f','crimson':'#a01f2d','berry':'#7b3350',
+  'mustard':'#d2a03c','butter':'#f0dfa0','yellow':'#e8c547','lavender':'#b9a6cf','purple':'#5b4b8a',
+  'pink':'#e5a5b5','blossom':'#f0c5cc','watermelon':'#e0625f','brown':'#5b4636','espresso':'#3b2b23'
+};
+function colorDot(name) {
+  const k = String(name || '').toLowerCase().trim();
+  if (COLOR_HEX[k]) return COLOR_HEX[k];
+  for (const key in COLOR_HEX) if (k.indexOf(key) !== -1) return COLOR_HEX[key];
+  return '#c9b99a';
+}
 
 let MERCH = [];
 let merchSel = null;
@@ -3098,22 +3218,55 @@ function merchDisplayTitle(t) {
   return t.split('|')[0].replace(/\s*(light|dark)\s*text\s*$/i, '').trim();
 }
 
+function viewLabel(alt) {
+  const a = String(alt || '').toLowerCase();
+  if (a.indexOf('back') !== -1) return 'Back';
+  if (a.indexOf('front') !== -1) return 'Front';
+  if (a.indexOf('side') !== -1) return 'Side';
+  if (a.indexOf('detail') !== -1 || a.indexOf('close') !== -1) return 'Detail';
+  return '';
+}
+
 function groupMerch(products) {
   const cards = {};
   for (const p of products) {
     const disp = merchDisplayTitle(p.title);
     const key = disp.toLowerCase();
-    if (!cards[key]) cards[key] = { title: disp, colors: {}, image: p.featuredImage && p.featuredImage.url, min: Infinity };
+    if (!cards[key]) cards[key] = { title: disp, colors: {}, image: p.featuredImage && p.featuredImage.url, min: Infinity, hasBack: false };
     const card = cards[key];
+
+    const allImgs = p.images.edges.map(e => ({ url: e.node.url, alt: e.node.altText || '' }));
+    if (new URLSearchParams(location.search).has('shopdebug')) {
+      merchLog(p.title + ' → ' + allImgs.length + ' imgs; alts: ' + allImgs.slice(0, 6).map(i => i.alt || '(none)').join(' | '));
+    }
+
     for (const ve of p.variants.edges) {
       const v = ve.node;
       const opts = {};
       v.selectedOptions.forEach(o => { opts[o.name.toLowerCase()] = o.value; });
       const color = opts.color || opts.colors || 'Classic';
       const size = opts.size || 'One Size';
-      if (!card.colors[color]) card.colors[color] = { image: null, sizes: {} };
+      if (!card.colors[color]) card.colors[color] = { image: null, gallery: [], sizes: {} };
       const c = card.colors[color];
-      if (!c.image && v.image) c.image = v.image.url;
+      if (!c.image && v.image) {
+        c.image = v.image.url;
+        // Build this colour's gallery: its own mockup first, then any other
+        // product image whose alt text names the same colour (front/back/side).
+        const cl = color.toLowerCase();
+        const seen = { };
+        const push = (im) => {
+          if (!im || !im.url || seen[im.url]) return;
+          seen[im.url] = 1;
+          c.gallery.push({ url: im.url, label: viewLabel(im.alt) });
+        };
+        push({ url: v.image.url, alt: v.image.altText || 'front' });
+        allImgs.forEach(im => { if (im.alt && im.alt.toLowerCase().indexOf(cl) !== -1) push(im); });
+        // Fallback: if this colour only matched its own mockup, offer any
+        // image explicitly labelled "back" so the back print is still visible.
+        if (c.gallery.length < 2) allImgs.forEach(im => { if (viewLabel(im.alt) === 'Back') push(im); });
+        c.gallery = c.gallery.slice(0, 6);
+        if (c.gallery.some(g => g.label === 'Back')) card.hasBack = true;
+      }
       c.sizes[size] = { id: v.id.split('/').pop(), price: parseFloat(v.price.amount), ok: v.availableForSale };
       if (v.availableForSale) card.min = Math.min(card.min, parseFloat(v.price.amount));
     }
@@ -3122,6 +3275,7 @@ function groupMerch(products) {
 }
 
 function fmtUsd(n) { return '$' + n.toFixed(2).replace(/\.00$/, ''); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 
 async function loadMerch() {
   const grid = document.getElementById('merchGrid');
@@ -3131,19 +3285,34 @@ async function loadMerch() {
     const data = await shopQuery(MERCH_QUERY);
     MERCH = groupMerch(data.products.edges.map(e => e.node));
     if (!MERCH.length) { status.textContent = 'New merch is on the way — check back soon. 🌊'; return; }
-    status.hidden = true;
+    if (!new URLSearchParams(location.search).has('shopdebug')) status.hidden = true;
     grid.innerHTML = MERCH.map((c, i) => {
       const colors = Object.keys(c.colors);
-      const img = c.image || (colors.length && c.colors[colors[0]].image) || '';
-      return '<div class="product-card" onclick="openMerchPanel(' + i + ')">'
-        + '<div class="product-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>'
-        + '<div class="product-card-img"><img src="' + img + '" alt="' + c.title.replace(/"/g, '&quot;') + '" loading="lazy" decoding="async"></div>'
-        + '<div class="product-card-info">'
-        + '<div class="product-card-name">' + c.title + '</div>'
-        + '<div class="product-card-color">' + (colors.length > 1 ? colors.length + ' colors' : colors[0]) + '</div>'
-        + '<div class="product-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</div>'
+      const first = c.colors[colors[0]];
+      const front = (first && first.image) || c.image || '';
+      // second view for the hover flip — prefer this colour's back shot
+      const backShot = first && first.gallery.filter(g => g.url !== front)[0];
+      const back = backShot ? backShot.url : '';
+      const dots = colors.slice(0, 8).map(col =>
+        '<span class="m-dot" style="background:' + colorDot(col) + '" title="' + esc(col) + '"></span>').join('')
+        + (colors.length > 8 ? '<span class="m-dot-more">+' + (colors.length - 8) + '</span>' : '');
+      return '<div class="m-card reveal" onclick="openMerchPanel(' + i + ')">'
+        + '<div class="m-card-media">'
+        + '<img class="m-front" src="' + front + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">'
+        + (back ? '<img class="m-back" src="' + back + '" alt="' + esc(c.title) + ' back" loading="lazy" decoding="async">' : '')
+        + '<span class="m-badge">Ships Now</span>'
+        + (c.hasBack ? '<span class="m-badge2">Front &amp; Back</span>' : '')
+        + (back ? '<span class="m-flip">Hover to flip ↻</span>' : '')
+        + '</div>'
+        + '<div class="m-card-body">'
+        + '<div class="m-card-top"><span class="m-card-name">' + esc(c.title) + '</span>'
+        + '<span class="m-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</span></div>'
+        + '<div class="m-dots">' + dots + '</div>'
+        + '<div class="m-card-meta">' + (colors.length > 1 ? colors.length + ' colors' : colors[0]) + ' · Printed on demand</div>'
         + '</div></div>';
     }).join('');
+    // dynamically-added cards still need the scroll-reveal observer
+    grid.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     merchLog('loaded ' + MERCH.length + ' cards');
   } catch (err) {
     status.hidden = false;
@@ -3154,7 +3323,7 @@ async function loadMerch() {
 
 function openMerchPanel(idx) {
   const c = MERCH[idx];
-  merchSel = { card: c, color: Object.keys(c.colors)[0], size: null };
+  merchSel = { card: c, color: Object.keys(c.colors)[0], size: null, img: 0 };
   document.getElementById('mpTitle').textContent = c.title;
   renderMerchPanel();
   document.getElementById('panelOverlay').classList.add('open');
@@ -3168,8 +3337,9 @@ function closeMerchPanel() {
   document.getElementById('panelOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
-function pickMerchColor(color) { merchSel.color = color; merchSel.size = null; renderMerchPanel(); }
+function pickMerchColor(color) { merchSel.color = color; merchSel.size = null; merchSel.img = 0; renderMerchPanel(); }
 function pickMerchSize(size) { merchSel.size = size; renderMerchPanel(); }
+function pickMerchImage(i) { merchSel.img = i; renderMerchPanel(); }
 
 function renderMerchPanel() {
   const card = merchSel.card, color = merchSel.color;
@@ -3177,15 +3347,26 @@ function renderMerchPanel() {
   const sizeKeys = Object.keys(cd.sizes);
   if (!merchSel.size && sizeKeys.length === 1 && cd.sizes[sizeKeys[0]].ok) merchSel.size = sizeKeys[0];
   const size = merchSel.size;
-  document.getElementById('mpImg').src = cd.image || card.image || '';
+
+  const gal = cd.gallery && cd.gallery.length ? cd.gallery : [{ url: cd.image || card.image || '', label: '' }];
+  const cur = gal[Math.min(merchSel.img, gal.length - 1)];
+  document.getElementById('mpImg').src = cur.url;
+  document.getElementById('mpView').textContent = cur.label || '';
+  document.getElementById('mpThumbs').innerHTML = gal.length > 1 ? gal.map((g, i) =>
+    '<button class="m-thumb' + (i === merchSel.img ? ' on' : '') + '" onclick="event.stopPropagation();pickMerchImage(' + i + ')">'
+    + '<img src="' + g.url + '" alt="' + esc(g.label || 'view') + '" loading="lazy">'
+    + (g.label ? '<span>' + g.label + '</span>' : '') + '</button>').join('') : '';
+
   document.getElementById('mpColorChips').innerHTML = Object.keys(card.colors).map(function (col) {
-    return '<button class="m-chip' + (col === color ? ' on' : '') + '" onclick="pickMerchColor(&quot;' + col.replace(/"/g, '') + '&quot;)">' + col + '</button>';
+    return '<button class="m-chip' + (col === color ? ' on' : '') + '" onclick="pickMerchColor(&quot;' + esc(col) + '&quot;)">'
+      + '<span class="m-chip-dot" style="background:' + colorDot(col) + '"></span>' + esc(col) + '</button>';
   }).join('');
   document.getElementById('mpSizes').innerHTML = sizeKeys.map(function (s) {
     const v = cd.sizes[s];
     return '<button class="m-size' + (s === size ? ' on' : '') + (v.ok ? '' : ' sold') + '" '
-      + (v.ok ? 'onclick="pickMerchSize(&quot;' + s.replace(/"/g, '') + '&quot;)"' : 'disabled') + '>' + s + '</button>';
+      + (v.ok ? 'onclick="pickMerchSize(&quot;' + esc(s) + '&quot;)"' : 'disabled') + '>' + esc(s) + '</button>';
   }).join('');
+
   const chosen = size ? cd.sizes[size] : null;
   document.getElementById('mpPrice').textContent = chosen ? fmtUsd(chosen.price) : '—';
   const btn = document.getElementById('mpAdd');
