@@ -3215,8 +3215,11 @@ let merchSel = null;
 // "BOYNT Logo T-shirt Light Text" + "... Dark Text" merge into one card.
 // Anything after a "|" in the Shopify title is trimmed for display.
 function merchDisplayTitle(t) {
-  return t.split('|')[0].replace(/\s*(light|dark)\s*text\s*$/i, '').trim();
+  return t.split('|')[0]
+          .replace(/\s*[-–—]?\s*front\s*(&|and)\s*back(\s*print)?\s*$/i, '')
+          .replace(/\s*(light|dark)\s*text\s*$/i, '').trim();
 }
+function titleSaysFrontBack(t) { return /front\s*(&|and)\s*back/i.test(t); }
 
 function viewLabel(alt) {
   const a = String(alt || '').toLowerCase();
@@ -3232,13 +3235,16 @@ function groupMerch(products) {
   for (const p of products) {
     const disp = merchDisplayTitle(p.title);
     const key = disp.toLowerCase();
-    if (!cards[key]) cards[key] = { title: disp, colors: {}, image: p.featuredImage && p.featuredImage.url, min: Infinity, hasBack: false };
+    if (!cards[key]) cards[key] = { title: disp, colors: {}, all: [], image: p.featuredImage && p.featuredImage.url, min: Infinity, hasBack: false };
     const card = cards[key];
+    if (titleSaysFrontBack(p.title)) card.hasBack = true;
 
+    // every mockup Shopify has for this product, de-duplicated
     const allImgs = p.images.edges.map(e => ({ url: e.node.url, alt: e.node.altText || '' }));
-    if (new URLSearchParams(location.search).has('shopdebug')) {
-      merchLog(p.title + ' → ' + allImgs.length + ' imgs; alts: ' + allImgs.slice(0, 6).map(i => i.alt || '(none)').join(' | '));
-    }
+    allImgs.forEach(im => { if (!card.all.some(x => x.url === im.url)) card.all.push(im); });
+    if (allImgs.some(im => viewLabel(im.alt) === 'Back')) card.hasBack = true;
+    merchLog(p.title + ' → ' + allImgs.length + ' images, ' + p.variants.edges.length + ' variants; alt samples: '
+             + JSON.stringify(allImgs.slice(0, 4).map(i => i.alt || null)));
 
     for (const ve of p.variants.edges) {
       const v = ve.node;
@@ -3248,29 +3254,32 @@ function groupMerch(products) {
       const size = opts.size || 'One Size';
       if (!card.colors[color]) card.colors[color] = { image: null, gallery: [], sizes: {} };
       const c = card.colors[color];
-      if (!c.image && v.image) {
-        c.image = v.image.url;
-        // Build this colour's gallery: its own mockup first, then any other
-        // product image whose alt text names the same colour (front/back/side).
-        const cl = color.toLowerCase();
-        const seen = { };
-        const push = (im) => {
-          if (!im || !im.url || seen[im.url]) return;
-          seen[im.url] = 1;
-          c.gallery.push({ url: im.url, label: viewLabel(im.alt) });
-        };
-        push({ url: v.image.url, alt: v.image.altText || 'front' });
-        allImgs.forEach(im => { if (im.alt && im.alt.toLowerCase().indexOf(cl) !== -1) push(im); });
-        // Fallback: if this colour only matched its own mockup, offer any
-        // image explicitly labelled "back" so the back print is still visible.
-        if (c.gallery.length < 2) allImgs.forEach(im => { if (viewLabel(im.alt) === 'Back') push(im); });
-        c.gallery = c.gallery.slice(0, 6);
-        if (c.gallery.some(g => g.label === 'Back')) card.hasBack = true;
-      }
+      if (!c.image && v.image) c.image = v.image.url;
       c.sizes[size] = { id: v.id.split('/').pop(), price: parseFloat(v.price.amount), ok: v.availableForSale };
       if (v.availableForSale) card.min = Math.min(card.min, parseFloat(v.price.amount));
     }
   }
+
+  // Build each colour's gallery. Prefer images whose alt text names the colour;
+  // if alt text is missing (common with Printify), fall back to every mockup on
+  // the product so the back print is still reachable.
+  Object.keys(cards).forEach(function (k) {
+    const card = cards[k];
+    Object.keys(card.colors).forEach(function (color) {
+      const c = card.colors[color];
+      const cl = color.toLowerCase();
+      const g = [];
+      const push = (im) => {
+        if (!im || !im.url || g.some(x => x.url === im.url)) return;
+        g.push({ url: im.url, label: viewLabel(im.alt) });
+      };
+      if (c.image) push({ url: c.image, alt: 'front' });
+      card.all.forEach(im => { if (im.alt && im.alt.toLowerCase().indexOf(cl) !== -1) push(im); });
+      if (g.length < 2) card.all.forEach(push);   // alt text unusable → show them all
+      c.gallery = g.slice(0, 8);
+      if (!c.image && c.gallery.length) c.image = c.gallery[0].url;
+    });
+  });
   return Object.values(cards);
 }
 
@@ -3289,9 +3298,10 @@ async function loadMerch() {
     grid.innerHTML = MERCH.map((c, i) => {
       const colors = Object.keys(c.colors);
       const first = c.colors[colors[0]];
-      const front = (first && first.image) || c.image || '';
-      // second view for the hover flip — prefer this colour's back shot
-      const backShot = first && first.gallery.filter(g => g.url !== front)[0];
+      const front = c.image || (first && first.image) || '';
+      // flip to the next distinct mockup (usually the back print)
+      const pool = (first && first.gallery.length ? first.gallery : c.all.map(im => ({ url: im.url })));
+      const backShot = pool.filter(g => g.url !== front)[0];
       const back = backShot ? backShot.url : '';
       const dots = colors.slice(0, 8).map(col =>
         '<span class="m-dot" style="background:' + colorDot(col) + '" title="' + esc(col) + '"></span>').join('')
