@@ -1365,6 +1365,7 @@ html { scroll-behavior: auto; }
 }
 .m-thumb.on { border-color:var(--ocean); }
 
+#mpColorName { color:var(--ink); font-weight:600; }
 .m-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px; }
 .m-chip {
   width:36px; height:36px; border-radius:50%; cursor:pointer; padding:0;
@@ -1984,7 +1985,7 @@ html { scroll-behavior: auto; }
     <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
     <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:22px;"></div>
     <div class="panel-divider"></div>
-    <div class="panel-swatch-label">Select Color</div>
+    <div class="panel-swatch-label">Select Color — <span id="mpColorName"></span></div>
     <div class="m-chips" id="mpColorChips"></div>
     <div class="panel-swatch-label">Select Size</div>
     <div class="m-sizes" id="mpSizes"></div>
@@ -3226,25 +3227,47 @@ const MERCH_QUERY = '{ products(first: 50, sortKey: CREATED_AT) { edges { node {
   + 'id availableForSale price { amount } selectedOptions { name value } image { url altText } '
   + '} } } } } } }';
 
-// Common garment colour names → a swatch dot. Anything unknown falls back to sand.
+// Garment colour names → swatch dot. Covers the Comfort Colors and
+// Bella+Canvas palettes; unknown names fall back to a neutral and the name is
+// always shown on screen, so a miss is never confusing.
 const COLOR_HEX = {
-  'black':'#1c1c1c','matte black':'#2a2a2a','vintage black':'#2b2b2b','dark grey heather':'#3f3f3f',
-  'charcoal':'#40444a','asphalt':'#4a4f55','storm':'#6b7f85','storm grey':'#8a9499','athletic heather':'#c8c9c7',
-  'heather grey':'#b7b9ba','grey':'#9aa0a3','gray':'#9aa0a3','ash':'#d6d6ce','white':'#f6f4ef','natural':'#efe7d6',
-  'ivory':'#f2ead9','bone':'#e8e0d0','sand':'#d9c5a0','sand dune':'#cbb894','driftwood sand':'#c9a96e','khaki':'#c3b091',
-  'tan':'#cdab7e','yam':'#b96a2e','burnt orange':'#b5521e','terracotta':'#b1573b','brick':'#9c4a3c','rust':'#a4553a',
-  'navy':'#1f2a44','true navy':'#1d2b4f','midnight':'#131a2b','ocean blue':'#1a4f8a','deep ocean blue':'#1a3f7a',
-  'blue jean':'#5c7ea3','light blue':'#a8c8e0','chambray':'#8fa9c4','denim':'#4a6b8a','royal':'#2f4fa3',
-  'seafoam':'#7bbfb0','mint':'#a9d8c8','sage':'#9caf88','moss':'#6f7a52','forest':'#22402f','green':'#3f6b4a',
-  'maroon':'#5f1f2b','cardinal':'#8c2233','red':'#b4262f','crimson':'#a01f2d','berry':'#7b3350',
-  'mustard':'#d2a03c','butter':'#f0dfa0','yellow':'#e8c547','lavender':'#b9a6cf','purple':'#5b4b8a',
-  'pink':'#e5a5b5','blossom':'#f0c5cc','watermelon':'#e0625f','brown':'#5b4636','espresso':'#3b2b23'
+  // neutrals / white
+  'white':'#f7f6f2','vintage white':'#f1ece0','soft cream':'#efe6d4','ivory':'#f2ead9','natural':'#efe7d6',
+  'bone':'#e8e0d0','chalk':'#ece8de','parchment':'#eadfc8','sandstone':'#d8cbb4','sand':'#d9c5a0',
+  'sand dune':'#cbb894','driftwood sand':'#c9a96e','khaki':'#bfa77f','tan':'#cdab7e','toast':'#b08e69',
+  'heather dust':'#ded3c6','oatmeal':'#e0d7c6','putty':'#d5c9b6',
+  // greys / black
+  'ash':'#d6d6ce','athletic heather':'#c8c9c7','heather grey':'#b7b9ba','grey':'#9aa0a3','gray':'#9aa0a3',
+  'granite':'#8d8b86','graphite':'#5b5c5e','dark grey heather':'#3f3f3f','charcoal':'#40444a',
+  'asphalt':'#4a4f55','storm grey':'#8a9499','storm':'#6b7f85','slate':'#6f7379','pepper':'#4a4744',
+  'smoke':'#7c7a75','black':'#1c1c1c','vintage black':'#2b2b2b','matte black':'#2a2a2a',
+  // blues
+  'blue jean':'#7d97b8','denim':'#4a6b8a','china blue':'#5b7fa6','flo blue':'#42638c','dusty blue':'#8aa4bd',
+  'light blue':'#a8c8e0','chambray':'#8fa9c4','steel blue':'#5c7f9e','topaz blue':'#5aa7c4',
+  'lagoon blue':'#3f9fb5','royal caribe':'#2f8fc4','royal':'#2f4fa3','true navy':'#1d2b4f','navy':'#1f2a44',
+  'midnight':'#131a2b','ocean blue':'#1a4f8a','deep ocean blue':'#1a3f7a','bay':'#4d9dbf','sky':'#9dc9e6',
+  // greens
+  'seafoam':'#7bbfb0','chalky mint':'#a9d6c4','mint':'#a9d8c8','island reef':'#79c3ad','light green':'#a9c9a0',
+  'sage':'#9caf88','hemp':'#a39d7e','moss':'#6f7a52','willow':'#8a9a6b','army':'#5c6144',
+  'blue spruce':'#3c5f5a','forest':'#22402f','heather forest':'#3f5545','green':'#3f6b4a',
+  // warm / reds
+  'butter':'#f2e3ab','banana':'#f5e39a','mustard':'#d2a03c','yellow':'#e8c547','citrus':'#e8a33d',
+  'yam':'#c8722f','burnt orange':'#b5521e','terracotta':'#b1573b','brick':'#9c4a3c','rust':'#a4553a',
+  'clay':'#b5643f','maroon':'#5f1f2b','cardinal':'#8c2233','crimson':'#a01f2d','red':'#b4262f',
+  'watermelon':'#e0625f','crunchberry':'#d4527a','berry':'#7b3350','brown':'#5b4636','espresso':'#3b2b23',
+  // pinks / purples
+  'blossom':'#f0c5cc','peony':'#e59fb0','pink':'#e5a5b5','neon pink':'#f04d8a','heather mauve':'#b895a0',
+  'orchid':'#c9a3cf','violet':'#8f74b5','amethyst':'#7d6aa8','grape':'#5b4b8a','lavender':'#b9a6cf','purple':'#5b4b8a'
 };
+// longest names first, so "blue jean" wins over "blue"
+const COLOR_KEYS = Object.keys(COLOR_HEX).sort((a, b) => b.length - a.length);
 function colorDot(name) {
   const k = String(name || '').toLowerCase().trim();
   if (COLOR_HEX[k]) return COLOR_HEX[k];
-  for (const key in COLOR_HEX) if (k.indexOf(key) !== -1) return COLOR_HEX[key];
-  return '#c9b99a';
+  for (let i = 0; i < COLOR_KEYS.length; i++) {
+    if (k.indexOf(COLOR_KEYS[i]) !== -1) return COLOR_HEX[COLOR_KEYS[i]];
+  }
+  return '#b9b3a6';
 }
 
 let MERCH = [];
@@ -3405,6 +3428,8 @@ function renderMerchPanel() {
     + '<img src="' + g.url + '" alt="' + esc(g.label || 'view') + '" loading="lazy">'
     + (g.label ? '<span>' + g.label + '</span>' : '') + '</button>').join('') : '';
 
+  const nameEl = document.getElementById('mpColorName');
+  if (nameEl) nameEl.textContent = color;
   document.getElementById('mpColorChips').innerHTML = Object.keys(card.colors).map(function (col) {
     return '<button class="m-chip' + (col === color ? ' on' : '') + '" title="' + esc(col) + '"'
       + ' style="background:' + colorDot(col) + '" onclick="pickMerchColor(&quot;' + esc(col) + '&quot;)">'
