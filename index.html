@@ -2588,20 +2588,19 @@ function enterSite(sectionId) {
 
   // Spawn transition bubbles
   stBubs.innerHTML = '';
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < 36; i++) {
     const b = document.createElement('div');
     b.className = 'st-bubble';
     const size = 4 + Math.random() * 18;
-    const dur  = 1.0 + Math.random() * 1.4;
-    const delay = Math.random() * 0.8;
-    b.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${5 + Math.random()*90}%;
-      bottom:${-5 + Math.random()*25}%;
-      --drift:${(Math.random()-.5)*80}px;
-      animation-duration:${dur}s;
-      animation-delay:${delay}s;
-    `;
+    const dur  = 1.3 + Math.random() * 1.7;
+    const delay = Math.random() * 1.1;
+    b.style.cssText =
+      'width:' + size + 'px; height:' + size + 'px;' +
+      'left:' + (5 + Math.random()*90) + '%;' +
+      'bottom:' + (-5 + Math.random()*25) + '%;' +
+      '--drift:' + ((Math.random()-.5)*80) + 'px;' +
+      'animation-duration:' + dur + 's;' +
+      'animation-delay:' + delay + 's;';
     stBubs.appendChild(b);
   }
 
@@ -2609,77 +2608,46 @@ function enterSite(sectionId) {
   tr.classList.add('active');
   tr.style.opacity = '1';
 
-  // Smooth layered rise — total ~3.6s
-  const setLayer = (el, opacity, duration, delay=0) => {
-    setTimeout(() => {
-      el.style.transition = `opacity ${duration}ms cubic-bezier(0.4,0,0.2,1)`;
+  // Smooth layered rise (same sequence as before, held a little longer)
+  const setLayer = (el, opacity, duration, delay) => {
+    _introTimers.push(setTimeout(function () {
+      el.style.transition = 'opacity ' + duration + 'ms cubic-bezier(0.4,0,0.2,1)';
       el.style.opacity = opacity;
-    }, delay);
+    }, delay || 0));
   };
+  const T = (fn, ms) => { _introTimers.push(setTimeout(fn, ms)); };
 
-  // Phase 1 (0–500ms): deep navy bleeds in slowly
-  setLayer(stMid,  '1', 600, 0);
+  // Phase 1: deep navy bleeds in
+  setLayer(stMid,  '1', 800, 100);
+  // Phase 2: teal/ocean surface colour
+  setLayer(stSurf, '1', 800, 650);
 
-  // Phase 2 (500–1000ms): teal/ocean surface colour
-  setLayer(stSurf, '1', 600, 480);
-
-  // Ripple at surface break — gentle, slower
-  setTimeout(() => {
+  // Ripple at the surface break
+  T(function () {
     stRip.style.top = '50%';
-    stRip.style.transition = 'opacity 0.4s ease, transform 0.5s ease, top 0.8s ease';
+    stRip.style.transition = 'opacity 0.4s ease, transform 0.5s ease, top 0.9s ease';
     stRip.style.transform = 'scaleX(1)';
     stRip.style.opacity = '1';
-    setTimeout(() => {
-      stRip.style.top = '10%';
-      stRip.style.opacity = '0';
-    }, 500);
-  }, 960);
+    T(function () { stRip.style.top = '10%'; stRip.style.opacity = '0'; }, 600);
+  }, 1150);
 
-  // BOYNT text — slower fade in/out
-  setTimeout(() => {
-    stTxt.style.transition = 'opacity 0.4s ease';
+  // BOYNT — held noticeably longer than the old version
+  T(function () {
+    stTxt.style.transition = 'opacity 0.5s ease';
     stTxt.style.opacity = '1';
-    setTimeout(() => {
-      stTxt.style.transition = 'opacity 0.5s ease';
+    T(function () {
+      stTxt.style.transition = 'opacity 0.6s ease';
       stTxt.style.opacity = '0';
-    }, 500);
-  }, 1000);
+    }, 1250);
+  }, 1200);
 
-  // Phase 3 (1100ms): light sky blue
-  setLayer(stLigh, '1', 650, 1080);
+  // Phase 3: light sky blue
+  setLayer(stLigh, '1', 800, 1450);
+  // Phase 4: pure white — long gentle fade
+  setLayer(stWhit, '1', 850, 2250);
 
-  // Phase 4 (1750ms): pure white — long gentle fade
-  setLayer(stWhit, '1', 700, 1700);
-
-  // Phase 5 (2500ms): swap to main site under white cover
-  setTimeout(() => {
-    intro.style.display = 'none';
-    mainSite.classList.add('visible');
-    // Greet first-time visitors once the water transition has fully cleared
-    setTimeout(() => showBoyntPopup('welcome'), 1500);
-    const target = _pendingSection ? document.getElementById(_pendingSection) : null;
-    if (target) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setTimeout(() => target.scrollIntoView({ behavior: 'instant' }), 20);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-    _pendingSection = null;
-    prog.style.transform = 'scaleX(0)';
-  }, 2500);
-
-  // Phase 6 (2800ms): fade white out slowly
-  setTimeout(() => {
-    tr.style.transition = 'opacity 0.9s cubic-bezier(0.4,0,0.2,1)';
-    tr.style.opacity = '0';
-    setTimeout(() => {
-      tr.classList.remove('active');
-      [stMid,stSurf,stLigh,stWhit].forEach(el => {
-        el.style.transition = 'none';
-        el.style.opacity = '0';
-      });
-    }, 950);
-  }, 2800);
+  // Phase 5: white fully covers → hand over to the site
+  T(function () { finishIntro(false); }, 3100);
 }
 
 // ── MAIN SITE SCROLL ─────────────────────────────────────────────────────────
@@ -2713,8 +2681,8 @@ window.addEventListener('scroll', () => {
   requestAnimationFrame(() => { handleScroll(); scrollTicking = false; });
 }, { passive: true });
 
-// Play the water/BOYNT reveal, then hand over to the site
-runLoadingIntro();
+// The loading intro is kicked off at the end of this script, once
+// everything it depends on has actually been defined.
 
 // Reliable scroll-to-section (works on mobile Safari where scrollIntoView is flaky)
 function navigateToSection(sectionId) {
@@ -3133,113 +3101,86 @@ window.addEventListener('hashchange', () => {
   else { closeKickstarter(); closeFounderWall(); }
 });
 
-// ── LOADING INTRO ─── the water/BOYNT reveal, played once on page load ───────
-let _introTimers = [];
-let _introDone = false;
+// ── LOADING INTRO ─── the original water/BOYNT reveal, played on page load ───
+// NOTE: plain `var` + the call at the bottom of this block on purpose — these
+// must exist before anything touches them, whatever order the file grows in.
+var _introTimers = [];
+var _introDone = false;
 
 function finishIntro(instant) {
   if (_introDone) return;
   _introDone = true;
-  _introTimers.forEach(clearTimeout); _introTimers = [];
+  _introTimers.forEach(clearTimeout);
+  _introTimers = [];
+  document.body.style.overflow = '';        // belt and braces: never leave it locked
   const tr = document.getElementById('siteTransition');
   const skip = document.getElementById('stSkip');
   if (skip) skip.remove();
-  mainSite.classList.add('visible');
-  document.body.style.overflow = '';
-  const done = () => {
+  if (mainSite) mainSite.classList.add('visible');
+  if (!tr) return;
+
+  const cleanup = function () {
     tr.classList.remove('active', 'boot');
-    ['stMid','stSurf','stLight','stWhite'].forEach(id => {
+    tr.style.pointerEvents = 'none';
+    ['stMid','stSurf','stLight','stWhite'].forEach(function (id) {
       const el = document.getElementById(id);
       if (el) { el.style.transition = 'none'; el.style.opacity = '0'; }
     });
+    const t = document.getElementById('stText'); if (t) t.style.opacity = '0';
+    const b = document.getElementById('stBubbles'); if (b) b.innerHTML = '';
   };
-  if (instant) { tr.style.transition = 'none'; tr.style.opacity = '0'; done(); }
-  else {
-    tr.style.transition = 'opacity .9s cubic-bezier(0.4,0,0.2,1)';
+
+  if (instant) {
+    tr.style.transition = 'none';
     tr.style.opacity = '0';
-    setTimeout(done, 950);
+    cleanup();
+  } else {
+    tr.style.transition = 'opacity 1s cubic-bezier(0.4,0,0.2,1)';
+    tr.style.opacity = '0';
+    setTimeout(cleanup, 1050);
   }
-  // land on a deep-linked section, then greet
-  const hash = location.hash;
-  if (hash && hash.length > 1 && hash !== '#kickstarter' && hash !== '#founders') {
-    const id = hash.slice(1);
-    setTimeout(() => { if (document.getElementById(id)) navigateToSection(id); }, instant ? 60 : 300);
-  } else if (!hash || hash.length <= 1) {
-    setTimeout(() => showBoyntPopup('welcome'), instant ? 500 : 1000);
+
+  // land on a deep-linked section, otherwise greet first-time visitors
+  const target = _pendingSection || (location.hash.length > 1 ? location.hash.slice(1) : null);
+  _pendingSection = null;
+  if (target && target !== 'kickstarter' && target !== 'founders' && document.getElementById(target)) {
+    setTimeout(function () { navigateToSection(target); }, instant ? 60 : 300);
+  } else if (!target) {
+    setTimeout(function () { showBoyntPopup('welcome'); }, instant ? 500 : 1100);
   }
 }
 
 function runLoadingIntro() {
   const tr = document.getElementById('siteTransition');
-  if (!tr) { mainSite.classList.add('visible'); return; }
+  if (!tr) { if (mainSite) mainSite.classList.add('visible'); return; }
 
-  // Arriving on a deep link or back from checkout? Skip straight in.
+  // Deep link or a return from checkout? Straight in, no animation.
   const hasHash = location.hash && location.hash.length > 1;
-  const fromCheckout = new URLSearchParams(location.search).has('checkout');
-  if (hasHash || fromCheckout) { finishIntro(true); return; }
-
-  const stMid  = document.getElementById('stMid');
-  const stSurf = document.getElementById('stSurf');
-  const stLigh = document.getElementById('stLight');
-  const stWhit = document.getElementById('stWhite');
-  const stBubs = document.getElementById('stBubbles');
-  const stRip  = document.getElementById('stRipple');
-  const stTxt  = document.getElementById('stText');
-
-  tr.classList.add('active');
-  tr.style.opacity = '1';
-  document.body.style.overflow = 'hidden';
-
-  // rising bubbles
-  stBubs.innerHTML = '';
-  for (let i = 0; i < 34; i++) {
-    const b = document.createElement('div');
-    b.className = 'st-bubble';
-    const size = 4 + Math.random() * 18;
-    b.style.cssText = 'width:' + size + 'px; height:' + size + 'px;'
-      + 'left:' + (5 + Math.random() * 90) + '%;'
-      + 'bottom:' + (-5 + Math.random() * 25) + '%;'
-      + '--drift:' + ((Math.random() - .5) * 80) + 'px;'
-      + 'animation-duration:' + (1.4 + Math.random() * 1.8) + 's;'
-      + 'animation-delay:' + (Math.random() * 1.4) + 's;';
-    stBubs.appendChild(b);
+  if (hasHash || new URLSearchParams(location.search).has('checkout')) {
+    finishIntro(true);
+    return;
   }
 
-  // let people out early
-  const skip = document.createElement('button');
-  skip.className = 'st-skip'; skip.id = 'stSkip';
-  skip.textContent = 'Skip →';
-  skip.onclick = () => finishIntro(false);
-  tr.appendChild(skip);
+  // Hard failsafe: whatever happens below, the page is usable within 7s.
+  setTimeout(function () { if (!_introDone) finishIntro(true); }, 7000);
 
-  const T = (fn, ms) => _introTimers.push(setTimeout(fn, ms));
-  const layer = (el, dur, delay) => T(() => {
-    el.style.transition = 'opacity ' + dur + 'ms cubic-bezier(0.4,0,0.2,1)';
-    el.style.opacity = '1';
-  }, delay);
+  try {
+    window.scrollTo(0, 0);
+    enterSite(null);                       // the original bubble/BOYNT sequence
 
-  layer(stMid, 800, 200);    // deep navy → ocean
-  layer(stSurf, 800, 800);   // ocean → surface teal
-
-  T(() => {                  // surface break
-    stRip.style.top = '50%';
-    stRip.style.transition = 'opacity .4s ease, transform .5s ease, top .8s ease';
-    stRip.style.transform = 'scaleX(1)';
-    stRip.style.opacity = '1';
-    T(() => { stRip.style.top = '10%'; stRip.style.opacity = '0'; }, 550);
-  }, 1300);
-
-  T(() => {                  // BOYNT — held noticeably longer than before
-    stTxt.style.transition = 'opacity .5s ease';
-    stTxt.style.opacity = '1';
-    T(() => { stTxt.style.transition = 'opacity .6s ease'; stTxt.style.opacity = '0'; }, 1500);
-  }, 1250);
-
-  layer(stLigh, 800, 1900);  // sky blue
-  layer(stWhit, 900, 2800);  // break into daylight
-
-  T(() => finishIntro(false), 3700);
+    const skip = document.createElement('button');
+    skip.className = 'st-skip';
+    skip.id = 'stSkip';
+    skip.textContent = 'Skip →';
+    skip.onclick = function () { finishIntro(false); };
+    tr.appendChild(skip);
+  } catch (err) {
+    console.error('[intro]', err);
+    finishIntro(true);
+  }
 }
+
+runLoadingIntro();
 
 // ── MERCH SHOP ─── live from Shopify; checkout hands the cart to Shopify ─────
 const SHOP_CONFIG = {
