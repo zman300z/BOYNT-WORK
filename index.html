@@ -1311,6 +1311,42 @@ html { scroll-behavior: auto; }
 .bp-later:hover { color:var(--ink); }
 
 /* ============================================================
+   MERCH — live from the Shopify store
+   ============================================================ */
+.merch-status { text-align:center; color:var(--mist); font-weight:300; font-size:15px; padding:20px 0 50px; }
+.m-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+.m-chip {
+  font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:1px; text-transform:uppercase;
+  padding:8px 14px; border:1.5px solid var(--cream); background:none; border-radius:20px;
+  cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s;
+}
+.m-chip:hover { border-color:var(--sand); }
+.m-chip.on { border-color:var(--ocean); background:rgba(26,107,138,.08); color:var(--ocean); font-weight:600; }
+.m-sizes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+.m-size {
+  min-width:46px; padding:9px 10px;
+  font-family:'Barlow Condensed',sans-serif; font-size:14px; letter-spacing:1px;
+  border:1.5px solid var(--cream); background:none; border-radius:4px;
+  cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s;
+}
+.m-size:hover { border-color:var(--sand); }
+.m-size.on { border-color:var(--ocean); color:var(--ocean); font-weight:600; background:rgba(26,107,138,.08); }
+.m-size.sold { opacity:.35; text-decoration:line-through; cursor:not-allowed; }
+#mpAdd:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+
+/* Sunglasses "coming soon" state — tasteful, still clickable → Kickstarter popup */
+.panel-add-btn.ks-soon {
+  background:var(--cream); color:var(--driftwood);
+  border:1.5px dashed var(--sand);
+  font-family:'Barlow Condensed',sans-serif; font-size:14px;
+  letter-spacing:2px; text-transform:uppercase;
+}
+.panel-add-btn.ks-soon:hover { background:var(--cream); transform:none; border-color:var(--driftwood); }
+
+/* extra nav link needs a little more room on smaller desktops */
+@media (max-width:1480px) { .nav-links { gap:24px; } }
+
+/* ============================================================
    REDUCED MOTION — respect the OS "reduce motion" setting
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -1339,10 +1375,10 @@ html { scroll-behavior: auto; }
 }
 
 /* ============================================================
-   COMPACT NAV  (<=1000px) — hamburger for phones AND tablets;
+   COMPACT NAV  (<=1100px) — hamburger for phones AND tablets;
    the full desktop link row no longer fits below this width.
    ============================================================ */
-@media (max-width:1000px) {
+@media (max-width:1100px) {
   /* NAV → hamburger */
   nav { padding:0 18px; height:60px; }
   .nav-logo { font-size:22px; letter-spacing:3px; }
@@ -1458,6 +1494,7 @@ html { scroll-behavior: auto; }
     <a href="#collections" class="nav-link-intro" data-section="collections">Collections</a>
     <a href="#about"       class="nav-link-intro" data-section="about">Our Story</a>
     <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
+    <a href="#merch"       class="nav-link-intro" data-section="merch">Merch</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
     <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
     <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founding Backers</a>
@@ -1857,6 +1894,39 @@ html { scroll-behavior: auto; }
   </div>
 </section>
 
+<!-- MERCH SECTION -->
+<section class="merch" id="merch" data-pad style="padding:120px 80px;background:var(--cream);">
+  <div class="section-header">
+    <p class="section-label">Merch</p>
+    <h2 class="section-title">WEAR THE BRAND</h2>
+    <p class="section-sub">Shirts and caps, printed when you order and shipped straight to your door — available now.</p>
+  </div>
+  <div class="merch-status" id="merchStatus">Loading the collection…</div>
+  <div class="product-grid" id="merchGrid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));"></div>
+</section>
+
+<!-- MERCH PANEL (slide-in, mirrors the sunglasses panel) -->
+<div class="product-panel" id="merchPanel">
+  <button class="panel-close" onclick="closeMerchPanel()" aria-label="Close">✕</button>
+  <div class="panel-img-wrap">
+    <div class="panel-float-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>
+    <img id="mpImg" src="" alt="BOYNT merch">
+  </div>
+  <div class="panel-body">
+    <p class="panel-style-name">BOYNT Merch</p>
+    <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
+    <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:20px;"></div>
+    <div class="panel-divider"></div>
+    <div class="panel-swatch-label">Color</div>
+    <div class="m-chips" id="mpColorChips"></div>
+    <div class="panel-swatch-label">Size</div>
+    <div class="m-sizes" id="mpSizes"></div>
+    <button class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
+    <p class="panel-shipping">Printed on demand &middot; ships in a few days 🚚</p>
+  </div>
+</div>
+<!-- /MERCH SECTION -->
+
 <!-- FOOTER -->
 <footer id="contact">
   <div class="footer-top">
@@ -1871,6 +1941,7 @@ html { scroll-behavior: auto; }
         <li><a href="#collections">The Drifters — $30–$35</a></li>
         <li><a href="#collections">The Currents — $35–$40</a></li>
         <li><a href="#shop">Shop All</a></li>
+        <li><a href="#merch">Merch — Ships Now</a></li>
       </ul>
     </div>
     <div>
@@ -2203,7 +2274,7 @@ if (eggBubbles) {
     <h3 class="bp-title" id="bpTitle"></h3>
     <p class="bp-body" id="bpBody"></p>
     <a class="bp-cta" id="bpCta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener"></a>
-    <button class="bp-later" id="bpLater" onclick="closeBoyntPopup()"></button>
+    <button class="bp-later" id="bpLater" onclick="onBpLater()"></button>
   </div>
 </div>
 
@@ -2562,7 +2633,7 @@ updateIntro();
 function navigateToSection(sectionId) {
   const target = document.getElementById(sectionId);
   if (!target) return;
-  const navH = window.innerWidth <= 1000 ? 60 : 68;
+  const navH = window.innerWidth <= 1100 ? 60 : 68;
   const y = target.getBoundingClientRect().top + window.pageYOffset - navH;
   window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
 }
@@ -2658,7 +2729,7 @@ function selectColor(idx) {
     document.getElementById('panelPrice').textContent = '$' + c.price;
     document.querySelectorAll('.panel-swatch').forEach((s,i) => s.classList.toggle('active', i===idx));
     const btn = document.getElementById('panelAddBtn');
-    btn.textContent = 'Add to Cart'; btn.classList.remove('added');
+    btn.textContent = '🚀 Coming Soon — Back Us on Kickstarter'; btn.classList.remove('added'); btn.classList.add('ks-soon');
   }, 150);
 }
 function renderPanel() {
@@ -2685,14 +2756,11 @@ function renderPanel() {
     sw.appendChild(s);
   });
   const btn = document.getElementById('panelAddBtn');
-  btn.textContent = 'Add to Cart'; btn.classList.remove('added');
+  btn.textContent = '🚀 Coming Soon — Back Us on Kickstarter'; btn.classList.remove('added'); btn.classList.add('ks-soon');
 }
 function handleAddToCart() {
-  if (!currentProduct) return;
-  addToCart(currentProduct, currentColorIdx);
-  const btn = document.getElementById('panelAddBtn');
-  btn.textContent = '✓ Added to Cart'; btn.classList.add('added');
-  setTimeout(() => { btn.textContent='Add to Cart'; btn.classList.remove('added'); }, 1800);
+  // Sunglasses aren't sold on the site yet — they're funding on Kickstarter.
+  showBoyntPopup('sunglasses');
 }
 document.querySelectorAll('.product-card[data-product]').forEach(card => {
   card.addEventListener('click', () => openPanel(card.dataset.product, parseInt(card.dataset.color||0)));
@@ -2727,6 +2795,8 @@ const CART_CONFIG = {
 
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('boynt_cart')) || []; } catch (e) { cart = []; }
+// The cart is merch-only now — clear out any saved sunglasses from before.
+cart = cart.filter(i => i.variantId);
 function saveCart() { try { localStorage.setItem('boynt_cart', JSON.stringify(cart)); } catch(e){} }
 
 function addToCart(product, colorIdx) {
@@ -2771,7 +2841,7 @@ function renderCart() {
   const wrap = document.getElementById('cartItems');
   const foot = document.getElementById('cartFoot');
   if (!cart.length) {
-    wrap.innerHTML = '<p class="cart-empty">Your cart is empty.<br>Time to grab a pair that floats. 🕶️</p>';
+    wrap.innerHTML = '<p class="cart-empty">Your cart is empty.<br>The merch rack is stocked — go grab something. 👕</p>';
     foot.style.display = 'none';
     return;
   }
@@ -2788,13 +2858,13 @@ function renderCart() {
             <span>${i.qty}</span>
             <button onclick="changeQty('${i.id}',1)" aria-label="Increase quantity">+</button>
           </div>
-          <span class="cart-item-price">$${i.price * i.qty}</span>
+          <span class="cart-item-price">$${(i.price * i.qty).toFixed(2).replace(/\.00$/, '')}</span>
         </div>
         <button class="cart-item-remove" onclick="removeFromCart('${i.id}')">Remove</button>
       </div>
     </div>`).join('');
   const total = cartTotal();
-  document.getElementById('cartSubtotal').textContent = '$' + total;
+  document.getElementById('cartSubtotal').textContent = '$' + total.toFixed(2).replace(/\.00$/, '');
 }
 
 // Overlay / Escape should close whichever surface is open
@@ -2803,33 +2873,14 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart();
 
 // ── STRIPE CHECKOUT ───────────────────────────────────────────────────────────
 async function checkout() {
+  // Merch checkout is real: build a Shopify cart permalink and hand off.
+  const items = cart.filter(i => i.variantId);
+  if (!items.length) return;
   const btn = document.getElementById('cartCheckout');
-  const msg = document.getElementById('cartCheckoutMsg');
-  msg.textContent = '';
-  if (!cart.length) return;
-  btn.disabled = true; btn.textContent = 'Redirecting…';
-  try {
-    const res = await fetch(CART_CONFIG.checkoutEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: cart.map(i => ({
-          name: i.name + ' — ' + i.color,
-          price: i.price,                 // dollars; the PHP endpoint converts to cents
-          qty: i.qty,
-          image: (i.img && i.img.startsWith('http')) ? i.img : undefined
-        }))
-      })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (data.url) { window.location.href = data.url; return; }
-    throw new Error(data.error || 'No checkout URL returned');
-  } catch (err) {
-    console.error('Checkout error:', err);
-    btn.disabled = false; btn.textContent = 'Checkout';
-    showBoyntPopup('checkout'); // shop isn't open yet — nudge to Kickstarter
-  }
+  btn.disabled = true; btn.textContent = 'Heading to checkout…';
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'Checkout'; }, 6000);
+  const path = items.map(i => i.variantId + ':' + i.qty).join(',');
+  window.location.href = 'https://' + SHOP_CONFIG.domain + '/cart/' + path;
 }
 
 // Initialise cart badge on load
@@ -2944,16 +2995,16 @@ const BP_COPY = {
   welcome: {
     emoji: '🕶️',
     title: "HEY — GLAD YOU <em>DRIFTED IN.</em>",
-    body: "Take your time and look around — this is a preview of the BOYNT lineup while we get the store ready. If you want to help us launch faster (and grab a pair before everyone else), our Kickstarter is live right now. Every backer gets a permanent spot on our Founding Backers Wall.",
+    body: "Lay of the land: our floating sunglasses are funding on Kickstarter right now — backing gets you a pair before everyone else, plus your name on the Founding Backers Wall. And the merch shop is open: shirts and caps that ship right away.",
     cta: '🚀 Check Out the Kickstarter',
-    later: 'All good — just looking around →'
+    later: 'Take me to the merch →'
   },
-  checkout: {
-    emoji: '🛟',
-    title: "OUR CHECKOUT IS STILL <em>LEARNING TO FLOAT.</em>",
-    body: "We're putting the finishing touches on the store, so you can't order from the site quite yet — your cart will be waiting right here when it opens. Can't wait? Backing us on Kickstarter is the fastest way to get a pair, and it puts your name on the Founding Backers Wall.",
-    cta: '🚀 Claim a Pair on Kickstarter',
-    later: "No rush — I'll hang onto my cart"
+  sunglasses: {
+    emoji: '🕶️',
+    title: "THE SHADES AREN'T IN THE SHOP <em>YET.</em>",
+    body: "Sunglasses are funding on Kickstarter right now — that's the only place to claim a pair today, and it puts your name on the Founding Backers Wall. The merch, on the other hand, ships right away.",
+    cta: '🚀 Get a Pair on Kickstarter',
+    later: 'Got it — keep browsing'
   }
 };
 function showBoyntPopup(kind) {
@@ -2963,6 +3014,7 @@ function showBoyntPopup(kind) {
       sessionStorage.setItem('boynt_welcomed', '1');
     } catch (err) { /* private mode etc. — just show it */ }
   }
+  _bpKind = kind;
   const c = BP_COPY[kind]; if (!c) return;
   document.getElementById('bpEmoji').textContent = c.emoji;
   document.getElementById('bpTitle').innerHTML = c.title;
@@ -2982,7 +3034,7 @@ function closeBoyntPopup() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); closeBoyntPopup(); }
+  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); closeBoyntPopup(); closeMerchPanel(); }
 });
 // Deep links: boynt.com/#kickstarter and boynt.com/#founders open their pages directly
 if (location.hash === '#kickstarter') openKickstarter();
@@ -2993,6 +3045,172 @@ window.addEventListener('hashchange', () => {
   else if (location.hash === '#founders') { closeKickstarter(); openFounderWall(); }
   else { closeKickstarter(); closeFounderWall(); }
 });
+
+// ── MERCH SHOP ─── live from Shopify; checkout hands the cart to Shopify ─────
+const SHOP_CONFIG = {
+  domain: 'boynt-2.myshopify.com',
+  token: 'c269dc76ef038de1e7ea5be5876562a6',   // public Storefront token — read-only, safe to embed
+  apiVersion: '2025-10'
+};
+
+let _bpKind = null;
+function onBpLater() {
+  const k = _bpKind;
+  closeBoyntPopup();
+  if (k === 'welcome') setTimeout(() => navigateToSection('merch'), 150);
+}
+
+function merchLog(msg) {
+  console.log('[merch]', msg);
+  if (new URLSearchParams(location.search).has('shopdebug')) {
+    const s = document.getElementById('merchStatus');
+    if (s) { s.hidden = false; s.textContent = 'DEBUG: ' + msg; }
+  }
+}
+
+async function shopQuery(query) {
+  const res = await fetch('https://' + SHOP_CONFIG.domain + '/api/' + SHOP_CONFIG.apiVersion + '/graphql.json', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': SHOP_CONFIG.token
+    },
+    body: JSON.stringify({ query: query })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (data.errors) throw new Error(data.errors.map(e => e.message).join('; '));
+  return data.data;
+}
+
+const MERCH_QUERY = '{ products(first: 50, sortKey: CREATED_AT) { edges { node { '
+  + 'title featuredImage { url } '
+  + 'variants(first: 100) { edges { node { '
+  + 'id availableForSale price { amount } selectedOptions { name value } image { url } '
+  + '} } } } } } }';
+
+let MERCH = [];
+let merchSel = null;
+
+// "BOYNT Logo T-shirt Light Text" + "... Dark Text" merge into one card.
+// Anything after a "|" in the Shopify title is trimmed for display.
+function merchDisplayTitle(t) {
+  return t.split('|')[0].replace(/\s*(light|dark)\s*text\s*$/i, '').trim();
+}
+
+function groupMerch(products) {
+  const cards = {};
+  for (const p of products) {
+    const disp = merchDisplayTitle(p.title);
+    const key = disp.toLowerCase();
+    if (!cards[key]) cards[key] = { title: disp, colors: {}, image: p.featuredImage && p.featuredImage.url, min: Infinity };
+    const card = cards[key];
+    for (const ve of p.variants.edges) {
+      const v = ve.node;
+      const opts = {};
+      v.selectedOptions.forEach(o => { opts[o.name.toLowerCase()] = o.value; });
+      const color = opts.color || opts.colors || 'Classic';
+      const size = opts.size || 'One Size';
+      if (!card.colors[color]) card.colors[color] = { image: null, sizes: {} };
+      const c = card.colors[color];
+      if (!c.image && v.image) c.image = v.image.url;
+      c.sizes[size] = { id: v.id.split('/').pop(), price: parseFloat(v.price.amount), ok: v.availableForSale };
+      if (v.availableForSale) card.min = Math.min(card.min, parseFloat(v.price.amount));
+    }
+  }
+  return Object.values(cards);
+}
+
+function fmtUsd(n) { return '$' + n.toFixed(2).replace(/\.00$/, ''); }
+
+async function loadMerch() {
+  const grid = document.getElementById('merchGrid');
+  const status = document.getElementById('merchStatus');
+  if (!grid) return;
+  try {
+    const data = await shopQuery(MERCH_QUERY);
+    MERCH = groupMerch(data.products.edges.map(e => e.node));
+    if (!MERCH.length) { status.textContent = 'New merch is on the way — check back soon. 🌊'; return; }
+    status.hidden = true;
+    grid.innerHTML = MERCH.map((c, i) => {
+      const colors = Object.keys(c.colors);
+      const img = c.image || (colors.length && c.colors[colors[0]].image) || '';
+      return '<div class="product-card" onclick="openMerchPanel(' + i + ')">'
+        + '<div class="product-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>'
+        + '<div class="product-card-img"><img src="' + img + '" alt="' + c.title.replace(/"/g, '&quot;') + '" loading="lazy" decoding="async"></div>'
+        + '<div class="product-card-info">'
+        + '<div class="product-card-name">' + c.title + '</div>'
+        + '<div class="product-card-color">' + (colors.length > 1 ? colors.length + ' colors' : colors[0]) + '</div>'
+        + '<div class="product-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</div>'
+        + '</div></div>';
+    }).join('');
+    merchLog('loaded ' + MERCH.length + ' cards');
+  } catch (err) {
+    status.hidden = false;
+    status.textContent = 'The merch rack is being restocked — refresh in a moment. 🌊';
+    merchLog('load failed: ' + err.message);
+  }
+}
+
+function openMerchPanel(idx) {
+  const c = MERCH[idx];
+  merchSel = { card: c, color: Object.keys(c.colors)[0], size: null };
+  document.getElementById('mpTitle').textContent = c.title;
+  renderMerchPanel();
+  document.getElementById('panelOverlay').classList.add('open');
+  document.getElementById('merchPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMerchPanel() {
+  const p = document.getElementById('merchPanel');
+  if (!p || !p.classList.contains('open')) return;
+  p.classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function pickMerchColor(color) { merchSel.color = color; merchSel.size = null; renderMerchPanel(); }
+function pickMerchSize(size) { merchSel.size = size; renderMerchPanel(); }
+
+function renderMerchPanel() {
+  const card = merchSel.card, color = merchSel.color;
+  const cd = card.colors[color];
+  const sizeKeys = Object.keys(cd.sizes);
+  if (!merchSel.size && sizeKeys.length === 1 && cd.sizes[sizeKeys[0]].ok) merchSel.size = sizeKeys[0];
+  const size = merchSel.size;
+  document.getElementById('mpImg').src = cd.image || card.image || '';
+  document.getElementById('mpColorChips').innerHTML = Object.keys(card.colors).map(function (col) {
+    return '<button class="m-chip' + (col === color ? ' on' : '') + '" onclick="pickMerchColor(&quot;' + col.replace(/"/g, '') + '&quot;)">' + col + '</button>';
+  }).join('');
+  document.getElementById('mpSizes').innerHTML = sizeKeys.map(function (s) {
+    const v = cd.sizes[s];
+    return '<button class="m-size' + (s === size ? ' on' : '') + (v.ok ? '' : ' sold') + '" '
+      + (v.ok ? 'onclick="pickMerchSize(&quot;' + s.replace(/"/g, '') + '&quot;)"' : 'disabled') + '>' + s + '</button>';
+  }).join('');
+  const chosen = size ? cd.sizes[size] : null;
+  document.getElementById('mpPrice').textContent = chosen ? fmtUsd(chosen.price) : '—';
+  const btn = document.getElementById('mpAdd');
+  const ready = !!(chosen && chosen.ok);
+  btn.disabled = !ready;
+  btn.textContent = ready ? 'Add to Cart' : 'Select a size';
+}
+
+function addMerchToCart() {
+  const card = merchSel.card, color = merchSel.color, size = merchSel.size;
+  const v = card.colors[color].sizes[size];
+  if (!v || !v.ok) return;
+  const id = 'm::' + v.id;
+  const existing = cart.find(i => i.id === id);
+  if (existing) existing.qty += 1;
+  else cart.push({ id: id, variantId: v.id, name: card.title, color: color + ' · ' + size,
+                   price: v.price, img: card.colors[color].image || card.image, qty: 1 });
+  saveCart(); renderCart(); updateCartCount();
+  const btn = document.getElementById('mpAdd');
+  btn.textContent = '✓ Added!'; btn.classList.add('added');
+  setTimeout(() => { btn.textContent = 'Add to Cart'; btn.classList.remove('added'); }, 1400);
+}
+
+document.getElementById('panelOverlay').addEventListener('click', closeMerchPanel);
+loadMerch();
 
 // ── CHECKOUT RETURN ──────────────────────────────────────────────────────────
 // Stripe sends buyers back to /?checkout=success or /?checkout=cancel.
