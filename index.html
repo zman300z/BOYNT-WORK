@@ -1311,75 +1311,53 @@ html { scroll-behavior: auto; }
 .bp-later:hover { color:var(--ink); }
 
 /* ============================================================
-   MERCH — live from the Shopify store
+   MERCH — live from Shopify, styled to sit inside the site's
+   existing product grid rather than beside it
    ============================================================ */
-.merch { background:var(--ink); color:var(--white); }
-.merch .section-label { color:var(--ocean-light); }
-.merch .section-title { color:var(--white); }
-.merch .section-sub { color:rgba(255,255,255,.55); }
-.merch-status { text-align:center; color:rgba(255,255,255,.5); font-weight:300; font-size:15px; padding:10px 0 40px; }
+.merch-status { text-align:center; color:var(--mist); font-weight:300; font-size:15px; padding:6px 0 40px; }
 
-.merch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:24px; }
-
-.m-card {
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
-  border-radius:6px; overflow:hidden; cursor:pointer;
-  transition:transform .3s cubic-bezier(.2,.8,.3,1), border-color .3s, box-shadow .3s;
-}
-.m-card:hover {
-  transform:translateY(-6px); border-color:rgba(109,212,236,.45);
-  box-shadow:0 22px 50px rgba(0,0,0,.45);
-}
-.m-card-media { position:relative; aspect-ratio:1/1; background:var(--white); overflow:hidden; }
-.m-card-media img {
+.m-card { position:relative; }
+.m-card .product-card-img { position:relative; }
+.m-card .product-card-img img {
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:contain; padding:16px; transition:opacity .45s ease, transform .6s ease;
+  object-fit:contain; padding:24px; transition:opacity .45s ease, transform .6s ease;
 }
 .m-front { opacity:1; }
 .m-back  { opacity:0; }
 .m-card:hover .m-front { opacity:0; }
-.m-card:hover .m-back  { opacity:1; transform:scale(1.03); }
-.m-card:hover .m-card-media img:only-child { transform:scale(1.04); opacity:1; }
+.m-card:hover .m-back  { opacity:1; transform:scale(1.04); }
+.m-card:hover .product-card-img img.m-solo { transform:scale(1.06); opacity:1; }
 
-.m-badge, .m-badge2 {
-  position:absolute; top:12px; font-family:'Barlow Condensed',sans-serif;
-  font-size:10px; letter-spacing:2px; text-transform:uppercase;
-  padding:5px 10px; border-radius:2px; z-index:2;
+.m-badge2 {
+  position:absolute; top:14px; right:14px; z-index:2;
+  background:var(--ink); color:var(--white);
+  font-family:'Barlow Condensed',sans-serif; font-size:10px;
+  letter-spacing:2px; text-transform:uppercase; padding:4px 10px; border-radius:1px;
 }
-.m-badge  { left:12px; background:#05ce78; color:#04140b; font-weight:600; }
-.m-badge2 { right:12px; background:var(--ink); color:var(--white); }
 .m-flip {
-  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:2;
   font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px;
-  text-transform:uppercase; color:var(--mist); opacity:.75; z-index:2; white-space:nowrap;
+  text-transform:uppercase; color:var(--mist); opacity:.7; white-space:nowrap;
+  transition:opacity .25s;
 }
 .m-card:hover .m-flip { opacity:0; }
 
-.m-card-body { padding:18px 20px 20px; }
-.m-card-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.m-card-name {
-  font-family:'Barlow Condensed',sans-serif; font-size:17px; letter-spacing:1.5px;
-  text-transform:uppercase; font-weight:500; color:var(--white); line-height:1.2;
-}
-.m-card-price { font-family:'Bebas Neue',sans-serif; font-size:23px; letter-spacing:1px; color:var(--ocean-light); flex-shrink:0; }
-.m-dots { display:flex; align-items:center; gap:6px; margin:12px 0 8px; flex-wrap:wrap; }
-.m-dot { width:15px; height:15px; border-radius:50%; border:1.5px solid rgba(255,255,255,.35); display:inline-block; }
-.m-dot-more { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:rgba(255,255,255,.5); letter-spacing:1px; }
-.m-card-meta { font-size:12px; font-weight:300; color:rgba(255,255,255,.45); letter-spacing:.3px; }
+.m-dots { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+.m-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.16); display:inline-block; }
+.m-dot-more { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:var(--mist); letter-spacing:1px; }
 
-/* panel: gallery + pickers */
+/* panel: colour swatches match the sunglasses panel exactly */
 #mpView {
   position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
   font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:3px;
   text-transform:uppercase; color:var(--mist);
 }
-.m-thumbs { display:flex; gap:8px; padding:12px 32px 0; flex-wrap:wrap; }
+.m-thumbs { display:flex; gap:8px; padding:14px 32px 0; flex-wrap:wrap; }
 .m-thumb {
-  width:58px; padding:0; background:var(--white); cursor:pointer;
-  border:1.5px solid var(--cream); border-radius:4px; overflow:hidden;
-  transition:border-color .2s; position:relative;
+  width:56px; padding:0; background:var(--white); cursor:pointer;
+  border:1.5px solid var(--cream); border-radius:3px; overflow:hidden; transition:border-color .2s;
 }
-.m-thumb img { width:100%; height:52px; object-fit:contain; padding:4px; display:block; }
+.m-thumb img { width:100%; height:50px; object-fit:contain; padding:4px; display:block; }
 .m-thumb span {
   display:block; font-family:'Barlow Condensed',sans-serif; font-size:9px;
   letter-spacing:1px; text-transform:uppercase; color:var(--mist);
@@ -1387,21 +1365,21 @@ html { scroll-behavior: auto; }
 }
 .m-thumb.on { border-color:var(--ocean); }
 
-.m-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+.m-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px; }
 .m-chip {
-  display:inline-flex; align-items:center; gap:7px;
-  font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:1px; text-transform:uppercase;
-  padding:7px 13px; border:1.5px solid var(--cream); background:none; border-radius:20px;
-  cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s;
+  width:36px; height:36px; border-radius:50%; cursor:pointer; padding:0;
+  border:2px solid transparent; position:relative; flex-shrink:0;
+  transition:transform .2s, box-shadow .2s;
 }
-.m-chip-dot { width:13px; height:13px; border-radius:50%; border:1px solid rgba(0,0,0,.18); flex-shrink:0; }
-.m-chip:hover { border-color:var(--sand); }
-.m-chip.on { border-color:var(--ocean); background:rgba(26,107,138,.08); color:var(--ocean); font-weight:600; }
+.m-chip:hover { transform:scale(1.12); }
+.m-chip.on { box-shadow:0 0 0 3px var(--white), 0 0 0 5px var(--ink); }
+.m-chip .swatch-tooltip { bottom:calc(100% + 6px); }
+
 .m-sizes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
 .m-size {
   min-width:46px; padding:9px 10px;
   font-family:'Barlow Condensed',sans-serif; font-size:14px; letter-spacing:1px;
-  border:1.5px solid var(--cream); background:none; border-radius:4px;
+  border:1.5px solid var(--cream); background:none; border-radius:2px;
   cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s;
 }
 .m-size:hover { border-color:var(--sand); }
@@ -1418,18 +1396,29 @@ html { scroll-behavior: auto; }
 }
 .panel-add-btn.ks-soon:hover { background:var(--cream); transform:none; border-color:var(--driftwood); }
 
+/* ============================================================
+   LOADING INTRO — the water/BOYNT reveal replaces the scroll story
+   ============================================================ */
+#cinematic-intro { display:none !important; }
+#main-site { opacity:1 !important; }
+/* Cover the page from first paint; the keyframe is a failsafe that clears
+   the cover even if the script never runs. */
+.site-transition.boot {
+  opacity:1; pointer-events:all;
+  animation:bootSafety 0s linear 6s forwards;
+}
+@keyframes bootSafety { to { opacity:0; visibility:hidden; pointer-events:none; } }
+.st-skip {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:1002;
+  background:none; border:none; cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:3px;
+  text-transform:uppercase; color:rgba(255,255,255,.6); transition:color .2s;
+}
+.st-skip:hover { color:#fff; }
+
 /* extra nav link needs a little more room on smaller desktops */
 @media (max-width:1480px) { .nav-links { gap:24px; } }
-@media (max-width:600px) {
-  .merch-grid { grid-template-columns:1fr 1fr; gap:12px; }
-  .m-card-body { padding:12px 12px 14px; }
-  .m-card-name { font-size:14px; letter-spacing:1px; }
-  .m-card-price { font-size:19px; }
-  .m-card-meta { font-size:11px; }
-  .m-flip { display:none; }
-  .m-thumbs { padding:12px 20px 0; }
-}
-@media (max-width:380px) { .merch-grid { grid-template-columns:1fr; } }
+@media (max-width:600px) { .m-flip { display:none; } .m-thumbs { padding:12px 20px 0; } }
 
 /* ============================================================
    REDUCED MOTION — respect the OS "reduce motion" setting
@@ -1971,21 +1960,21 @@ html { scroll-behavior: auto; }
   </div>
 </div>
 
-<section class="merch" id="merch" data-pad style="padding:120px 80px;">
+<section class="collections merch" id="merch" data-pad style="padding:120px 80px;background:var(--cream);">
   <div class="section-header">
-    <p class="section-label reveal">Merch — Available Now</p>
+    <p class="section-label reveal">Merch — Ships Now</p>
     <h2 class="section-title reveal reveal-delay-1">WEAR THE BRAND</h2>
-    <p class="section-sub reveal reveal-delay-2">Tees and caps, printed when you order and shipped straight to your door. The sunglasses are still funding — this you can grab today.</p>
+    <p class="section-sub reveal reveal-delay-2">Tees and caps, printed when you order and sent straight to your door. The sunglasses are still funding — this you can grab today.</p>
   </div>
   <div class="merch-status" id="merchStatus">Loading the collection…</div>
-  <div class="merch-grid" id="merchGrid"></div>
+  <div class="product-grid" id="merchGrid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
 </section>
 
 <!-- MERCH PANEL (slide-in, mirrors the sunglasses panel) -->
 <div class="product-panel" id="merchPanel">
   <button class="panel-close" onclick="closeMerchPanel()" aria-label="Close">✕</button>
   <div class="panel-img-wrap">
-    <div class="panel-float-badge" style="background:#05ce78;color:#04140b;">Ships Now</div>
+    <div class="panel-float-badge">Ships Now</div>
     <img id="mpImg" src="" alt="BOYNT merch">
     <span id="mpView"></span>
   </div>
@@ -1993,14 +1982,14 @@ html { scroll-behavior: auto; }
   <div class="panel-body">
     <p class="panel-style-name">BOYNT Merch</p>
     <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
-    <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:20px;"></div>
+    <div class="panel-price" id="mpPrice" style="font-size:28px;margin-bottom:22px;"></div>
     <div class="panel-divider"></div>
-    <div class="panel-swatch-label">Color</div>
+    <div class="panel-swatch-label">Select Color</div>
     <div class="m-chips" id="mpColorChips"></div>
-    <div class="panel-swatch-label">Size</div>
+    <div class="panel-swatch-label">Select Size</div>
     <div class="m-sizes" id="mpSizes"></div>
     <button class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
-    <p class="panel-shipping">Printed on demand &middot; ships in a few days 🚚</p>
+    <p class="panel-shipping">🚚 Printed on demand · ships in a few days</p>
   </div>
 </div>
 <!-- /MERCH SECTION -->
@@ -2376,7 +2365,7 @@ if (eggBubbles) {
   </div>
 </div>
 
-<div class="site-transition" id="siteTransition">
+<div class="site-transition boot" id="siteTransition">
   <div class="st-deep"  id="stDeep"></div>
   <div class="st-mid"   id="stMid"></div>
   <div class="st-surf"  id="stSurf"></div>
@@ -2456,7 +2445,7 @@ const layerSkyFull = document.getElementById('layerSkyFull');
 const lightRays    = document.getElementById('lightRays');
 const waterShimmer = document.getElementById('waterShimmer');
 
-let introComplete = false;
+let introComplete = true;  // scroll story retired; see runLoadingIntro()
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 function lerp(a, b, t) { return a + (b-a)*t; }
@@ -2724,8 +2713,8 @@ window.addEventListener('scroll', () => {
   requestAnimationFrame(() => { handleScroll(); scrollTicking = false; });
 }, { passive: true });
 
-// Init on load
-updateIntro();
+// Play the water/BOYNT reveal, then hand over to the site
+runLoadingIntro();
 
 // Reliable scroll-to-section (works on mobile Safari where scrollIntoView is flaky)
 function navigateToSection(sectionId) {
@@ -3144,6 +3133,114 @@ window.addEventListener('hashchange', () => {
   else { closeKickstarter(); closeFounderWall(); }
 });
 
+// ── LOADING INTRO ─── the water/BOYNT reveal, played once on page load ───────
+let _introTimers = [];
+let _introDone = false;
+
+function finishIntro(instant) {
+  if (_introDone) return;
+  _introDone = true;
+  _introTimers.forEach(clearTimeout); _introTimers = [];
+  const tr = document.getElementById('siteTransition');
+  const skip = document.getElementById('stSkip');
+  if (skip) skip.remove();
+  mainSite.classList.add('visible');
+  document.body.style.overflow = '';
+  const done = () => {
+    tr.classList.remove('active', 'boot');
+    ['stMid','stSurf','stLight','stWhite'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.transition = 'none'; el.style.opacity = '0'; }
+    });
+  };
+  if (instant) { tr.style.transition = 'none'; tr.style.opacity = '0'; done(); }
+  else {
+    tr.style.transition = 'opacity .9s cubic-bezier(0.4,0,0.2,1)';
+    tr.style.opacity = '0';
+    setTimeout(done, 950);
+  }
+  // land on a deep-linked section, then greet
+  const hash = location.hash;
+  if (hash && hash.length > 1 && hash !== '#kickstarter' && hash !== '#founders') {
+    const id = hash.slice(1);
+    setTimeout(() => { if (document.getElementById(id)) navigateToSection(id); }, instant ? 60 : 300);
+  } else if (!hash || hash.length <= 1) {
+    setTimeout(() => showBoyntPopup('welcome'), instant ? 500 : 1000);
+  }
+}
+
+function runLoadingIntro() {
+  const tr = document.getElementById('siteTransition');
+  if (!tr) { mainSite.classList.add('visible'); return; }
+
+  // Arriving on a deep link or back from checkout? Skip straight in.
+  const hasHash = location.hash && location.hash.length > 1;
+  const fromCheckout = new URLSearchParams(location.search).has('checkout');
+  if (hasHash || fromCheckout) { finishIntro(true); return; }
+
+  const stMid  = document.getElementById('stMid');
+  const stSurf = document.getElementById('stSurf');
+  const stLigh = document.getElementById('stLight');
+  const stWhit = document.getElementById('stWhite');
+  const stBubs = document.getElementById('stBubbles');
+  const stRip  = document.getElementById('stRipple');
+  const stTxt  = document.getElementById('stText');
+
+  tr.classList.add('active');
+  tr.style.opacity = '1';
+  document.body.style.overflow = 'hidden';
+
+  // rising bubbles
+  stBubs.innerHTML = '';
+  for (let i = 0; i < 34; i++) {
+    const b = document.createElement('div');
+    b.className = 'st-bubble';
+    const size = 4 + Math.random() * 18;
+    b.style.cssText = 'width:' + size + 'px; height:' + size + 'px;'
+      + 'left:' + (5 + Math.random() * 90) + '%;'
+      + 'bottom:' + (-5 + Math.random() * 25) + '%;'
+      + '--drift:' + ((Math.random() - .5) * 80) + 'px;'
+      + 'animation-duration:' + (1.4 + Math.random() * 1.8) + 's;'
+      + 'animation-delay:' + (Math.random() * 1.4) + 's;';
+    stBubs.appendChild(b);
+  }
+
+  // let people out early
+  const skip = document.createElement('button');
+  skip.className = 'st-skip'; skip.id = 'stSkip';
+  skip.textContent = 'Skip →';
+  skip.onclick = () => finishIntro(false);
+  tr.appendChild(skip);
+
+  const T = (fn, ms) => _introTimers.push(setTimeout(fn, ms));
+  const layer = (el, dur, delay) => T(() => {
+    el.style.transition = 'opacity ' + dur + 'ms cubic-bezier(0.4,0,0.2,1)';
+    el.style.opacity = '1';
+  }, delay);
+
+  layer(stMid, 800, 200);    // deep navy → ocean
+  layer(stSurf, 800, 800);   // ocean → surface teal
+
+  T(() => {                  // surface break
+    stRip.style.top = '50%';
+    stRip.style.transition = 'opacity .4s ease, transform .5s ease, top .8s ease';
+    stRip.style.transform = 'scaleX(1)';
+    stRip.style.opacity = '1';
+    T(() => { stRip.style.top = '10%'; stRip.style.opacity = '0'; }, 550);
+  }, 1300);
+
+  T(() => {                  // BOYNT — held noticeably longer than before
+    stTxt.style.transition = 'opacity .5s ease';
+    stTxt.style.opacity = '1';
+    T(() => { stTxt.style.transition = 'opacity .6s ease'; stTxt.style.opacity = '0'; }, 1500);
+  }, 1250);
+
+  layer(stLigh, 800, 1900);  // sky blue
+  layer(stWhit, 900, 2800);  // break into daylight
+
+  T(() => finishIntro(false), 3700);
+}
+
 // ── MERCH SHOP ─── live from Shopify; checkout hands the cart to Shopify ─────
 const SHOP_CONFIG = {
   domain: 'boynt-2.myshopify.com',
@@ -3306,19 +3403,19 @@ async function loadMerch() {
       const dots = colors.slice(0, 8).map(col =>
         '<span class="m-dot" style="background:' + colorDot(col) + '" title="' + esc(col) + '"></span>').join('')
         + (colors.length > 8 ? '<span class="m-dot-more">+' + (colors.length - 8) + '</span>' : '');
-      return '<div class="m-card reveal" onclick="openMerchPanel(' + i + ')">'
-        + '<div class="m-card-media">'
-        + '<img class="m-front" src="' + front + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">'
-        + (back ? '<img class="m-back" src="' + back + '" alt="' + esc(c.title) + ' back" loading="lazy" decoding="async">' : '')
-        + '<span class="m-badge">Ships Now</span>'
+      return '<div class="product-card m-card reveal" onclick="openMerchPanel(' + i + ')">'
+        + '<div class="product-badge">Ships Now</div>'
         + (c.hasBack ? '<span class="m-badge2">Front &amp; Back</span>' : '')
+        + '<div class="product-card-img">'
+        + '<img class="m-front' + (back ? '' : ' m-solo') + '" src="' + front + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">'
+        + (back ? '<img class="m-back" src="' + back + '" alt="' + esc(c.title) + ' back" loading="lazy" decoding="async">' : '')
         + (back ? '<span class="m-flip">Hover to flip ↻</span>' : '')
         + '</div>'
-        + '<div class="m-card-body">'
-        + '<div class="m-card-top"><span class="m-card-name">' + esc(c.title) + '</span>'
-        + '<span class="m-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</span></div>'
+        + '<div class="product-card-info">'
+        + '<div class="product-card-name">' + esc(c.title) + '</div>'
+        + '<div class="product-card-color">' + (colors.length > 1 ? colors.length + ' colors' : esc(colors[0])) + '</div>'
+        + '<div class="product-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</div>'
         + '<div class="m-dots">' + dots + '</div>'
-        + '<div class="m-card-meta">' + (colors.length > 1 ? colors.length + ' colors' : colors[0]) + ' · Printed on demand</div>'
         + '</div></div>';
     }).join('');
     // dynamically-added cards still need the scroll-reveal observer
@@ -3368,8 +3465,9 @@ function renderMerchPanel() {
     + (g.label ? '<span>' + g.label + '</span>' : '') + '</button>').join('') : '';
 
   document.getElementById('mpColorChips').innerHTML = Object.keys(card.colors).map(function (col) {
-    return '<button class="m-chip' + (col === color ? ' on' : '') + '" onclick="pickMerchColor(&quot;' + esc(col) + '&quot;)">'
-      + '<span class="m-chip-dot" style="background:' + colorDot(col) + '"></span>' + esc(col) + '</button>';
+    return '<button class="m-chip' + (col === color ? ' on' : '') + '" title="' + esc(col) + '"'
+      + ' style="background:' + colorDot(col) + '" onclick="pickMerchColor(&quot;' + esc(col) + '&quot;)">'
+      + '<span class="swatch-tooltip">' + esc(col) + '</span></button>';
   }).join('');
   document.getElementById('mpSizes').innerHTML = sizeKeys.map(function (s) {
     const v = cd.sizes[s];
@@ -3421,9 +3519,7 @@ function showToast(text, kind) {
 }
 
 function skipIntroInstant() {
-  introComplete = true;
-  intro.style.display = 'none';
-  mainSite.classList.add('visible');
+  finishIntro(true);
   window.scrollTo(0, 0);
   prog.style.transform = 'scaleX(0)';
 }
