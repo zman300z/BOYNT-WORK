@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
-"""BOYNT photo utilities: remove the corner sparkle mark, then build an IG collage.
+"""BOYNT photo utilities: remove the sparkle mark, then build an IG collage.
 
 Two subcommands:
 
-    clean    remove the small 4-point sparkle watermark from the bottom-right
-             corner of each photo, writing full-resolution cleaned copies
+    clean    remove the four-point sparkle watermark, writing full-resolution
+             cleaned copies
 
-    collage  arrange four (already cleaned) photos into a 2x2 grid sized for a
-             portrait Instagram post
+    collage  arrange four photos into a 2x2 grid sized for a portrait
+             Instagram post
 
 Typical run:
 
-    python3 tools/photo_collage.py clean assets/source/*.png -o assets/clean
-    python3 tools/photo_collage.py collage assets/clean/*.png \
-        -o assets/collage/boynt-collage.jpg
+    python3 tools/photo_collage.py clean -o assets/clean
+    python3 tools/photo_collage.py collage -o assets/collage/boynt-collage.jpg
+
+On removal method: automatic detection was tried first and abandoned. The
+sparkle is a soft, low-contrast overlay, so local-contrast thresholding scored
+wood grain and fabric folds higher than the glyph itself, and template matching
+locked onto background bokeh. Diffusion inpainting (Telea, Navier-Stokes, and
+xphoto FSR) all left a visible ghost of the glyph.
+
+What works is copying real pixels from a nearby patch of the same material.
+The glyph sits at a fixed spot in every marked frame, so each photo carries an
+explicit, eyeballed source offset below rather than a guess at runtime.
 """
 
 from __future__ import annotations
@@ -25,113 +34,85 @@ import sys
 import cv2
 import numpy as np
 
-# The sparkle sits inside the bottom-right corner. Search a slightly generous
-# box so a few percent of placement drift between renders still gets caught.
-SEARCH_W = 0.16   # fraction of image width
-SEARCH_H = 0.16   # fraction of image height
+# Glyph centre, measured off a coordinate grid; identical in every marked
+# frame, at 88% across and 88% down a 2048px square.
+MARK_CX_FRAC = 1807 / 2048
+MARK_CY_FRAC = 1806 / 2048
+MARK_R_FRAC = 70 / 2048     # covers the glyph's tips plus its soft halo
 
-# Sanity bounds on the detected mark, as a fraction of the search box area.
-MIN_AREA = 0.004
-MAX_AREA = 0.40
+# Per-photo fill source, as a (dy, dx) shift in pixels. dst[p] = src[p - shift],
+# so a negative dy samples from below and a positive dx samples from the left.
+# A shift must clear the glyph itself (>=135px here) or it copies the mark back
+# in, and must not reach past the frame edge into unrelated content.
+PHOTOS = {
+    # navy cap, cobblestone patio  -> cream shirt below
+    "Gemini_Generated_Image_s1vri5s1vri5s1vr": (-140, 0),
+    # orange cap, wooden barn      -> sage shirt below
+    "Gemini_Generated_Image_ga6m8sga6m8sga6m": (-140, 0),
+    # back print, wooden fence     -> blurred fence to the left
+    "Gemini_Generated_Image_63jdvl63jdvl63jd": (0, 150),
+    # orange cap, cobblestone      -> no mark present, passed through untouched
+    "Gemini_Generated_Image_iq9t7ciq9t7ciq9t": None,
+}
+
+# Photo order in the collage: top-left, top-right, bottom-left, bottom-right.
+ORDER = [
+    "Gemini_Generated_Image_s1vri5s1vri5s1vr",
+    "Gemini_Generated_Image_iq9t7ciq9t7ciq9t",
+    "Gemini_Generated_Image_63jdvl63jdvl63jd",
+    "Gemini_Generated_Image_ga6m8sga6m8sga6m",
+]
 
 
-def find_mark_mask(img: np.ndarray) -> tuple[np.ndarray, str]:
-    """Return a full-frame uint8 mask covering the corner sparkle.
-
-    The sparkle is a soft white glyph laid over ordinary photo content, so it
-    reads as a small bright blob against its own local neighbourhood even when
-    it sits on a pale shirt. Compare each pixel to a heavily blurred copy of
-    the corner rather than to a global threshold.
-
-    Falls back to masking the whole expected glyph box when detection returns
-    something implausible, which keeps the caller from silently shipping an
-    uncleaned photo.
-    """
+def remove_mark(img: np.ndarray, dy: int, dx: int, feather: float = 9.0) -> np.ndarray:
+    """Patch out the sparkle by blending in a shifted copy of the photo."""
     h, w = img.shape[:2]
-    sw, sh = int(w * SEARCH_W), int(h * SEARCH_H)
-    x0, y0 = w - sw, h - sh
-
-    roi = img[y0:h, x0:w]
-    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY).astype(np.float32)
-
-    # Local background estimate; kernel must be odd and comfortably larger than
-    # the sparkle's stroke width.
-    k = max(3, (min(sw, sh) // 2) | 1)
-    background = cv2.GaussianBlur(gray, (k, k), 0)
-    lift = gray - background
-
-    # The glyph is the brightest thing relative to its surroundings. Use a
-    # percentile so the threshold adapts to shirt vs. cobblestone backdrops.
-    cutoff = max(6.0, float(np.percentile(lift, 99.0)) * 0.45)
-    raw = (lift > cutoff).astype(np.uint8) * 255
-
-    raw = cv2.morphologyEx(raw, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
-    raw = cv2.morphologyEx(raw, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
-
-    area_frac = float(raw.sum()) / 255.0 / (sw * sh)
-    mode = "detected"
-    if not (MIN_AREA <= area_frac <= MAX_AREA):
-        mode = "fallback-box"
-        raw = np.zeros((sh, sw), np.uint8)
-        # Expected glyph footprint: ~6% of image width, inset ~2.5% from edges.
-        gw = int(w * 0.075)
-        pad_x = int(w * 0.02)
-        pad_y = int(h * 0.02)
-        raw[max(0, sh - pad_y - gw):sh - pad_y, max(0, sw - pad_x - gw):sw - pad_x] = 255
-
-    # Grow the mask so the glyph's soft outer glow is repainted too.
-    grow = max(5, int(min(w, h) * 0.006)) | 1
-    raw = cv2.dilate(raw, np.ones((grow, grow), np.uint8))
+    cx, cy = int(w * MARK_CX_FRAC), int(h * MARK_CY_FRAC)
+    r = int(min(w, h) * MARK_R_FRAC)
 
     mask = np.zeros((h, w), np.uint8)
-    mask[y0:h, x0:w] = raw
-    return mask, mode
+    cv2.circle(mask, (cx, cy), r, 255, -1)
+
+    src = np.roll(np.roll(img, dy, axis=0), dx, axis=1)
+    alpha = cv2.GaussianBlur(mask.astype(np.float32) / 255.0, (0, 0), feather)[..., None]
+    return (img * (1 - alpha) + src * alpha).astype(np.uint8)
 
 
-def clean_image(path: str, out_dir: str, debug: bool = False) -> str:
-    img = cv2.imread(path, cv2.IMREAD_COLOR)
-    if img is None:
-        raise SystemExit(f"could not read image: {path}")
-
-    mask, mode = find_mark_mask(img)
-    radius = max(4, int(min(img.shape[:2]) * 0.004))
-    fixed = cv2.inpaint(img, mask, radius, cv2.INPAINT_TELEA)
-
+def clean_all(src_dir: str, out_dir: str) -> list[str]:
     os.makedirs(out_dir, exist_ok=True)
-    stem = os.path.splitext(os.path.basename(path))[0]
-    out = os.path.join(out_dir, f"{stem}-clean.png")
-    cv2.imwrite(out, fixed)
+    outs = []
+    for stem, shift in PHOTOS.items():
+        path = os.path.join(src_dir, f"{stem}.png")
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
+        if img is None:
+            raise SystemExit(f"could not read image: {path}")
 
-    if debug:
-        overlay = img.copy()
-        overlay[mask > 0] = (0, 0, 255)
-        cv2.imwrite(os.path.join(out_dir, f"{stem}-mask.png"), overlay)
+        out = os.path.join(out_dir, f"{stem}-clean.png")
+        if shift is None:
+            cv2.imwrite(out, img)
+            print(f"{stem[-8:]}: no mark present, copied unchanged")
+        else:
+            cv2.imwrite(out, remove_mark(img, *shift))
+            print(f"{stem[-8:]}: mark removed, fill from shift {shift}")
+        outs.append(out)
+    return outs
 
-    print(f"{os.path.basename(path)}: mark removed ({mode}) -> {out}")
-    return out
 
-
-def cover_crop(img: np.ndarray, cw: int, ch: int, anchor: float) -> np.ndarray:
-    """Scale-and-crop `img` to exactly cw x ch, keeping `anchor` vertically.
-
-    anchor 0.0 keeps the top of the frame, 1.0 the bottom, 0.5 the centre.
-    """
+def cover_crop(img: np.ndarray, cw: int, ch: int, ax: float, ay: float) -> np.ndarray:
+    """Scale-and-crop to exactly cw x ch. ax/ay pick which part survives the
+    crop on each axis: 0.0 keeps the left/top edge, 1.0 the right/bottom."""
     h, w = img.shape[:2]
     scale = max(cw / w, ch / h)
     nw, nh = int(round(w * scale)), int(round(h * scale))
     img = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_AREA)
-
-    x = max(0, min(nw - cw, (nw - cw) // 2))
-    y = max(0, min(nh - ch, int(round((nh - ch) * anchor))))
+    x = int(round((nw - cw) * ax))
+    y = int(round((nh - ch) * ay))
     return img[y:y + ch, x:x + cw]
 
 
 def build_collage(paths: list[str], out: str, width: int, height: int,
                   gutter: int, margin: int, bg: tuple[int, int, int],
-                  anchors: list[float]) -> str:
-    if len(paths) != 4:
-        raise SystemExit(f"collage expects exactly 4 photos, got {len(paths)}")
-
+                  xa: list[float], ya: list[float]) -> str:
     canvas = np.zeros((height, width, 3), np.uint8)
     canvas[:] = bg
 
@@ -142,7 +123,7 @@ def build_collage(paths: list[str], out: str, width: int, height: int,
         img = cv2.imread(path, cv2.IMREAD_COLOR)
         if img is None:
             raise SystemExit(f"could not read image: {path}")
-        cell = cover_crop(img, cw, ch, anchors[i])
+        cell = cover_crop(img, cw, ch, xa[i], ya[i])
         x = margin + (i % 2) * (cw + gutter)
         y = margin + (i // 2) * (ch + gutter)
         canvas[y:y + ch, x:x + cw] = cell
@@ -150,7 +131,7 @@ def build_collage(paths: list[str], out: str, width: int, height: int,
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     params = [cv2.IMWRITE_JPEG_QUALITY, 95] if out.lower().endswith((".jpg", ".jpeg")) else []
     cv2.imwrite(out, canvas, params)
-    print(f"collage {width}x{height} -> {out}")
+    print(f"collage {width}x{height}, cells {cw}x{ch} -> {out}")
     return out
 
 
@@ -159,35 +140,34 @@ def main(argv: list[str]) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    c = sub.add_parser("clean", help="remove the corner sparkle mark")
-    c.add_argument("images", nargs="+")
+    c = sub.add_parser("clean", help="remove the sparkle mark")
+    c.add_argument("--src-dir", default="assets/source")
     c.add_argument("-o", "--out-dir", default="assets/clean")
-    c.add_argument("--debug", action="store_true",
-                   help="also write a red-overlay preview of each mask")
 
     g = sub.add_parser("collage", help="build the 2x2 Instagram collage")
-    g.add_argument("images", nargs=4)
+    g.add_argument("--src-dir", default="assets/clean")
     g.add_argument("-o", "--out", default="assets/collage/boynt-collage.jpg")
     g.add_argument("--width", type=int, default=1080)
     g.add_argument("--height", type=int, default=1350)  # 4:5 portrait IG post
     g.add_argument("--gutter", type=int, default=12)
     g.add_argument("--margin", type=int, default=12)
     g.add_argument("--bg", default="255,255,255", help="B,G,R background colour")
-    g.add_argument("--anchors", default="0.5,0.5,0.5,0.5",
-                   help="per-photo vertical crop anchor, 0=top 1=bottom")
+    g.add_argument("--xanchors", default="0.5,0.45,0.5,0.5")
+    g.add_argument("--yanchors", default="0.5,0.5,0.5,0.5")
 
     a = ap.parse_args(argv)
 
     if a.cmd == "clean":
-        for p in a.images:
-            clean_image(p, a.out_dir, a.debug)
+        clean_all(a.src_dir, a.out_dir)
         return 0
 
+    paths = [os.path.join(a.src_dir, f"{s}-clean.png") for s in ORDER]
     bg = tuple(int(v) for v in a.bg.split(","))
-    anchors = [float(v) for v in a.anchors.split(",")]
-    if len(anchors) != 4:
-        raise SystemExit("--anchors needs 4 comma-separated values")
-    build_collage(a.images, a.out, a.width, a.height, a.gutter, a.margin, bg, anchors)
+    xa = [float(v) for v in a.xanchors.split(",")]
+    ya = [float(v) for v in a.yanchors.split(",")]
+    if len(xa) != 4 or len(ya) != 4:
+        raise SystemExit("anchors need 4 comma-separated values each")
+    build_collage(paths, a.out, a.width, a.height, a.gutter, a.margin, bg, xa, ya)
     return 0
 
 
