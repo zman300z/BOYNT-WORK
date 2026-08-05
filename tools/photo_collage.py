@@ -149,8 +149,10 @@ def main(argv: list[str]) -> int:
     g.add_argument("-o", "--out", default="assets/collage/boynt-collage.jpg")
     g.add_argument("--width", type=int, default=1080)
     g.add_argument("--height", type=int, default=1350)  # 4:5 portrait IG post
-    g.add_argument("--gutter", type=int, default=12)
-    g.add_argument("--margin", type=int, default=12)
+    # Edge to edge by default: at 0/0 the cells land on an exact 540x675, so
+    # each photo keeps a true 4:5 crop with no seam between them.
+    g.add_argument("--gutter", type=int, default=0)
+    g.add_argument("--margin", type=int, default=0)
     g.add_argument("--bg", default="255,255,255", help="B,G,R background colour")
     g.add_argument("--xanchors", default="0.5,0.45,0.5,0.5")
     g.add_argument("--yanchors", default="0.5,0.5,0.5,0.5")
