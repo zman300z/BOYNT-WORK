@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tidewater Signal — Unidentified craft down off Myrtle Beach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181d; --ink-soft:#41474f; --ink-faint:#6b727b;
+  --paper:#ffffff; --paper-2:#f6f4f0; --rule:#dcd8d1;
+  --brand:#0f3b6e; --brand-2:#1c6fb8; --alert:#b3261e; --amber:#b9791a;
+  --shell:#e9e6e0;
+  --max:1180px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--shell); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{max-width:100%}
+a{color:var(--brand-2)}
+
+/* ---------- fiction banner ---------- */
+.fiction{
+  position:sticky; top:0; z-index:50;
+  background:repeating-linear-gradient(135deg,#1d1d1d,#1d1d1d 14px,#262626 14px,#262626 28px);
+  color:#ffd66b; border-bottom:3px solid #ffd66b;
+  font-family:Inter,system-ui,sans-serif; font-size:12.5px; letter-spacing:.04em;
+  padding:9px 16px; text-align:center; line-height:1.5;
+}
+.fiction strong{color:#fff; letter-spacing:.12em; font-weight:700}
+@media (max-width:560px){ .fiction{font-size:11px; padding:7px 12px} }
+
+/* ---------- shell ---------- */
+.wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
+.sheet{background:var(--paper); max-width:1240px; margin:0 auto; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 60px rgba(0,0,0,.10)}
+
+/* ---------- masthead ---------- */
+.utility{
+  border-bottom:1px solid var(--rule); background:var(--paper-2);
+  font-family:Inter,system-ui,sans-serif; font-size:11.5px; color:var(--ink-faint);
+}
+.utility .wrap{display:flex; justify-content:space-between; align-items:center; gap:16px; height:34px}
+.utility .live{display:inline-flex; align-items:center; gap:7px; color:var(--alert); font-weight:600; letter-spacing:.09em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--alert);box-shadow:0 0 0 0 rgba(179,38,30,.6);animation:pulse 1.9s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(179,38,30,0)}100%{box-shadow:0 0 0 0 rgba(179,38,30,0)}}
+
+.masthead{padding:22px 0 14px; text-align:center; border-bottom:1px solid var(--rule)}
+.logo{display:inline-flex; align-items:center; gap:14px}
+.logo .mark{flex:0 0 auto}
+.logo .word{text-align:left}
+.logo h1{
+  margin:0; font-family:"Playfair Display",Georgia,serif; font-weight:900;
+  font-size:clamp(30px,5.4vw,54px); letter-spacing:-.015em; line-height:.95; color:var(--brand);
+}
+.logo .tag{
+  font-family:Inter,system-ui,sans-serif; font-size:9.5px; letter-spacing:.42em;
+  text-transform:uppercase; color:var(--ink-faint); margin-top:7px;
+}
+nav.sections{border-bottom:2px solid var(--ink); background:var(--paper)}
+nav.sections .wrap{display:flex; gap:26px; overflow-x:auto; height:42px; align-items:center;
+  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase}
+nav.sections span{white-space:nowrap; color:var(--ink-soft); padding-bottom:2px}
+nav.sections span.on{color:var(--alert); border-bottom:2px solid var(--alert)}
+
+/* ---------- headline block ---------- */
+article{padding:34px 0 0}
+.kicker{
+  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:700; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--alert); margin-bottom:14px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.kicker .sep{width:26px;height:1px;background:var(--alert);opacity:.5}
+h2.head{
+  font-family:"Playfair Display",Georgia,serif; font-weight:800;
+  font-size:clamp(31px,5.1vw,58px); line-height:1.04; letter-spacing:-.022em; margin:0 0 16px;
+  max-width:19ch;
+}
+.deck{
+  font-size:clamp(17px,2.1vw,21px); line-height:1.5; color:var(--ink-soft);
+  max-width:62ch; margin:0 0 22px;
+}
+.byline{
+  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
+  border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:12px 0; font-family:Inter,system-ui,sans-serif; font-size:12.5px; color:var(--ink-faint);
+}
+.byline b{color:var(--ink); font-weight:600}
+.byline .who{display:flex;align-items:center;gap:9px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#c9d6e6,#8fa9c4);
+  display:grid;place-items:center;color:#123; font-weight:700; font-size:11px; font-family:Inter,sans-serif}
+
+/* ---------- media ---------- */
+figure{margin:26px 0 0}
+figure .frame{background:#0a0d12; line-height:0; position:relative; overflow:hidden}
+figcaption{
+  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.55; color:var(--ink-faint);
+  padding:9px 2px 0; border-bottom:1px solid var(--rule); padding-bottom:12px;
+}
+figcaption b{color:var(--ink-soft); font-weight:600}
+.credit{text-transform:uppercase; letter-spacing:.09em; font-size:10px; color:#9aa1a9}
+
+/* ---------- body layout ---------- */
+.cols{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:44px; padding:30px 0 50px; align-items:start}
+@media (max-width:900px){ .cols{grid-template-columns:1fr; gap:34px} }
+
+.body{font-size:18.5px; line-height:1.72; max-width:66ch}
+.body p{margin:0 0 20px}
+.body p.lead::first-letter{
+  float:left; font-family:"Playfair Display",serif; font-weight:800; font-size:64px;
+  line-height:.82; padding:6px 10px 0 0; color:var(--brand);
+}
+.body h3{
+  font-family:Inter,system-ui,sans-serif; font-size:13px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink); margin:34px 0 14px; padding-top:16px; border-top:1px solid var(--rule);
+}
+blockquote{
+  margin:28px 0; padding:4px 0 4px 22px; border-left:3px solid var(--amber);
+  font-size:22px; line-height:1.45; font-style:italic; color:var(--ink);
+}
+blockquote cite{display:block; margin-top:12px; font-style:normal; font-family:Inter,sans-serif;
+  font-size:12px; letter-spacing:.06em; color:var(--ink-faint)}
+
+/* ---------- sidebar ---------- */
+aside{position:sticky; top:74px; font-family:Inter,system-ui,sans-serif}
+.card{border:1px solid var(--rule); margin-bottom:22px}
+.card h4{
+  margin:0; background:var(--ink); color:#fff; font-size:11.5px; letter-spacing:.14em;
+  text-transform:uppercase; padding:10px 14px; font-weight:700;
+}
+.card .in{padding:14px}
+.tl{list-style:none; margin:0; padding:0; font-size:13px; line-height:1.5}
+.tl li{position:relative; padding:0 0 16px 20px; border-left:2px solid var(--rule); margin-left:5px}
+.tl li:last-child{padding-bottom:0; border-left-color:transparent}
+.tl li::before{content:""; position:absolute; left:-6px; top:3px; width:10px; height:10px;
+  border-radius:50%; background:#fff; border:2px solid var(--brand-2)}
+.tl li.hot::before{border-color:var(--alert); background:var(--alert)}
+.tl time{display:block; font-weight:700; font-size:11px; letter-spacing:.08em; color:var(--ink); margin-bottom:3px}
+.tl span{color:var(--ink-soft)}
+
+.facts{font-size:13px; line-height:1.5; margin:0; padding:0; list-style:none}
+.facts li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dotted var(--rule)}
+.facts li:last-child{border-bottom:0}
+.facts b{color:var(--ink); font-weight:600; text-align:right}
+.facts em{font-style:normal; color:var(--ink-faint)}
+
+.related{list-style:none;margin:0;padding:0;font-size:13.5px;line-height:1.35}
+.related li{padding:11px 0;border-bottom:1px solid var(--rule)}
+.related li:last-child{border-bottom:0}
+.related a{color:var(--ink); text-decoration:none; font-weight:600}
+.related small{display:block;color:var(--ink-faint);font-weight:400;margin-top:4px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+
+/* ---------- inline extras ---------- */
+.pullbox{
+  background:var(--paper-2); border:1px solid var(--rule); border-top:3px solid var(--brand);
+  padding:18px 20px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.6;
+}
+.pullbox h5{margin:0 0 10px; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand)}
+.pullbox p{margin:0 0 10px; color:var(--ink-soft)}
+.pullbox p:last-child{margin:0}
+
+.gallery{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:30px 0}
+@media (max-width:640px){ .gallery{grid-template-columns:1fr} }
+.gallery figure{margin:0}
+
+footer.site{background:var(--ink); color:#aeb5bd; margin-top:0; padding:34px 0 44px;
+  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.7}
+footer.site .wrap{display:flex; flex-wrap:wrap; gap:26px; justify-content:space-between}
+footer.site b{color:#fff; display:block; margin-bottom:8px; font-size:11px; letter-spacing:.13em; text-transform:uppercase}
+footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18px; color:#7f868e}
+</style>
+</head>
+<body>
+
+<div class="fiction">
+  <strong>FICTION</strong> &nbsp;·&nbsp; This is a fabricated news story written as a creative exercise. <b>Tidewater Signal</b> is not a real news organization, the people quoted do not exist, and no aircraft of unknown origin has landed off Myrtle Beach.
+</div>
+
+<div class="sheet">
+
+  <div class="utility">
+    <div class="wrap">
+      <span class="live"><i class="dot"></i>LIVE UPDATES</span>
+      <span>Wednesday, August 19, 2026 · Myrtle Beach, S.C. · 84°F</span>
+    </div>
+  </div>
+
+  <header class="masthead">
+    <div class="logo">
+      <svg class="mark" width="62" height="62" viewBox="0 0 64 64" aria-label="Tidewater Signal logo">
+        <circle cx="32" cy="32" r="31" fill="#0f3b6e"/>
+        <path d="M4 40c6-5 10 3 16-1s10 4 16-1 10 3 16-2v22H4z" fill="#1c6fb8" opacity=".55"/>
+        <path d="M4 46c6-5 10 3 16-1s10 4 16-1 10 3 16-2v20H4z" fill="#5ba7de" opacity=".45"/>
+        <g stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round">
+          <path d="M32 33V13"/>
+          <path d="M22.5 21.5a13 13 0 0 1 19 0" opacity=".95"/>
+          <path d="M17 15.5a21 21 0 0 1 30 0" opacity=".6"/>
+        </g>
+        <circle cx="32" cy="34.5" r="3.4" fill="#fff"/>
+      </svg>
+      <div class="word">
+        <h1>Tidewater Signal</h1>
+        <div class="tag">Carolina Coast · Independent Since 1974</div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="sections">
+    <div class="wrap">
+      <span class="on">Breaking</span><span>Grand Strand</span><span>State</span><span>Nation</span>
+      <span>Weather</span><span>Business</span><span>Sports</span><span>Opinion</span><span>Obituaries</span>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <article>
+
+      <div class="kicker">Breaking <span class="sep"></span> Grand Strand <span class="sep"></span> Updated 11 min ago</div>
+
+      <h2 class="head">Unidentified craft comes down in the Atlantic four miles off Myrtle Beach</h2>
+
+      <p class="deck">Radar tracked the object on a descending path out of low Earth orbit before it entered the water shortly after 3 a.m. Officials say it matches nothing in the public catalog of satellites, spent boosters or debris — and no country has claimed it.</p>
+
+      <div class="byline">
+        <span class="who"><i class="avatar">MR</i> By <b>Marisol Reyes</b> and <b>Dean Ottaway</b></span>
+        <span>Tidewater Signal · Coastal Bureau</span>
+        <span>Published Aug. 19, 2026, 5:12 a.m. ET</span>
+        <span>Updated 8:47 a.m. ET</span>
+      </div>
+
+      <figure>
+        <div class="frame">
+          <!-- HERO: night ocean, glowing object partially submerged -->
+          <svg viewBox="0 0 1600 900" role="img" aria-label="A dim amber glow spreads across dark water off a pier, with a partially submerged object at its center.">
+            <defs>
+              <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#04060b"/><stop offset=".45" stop-color="#080f1b"/>
+                <stop offset=".8" stop-color="#12212f"/><stop offset="1" stop-color="#1b303f"/>
+              </linearGradient>
+              <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#152634"/><stop offset=".28" stop-color="#0c1723"/>
+                <stop offset="1" stop-color="#03070c"/>
+              </linearGradient>
+              <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#fff4d8" stop-opacity=".95"/>
+                <stop offset=".2" stop-color="#ffc978" stop-opacity=".62"/>
+                <stop offset=".54" stop-color="#d9822a" stop-opacity=".24"/>
+                <stop offset="1" stop-color="#a34f0d" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#a8dcff" stop-opacity=".30"/>
+                <stop offset="1" stop-color="#a8dcff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="vig" cx="50%" cy="46%" r="74%">
+                <stop offset=".45" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".70"/>
+              </radialGradient>
+              <filter id="grain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="4" seed="7" result="n"/>
+                <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+                <feComponentTransfer in="g"><feFuncA type="linear" slope=".55"/></feComponentTransfer>
+              </filter>
+              <filter id="clouds" x="-10%" y="-10%" width="120%" height="120%">
+                <feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="19"/>
+                <feColorMatrix type="saturate" values="0"/>
+                <feGaussianBlur stdDeviation="6"/>
+              </filter>
+              <filter id="chop" x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence type="fractalNoise" baseFrequency=".006 .05" numOctaves="3" seed="4" result="t"/>
+                <feDisplacementMap in="SourceGraphic" in2="t" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+                <feGaussianBlur stdDeviation=".7"/>
+              </filter>
+              <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="11"/></filter>
+              <filter id="soft2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>
+              <filter id="soft3" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="26"/></filter>
+              <clipPath id="seaclip"><rect y="470" width="1600" height="430"/></clipPath>
+            </defs>
+
+            <rect width="1600" height="900" fill="url(#sky2)"/>
+            <rect width="1600" height="470" filter="url(#clouds)" opacity=".10"/>
+
+            <g fill="#e6eefa">
+              <circle cx="180" cy="90" r="1.4" opacity=".75"/><circle cx="420" cy="58" r="1" opacity=".45"/>
+              <circle cx="700" cy="118" r="1.2" opacity=".6"/><circle cx="980" cy="70" r=".9" opacity=".4"/>
+              <circle cx="1230" cy="140" r="1.5" opacity=".65"/><circle cx="1420" cy="80" r="1" opacity=".42"/>
+              <circle cx="300" cy="198" r=".9" opacity=".32"/><circle cx="1120" cy="222" r="1.1" opacity=".38"/>
+              <circle cx="860" cy="178" r=".9" opacity=".28"/><circle cx="560" cy="242" r="1" opacity=".33"/>
+              <circle cx="1520" cy="300" r=".9" opacity=".22"/><circle cx="120" cy="330" r=".9" opacity=".2"/>
+            </g>
+
+            <!-- residual entry trail, mostly dissipated -->
+            <path d="M1570 30 C1330 140 1150 250 1000 396" stroke="#cfe4ff" stroke-width="2" fill="none" opacity=".13" filter="url(#soft2)"/>
+            <path d="M1570 30 C1330 140 1150 250 1000 396" stroke="#ffd9a3" stroke-width="9" fill="none" opacity=".05" filter="url(#soft)"/>
+
+            <!-- sea -->
+            <rect y="470" width="1600" height="430" fill="url(#sea)"/>
+            <line x1="0" y1="470" x2="1600" y2="470" stroke="#3d637f" stroke-width="1.4" opacity=".45"/>
+            <!-- haze band sitting on the horizon -->
+            <rect y="430" width="1600" height="70" fill="#4a6b86" opacity=".13" filter="url(#soft)"/>
+
+            <g clip-path="url(#seaclip)">
+              <!-- ambient chop -->
+              <g filter="url(#chop)" stroke="#7fa8c6" fill="none">
+                <g opacity=".13" stroke-width="1.2">
+                  <path d="M-40 486h1700"/><path d="M-40 496h1700"/><path d="M-40 508h1700"/>
+                  <path d="M-40 522h1700"/><path d="M-40 538h1700"/>
+                </g>
+                <g opacity=".16" stroke-width="1.7">
+                  <path d="M-40 558h1700"/><path d="M-40 582h1700"/><path d="M-40 610h1700"/>
+                  <path d="M-40 642h1700"/><path d="M-40 678h1700"/>
+                </g>
+                <g opacity=".18" stroke-width="2.6">
+                  <path d="M-40 720h1700"/><path d="M-40 766h1700"/><path d="M-40 818h1700"/>
+                  <path d="M-40 872h1700"/>
+                </g>
+              </g>
+
+              <!-- glow spilling across the water -->
+              <ellipse cx="900" cy="586" rx="520" ry="150" fill="url(#glow)" opacity=".50" filter="url(#soft3)"/>
+              <ellipse cx="900" cy="502" rx="320" ry="72" fill="url(#halo)" filter="url(#soft)"/>
+
+              <!-- lit chop inside the glow -->
+              <g filter="url(#chop)" stroke="#ffca7d" fill="none" opacity=".30">
+                <path d="M700 560h410" stroke-width="1.6"/><path d="M672 582h470" stroke-width="1.8"/>
+                <path d="M646 610h510" stroke-width="2"/><path d="M614 644h570" stroke-width="2.2"/>
+                <path d="M586 684h624" stroke-width="2.4"/><path d="M548 730h692" stroke-width="2.6"/>
+                <path d="M512 786h760" stroke-width="2.8"/><path d="M470 848h820" stroke-width="3"/>
+              </g>
+            </g>
+
+            <!-- the object: low, tilted, mostly under -->
+            <g transform="rotate(-3.5 900 500)">
+              <ellipse cx="900" cy="524" rx="230" ry="46" fill="#ffb459" opacity=".16" filter="url(#soft)"/>
+              <g filter="url(#soft2)">
+                <path d="M772 504 C790 486 830 476 900 476 C970 476 1010 486 1028 504 C1000 518 950 524 900 524 C850 524 800 518 772 504z" fill="#171d24"/>
+                <path d="M786 500 C806 488 842 481 900 481 C958 481 994 488 1014 500 C990 508 950 512 900 512 C850 512 810 508 786 500z" fill="#28323d"/>
+                <path d="M842 486 C862 480 880 478 900 478 C920 478 938 480 958 486 C938 492 920 494 900 494 C880 494 862 492 842 486z" fill="#fff1d3" opacity=".9"/>
+                <path d="M842 486 C862 480 880 478 900 478 C920 478 938 480 958 486 C938 492 920 494 900 494 C880 494 862 492 842 486z" fill="#ffcf8a" opacity=".55" filter="url(#soft2)"/>
+                <rect x="868" y="470" width="64" height="7" rx="3.5" fill="#3a4653"/>
+                <circle cx="1004" cy="497" r="3.4" fill="#ffe6b5" opacity=".85"/>
+                <circle cx="800" cy="498" r="3" fill="#9fd7ff" opacity=".7"/>
+              </g>
+              <!-- waterline froth -->
+              <g filter="url(#chop)" stroke="#e8f2fb" opacity=".28" fill="none">
+                <path d="M768 516 C820 526 980 526 1032 516" stroke-width="3"/>
+                <path d="M754 524 C816 536 986 536 1048 524" stroke-width="2"/>
+              </g>
+            </g>
+            <!-- steam rising off the hull -->
+            <g filter="url(#soft3)" opacity=".17">
+              <ellipse cx="930" cy="444" rx="130" ry="44" fill="#cfe0ee"/>
+              <ellipse cx="872" cy="404" rx="80" ry="34" fill="#b9cfe2" opacity=".7"/>
+            </g>
+
+            <!-- distant vessels on station -->
+            <g>
+              <rect x="1272" y="452" width="52" height="15" fill="#070c13"/>
+              <rect x="1288" y="444" width="16" height="9" fill="#0a1119"/>
+              <circle cx="1290" cy="441" r="2.6" fill="#ffe9b8"/><circle cx="1310" cy="447" r="2" fill="#9fd7ff"/>
+              <rect x="1272" y="467" width="52" height="7" fill="#0d1620" opacity=".7"/>
+            </g>
+            <g>
+              <rect x="392" y="458" width="38" height="11" fill="#070c13"/>
+              <circle cx="404" cy="454" r="2.2" fill="#ffd9a0"/>
+            </g>
+
+            <!-- pier silhouette, left, slightly out of frame -->
+            <g fill="#03060a">
+              <rect x="-10" y="450" width="342" height="18"/>
+              <rect x="-10" y="436" width="66" height="32"/>
+              <rect x="150" y="414" width="54" height="36"/>
+              <rect x="24" y="466" width="10" height="170"/><rect x="88" y="466" width="10" height="158"/>
+              <rect x="152" y="466" width="10" height="146"/><rect x="216" y="466" width="9" height="132"/>
+              <rect x="278" y="466" width="9" height="118"/>
+            </g>
+            <g fill="#ffc96a">
+              <circle cx="62" cy="444" r="2.4" opacity=".9"/><circle cx="142" cy="444" r="2.4" opacity=".75"/>
+              <circle cx="232" cy="446" r="2" opacity=".6"/><circle cx="176" cy="424" r="2" opacity=".8"/>
+            </g>
+            <g filter="url(#soft)" opacity=".35">
+              <circle cx="62" cy="444" r="9" fill="#ffc96a"/><circle cx="142" cy="444" r="8" fill="#ffc96a"/>
+            </g>
+
+            <!-- helicopter with searchlight, right -->
+            <g opacity=".5">
+              <path d="M1428 252 L1338 470 L1524 470 Z" fill="#cfe6ff" opacity=".11" filter="url(#soft)"/>
+              <circle cx="1428" cy="248" r="2.6" fill="#fff"/>
+              <circle cx="1442" cy="242" r="2.2" fill="#ff5d4d"/>
+            </g>
+
+            <!-- lens/atmosphere -->
+            <rect width="1600" height="900" fill="url(#vig)"/>
+            <rect width="1600" height="900" filter="url(#grain)" opacity=".28" style="mix-blend-mode:overlay"/>
+            <rect width="1600" height="900" fill="#1a2b3d" opacity=".08" style="mix-blend-mode:screen"/>
+          </svg>
+        </div>
+        <figcaption><b>Long exposure from the north end of the pier at 3:41 a.m.</b> shows an object roughly 60 feet across sitting low in the water inside the Coast Guard exclusion zone. The amber light dimmed and brightened on a slow cycle for about ninety minutes, witnesses said. <span class="credit">Tidewater Signal / Handout via reader submission</span></figcaption>
+      </figure>
+
+      <div class="cols">
+        <div class="body">
+
+          <p class="lead">MYRTLE BEACH, S.C. — Something came down out of the sky over the Grand Strand early Wednesday morning, and more than five hours later nobody in a position to know would say what it was.</p>
+
+          <p>The object entered the Atlantic roughly four nautical miles east-southeast of the 14th Avenue Pier at 3:07 a.m., according to two people briefed on the tracking data who spoke on condition of anonymity because they were not authorized to discuss it. It did not sink. As of 8:30 a.m. it was still there, sitting low and mostly submerged, ringed by three Coast Guard cutters and a two-mile exclusion zone that the Coast Guard's Sector Charleston office extended twice before sunrise.</p>
+
+          <p>What has federal agencies moving quickly is not the splashdown itself — the ocean off the Carolinas catches falling hardware a few times a year — but the path it took getting here.</p>
+
+          <p>Radar returns reviewed by the Signal show the object in a stable, roughly circular orbit about 210 miles up for at least four passes before it began to descend. Then, over the course of a single 90-minute orbit, it dropped. The descent was smooth and shallow, and it slowed at the end.</p>
+
+          <blockquote>
+            It came out of orbit. That part is not in dispute and it is not interesting. What is interesting is that it was in orbit at all, and we cannot tell you when it got there.
+            <cite>— A senior official at a U.S. space-tracking facility, speaking on condition of anonymity</cite>
+          </blockquote>
+
+          <p>Every object larger than about four inches in Earth orbit is supposed to be in a catalog. There are more than 40,000 of them: working satellites, dead satellites, spent upper stages, bolts, paint flecks, a lost tool bag. Each is tracked, numbered and matched to a launch. Objects do not simply appear in the catalog. They are put into orbit by rockets, and rockets are visible from a long way off.</p>
+
+          <p>This one is not in the catalog. Three current and former tracking officials confirmed that no entry in the public catalog matches its orbit, and none of them could point to a launch it could plausibly have come from.</p>
+
+          <h3>Where it came from</h3>
+
+          <p>The honest answer, five people involved in the response said in some version or another, is that nobody knows.</p>
+
+          <p>The object was first noted at 11:52 p.m. Tuesday, already in orbit, on a track that crossed the eastern seaboard on a northwest-to-southeast diagonal. Analysts initially logged it as an uncorrelated target — routine, usually resolved within a day when the object turns out to be a fragment of something already known. It was not resolved. By 1:30 a.m. the track had been elevated.</p>
+
+          <p>Working backward from the descent, the object's earlier orbit does not extrapolate cleanly to any launch window in the last six weeks. That leaves two possibilities that space-surveillance people are willing to say out loud: either it was launched by someone who did not want it seen and it went unnoticed for some period, or it arrived from outside Earth orbit and inserted itself — which is a very different sentence, and one that no official would put their name to on Wednesday morning.</p>
+
+          <div class="pullbox">
+            <h5>What we know, what we don't</h5>
+            <p><b>Known:</b> An object approximately 55–70 feet across entered the water 4.1 nautical miles off Myrtle Beach at 3:07 a.m. It descended from a low Earth orbit at roughly 210 miles. It is intact, floating and emitting light on an irregular cycle. Federal agencies have closed the airspace and the water around it.</p>
+            <p><b>Not known:</b> What it is, who built it, how long it was in orbit, how it got into orbit, whether anything aboard is alive, and whether the light is a signal, a byproduct or an accident.</p>
+          </div>
+
+          <h3>On the beach</h3>
+
+          <p>The first calls to Horry County dispatch came in at 3:04 a.m., three minutes before the water. Callers described a light "like a welding arc" moving south to north, slower than a meteor and without the sound that usually follows one.</p>
+
+          <p>Delia Karounos, 62, was walking her dog on the beach near 29th Avenue North when she saw it. "I've lived here forty years and I've watched the rockets go up from the Cape and come down again," she said. "That's a rocket. It roars, it's over, it's gone. This one took its time. It went out over the water and it stopped. Things do not stop."</p>
+
+          <p>Nolan Vestrick, a charter captain who had just cast off from the marina at Little River, said he was inside the exclusion zone when it was established. "The water lit up under the boat before I saw anything on the surface," he said. "Green, then orange. My depth sounder went to garbage for about a minute — just noise. Then it came back and there it was, two hundred yards off my starboard, half under."</p>
+
+          <p>The Coast Guard ordered him out at 3:40 a.m. He said cutters were already on station when he turned for shore, which would put them on the water before the object came down.</p>
+
+          <div class="gallery">
+            <figure>
+              <div class="frame">
+                <!-- CUTTER AT DAWN -->
+                <svg viewBox="0 0 800 560" role="img" aria-label="A Coast Guard cutter at dawn with floodlights aimed at the water.">
+                  <defs>
+                    <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#243347"/><stop offset=".5" stop-color="#4d5f72"/>
+                      <stop offset=".78" stop-color="#8b95a0"/><stop offset="1" stop-color="#bdb9ae"/>
+                    </linearGradient>
+                    <linearGradient id="dawnsea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#68798b"/><stop offset=".4" stop-color="#455768"/>
+                      <stop offset="1" stop-color="#1f2c39"/>
+                    </linearGradient>
+                    <radialGradient id="dvig" cx="50%" cy="46%" r="72%">
+                      <stop offset=".45" stop-color="#000" stop-opacity="0"/>
+                      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+                    </radialGradient>
+                    <filter id="g2" x="0" y="0" width="100%" height="100%">
+                      <feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="4" seed="3"/>
+                      <feColorMatrix type="saturate" values="0"/>
+                    </filter>
+                    <filter id="chop2" x="-5%" y="-5%" width="110%" height="110%">
+                      <feTurbulence type="fractalNoise" baseFrequency=".01 .07" numOctaves="3" seed="9" result="t"/>
+                      <feDisplacementMap in="SourceGraphic" in2="t" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+                      <feGaussianBlur stdDeviation=".5"/>
+                    </filter>
+                    <filter id="b2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>
+                    <filter id="b3" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
+                    <clipPath id="sc2"><rect y="300" width="800" height="260"/></clipPath>
+                  </defs>
+
+                  <rect width="800" height="560" fill="url(#dawn)"/>
+                  <!-- stratus over the horizon -->
+                  <ellipse cx="200" cy="150" rx="250" ry="30" fill="#8d9aa8" opacity=".32" filter="url(#b2)"/>
+                  <ellipse cx="640" cy="104" rx="220" ry="24" fill="#aab5c0" opacity=".26" filter="url(#b2)"/>
+                  <ellipse cx="430" cy="238" rx="330" ry="26" fill="#c3c8cc" opacity=".22" filter="url(#b2)"/>
+
+                  <rect y="300" width="800" height="260" fill="url(#dawnsea)"/>
+                  <line x1="0" y1="300" x2="800" y2="300" stroke="#a6b0ba" stroke-width="1" opacity=".55"/>
+                  <rect y="276" width="800" height="46" fill="#c9ced3" opacity=".16" filter="url(#b2)"/>
+
+                  <g clip-path="url(#sc2)">
+                    <g filter="url(#chop2)" stroke="#c2d2df" fill="none">
+                      <g opacity=".13" stroke-width="1">
+                        <path d="M-20 312h840"/><path d="M-20 322h840"/><path d="M-20 334h840"/><path d="M-20 348h840"/>
+                      </g>
+                      <g opacity=".15" stroke-width="1.5">
+                        <path d="M-20 366h840"/><path d="M-20 388h840"/><path d="M-20 414h840"/><path d="M-20 444h840"/>
+                      </g>
+                      <g opacity=".17" stroke-width="2.4">
+                        <path d="M-20 478h840"/><path d="M-20 516h840"/><path d="M-20 552h840"/>
+                      </g>
+                    </g>
+                  </g>
+
+                  <!-- floodlight cones -->
+                  <g filter="url(#b2)">
+                    <path d="M470 232 L296 336 L474 344 Z" fill="#fffbe9" opacity=".28"/>
+                    <path d="M486 236 L338 356 L502 362 Z" fill="#fffbe9" opacity=".20"/>
+                  </g>
+
+                  <!-- cutter -->
+                  <g filter="url(#b3)">
+                    <path d="M420 300 L700 300 L676 336 L444 336 Z" fill="#dedbd3"/>
+                    <path d="M420 300 L700 300 L698 306 L422 306 Z" fill="#f3f1eb" opacity=".8"/>
+                    <path d="M444 336 L676 336 L664 349 L456 349 Z" fill="#141d27"/>
+                    <rect x="470" y="264" width="120" height="36" fill="#d3d0c8"/>
+                    <rect x="470" y="264" width="120" height="5" fill="#eae7e0"/>
+                    <rect x="500" y="240" width="66" height="26" fill="#e3e0da"/>
+                    <rect x="506" y="246" width="52" height="12" fill="#2f3d4d"/>
+                    <rect x="530" y="204" width="5" height="38" fill="#bfbcb5"/>
+                    <path d="M535 206 h32 v9 h-32z" fill="#c4382c"/>
+                    <path d="M600 300 L648 300 L624 336 L576 336 Z" fill="#c4382c"/>
+                    <path d="M652 300 L666 300 L642 336 L628 336 Z" fill="#12263f"/>
+                    <rect x="452" y="290" width="18" height="10" fill="#c9c6be"/>
+                    <circle cx="470" cy="232" r="3.4" fill="#fffdf2"/><circle cx="486" cy="236" r="3" fill="#fffdf2"/>
+                    <circle cx="596" cy="210" r="2.6" fill="#ff5f4f"/>
+                  </g>
+                  <g filter="url(#b2)" opacity=".5">
+                    <circle cx="470" cy="232" r="9" fill="#fffdf2"/><circle cx="486" cy="236" r="8" fill="#fffdf2"/>
+                  </g>
+
+                  <!-- rigid-hull inflatable running the line -->
+                  <g filter="url(#b3)">
+                    <path d="M182 342 h94 l-13 15 h-70z" fill="#101d2b"/>
+                    <rect x="208" y="329" width="28" height="13" fill="#26374b"/>
+                    <circle cx="197" cy="325" r="2.6" fill="#ffe9b8"/>
+                  </g>
+
+                  <!-- wake -->
+                  <g clip-path="url(#sc2)" filter="url(#chop2)" stroke="#e6edf3" fill="none">
+                    <path d="M436 358 h250" stroke-width="3" opacity=".24"/>
+                    <path d="M404 384 h316" stroke-width="2.4" opacity=".18"/>
+                    <path d="M366 420 h392" stroke-width="2" opacity=".14"/>
+                    <path d="M170 366 h130" stroke-width="2" opacity=".16"/>
+                  </g>
+
+                  <rect width="800" height="560" fill="url(#dvig)"/>
+                  <rect width="800" height="560" filter="url(#g2)" opacity=".13" style="mix-blend-mode:overlay"/>
+                </svg>
+              </div>
+              <figcaption><b>A Coast Guard cutter holds station at first light</b> along the southern edge of the exclusion zone. Two more cutters and a buoy tender were on scene by 6 a.m. <span class="credit">Tidewater Signal</span></figcaption>
+            </figure>
+
+            <figure>
+              <div class="frame">
+                <!-- PHONE STILL: streak over beach houses -->
+                <svg viewBox="0 0 800 560" role="img" aria-label="A blurry phone photo of a bright streak crossing the night sky above beachfront rooftops.">
+                  <defs>
+                    <linearGradient id="nsky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#070a12"/><stop offset="1" stop-color="#1b2334"/>
+                    </linearGradient>
+                    <filter id="g3"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="4" seed="11"/>
+                      <feColorMatrix type="saturate" values="0"/></filter>
+                    <filter id="bloom"><feGaussianBlur stdDeviation="14"/></filter>
+                    <filter id="bloom2"><feGaussianBlur stdDeviation="4"/></filter>
+                  </defs>
+                  <rect width="800" height="560" fill="url(#nsky)"/>
+                  <g fill="#c9d6e8" opacity=".5">
+                    <circle cx="120" cy="70" r="1.4"/><circle cx="330" cy="40" r="1"/><circle cx="600" cy="90" r="1.2"/>
+                    <circle cx="740" cy="50" r="1"/><circle cx="470" cy="130" r="1"/>
+                  </g>
+                  <!-- streak -->
+                  <g filter="url(#bloom)" opacity=".85">
+                    <path d="M60 40 C260 130 440 210 700 250" stroke="#ffe9bd" stroke-width="26" fill="none" opacity=".55"/>
+                  </g>
+                  <g filter="url(#bloom2)">
+                    <path d="M60 40 C260 130 440 210 700 250" stroke="#fffdf4" stroke-width="6" fill="none"/>
+                    <circle cx="700" cy="250" r="16" fill="#fff"/>
+                    <circle cx="700" cy="250" r="34" fill="#ffd68d" opacity=".45"/>
+                  </g>
+                  <!-- rooftops -->
+                  <g fill="#080c14">
+                    <rect y="380" width="800" height="180"/>
+                    <path d="M40 380 v-70 h130 v70z"/><path d="M30 312 l75-42 75 42z"/>
+                    <path d="M210 380 v-96 h150 v96z"/><path d="M200 286 l85-46 85 46z"/>
+                    <path d="M400 380 v-60 h120 v60z"/>
+                    <path d="M560 380 v-104 h180 v104z"/><path d="M550 278 l100-50 100 50z"/>
+                    <rect x="742" y="300" width="58" height="80"/>
+                  </g>
+                  <g fill="#ffcf7a" opacity=".9">
+                    <rect x="66" y="330" width="16" height="20"/><rect x="126" y="330" width="16" height="20" opacity=".5"/>
+                    <rect x="240" y="312" width="18" height="22" opacity=".7"/><rect x="316" y="312" width="18" height="22"/>
+                    <rect x="596" y="304" width="20" height="24" opacity=".6"/><rect x="686" y="304" width="20" height="24"/>
+                  </g>
+                  <!-- palm silhouette -->
+                  <g stroke="#05080e" stroke-width="7" fill="none" stroke-linecap="round">
+                    <path d="M108 560 C104 490 100 450 96 418"/>
+                  </g>
+                  <g fill="#05080e">
+                    <path d="M96 418 c-34 -8 -56 4 -70 22 24 -8 48 -8 70 -6z"/>
+                    <path d="M96 418 c34 -10 58 0 74 18 -26 -8 -50 -10 -74 -6z"/>
+                    <path d="M96 418 c-14 -28 -8 -50 6 -66 2 24 4 44 -2 66z"/>
+                  </g>
+                  <!-- ui overlay -->
+                  <g font-family="Inter,sans-serif" fill="#fff" opacity=".85">
+                    <rect x="20" y="500" width="196" height="30" fill="#000" opacity=".45"/>
+                    <text x="32" y="520" font-size="15" letter-spacing="1">03:04:51  ·  0.5×  ·  LIVE</text>
+                  </g>
+                  <rect width="800" height="560" filter="url(#g3)" opacity=".3" style="mix-blend-mode:overlay"/>
+                </svg>
+              </div>
+              <figcaption><b>A frame pulled from a resident's phone video</b> taken from a balcony near 29th Avenue North at 3:04 a.m. The object crossed roughly 60 degrees of sky in eleven seconds without an audible sonic boom. <span class="credit">Handout · Verified by Tidewater Signal</span></figcaption>
+            </figure>
+          </div>
+
+          <h3>The trajectory</h3>
+
+          <p>The Signal reconstructed the descent from radar returns and two independent amateur-satellite observers in Georgia and Virginia who recorded the object on its final two passes. The reconstruction is approximate, but the shape of it is not in question: a stable orbit, a controlled-looking drop, and a terminal deceleration that a ballistic object cannot perform.</p>
+
+          <figure>
+            <div class="frame" style="background:#0b1018">
+              <!-- TRAJECTORY DIAGRAM -->
+              <svg viewBox="0 0 1600 720" role="img" aria-label="Diagram showing a stable orbit at 210 miles, a descending path, and the splashdown point off Myrtle Beach.">
+                <defs>
+                  <linearGradient id="earthg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#1c4f7a"/><stop offset="1" stop-color="#0c2036"/>
+                  </linearGradient>
+                  <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#57c7ff" stop-opacity="0"/>
+                    <stop offset=".25" stop-color="#57c7ff" stop-opacity=".8"/>
+                    <stop offset="1" stop-color="#ffb454" stop-opacity="1"/>
+                  </linearGradient>
+                </defs>
+                <rect width="1600" height="720" fill="#0b1018"/>
+                <g stroke="#1b2735" stroke-width="1">
+                  <path d="M0 120h1600M0 240h1600M0 360h1600M0 480h1600M0 600h1600"/>
+                  <path d="M200 0v720M500 0v720M800 0v720M1100 0v720M1400 0v720"/>
+                </g>
+
+                <!-- earth limb -->
+                <path d="M-200 900 A1250 1250 0 0 1 1800 900 Z" fill="url(#earthg)"/>
+                <path d="M-200 900 A1250 1250 0 0 1 1800 900" fill="none" stroke="#5fd0ff" stroke-width="3" opacity=".8"/>
+                <path d="M-200 916 A1250 1250 0 0 1 1800 916" fill="none" stroke="#5fd0ff" stroke-width="26" opacity=".10"/>
+
+                <!-- orbit line -->
+                <path d="M60 172 C420 118 1120 132 1540 214" fill="none" stroke="#57c7ff" stroke-width="2.4" stroke-dasharray="10 8" opacity=".65"/>
+                <!-- descent -->
+                <path d="M700 140 C980 190 1180 330 1288 596" fill="none" stroke="url(#fade)" stroke-width="4.5"/>
+                <!-- deceleration marks -->
+                <g stroke="#5b6b7d" stroke-width="1.2" stroke-dasharray="4 5" fill="none">
+                  <path d="M980 322 H1108"/>
+                  <path d="M1030 486 H1198"/>
+                  <path d="M1195 648 H1276 V612"/>
+                </g>
+                <g fill="#ffb454">
+                  <circle cx="1000" cy="228" r="4"/><circle cx="1120" cy="322" r="4"/>
+                  <circle cx="1210" cy="440" r="4"/><circle cx="1262" cy="530" r="4"/>
+                </g>
+                <circle cx="1288" cy="596" r="10" fill="#ff6b4a"/>
+                <circle cx="1288" cy="596" r="22" fill="#ff6b4a" opacity=".25"/>
+
+                <g font-family="Inter,sans-serif" fill="#cfe0f0">
+                  <text x="70" y="92" font-size="21" fill="#57c7ff" font-weight="600">STABLE ORBIT · ~210 mi · 4+ observed passes</text>
+                  <text x="70" y="120" font-size="17" opacity=".6">First logged 11:52 p.m. Aug. 18 as an uncorrelated target</text>
+
+                  <text x="600" y="330" font-size="19" font-weight="600" fill="#ffd9a3">DESCENT BEGINS 1:38 a.m.</text>
+                  <text x="600" y="358" font-size="16" opacity=".62">Shallow, non-ballistic profile</text>
+
+                  <text x="690" y="492" font-size="19" font-weight="600" fill="#ffb454">TERMINAL DECELERATION</text>
+                  <text x="690" y="520" font-size="16" opacity=".62">Est. 17,000 mph → under 200 mph</text>
+
+                  <text x="830" y="654" font-size="21" font-weight="700" fill="#ff8f6b">SPLASHDOWN 3:07 a.m.</text>
+                  <text x="830" y="682" font-size="16" opacity=".62">33.69°N, 78.80°W — 4.1 nmi ESE of Myrtle Beach</text>
+
+                  <text x="70" y="676" font-size="14" opacity=".45">Reconstruction: Tidewater Signal, from radar returns and independent optical observations. Not to scale.</text>
+                </g>
+              </svg>
+            </div>
+            <figcaption><b>The reconstructed path.</b> The object held a circular orbit for at least six hours before beginning a shallow descent at 1:38 a.m. and slowing sharply in the final ninety seconds. <span class="credit">Graphic by Tidewater Signal</span></figcaption>
+          </figure>
+
+          <p>Dr. Priya Anand, an orbital-dynamics researcher at a Southeastern university who reviewed the Signal's reconstruction, cautioned that amateur observations carry wide error bars. She would not endorse the deceleration figure. But she said the descent profile itself was, in her word, "wrong."</p>
+
+          <blockquote>
+            Things that fall out of orbit fall on a curve you can write down in one line. This did not follow that curve. Either the observations are bad, or the object was doing something.
+            <cite>— Dr. Priya Anand, orbital dynamics</cite>
+          </blockquote>
+
+          <h3>The response</h3>
+
+          <p>By 4:15 a.m. the Federal Aviation Administration had issued a temporary flight restriction covering a ten-nautical-mile radius from the surface to 18,000 feet. The Coast Guard's exclusion zone went to two nautical miles at 5:30 a.m. Horry County closed beach access from 21st Avenue North to 38th Avenue North "pending a federal operation," a phrase the county could not expand on when asked.</p>
+
+          <p>A Coast Guard spokesperson confirmed the exclusion zone and the presence of three cutters and referred all questions about the object to "federal partners," which she declined to name. The FAA confirmed the flight restriction and said its origin was "an interagency request." The Department of Defense did not respond to four messages. NASA said the object is not theirs and that they have no launches in that inclination.</p>
+
+          <p>Two Navy aircraft flew racetrack patterns over the site through the morning. A salvage-capable vessel left Charleston at 6:20 a.m. on a heading that would put it on scene before noon, according to public vessel-tracking data reviewed by the Signal.</p>
+
+          <p>Nothing has been recovered. Nothing has been named. At 8:40 a.m., from the boardwalk, the exclusion zone was a line of gray hulls on a flat sea, and past them a shape in the water that the light kept finding and losing.</p>
+
+          <p style="color:var(--ink-faint); font-size:15px; border-top:1px solid var(--rule); padding-top:18px; margin-top:34px">
+            <em>This is a developing story and will be updated. Marisol Reyes reported from Myrtle Beach and Dean Ottaway from Columbia. Reporting contributed by the Signal's Charleston bureau.</em>
+          </p>
+
+        </div>
+
+        <aside>
+          <div class="card">
+            <h4>Live timeline</h4>
+            <div class="in">
+              <ul class="tl">
+                <li><time>11:52 P.M. TUE</time><span>Object logged in low Earth orbit as an uncorrelated target.</span></li>
+                <li><time>1:38 A.M.</time><span>Descent begins. Track elevated by tracking center.</span></li>
+                <li><time>3:04 A.M.</time><span>First 911 calls from the Grand Strand. Phone video captured.</span></li>
+                <li class="hot"><time>3:07 A.M.</time><span>Object enters the water 4.1 nmi ESE of the 14th Ave. Pier. Does not sink.</span></li>
+                <li><time>3:31 A.M.</time><span>Coast Guard establishes a half-mile exclusion zone.</span></li>
+                <li><time>4:15 A.M.</time><span>FAA issues a 10-nmi temporary flight restriction to 18,000 ft.</span></li>
+                <li><time>5:30 A.M.</time><span>Exclusion zone extended to two nautical miles.</span></li>
+                <li><time>6:20 A.M.</time><span>Salvage-capable vessel departs Charleston.</span></li>
+                <li class="hot"><time>8:47 A.M.</time><span>Object still floating and still lit. No agency has claimed it.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>At a glance</h4>
+            <div class="in">
+              <ul class="facts">
+                <li><em>Impact point</em><b>33.69°N, 78.80°W</b></li>
+                <li><em>Distance from shore</em><b>4.1 nautical miles</b></li>
+                <li><em>Est. width</em><b>55–70 feet</b></li>
+                <li><em>Orbit altitude</em><b>~210 miles</b></li>
+                <li><em>Catalog match</em><b>None</b></li>
+                <li><em>Claimed by</em><b>No one</b></li>
+                <li><em>Exclusion zone</em><b>2 nmi · active</b></li>
+                <li><em>Airspace</em><b>Closed to 18,000 ft</b></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>More coverage</h4>
+            <div class="in">
+              <ul class="related">
+                <li><a href="#">Beach access closed from 21st to 38th Avenue North as federal vessels arrive</a><small>Grand Strand · 1h ago</small></li>
+                <li><a href="#">'It stopped': four people who watched it come down</a><small>Grand Strand · 2h ago</small></li>
+                <li><a href="#">How 40,000 objects in orbit get counted — and what it means when one isn't</a><small>Explainer · 3h ago</small></li>
+                <li><a href="#">Charter captains stuck at the dock as the exclusion zone holds</a><small>Business · 40m ago</small></li>
+                <li><a href="#">Hotels report cancellations, and a wave of new bookings</a><small>Business · 25m ago</small></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </article>
+  </div>
+
+  <footer class="site">
+    <div class="wrap">
+      <div><b>Tidewater Signal</b>Coastal Bureau · Myrtle Beach<br>Newsroom desk · Charleston<br>Columbia statehouse desk</div>
+      <div><b>Sections</b>Breaking · Grand Strand<br>State · Nation · Weather<br>Business · Sports · Opinion</div>
+      <div><b>The Signal</b>About us · Standards<br>Corrections · Ethics policy<br>Contact the newsroom</div>
+      <div><b>Follow</b>Newsletters<br>Storm alerts<br>Print delivery</div>
+    </div>
+    <div class="wrap"><div class="disc">
+      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — Tidewater Signal does not exist. This page is an invented news story created as a writing and design exercise. Every person, quote, agency statement, coordinate and photograph on it is fabricated. Nothing here describes a real event.
+    </div></div>
+  </footer>
+</div>
+
+</body>
+</html>
