@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MNN — Fighter jets standing by off the South Carolina coast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#d8202c; --red-dk:#a5161f;
+  --black:#0c0e11; --char:#16191e; --line:#262b32;
+  --ink:#14171b; --ink-2:#454c55; --ink-3:#767e88;
+  --paper:#fff; --wash:#f2f4f6; --rule:#dfe3e8;
+  --amber:#e08a1e; --cyan:#2fa8dd;
+  --max:1200px;
+}
+*{box-sizing:border-box}
+body{margin:0; background:#e5e8ec; color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:inherit}
+
+/* ---------- fiction banner ---------- */
+.fiction{
+  position:sticky; top:0; z-index:80;
+  background:repeating-linear-gradient(135deg,#111,#111 14px,#1c1c1c 14px,#1c1c1c 28px);
+  color:#ffd66b; border-bottom:3px solid #ffd66b;
+  font-size:12.5px; letter-spacing:.03em; padding:9px 16px; text-align:center; line-height:1.5;
+}
+.fiction strong{color:#fff; letter-spacing:.12em; font-weight:800}
+@media (max-width:560px){ .fiction{font-size:11px; padding:7px 12px} }
+
+.shell{max-width:1320px; margin:0 auto; background:var(--paper); box-shadow:0 0 0 1px rgba(0,0,0,.07),0 20px 60px rgba(0,0,0,.14)}
+.wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
+
+/* ---------- network chrome ---------- */
+.topbar{background:var(--black); color:#fff}
+.topbar .wrap{display:flex; align-items:center; gap:22px; height:62px}
+.brand{display:flex; align-items:center; gap:11px; text-decoration:none}
+.brand .cube{width:44px;height:44px;flex:0 0 auto}
+.brand .name{font-family:"Barlow Condensed",Inter,sans-serif; font-weight:800; font-size:29px;
+  letter-spacing:.02em; line-height:1; color:#fff; white-space:nowrap; display:block}
+.brand .sub{font-size:8.5px; letter-spacing:.34em; color:#9aa3ad; text-transform:uppercase; margin-top:3px}
+.topnav{display:flex; gap:20px; margin-left:14px; overflow-x:auto;
+  font-family:"Barlow Condensed",Inter,sans-serif; font-size:16px; font-weight:600;
+  letter-spacing:.09em; text-transform:uppercase; color:#c3cad2}
+.topnav span{white-space:nowrap; padding:4px 0; border-bottom:3px solid transparent}
+.topnav span.on{color:#fff; border-bottom-color:var(--red)}
+.watch{margin-left:auto; display:inline-flex; align-items:center; gap:8px; background:var(--red); color:#fff;
+  font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:9px 14px; white-space:nowrap}
+.watch i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blip 1.6s infinite}
+@keyframes blip{50%{opacity:.25}}
+@media (max-width:860px){ .topnav{display:none} }
+@media (max-width:560px){
+  .topbar .wrap{gap:12px; padding:0 16px}
+  .brand .cube{width:36px;height:36px}
+  .brand .name{font-size:22px}
+  .brand .sub{font-size:7.5px; letter-spacing:.28em}
+  .watch{font-size:10px; padding:8px 10px; letter-spacing:.08em}
+  .hero .txt{padding:28px 20px 32px}
+}
+
+.ticker{background:var(--char); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  display:flex; align-items:stretch; height:38px; overflow:hidden; color:#dfe4ea}
+.ticker .tag{background:var(--red); color:#fff; font-size:11.5px; font-weight:800; letter-spacing:.16em;
+  display:flex; align-items:center; padding:0 14px; white-space:nowrap}
+.ticker .rail{position:relative; flex:1; overflow:hidden}
+.ticker .run{position:absolute; white-space:nowrap; top:0; line-height:38px; font-size:13px;
+  letter-spacing:.02em; animation:roll 46s linear infinite}
+.ticker .run b{color:var(--red); font-weight:800; margin:0 10px 0 26px; letter-spacing:.08em}
+@keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ---------- hero ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.18fr); background:var(--black); color:#fff}
+@media (max-width:900px){ .hero{grid-template-columns:1fr} .hero .txt{order:2} .hero .still{order:1} }
+.hero .txt{padding:44px 40px 46px 44px; align-self:center}
+.hero .still{position:relative; min-height:330px; line-height:0}
+.hero .still svg{display:block; width:100%; height:100%; position:absolute; inset:0}
+.hero .still:after{content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg,rgba(12,14,17,.92) 0%,rgba(12,14,17,0) 14%),
+             linear-gradient(0deg,rgba(12,14,17,.35) 0%,rgba(12,14,17,0) 30%)}
+@media (max-width:900px){ .hero .still:after{background:linear-gradient(0deg,rgba(12,14,17,.5) 0%,rgba(12,14,17,0) 34%)} }
+.hero .live{display:inline-flex; align-items:center; gap:9px; background:var(--red); color:#fff;
+  font-size:11.5px; font-weight:800; letter-spacing:.16em; padding:6px 11px; margin-bottom:18px}
+.hero .live i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blip 1.6s infinite}
+.hero h1{
+  font-size:clamp(28px,3.5vw,44px); font-weight:800; letter-spacing:-.028em; line-height:1.07; margin:0 0 16px;
+}
+.hero .sub{font-size:clamp(15px,1.5vw,18px); color:#c9d0d8; line-height:1.55; margin:0}
+.playbtn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:3;
+  width:74px; height:74px; border-radius:50%; background:rgba(216,32,44,.94);
+  display:grid; place-items:center; box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.playbtn:after{content:""; border-left:21px solid #fff; border-top:13px solid transparent;
+  border-bottom:13px solid transparent; margin-left:6px}
+.vidmeta{position:absolute; left:18px; bottom:16px; z-index:3; display:flex; gap:7px; align-items:center;
+  font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase}
+.vidmeta span{background:rgba(8,10,13,.75); padding:5px 9px; border:1px solid rgba(255,255,255,.18)}
+@media (max-width:760px){ .playbtn{width:56px;height:56px} .playbtn:after{border-left-width:16px;border-top-width:10px;border-bottom-width:10px} }
+
+/* ---------- meta strip ---------- */
+.meta{border-bottom:1px solid var(--rule); background:var(--paper)}
+.meta .wrap{display:flex; flex-wrap:wrap; gap:10px 20px; align-items:center; padding:15px 24px;
+  font-size:12.5px; color:var(--ink-3)}
+.meta b{color:var(--ink); font-weight:600}
+.meta .pill{border:1px solid var(--rule); padding:4px 9px; font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-2)}
+.meta .share{margin-left:auto; display:flex; gap:7px}
+.meta .share i{width:26px;height:26px;border:1px solid var(--rule); display:grid; place-items:center;
+  font-style:normal; font-size:11px; font-weight:700; color:var(--ink-2)}
+
+/* ---------- body ---------- */
+.cols{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:48px; padding:34px 0 56px; align-items:start}
+@media (max-width:980px){ .cols{grid-template-columns:1fr; gap:36px} }
+.body{font-size:17.5px; line-height:1.75; max-width:70ch; color:#20252b}
+.body p{margin:0 0 21px}
+.body h2{font-size:24px; font-weight:800; letter-spacing:-.02em; margin:38px 0 14px; color:var(--ink)}
+.body h2:before{content:""; display:block; width:44px; height:4px; background:var(--red); margin-bottom:13px}
+
+.keypoints{border:1px solid var(--rule); border-left:5px solid var(--red); background:var(--wash);
+  padding:20px 22px; margin:0 0 30px}
+.keypoints h3{margin:0 0 12px; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--red)}
+.keypoints ul{margin:0; padding-left:19px; font-size:15.5px; line-height:1.62; color:#2c333a}
+.keypoints li{margin-bottom:9px}
+.keypoints li:last-child{margin-bottom:0}
+
+blockquote{margin:30px 0; padding:22px 24px; background:var(--black); color:#fff;
+  font-size:21px; line-height:1.5; font-weight:500; letter-spacing:-.01em}
+blockquote cite{display:block; margin-top:14px; font-style:normal; font-size:12px; letter-spacing:.1em;
+  text-transform:uppercase; color:#98a1ab; font-weight:600}
+
+figure{margin:30px 0 0}
+figure .frame{background:var(--black); line-height:0; position:relative; overflow:hidden}
+figcaption{font-size:12.5px; line-height:1.55; color:var(--ink-3); padding:10px 2px 0}
+figcaption b{color:var(--ink-2); font-weight:600}
+.credit{text-transform:uppercase; letter-spacing:.09em; font-size:10px; color:#98a1ab}
+
+.statrow{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule); margin:30px 0;
+  border:1px solid var(--rule)}
+@media (max-width:640px){ .statrow{grid-template-columns:repeat(2,1fr)} }
+.statrow div{background:var(--paper); padding:16px 14px}
+.statrow b{display:block; font-size:26px; font-weight:800; letter-spacing:-.03em; color:var(--red); line-height:1}
+.statrow span{display:block; margin-top:7px; font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3)}
+
+.partner{border:1px solid var(--rule); border-top:4px solid var(--black); padding:18px 20px; margin:32px 0;
+  font-size:14.5px; line-height:1.6; color:var(--ink-2)}
+.partner b{display:block; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); margin-bottom:7px}
+.partner a{color:var(--red); font-weight:700; text-decoration:none}
+
+/* ---------- rail ---------- */
+aside{position:sticky; top:80px}
+.blk{margin-bottom:24px; border:1px solid var(--rule)}
+.blk h4{margin:0; background:var(--black); color:#fff; font-size:11.5px; font-weight:800;
+  letter-spacing:.16em; text-transform:uppercase; padding:11px 15px; display:flex; align-items:center; gap:9px}
+.blk h4 i{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blip 1.6s infinite}
+.blk .in{padding:15px}
+
+.feed{list-style:none; margin:0; padding:0}
+.feed li{padding:0 0 15px 0; border-bottom:1px solid var(--rule); margin-bottom:15px}
+.feed li:last-child{border-bottom:0; margin-bottom:0; padding-bottom:0}
+.feed time{display:block; font-size:11px; font-weight:800; letter-spacing:.09em; color:var(--red); margin-bottom:5px}
+.feed p{margin:0; font-size:13.5px; line-height:1.5; color:var(--ink-2)}
+
+.spec{list-style:none;margin:0;padding:0;font-size:13px}
+.spec li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dotted var(--rule)}
+.spec li:last-child{border-bottom:0}
+.spec b{font-weight:700; text-align:right; color:var(--ink)}
+.spec em{font-style:normal; color:var(--ink-3)}
+
+.vidlist{list-style:none;margin:0;padding:0}
+.vidlist li{display:flex; gap:11px; padding:11px 0; border-bottom:1px solid var(--rule)}
+.vidlist li:last-child{border-bottom:0}
+.vidlist .thumb{width:78px; height:50px; flex:0 0 auto; background:#0c0e11; position:relative}
+.vidlist .thumb:after{content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  border-left:11px solid #fff; border-top:7px solid transparent; border-bottom:7px solid transparent; margin-left:3px; opacity:.9}
+.vidlist p{margin:0; font-size:13px; line-height:1.38; font-weight:600}
+.vidlist small{display:block; margin-top:5px; font-size:10.5px; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500}
+
+/* ---------- footer ---------- */
+footer{background:var(--black); color:#98a1ab; padding:36px 0 46px; font-size:12px; line-height:1.75}
+footer .wrap{display:flex; flex-wrap:wrap; gap:28px; justify-content:space-between}
+footer b{display:block; color:#fff; font-size:11px; letter-spacing:.15em; text-transform:uppercase; margin-bottom:9px}
+footer .disc{border-top:1px solid var(--line); margin-top:28px; padding-top:20px; color:#7c848e}
+</style>
+</head>
+<body>
+
+<div class="fiction">
+  <strong>FICTION</strong> &nbsp;·&nbsp; This is a fabricated news story written as a creative exercise. <b>Meridian News Network</b> is not a real broadcaster, the people quoted do not exist, and no military aircraft are operating off Myrtle Beach.
+</div>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#">
+        <svg class="cube" viewBox="0 0 48 48" aria-label="Meridian News Network logo">
+          <rect width="48" height="48" fill="#d8202c"/>
+          <circle cx="24" cy="24" r="14.5" fill="none" stroke="#fff" stroke-width="2.4"/>
+          <ellipse cx="24" cy="24" rx="6.2" ry="14.5" fill="none" stroke="#fff" stroke-width="2.4" opacity=".85"/>
+          <path d="M9.5 24h29" stroke="#fff" stroke-width="2.4"/>
+          <path d="M12 16.5h24M12 31.5h24" stroke="#fff" stroke-width="1.4" opacity=".6"/>
+        </svg>
+        <span>
+          <span class="name">MERIDIAN NEWS</span>
+          <span class="sub">Network</span>
+        </span>
+      </a>
+      <nav class="topnav">
+        <span>U.S.</span><span class="on">National Security</span><span>World</span>
+        <span>Politics</span><span>Video</span>
+      </nav>
+      <span class="watch"><i></i>Watch Live</span>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="tag">BREAKING</div>
+    <div class="rail"><div class="run">
+      Military aircraft continue passes over unidentified object off Myrtle Beach <b>•</b>
+      Fighters on station since 3:19 a.m., officials say posture is precautionary <b>•</b>
+      Coast Guard holds two-mile exclusion zone; beach closed for 14 blocks <b>•</b>
+      FAA restriction closes airspace within 10 nautical miles to 18,000 feet <b>•</b>
+      No agency has claimed the object; no distress signal detected <b>•</b>
+      Military aircraft continue passes over unidentified object off Myrtle Beach <b>•</b>
+      Fighters on station since 3:19 a.m., officials say posture is precautionary <b>•</b>
+      Coast Guard holds two-mile exclusion zone; beach closed for 14 blocks <b>•</b>
+      FAA restriction closes airspace within 10 nautical miles to 18,000 feet <b>•</b>
+      No agency has claimed the object; no distress signal detected <b>•</b>
+    </div></div>
+  </div>
+
+  <section class="hero">
+    <div class="txt">
+      <span class="live"><i></i>LIVE · NATIONAL SECURITY</span>
+      <h1>Fighter jets standing by off the South Carolina coast as military aircraft run repeated passes over the object</h1>
+      <p class="sub">At least fourteen overflights since before dawn. Officials say the jets are overhead to observe and to be close enough to help if anyone needs it — not to intercept anything.</p>
+    </div>
+    <div class="still">
+      <!-- VIDEO STILL: fighter low pass over the water -->
+      <svg viewBox="0 0 1600 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Video still of a fighter jet banking low over open water, shot from a boat.">
+        <defs>
+          <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2d5f8c"/><stop offset=".45" stop-color="#7ea6c6"/>
+            <stop offset=".8" stop-color="#c9d2d6"/><stop offset="1" stop-color="#e2ddd2"/>
+          </linearGradient>
+          <linearGradient id="hwater" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3d6a89"/><stop offset=".4" stop-color="#2b5069"/>
+            <stop offset="1" stop-color="#14293a"/>
+          </linearGradient>
+          <linearGradient id="hwater2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#41708f"/><stop offset=".45" stop-color="#2a4c66"/>
+            <stop offset="1" stop-color="#12222f"/>
+          </linearGradient>
+          <linearGradient id="vapor" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity=".0"/>
+            <stop offset=".45" stop-color="#fff" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <radialGradient id="sunb" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#fff6d8" stop-opacity=".9"/>
+            <stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="vg" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="4" seed="31"/>
+            <feColorMatrix type="saturate" values="0"/>
+          </filter>
+          <filter id="vch" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency=".008 .06" numOctaves="3" seed="12" result="t"/>
+            <feDisplacementMap in="SourceGraphic" in2="t" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+            <feGaussianBlur stdDeviation=".6"/>
+          </filter>
+          <filter id="vb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
+          <filter id="vb2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter>
+          <filter id="pan" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="7 0"/>
+          </filter>
+          <clipPath id="wclip"><rect y="470" width="1600" height="330"/></clipPath>
+
+          <g id="jet2">
+            <path d="M74 -9 L124 -70 L146 -68 L156 -10 Z"/>
+            <path d="M74 9 L124 70 L146 68 L156 10 Z"/>
+            <path d="M156 -9 L190 -47 L203 -45 L196 -8 Z"/>
+            <path d="M156 9 L190 47 L203 45 L196 8 Z"/>
+            <path d="M0 0 C15 -6 46 -10 76 -11 L156 -12 L192 -8 L204 -3 L204 3 L192 8 L156 12 L76 11 C46 10 15 6 0 0 Z"/>
+            <path d="M154 -2 L210 -1 L210 1 L154 2 Z"/>
+            <rect x="116" y="-76" width="30" height="5.5" rx="2.5"/>
+            <rect x="116" y="71" width="30" height="5.5" rx="2.5"/>
+          </g>
+        </defs>
+
+        <rect width="1600" height="800" fill="url(#hsky)"/>
+        <circle cx="1290" cy="176" r="200" fill="url(#sunb)" opacity=".55"/>
+        <!-- panned background haze -->
+        <g filter="url(#pan)">
+          <ellipse cx="380" cy="230" rx="440" ry="34" fill="#fff" opacity=".2"/>
+          <ellipse cx="1080" cy="300" rx="520" ry="28" fill="#fff" opacity=".16"/>
+        </g>
+
+        <!-- water -->
+        <rect y="470" width="1600" height="330" fill="url(#hwater2)"/>
+        <line x1="0" y1="470" x2="1600" y2="470" stroke="#dbe3e7" stroke-width="1.6" opacity=".6"/>
+        <rect y="440" width="1600" height="54" fill="#e6ebee" opacity=".2" filter="url(#vb)"/>
+        <g clip-path="url(#wclip)">
+          <g filter="url(#vch)" stroke="#bcd2e0" fill="none">
+            <g opacity=".14" stroke-width="1.2"><path d="M-40 484h1700"/><path d="M-40 496h1700"/><path d="M-40 512h1700"/></g>
+            <g opacity=".17" stroke-width="1.9"><path d="M-40 534h1700"/><path d="M-40 562h1700"/><path d="M-40 596h1700"/></g>
+            <g opacity=".2" stroke-width="3"><path d="M-40 640h1700"/><path d="M-40 692h1700"/><path d="M-40 752h1700"/></g>
+          </g>
+          <!-- sun glitter -->
+          <g filter="url(#vch)" stroke="#fff3d2" opacity=".3" fill="none">
+            <path d="M1120 500h340" stroke-width="2"/><path d="M1080 530h420" stroke-width="2.4"/>
+            <path d="M1030 570h500" stroke-width="2.8"/><path d="M980 620h560" stroke-width="3"/>
+          </g>
+          <!-- distant hulls on the line -->
+          <g fill="#16232e">
+            <rect x="250" y="462" width="54" height="10" rx="2"/><rect x="268" y="454" width="16" height="9"/>
+            <rect x="700" y="464" width="44" height="9" rx="2"/><rect x="714" y="457" width="13" height="8"/>
+          </g>
+        </g>
+
+        <!-- spray kicked off the surface behind the jet -->
+        <g filter="url(#vb)" opacity=".5">
+          <ellipse cx="1010" cy="470" rx="250" ry="36" fill="#eef4f8"/>
+        </g>
+
+        <!-- the aircraft, banking hard, close to the camera -->
+        <g transform="translate(430,268) rotate(13) scale(1.5)">
+          <g filter="url(#vb2)">
+            <use href="#jet2" fill="#20272f"/>
+            <use href="#jet2" fill="#7d8b99" opacity=".3" transform="translate(0,-5)"/>
+          </g>
+          <!-- stores and underside -->
+          <g fill="#161c23">
+            <ellipse cx="48" cy="0" rx="20" ry="8.5"/>
+            <rect x="98" y="-34" width="34" height="7" rx="3.5"/><rect x="98" y="27" width="34" height="7" rx="3.5"/>
+            <rect x="120" y="-18" width="26" height="6" rx="3"/><rect x="120" y="12" width="26" height="6" rx="3"/>
+            <rect x="60" y="-6" width="34" height="12" rx="5"/>
+          </g>
+          <g fill="#aebbc7" opacity=".33">
+            <path d="M76 -11 L156 -12 L156 -9 L76 -8 Z"/>
+            <path d="M124 -70 L146 -68 L145 -64 L126 -66 Z"/>
+            <path d="M190 -47 L203 -45 L202 -42 L189 -44 Z"/>
+          </g>
+          <!-- exhaust -->
+          <circle cx="207" cy="0" r="10" fill="#ffcf95" opacity=".75" filter="url(#vb2)"/>
+          <circle cx="214" cy="0" r="26" fill="#ffb45e" opacity=".2" filter="url(#vb)"/>
+          <!-- wing vapor in the pull -->
+          <path d="M126 -74 C210 -80 300 -70 380 -50" stroke="url(#vapor)" stroke-width="16" fill="none" opacity=".75" filter="url(#vb2)"/>
+          <path d="M126 75 C210 81 300 71 380 51" stroke="url(#vapor)" stroke-width="16" fill="none" opacity=".75" filter="url(#vb2)"/>
+          <path d="M96 -30 C150 -44 210 -46 268 -36" stroke="#fff" stroke-width="7" fill="none" opacity=".22" filter="url(#vb)"/>
+        </g>
+
+        <rect width="1600" height="800" filter="url(#vg)" opacity=".13" style="mix-blend-mode:overlay"/>
+      </svg>
+      <div class="playbtn"></div>
+      <div class="vidmeta"><span>Live</span><span>Myrtle Beach, S.C.</span><span>1:42</span></div>
+    </div>
+  </section>
+
+  <div class="meta">
+    <div class="wrap">
+      <span class="pill">National Security</span>
+      <span>By <b>Renata Okonjo-Hale</b> and <b>Tom Bridger</b> · MNN Pentagon Unit</span>
+      <span>Published Aug. 19, 2026, 10:20 a.m. ET</span>
+      <span>Updated <b>12:06 p.m. ET</b></span>
+      <span>6 min read</span>
+      <span class="share"><i>f</i><i>X</i><i>in</i><i>↗</i></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="cols">
+      <div class="body">
+
+        <div class="keypoints">
+          <h3>What to know</h3>
+          <ul>
+            <li>Military aircraft have flown at least <b>14 passes</b> over the object since 3:19 a.m., the first twelve minutes after it entered the water.</li>
+            <li>A two-ship of fighters has held a continuous orbit above the site, refueled in the air to stay on station.</li>
+            <li>Officials describe the fighters as <b>standing by to assist</b> — not as an intercept posture. No weapons employment has been authorized or requested.</li>
+            <li>A rescue helicopter and swimmer team are on alert in case anyone on the water gets into trouble.</li>
+            <li>The airspace is closed within 10 nautical miles to 18,000 feet. The water is closed within two.</li>
+          </ul>
+        </div>
+
+        <p>MYRTLE BEACH, S.C. — For nine hours, the loudest thing on the Grand Strand has been the sound of American fighter jets going around again.</p>
+
+        <p>Military aircraft have made at least fourteen passes over the unidentified object sitting in the water four miles off this city since it came down at 3:07 a.m. Wednesday, according to a Meridian News Network count corroborated by two defense officials. The first came at 3:19 a.m. The most recent was at 11:48 a.m., low and out of the north, and it rattled the windows of the beachfront hotels it crossed.</p>
+
+        <p>Above those passes, higher and slower, two fighters have held a continuous orbit since before dawn. They have been relieved twice and refueled in the air at least three times to keep the station unbroken. Officials have gone out of their way — repeatedly, and unprompted — to explain what those jets are and are not there to do.</p>
+
+        <blockquote>
+          They are standing by. That is the whole description. If a boat gets in trouble inside that zone, if an aircraft strays in, if something down there changes and somebody needs help fast, I want airplanes already overhead and not sitting on a ramp forty minutes away.
+          <cite>Col. Wade Ferrante, Air Component Coordination Element</cite>
+        </blockquote>
+
+        <p>Asked directly whether the fighters are armed, Ferrante said the aircraft are "configured as they normally launch," and declined to go further. Asked whether any authority to engage the object had been sought or granted, he said no — twice, and without qualification.</p>
+
+        <div class="statrow">
+          <div><b>14</b><span>Passes since 3:19 a.m.</span></div>
+          <div><b>9 hrs</b><span>Unbroken fighter orbit</span></div>
+          <div><b>10 nmi</b><span>Closed airspace</span></div>
+          <div><b>0</b><span>Agencies claiming it</span></div>
+        </div>
+
+        <h2>What the passes are for</h2>
+
+        <p>The overflights are not the fighters. They are being flown by a mix of aircraft — a maritime patrol plane working a wide search pattern, a helicopter carrying survey equipment, and at least two passes by a reconnaissance aircraft — and their purpose is to build a picture of something no one has been able to identify from a distance.</p>
+
+        <p>Each pass collects a different slice: optical and infrared imagery, radar returns from a low angle, air sampling downwind of the object, and radiation readings. A defense official said the survey aircraft has found "nothing above background" — no elevated radiation and no chemical signature in the air over the site — a finding first reported by the <a href="index.html" style="color:var(--red);font-weight:600;text-decoration:none">Tidewater Signal</a> and since confirmed to MNN by a second official.</p>
+
+        <p>The object has done nothing in response. It has not moved, has not transmitted on any monitored frequency, and has not reacted to the aircraft crossing above it — including the low passes, which two officials confirmed were flown in part to see whether it would.</p>
+
+        <figure>
+          <div class="frame">
+            <!-- FLIR STILL -->
+            <svg viewBox="0 0 1600 900" role="img" aria-label="Infrared camera still from a military aircraft showing the object as a bright shape in dark water, framed by a targeting reticle and telemetry text.">
+              <defs>
+                <radialGradient id="irhot" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#dff3e2"/>
+                  <stop offset=".7" stop-color="#5f9a72" stop-opacity=".55"/>
+                  <stop offset="1" stop-color="#2b4a38" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="irn" x="0" y="0" width="100%" height="100%">
+                  <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="4" seed="42"/>
+                  <feColorMatrix type="saturate" values="0"/>
+                </filter>
+                <filter id="irb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+                <filter id="irb2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6"/></filter>
+                <filter id="irch" x="-5%" y="-5%" width="110%" height="110%">
+                  <feTurbulence type="fractalNoise" baseFrequency=".01 .05" numOctaves="3" seed="23" result="t"/>
+                  <feDisplacementMap in="SourceGraphic" in2="t" scale="26" xChannelSelector="R" yChannelSelector="G"/>
+                  <feGaussianBlur stdDeviation="1.4"/>
+                </filter>
+              </defs>
+
+              <rect width="1600" height="900" fill="#0a1610"/>
+              <!-- cold sea, mottled -->
+              <g filter="url(#irch)" opacity=".5">
+                <rect width="1600" height="900" fill="#12251a"/>
+                <g stroke="#1e3a29" stroke-width="26" opacity=".5" fill="none">
+                  <path d="M-40 130h1700"/><path d="M-40 260h1700"/><path d="M-40 400h1700"/>
+                  <path d="M-40 540h1700"/><path d="M-40 690h1700"/><path d="M-40 830h1700"/>
+                </g>
+              </g>
+              <!-- thermal wake around the hull -->
+              <ellipse cx="800" cy="452" rx="300" ry="150" fill="#2f5f45" opacity=".45" filter="url(#irb)"/>
+              <ellipse cx="800" cy="452" rx="190" ry="92" fill="url(#irhot)" opacity=".85" filter="url(#irb2)"/>
+              <!-- the object -->
+              <g filter="url(#irb2)">
+                <ellipse cx="800" cy="452" rx="124" ry="52" fill="#eafbee"/>
+                <ellipse cx="800" cy="452" rx="96" ry="38" fill="#fff"/>
+                <ellipse cx="800" cy="446" rx="52" ry="18" fill="#0d1f16" opacity=".45"/>
+                <path d="M690 470 C740 492 860 492 910 470" stroke="#c9e8d2" stroke-width="7" fill="none" opacity=".7"/>
+              </g>
+              <!-- warm hulls standing off -->
+              <g filter="url(#irb2)">
+                <rect x="286" y="694" width="104" height="24" rx="6" fill="#bfe0c8"/>
+                <rect x="318" y="676" width="30" height="22" rx="4" fill="#eafbee"/>
+                <rect x="1216" y="238" width="88" height="20" rx="5" fill="#a9d4b6"/>
+                <rect x="1244" y="224" width="24" height="18" rx="4" fill="#d8f0de"/>
+              </g>
+
+              <!-- reticle + brackets -->
+              <g stroke="#d7ffe4" fill="none" opacity=".9">
+                <path d="M800 300 v-70 M800 604 v70 M594 452 h-80 M1006 452 h80" stroke-width="2"/>
+                <circle cx="800" cy="452" r="176" stroke-width="1.6" opacity=".55"/>
+                <path d="M604 268 h-56 v-56 M996 268 h56 v-56 M604 636 h-56 v56 M996 636 h56 v56" stroke-width="2.6"/>
+                <path d="M770 452 h20 M810 452 h20 M800 422 v20 M800 462 v20" stroke-width="2"/>
+              </g>
+              <g stroke="#d7ffe4" opacity=".35" stroke-width="1.2">
+                <path d="M0 452h514M1086 452h514M800 0v230M800 674v226"/>
+              </g>
+
+              <!-- telemetry -->
+              <g font-family="'Courier New',monospace" fill="#d9ffe6" font-size="25" letter-spacing="1.5">
+                <text x="56" y="72">IR  WHOT</text>
+                <text x="56" y="110" opacity=".8">FOV  2.4</text>
+                <text x="56" y="148" opacity=".8">RNG  4.6 NM</text>
+                <text x="1544" y="72" text-anchor="end">19 AUG 26</text>
+                <text x="1544" y="110" text-anchor="end">10:41:22Z</text>
+                <text x="1544" y="148" text-anchor="end" opacity=".8">ALT 8400</text>
+                <text x="56" y="838" opacity=".8">33 41.4N  078 48.1W</text>
+                <text x="1544" y="838" text-anchor="end" opacity=".8">TRK 214</text>
+                <text x="712" y="838" fill="#ffd9a0">TGT 01</text>
+              </g>
+
+              <!-- scanlines + sensor noise -->
+              <g opacity=".16">
+                <rect width="1600" height="900" filter="url(#irn)" style="mix-blend-mode:screen"/>
+              </g>
+              <g stroke="#000" stroke-width="2" opacity=".14">
+                <path d="M0 6h1600M0 18h1600M0 30h1600M0 42h1600M0 54h1600M0 66h1600M0 78h1600M0 90h1600M0 102h1600M0 114h1600M0 126h1600M0 138h1600M0 150h1600M0 162h1600M0 174h1600M0 186h1600M0 198h1600M0 210h1600M0 222h1600M0 234h1600M0 246h1600M0 258h1600M0 270h1600M0 282h1600M0 294h1600M0 306h1600M0 318h1600M0 330h1600M0 342h1600M0 354h1600M0 366h1600M0 378h1600M0 390h1600M0 402h1600M0 414h1600M0 426h1600M0 438h1600M0 450h1600M0 462h1600M0 474h1600M0 486h1600M0 498h1600M0 510h1600M0 522h1600M0 534h1600M0 546h1600M0 558h1600M0 570h1600M0 582h1600M0 594h1600M0 606h1600M0 618h1600M0 630h1600M0 642h1600M0 654h1600M0 666h1600M0 678h1600M0 690h1600M0 702h1600M0 714h1600M0 726h1600M0 738h1600M0 750h1600M0 762h1600M0 774h1600M0 786h1600M0 798h1600M0 810h1600M0 822h1600M0 834h1600M0 846h1600M0 858h1600M0 870h1600M0 882h1600M0 894h1600"/>
+              </g>
+            </svg>
+          </div>
+          <figcaption><b>An infrared frame recorded from a survey aircraft at 8,400 feet</b> and provided to MNN by a person who reviewed it. The object registers warm against cold water nine hours after entering it. Two vessels standing off appear at the edges of the frame. <span class="credit">Obtained by Meridian News Network</span></figcaption>
+        </figure>
+
+        <h2>Standing by, and what that means</h2>
+
+        <p>"Standing by" is not a figure of speech in this context. It is a posture with a definition, and three officials walked MNN through it the same way.</p>
+
+        <p>Aircraft on station overhead are the fastest possible response to anything that happens below them, and the reasons they might be needed are mostly mundane: a recreational boat that pushes the exclusion line and swamps, a drone operator whose aircraft goes into the water near a cutter, a crewman hurt on a small boat working the perimeter. A fighter cannot pull anyone out of the water — but it can find them in seconds, mark the position, and hold overhead until a helicopter arrives.</p>
+
+        <p>That helicopter is also standing by. A rescue crew with swimmers has been on alert at a coastal air station since 4 a.m., and a second aircrew went to alert status at 9. Neither has launched.</p>
+
+        <p>The less mundane version is the one nobody will discuss in specifics. Pressed on what else the fighters would be reacting to, Ferrante said only that "an unidentified object is unidentified in every direction" — including, he allowed, the possibility that it does something no one has planned for.</p>
+
+        <figure>
+          <div class="frame">
+            <!-- ALTITUDE STACK -->
+            <svg viewBox="0 0 1600 820" role="img" aria-label="Cross-section diagram showing the layers of aircraft stacked above the object: fighters highest, then a tanker, a patrol aircraft, and a helicopter lowest.">
+              <defs>
+                <linearGradient id="stsky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#0b1017"/><stop offset="1" stop-color="#16222e"/>
+                </linearGradient>
+                <linearGradient id="stsea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#1d3a4f"/><stop offset="1" stop-color="#0a1620"/>
+                </linearGradient>
+              </defs>
+              <rect width="1600" height="820" fill="url(#stsky)"/>
+
+              <!-- altitude bands -->
+              <g stroke="#28323d" stroke-width="1" stroke-dasharray="6 8">
+                <path d="M170 120h1360M170 250h1360M170 380h1360M170 510h1360M170 640h1360"/>
+              </g>
+              <g font-family="Inter,sans-serif" fill="#7d8994" font-size="18" text-anchor="end">
+                <text x="150" y="126">18,000 ft</text>
+                <text x="150" y="256">12,000 ft</text>
+                <text x="150" y="386">8,000 ft</text>
+                <text x="150" y="516">3,000 ft</text>
+                <text x="150" y="646">500 ft</text>
+                <text x="150" y="712">SURFACE</text>
+              </g>
+              <path d="M170 96 V700" stroke="#39434f" stroke-width="2"/>
+
+              <!-- ceiling of the restriction -->
+              <path d="M170 120h1360" stroke="#d8202c" stroke-width="2.5"/>
+              <text x="1530" y="106" font-family="Inter,sans-serif" font-size="19" font-weight="700" fill="#d8202c" text-anchor="end">CEILING OF CLOSED AIRSPACE</text>
+
+              <!-- sea -->
+              <rect y="700" width="1600" height="120" fill="url(#stsea)"/>
+              <line x1="0" y1="700" x2="1600" y2="700" stroke="#5d8298" stroke-width="1.6" opacity=".7"/>
+              <g stroke="#41647c" opacity=".5" fill="none" stroke-width="2">
+                <path d="M60 726h1480M60 754h1480M60 786h1480"/>
+              </g>
+              <!-- the object -->
+              <ellipse cx="800" cy="702" rx="86" ry="17" fill="#e9b463" opacity=".22"/>
+              <ellipse cx="800" cy="700" rx="46" ry="11" fill="#1d2933"/>
+              <ellipse cx="800" cy="696" rx="30" ry="7" fill="#ffe0a8"/>
+              <text x="800" y="768" font-family="Inter,sans-serif" font-size="19" font-weight="700" fill="#ffd9a3" text-anchor="middle">THE OBJECT</text>
+
+              <!-- fighters -->
+              <g fill="#5fd0ff">
+                <path d="M700 176 l40 0 l-8 -12 l24 12 l24 0 l-24 6 l8 12 l-40 -12 z"/>
+                <path d="M860 200 l34 0 l-7 -10 l20 10 l20 0 l-20 5 l7 10 l-34 -10 z" opacity=".85"/>
+              </g>
+              <g stroke="#5fd0ff" stroke-dasharray="9 8" stroke-width="2" fill="none" opacity=".6">
+                <path d="M560 188 C700 150 940 150 1060 196"/>
+              </g>
+              <g font-family="Inter,sans-serif">
+                <text x="1090" y="182" font-size="22" font-weight="700" fill="#5fd0ff">FIGHTERS · STANDING BY</text>
+                <text x="1090" y="210" font-size="17" fill="#9fb0be">Two-ship orbit, continuous since 3:19 a.m.</text>
+              </g>
+
+              <!-- tanker -->
+              <g fill="#c2b5ff">
+                <path d="M300 292 l70 0 l-6 -16 l26 16 l40 0 l-40 8 l6 16 l-26 -16 l-70 0 z"/>
+              </g>
+              <g font-family="Inter,sans-serif">
+                <text x="452" y="292" font-size="20" font-weight="700" fill="#c2b5ff">TANKER</text>
+                <text x="452" y="318" font-size="17" fill="#9fb0be">Keeps the orbit unbroken · 3 refuelings</text>
+              </g>
+
+              <!-- patrol / survey -->
+              <g fill="#9bd18a">
+                <path d="M1100 402 l58 0 l-5 -14 l22 14 l34 0 l-34 7 l5 14 l-22 -14 l-58 0 z"/>
+              </g>
+              <g stroke="#9bd18a" stroke-dasharray="7 9" stroke-width="2" fill="none" opacity=".55">
+                <path d="M240 420 C560 372 1000 372 1310 414"/>
+              </g>
+              <g font-family="Inter,sans-serif" text-anchor="end">
+                <text x="1060" y="398" font-size="20" font-weight="700" fill="#9bd18a">SURVEY &amp; PATROL PASSES</text>
+                <text x="1060" y="424" font-size="17" fill="#9fb0be">At least 14 since 3:19 a.m. · imagery, radar, air sampling</text>
+              </g>
+
+              <!-- helicopter -->
+              <g fill="#ffb454">
+                <ellipse cx="470" cy="642" rx="26" ry="9"/>
+                <path d="M492 642 l34 -3 l0 6 l-34 3z"/>
+                <rect x="418" y="628" width="104" height="3.4" rx="1.7"/>
+                <rect x="452" y="650" width="4" height="9"/><rect x="486" y="650" width="4" height="9"/>
+              </g>
+              <g font-family="Inter,sans-serif">
+                <text x="546" y="638" font-size="20" font-weight="700" fill="#ffb454">RESCUE HELICOPTER · ON ALERT</text>
+                <text x="546" y="664" font-size="17" fill="#9fb0be">Crew and swimmers ready ashore · not launched</text>
+              </g>
+
+              <text x="170" y="800" font-family="Inter,sans-serif" font-size="15" fill="#68737e">
+                Altitudes approximate, from public flight-tracking data and officials' descriptions. Horizontal spacing not to scale. — Meridian News Network
+              </text>
+            </svg>
+          </div>
+          <figcaption><b>How the aircraft are layered over the site.</b> Fighters hold the top of the stack inside the closed airspace, with a tanker keeping them there; survey and patrol aircraft fly the passes below them; a rescue helicopter waits ashore. <span class="credit">MNN Graphics</span></figcaption>
+        </figure>
+
+        <h2>On the ground, a city listening</h2>
+
+        <p>The effect on shore has been less about what people can see than what they can hear. The object itself is a smudge on the horizon, visible with binoculars and not much else. The aircraft are unmistakable.</p>
+
+        <p>"You feel the low ones in the balcony rail," said Priscilla Vance, who has been on the fourteenth floor of a hotel at 32nd Avenue North since Monday and has not left it since 4 a.m. "It's every twenty minutes or so. My grandkids think it's the best week of their lives. I've counted eleven and I've been asleep for two of them."</p>
+
+        <p>Horry County has kept the beach closed from 21st to 38th Avenue North, and the sand outside that line has filled with people watching a sky that mostly looks empty until it very suddenly doesn't. Emergency management asked residents twice Wednesday morning to stop calling 911 to report the noise.</p>
+
+        <p>Hotels along the closed stretch reported a run of cancellations before 8 a.m. and a heavier run of new bookings after 10.</p>
+
+        <h2>What officials still won't say</h2>
+
+        <p>Nine hours in, the list of unanswered questions has not shortened. No agency has claimed the object. No government has said it launched anything matching it. The military will not characterize it, will not say whether it is considered a threat, and will not describe what the survey passes have actually returned beyond the radiation and chemical readings.</p>
+
+        <p>Ferrante was asked, at the end of a fifteen-minute call, the simplest version of the question: is the public in danger?</p>
+
+        <p>"Right now, from that object, we have no indication that anybody is," he said. "That is a real answer and it is not a promise. It's why the airplanes are up."</p>
+
+        <div class="partner">
+          <b>Partner coverage</b>
+          The <a href="index.html">Tidewater Signal</a> is reporting on the ground in Myrtle Beach and first published the radar reconstruction showing the object's descent out of orbit — and the fact that it matches nothing in the public catalog of more than 40,000 tracked objects.
+        </div>
+
+        <p style="color:var(--ink-3); font-size:14.5px; border-top:1px solid var(--rule); padding-top:18px; margin-top:34px">
+          <em>Renata Okonjo-Hale reported from Washington and Tom Bridger from Myrtle Beach. This story is being updated.</em>
+        </p>
+
+      </div>
+
+      <aside>
+        <div class="blk">
+          <h4><i></i>Live updates</h4>
+          <div class="in">
+            <ul class="feed">
+              <li><time>11:48 A.M.</time><p>Fourteenth pass over the site, low and out of the north. Heard across the northern Grand Strand.</p></li>
+              <li><time>11:12 A.M.</time><p>Second rescue aircrew goes to alert status. No launch.</p></li>
+              <li><time>10:41 A.M.</time><p>Infrared frame obtained by MNN shows the object still warm nine hours after splashdown.</p></li>
+              <li><time>9:52 A.M.</time><p>A destroyer takes station on the eastern edge of the exclusion zone.</p></li>
+              <li><time>8:30 A.M.</time><p>Third aerial refueling keeps the fighter orbit unbroken.</p></li>
+              <li><time>7:14 A.M.</time><p>Survey aircraft reports readings "nothing above background."</p></li>
+              <li><time>6:00 A.M.</time><p>Northern Command assumes lead of the response from the Coast Guard.</p></li>
+              <li><time>3:19 A.M.</time><p>First pass over the site — twelve minutes after the object entered the water.</p></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h4>The posture</h4>
+          <div class="in">
+            <ul class="spec">
+              <li><em>Fighters on station</em><b>2, continuous</b></li>
+              <li><em>Time on station</em><b>9 hours</b></li>
+              <li><em>Aerial refuelings</em><b>3</b></li>
+              <li><em>Passes over site</em><b>14+</b></li>
+              <li><em>Rescue crews on alert</em><b>2</b></li>
+              <li><em>Engagement authority</em><b>None sought</b></li>
+              <li><em>Closed airspace</em><b>10 nmi / 18,000 ft</b></li>
+              <li><em>Lead command</em><b>NORTHCOM</b></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h4>Watch</h4>
+          <div class="in">
+            <ul class="vidlist">
+              <li><span class="thumb"></span><span><p>Low pass over the exclusion zone, filmed from a charter boat</p><small>1:42 · Live</small></span></li>
+              <li><span class="thumb"></span><span><p>Col. Ferrante: "They are standing by. That is the whole description."</p><small>3:08 · 1h ago</small></span></li>
+              <li><span class="thumb"></span><span><p>What a rescue alert actually involves — MNN explains</p><small>2:24 · 2h ago</small></span></li>
+              <li><span class="thumb"></span><span><p>From the sand: a city listening to its own sky</p><small>4:11 · 40m ago</small></span></li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div><b>Meridian News Network</b>National Security Unit<br>Washington bureau<br>Southeast bureau · Atlanta</div>
+      <div><b>Sections</b>U.S. · World · Politics<br>National Security<br>Weather · Business · Video</div>
+      <div><b>Network</b>About MNN · Standards<br>Corrections<br>Contact the newsroom</div>
+      <div><b>Watch</b>MNN Live<br>Podcasts<br>Newsletters</div>
+    </div>
+    <div class="wrap"><div class="disc">
+      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — Meridian News Network does not exist. This page is an invented news broadcast website created as a writing and design exercise. Every person, quote, official statement, image, video still and graphic on it is fabricated. No military flyovers, alert postures or aircraft operations described here are real.
+    </div></div>
+  </footer>
+</div>
+
+</body>
+</html>
