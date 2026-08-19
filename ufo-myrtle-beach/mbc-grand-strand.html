@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBC 12 — A closed beach in the busiest week of the year</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#075e6b; --teal-2:#0596a8; --teal-lite:#e4f4f6;
+  --orange:#c2570c; --amber:#f2a03d; --sun:#ffd15c;
+  --ink:#17242a; --ink-2:#48585f; --ink-3:#75858c;
+  --paper:#fff; --wash:#f2f6f7; --page:#e7eef0; --rule:#dae4e7;
+  --r:10px;
+  --max:1180px;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--page); color:var(--ink);
+  font-family:"Source Sans 3",system-ui,-apple-system,sans-serif; font-size:17px; -webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--teal-2)}
+h1,h2,h3,h4,.arch{font-family:Archivo,system-ui,sans-serif}
+
+/* ---------- fiction banner ---------- */
+.fiction{
+  position:sticky; top:0; z-index:90;
+  background:repeating-linear-gradient(135deg,#111,#111 14px,#1c1c1c 14px,#1c1c1c 28px);
+  color:#ffd66b; border-bottom:3px solid #ffd66b;
+  font-family:"Source Sans 3",sans-serif; font-size:13px; letter-spacing:.02em;
+  padding:9px 16px; text-align:center; line-height:1.5;
+}
+.fiction strong{color:#fff; letter-spacing:.12em; font-weight:700}
+@media (max-width:560px){ .fiction{font-size:11.5px; padding:7px 12px} }
+
+.shell{max-width:1300px; margin:0 auto; background:var(--paper)}
+.wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
+
+/* ---------- alert bar ---------- */
+.alert{background:var(--orange); color:#fff}
+.alert .wrap{display:flex; align-items:center; gap:13px; padding:11px 24px; font-size:14.5px; flex-wrap:wrap}
+.alert .warn{width:24px;height:22px;flex:0 0 auto}
+.alert b{font-family:Archivo,sans-serif; font-weight:800; letter-spacing:.06em; text-transform:uppercase; font-size:13px}
+.alert .when{margin-left:auto; font-size:12.5px; opacity:.9}
+
+/* ---------- station header ---------- */
+.head{border-bottom:1px solid var(--rule)}
+.head .wrap{display:flex; align-items:center; gap:20px; padding:15px 24px}
+.mark{display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit}
+.mark .logo{width:96px;height:52px;flex:0 0 auto}
+.mark .tagline{font-family:Archivo,sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); line-height:1.35; max-width:12ch}
+.wx{margin-left:auto; display:flex; align-items:center; gap:16px; text-align:right}
+.wx .now{display:flex; align-items:center; gap:10px}
+.wx .temp{font-family:Archivo,sans-serif; font-size:31px; font-weight:800; line-height:1; color:var(--ink)}
+.wx .cond{font-size:12px; color:var(--ink-3); line-height:1.4}
+.wx .sea{border-left:1px solid var(--rule); padding-left:16px; font-size:12px; color:var(--ink-3); line-height:1.55}
+.wx .sea b{color:var(--ink); font-weight:700}
+@media (max-width:820px){ .wx .sea{display:none} }
+@media (max-width:520px){ .mark .tagline{display:none} }
+
+.nav{background:var(--teal); color:#fff}
+.nav .wrap{display:flex; align-items:center; gap:22px; height:44px; overflow-x:auto;
+  font-family:Archivo,sans-serif; font-size:13px; font-weight:700; letter-spacing:.07em; text-transform:uppercase}
+.nav span{white-space:nowrap; opacity:.82}
+.nav span.on{opacity:1; box-shadow:inset 0 -3px 0 var(--sun)}
+.nav .live{margin-left:auto; background:#fff; color:var(--teal); padding:5px 11px; border-radius:20px;
+  display:inline-flex; align-items:center; gap:7px; font-size:11.5px}
+.nav .live i{width:7px;height:7px;border-radius:50%;background:var(--orange)}
+
+.onair{background:var(--wash); border-bottom:1px solid var(--rule); font-size:12.5px; color:var(--ink-3)}
+.onair .wrap{display:flex; gap:10px; align-items:center; padding:9px 24px; flex-wrap:wrap}
+.onair b{font-family:Archivo,sans-serif; font-size:11px; letter-spacing:.11em; text-transform:uppercase;
+  background:var(--teal-lite); color:var(--teal); padding:4px 9px; border-radius:5px}
+
+/* ---------- hero ---------- */
+.top{position:relative; padding-bottom:10px}
+.top .shot{line-height:0}
+.card{
+  position:relative; margin:-74px auto 0; max-width:1040px; background:var(--paper);
+  border-radius:var(--r); box-shadow:0 14px 40px rgba(12,40,50,.16); padding:28px 34px 26px;
+}
+@media (max-width:760px){ .card{margin:-30px 14px 0; padding:22px 20px} }
+.kick{display:inline-flex; align-items:center; gap:9px; font-family:Archivo,sans-serif; font-size:11.5px;
+  font-weight:800; letter-spacing:.13em; text-transform:uppercase; color:#fff; background:var(--teal-2);
+  padding:6px 11px; border-radius:5px; margin-bottom:15px}
+h1{font-size:clamp(28px,3.9vw,45px); font-weight:800; line-height:1.09; letter-spacing:-.02em; margin:0 0 14px}
+.deck{font-size:clamp(16px,1.8vw,19.5px); line-height:1.55; color:var(--ink-2); margin:0 0 20px; max-width:62ch}
+.by{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; border-top:1px solid var(--rule);
+  padding-top:15px; font-size:13px; color:var(--ink-3)}
+.by b{color:var(--ink); font-weight:700}
+.by .av{width:32px;height:32px;border-radius:50%;background:var(--teal-lite); color:var(--teal);
+  display:grid; place-items:center; font-family:Archivo,sans-serif; font-weight:800; font-size:11.5px}
+.capbar{font-size:12.5px; color:var(--ink-3); line-height:1.5; padding:10px 0 0}
+.capbar b{color:var(--ink-2); font-weight:600}
+.credit{text-transform:uppercase; letter-spacing:.08em; font-size:10px; color:#93a2a8}
+
+/* ---------- body ---------- */
+.cols{display:grid; grid-template-columns:minmax(0,1fr) 316px; gap:44px; padding:34px 0 54px; align-items:start}
+@media (max-width:960px){ .cols{grid-template-columns:1fr; gap:34px} }
+.body{max-width:68ch; font-size:18px; line-height:1.7; color:#213036}
+.body p{margin:0 0 20px}
+.body h2{font-size:23px; font-weight:800; letter-spacing:-.015em; margin:36px 0 14px;
+  display:flex; align-items:center; gap:11px}
+.body h2 i{width:9px; height:26px; background:var(--teal-2); border-radius:3px; flex:0 0 auto}
+.body q{quotes:"“" "”" "‘" "’"}
+
+.quote{background:var(--teal-lite); border-radius:var(--r); padding:22px 26px; margin:28px 0;
+  font-size:20px; line-height:1.5; color:var(--teal); font-weight:600}
+.quote cite{display:block; margin-top:13px; font-style:normal; font-family:Archivo,sans-serif;
+  font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:700}
+
+.box{border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; margin:30px 0}
+.box .hd{background:var(--teal); color:#fff; font-family:Archivo,sans-serif; font-size:12px; font-weight:800;
+  letter-spacing:.13em; text-transform:uppercase; padding:11px 16px; display:flex; align-items:center; gap:9px}
+.box .bd{padding:18px 20px; font-size:16px; line-height:1.6}
+.split{display:grid; grid-template-columns:1fr 1fr; gap:0}
+@media (max-width:620px){ .split{grid-template-columns:1fr} }
+.split > div{padding:18px 20px}
+.split > div + div{border-left:1px solid var(--rule)}
+@media (max-width:620px){ .split > div + div{border-left:0; border-top:1px solid var(--rule)} }
+.split h5{margin:0 0 11px; font-family:Archivo,sans-serif; font-size:11.5px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--ink-3)}
+.split ul{margin:0; padding:0; list-style:none; font-size:15.5px; line-height:1.5}
+.split li{display:flex; gap:9px; padding:6px 0}
+.split .x{color:var(--orange); font-weight:800}
+.split .ok{color:#0f7a52; font-weight:800}
+
+figure{margin:30px 0 0}
+figure .frame{border-radius:var(--r); overflow:hidden; background:#0d1a1f; line-height:0}
+figcaption{font-size:12.5px; line-height:1.55; color:var(--ink-3); padding:9px 2px 0}
+figcaption b{color:var(--ink-2); font-weight:600}
+
+.ugc{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0 0}
+@media (max-width:700px){ .ugc{grid-template-columns:1fr 1fr} }
+.ugc figure{margin:0}
+.ugc figcaption{font-size:11.5px; padding-top:7px}
+.ugc .who{font-family:Archivo,sans-serif; font-weight:700; color:var(--teal-2); font-size:11px; letter-spacing:.03em}
+.send{background:var(--teal-lite); border-radius:var(--r); padding:16px 18px; margin:18px 0 0;
+  font-size:14.5px; color:var(--teal); display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+.send b{font-family:Archivo,sans-serif; letter-spacing:.06em; text-transform:uppercase; font-size:12px}
+
+/* ---------- chart ---------- */
+.chart{border:1px solid var(--rule); border-radius:var(--r); padding:20px 20px 16px; margin:30px 0; background:#fcfcfb}
+.chart h4{margin:0 0 4px; font-size:17px; font-weight:800; letter-spacing:-.01em}
+.chart .sub{margin:0 0 14px; font-size:13.5px; color:var(--ink-3); line-height:1.45}
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin:0 0 12px; font-size:13px; color:var(--ink-2)}
+.legend span{display:inline-flex; align-items:center; gap:7px}
+.legend i{width:12px; height:12px; border-radius:3px; display:inline-block}
+.chart figcaption{padding-top:10px}
+.chart details{margin-top:12px; font-size:13.5px; color:var(--ink-2)}
+.chart summary{cursor:pointer; color:var(--teal-2); font-weight:600}
+.chart table{border-collapse:collapse; margin-top:10px; font-size:13px; width:100%}
+.chart th,.chart td{border:1px solid var(--rule); padding:5px 9px; text-align:right}
+.chart th:first-child,.chart td:first-child{text-align:left}
+.chart thead th{background:var(--wash); font-weight:700}
+#tip{position:fixed; z-index:60; pointer-events:none; background:#17242a; color:#fff; font-size:12.5px;
+  padding:8px 11px; border-radius:7px; line-height:1.45; opacity:0; transition:opacity .12s; box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#tip b{font-family:Archivo,sans-serif; display:block; margin-bottom:3px; font-size:11.5px; letter-spacing:.06em}
+.bar{cursor:pointer}
+.bar:hover rect{filter:brightness(1.12)}
+
+/* ---------- rail ---------- */
+aside{position:sticky; top:82px}
+.blk{border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; margin-bottom:22px; background:var(--paper)}
+.blk h4{margin:0; background:var(--teal); color:#fff; font-size:12px; font-weight:800; letter-spacing:.13em;
+  text-transform:uppercase; padding:11px 15px; display:flex; align-items:center; gap:9px}
+.blk h4.warn{background:var(--orange)}
+.blk .in{padding:15px}
+.clos{list-style:none; margin:0; padding:0; font-size:14px}
+.clos li{display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--rule); line-height:1.4}
+.clos li:last-child{border-bottom:0}
+.clos b{color:var(--orange); font-family:Archivo,sans-serif; font-size:11px; letter-spacing:.07em;
+  text-transform:uppercase; white-space:nowrap; padding-top:2px}
+.clos b.open{color:#0f7a52}
+.dos{margin:0; padding-left:19px; font-size:14.5px; line-height:1.55; color:var(--ink-2)}
+.dos li{margin-bottom:9px}
+.dos li:last-child{margin-bottom:0}
+.more{list-style:none;margin:0;padding:0;font-size:14.5px;line-height:1.35}
+.more li{padding:11px 0;border-bottom:1px solid var(--rule)}
+.more li:last-child{border-bottom:0}
+.more a{color:var(--ink); text-decoration:none; font-weight:600}
+.more small{display:block;color:var(--ink-3);font-weight:400;margin-top:5px;font-size:11px;
+  letter-spacing:.06em;text-transform:uppercase; font-family:Archivo,sans-serif}
+
+/* ---------- footer ---------- */
+footer{background:var(--teal); color:#bfdde2; padding:34px 0 44px; font-size:13.5px; line-height:1.75}
+footer .wrap{display:flex; flex-wrap:wrap; gap:28px; justify-content:space-between}
+footer b{display:block; color:#fff; font-family:Archivo,sans-serif; font-size:11.5px; letter-spacing:.13em;
+  text-transform:uppercase; margin-bottom:9px}
+footer .disc{border-top:1px solid rgba(255,255,255,.18); margin-top:26px; padding-top:18px; color:#a6ccd3; font-size:12.5px}
+</style>
+</head>
+<body data-palette="#0596a8,#c2570c">
+
+<div class="fiction">
+  <strong>FICTION</strong> &nbsp;·&nbsp; This is a fabricated news story written as a creative exercise. <b>MBC 12 / Myrtle Beach Coastal</b> is not a real television station, the people quoted do not exist, and none of these closures, flyovers or events are real.
+</div>
+
+<div class="shell">
+
+  <div class="alert">
+    <div class="wrap">
+      <svg class="warn" viewBox="0 0 24 22" aria-hidden="true">
+        <path d="M12 1.5 23 20.5H1z" fill="#fff" opacity=".2"/>
+        <path d="M12 3.4 21.3 19.5H2.7z" fill="#fff"/>
+        <path d="M11.1 8h1.8l-.35 6h-1.1zM12 15.6a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z" fill="#c2570c"/>
+      </svg>
+      <b>Beach closure in effect</b>
+      <span>21st Avenue North to 38th Avenue North · all beach access points closed · no swimming, no boating within two miles</span>
+      <span class="when">Updated 12:40 p.m.</span>
+    </div>
+  </div>
+
+  <header class="head">
+    <div class="wrap">
+      <a class="mark" href="#">
+        <svg class="logo" viewBox="0 0 192 104" aria-label="MBC 12 Myrtle Beach Coastal logo">
+          <rect width="132" height="104" rx="9" fill="#075e6b"/>
+          <path d="M0 74c14-9 24 6 38-2s24 8 38-2 24 6 38-4 18 4 18 4v34H0z" fill="#0596a8" opacity=".55"/>
+          <path d="M0 84c14-8 24 6 38-2s24 8 38-2 24 6 38-4 18 4 18 4v24H0z" fill="#57c3d1" opacity=".45"/>
+          <circle cx="103" cy="30" r="13" fill="#ffd15c"/>
+          <text x="15" y="52" font-family="Archivo,sans-serif" font-size="42" font-weight="800" fill="#fff" letter-spacing="-1">MBC</text>
+          <text x="140" y="62" font-family="Archivo,sans-serif" font-size="52" font-weight="800" fill="#075e6b" letter-spacing="-2">12</text>
+        </svg>
+        <span class="tagline">The Grand Strand's News Leader</span>
+      </a>
+      <div class="wx">
+        <div class="now">
+          <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="19" r="10" fill="#ffd15c"/>
+            <g stroke="#ffd15c" stroke-width="2.6" stroke-linecap="round">
+              <path d="M20 3v4M20 31v4M4 19h4M32 19h4M8.6 7.6l2.8 2.8M28.6 27.6l2.8 2.8M31.4 7.6l-2.8 2.8M11.4 27.6l-2.8 2.8"/>
+            </g>
+          </svg>
+          <span>
+            <span class="temp">84°</span>
+            <span class="cond">Sunny · Myrtle Beach</span>
+          </span>
+        </div>
+        <div class="sea">
+          Water <b>82°</b> · Surf <b>2–3 ft</b><br>
+          High tide <b>1:42 p.m.</b> · UV <b>9</b>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="wrap">
+      <span class="on">Grand Strand</span><span>First Alert Weather</span><span>Traffic</span>
+      <span>Carolina Sports</span><span>Investigates</span><span>Community</span>
+      <span class="live"><i></i>Watch MBC 12</span>
+    </div>
+  </nav>
+
+  <div class="onair">
+    <div class="wrap">
+      <b>On air now</b> <span>MBC News at Noon — continuing coverage</span>
+      <span style="margin-left:auto">Next: First Alert Weather at 12:30</span>
+    </div>
+  </div>
+
+  <section class="top">
+    <div class="shot">
+      <!-- HERO: closed beach, midday -->
+      <svg viewBox="0 0 1600 760" role="img" aria-label="An empty stretch of beach behind orange barricades and yellow tape, with onlookers at the line and a patrol truck on the sand.">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2872ad"/><stop offset=".45" stop-color="#75b0d8"/>
+            <stop offset=".82" stop-color="#c6dbe7"/><stop offset="1" stop-color="#e6ecec"/>
+          </linearGradient>
+          <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2c7e97"/><stop offset=".45" stop-color="#31909f"/>
+            <stop offset="1" stop-color="#5cb0bb"/>
+          </linearGradient>
+          <linearGradient id="dry" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#e2d3b3"/><stop offset=".55" stop-color="#cdb894"/>
+            <stop offset="1" stop-color="#b6a07b"/>
+          </linearGradient>
+          <radialGradient id="glare" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#fff9e2" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#ffeeb0" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="grade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffd9a0" stop-opacity=".16"/>
+            <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="1" stop-color="#4a3a22" stop-opacity=".2"/>
+          </linearGradient>
+          <radialGradient id="vig" cx="50%" cy="44%" r="76%">
+            <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".34"/>
+          </radialGradient>
+          <filter id="gr" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="4" seed="9"/>
+            <feColorMatrix type="saturate" values="0"/>
+          </filter>
+          <filter id="ch" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency=".012 .07" numOctaves="3" seed="15" result="t"/>
+            <feDisplacementMap in="SourceGraphic" in2="t" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="bl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+          <filter id="far" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.5"/></filter>
+          <filter id="near" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+          <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3"/></filter>
+          <clipPath id="water"><rect y="286" width="1600" height="120"/></clipPath>
+
+          <!-- a person, standing, seen from behind -->
+          <g id="pp">
+            <ellipse cx="0" cy="2" rx="15" ry="4" fill="#7d6c52" opacity=".38"/>
+            <path d="M-9 0 C-11 -22 -10 -38 -8 -48 L8 -48 C10 -38 11 -22 9 0 Z"/>
+            <path d="M-9 -46 C-15 -44 -17 -34 -17 -22 L-12 -22 C-12 -32 -11 -40 -9 -44 Z"/>
+            <path d="M9 -46 C15 -44 17 -34 17 -22 L12 -22 C12 -32 11 -40 9 -44 Z"/>
+            <circle cx="0" cy="-56" r="7.5"/>
+          </g>
+        </defs>
+
+        <rect width="1600" height="760" fill="url(#sky)"/>
+        <circle cx="1330" cy="86" r="250" fill="url(#glare)" opacity=".75"/>
+        <ellipse cx="330" cy="118" rx="300" ry="26" fill="#fff" opacity=".38" filter="url(#bl)"/>
+        <ellipse cx="920" cy="172" rx="380" ry="20" fill="#fff" opacity=".28" filter="url(#bl)"/>
+
+        <!-- contrail and a speck -->
+        <path d="M180 96 C520 84 900 96 1180 122" stroke="#fff" stroke-width="5" fill="none" opacity=".55" filter="url(#soft)"/>
+        <g fill="#31414a"><ellipse cx="1192" cy="123" rx="8" ry="2.6"/><rect x="1186" y="120" width="4" height="7" rx="2"/></g>
+
+        <!-- ocean, held slightly soft so the sand reads as the focal plane -->
+        <g filter="url(#far)">
+          <rect y="286" width="1600" height="120" fill="url(#sea)"/>
+          <line x1="0" y1="286" x2="1600" y2="286" stroke="#e2edf1" stroke-width="1.8" opacity=".75"/>
+          <g clip-path="url(#water)" filter="url(#ch)">
+            <g stroke="#c6e8ee" fill="none">
+              <g opacity=".28" stroke-width="1.6"><path d="M-40 300h1700"/><path d="M-40 316h1700"/><path d="M-40 336h1700"/></g>
+              <g opacity=".5" stroke-width="3"><path d="M-40 360h1700"/><path d="M-40 384h1700"/></g>
+            </g>
+            <g fill="#1d3b48">
+              <rect x="470" y="278" width="46" height="9" rx="2"/><rect x="486" y="271" width="13" height="8"/>
+              <rect x="1010" y="279" width="40" height="8" rx="2"/><rect x="1024" y="273" width="12" height="7"/>
+              <rect x="1290" y="280" width="34" height="7" rx="2"/>
+            </g>
+          </g>
+        </g>
+        <!-- horizon haze -->
+        <rect y="264" width="1600" height="70" fill="#eaf2f4" opacity=".4" filter="url(#bl)"/>
+
+        <!-- surf -->
+        <g filter="url(#far)">
+          <path d="M0 400 C220 392 380 414 600 404 C820 394 980 416 1200 406 C1380 398 1500 412 1600 406 L1600 424 L0 424 Z"
+                fill="#f6fafb" opacity=".92" filter="url(#ch)"/>
+          <path d="M0 418 C240 428 420 412 640 424 C880 436 1040 418 1280 428 C1420 434 1520 424 1600 428 L1600 448 L0 448 Z"
+                fill="#eaf3f4" opacity=".7" filter="url(#ch)"/>
+        </g>
+
+        <!-- wet sand then dry sand -->
+        <rect y="424" width="1600" height="66" fill="#a5977c"/>
+        <rect y="476" width="1600" height="284" fill="url(#dry)"/>
+        <g fill="#dccbaa" opacity=".55" filter="url(#ch)">
+          <path d="M0 492 C300 502 600 486 900 498 C1200 510 1400 494 1600 502 L1600 518 L0 518Z"/>
+        </g>
+        <!-- heat shimmer along the sand line -->
+        <rect y="452" width="1600" height="52" fill="#fff6de" opacity=".3" filter="url(#bl)"/>
+        <!-- dune shadow raking in from the right -->
+        <path d="M1600 760 L1600 560 C1300 596 1000 640 700 760 Z" fill="#8d7c5e" opacity=".12" filter="url(#bl)"/>
+
+        <!-- a thin, hazy line of people far down the open beach -->
+        <g fill="#4a5a63" opacity=".5" filter="url(#far)" transform="translate(0,0)">
+          <g transform="translate(96,470) scale(.34)"><use href="#pp"/></g>
+          <g transform="translate(124,472) scale(.31)"><use href="#pp"/></g>
+          <g transform="translate(158,469) scale(.36)"><use href="#pp"/></g>
+          <g transform="translate(1466,474) scale(.33)"><use href="#pp"/></g>
+          <g transform="translate(1498,471) scale(.3)"><use href="#pp"/></g>
+        </g>
+
+        <!-- stacked chairs and closed umbrellas, unused -->
+        <g>
+          <ellipse cx="212" cy="474" rx="66" ry="9" fill="#8a7859" opacity=".3"/>
+          <g fill="#7f6f56">
+            <g transform="translate(196,470)">
+              <rect x="-3" y="-56" width="6" height="60" rx="3"/>
+              <path d="M-3 -56 C-16 -46 -16 -28 -12 -14 L12 -14 C16 -28 16 -46 3 -56z" fill="#1f6f7d"/>
+            </g>
+            <g transform="translate(232,472)">
+              <rect x="-3" y="-52" width="6" height="56" rx="3"/>
+              <path d="M-3 -52 C-15 -43 -15 -26 -11 -13 L11 -13 C15 -26 15 -43 3 -52z" fill="#c2570c"/>
+            </g>
+            <g transform="translate(268,470)">
+              <rect x="-3" y="-54" width="6" height="58" rx="3"/>
+              <path d="M-3 -54 C-15 -45 -15 -27 -11 -13 L11 -13 C15 -27 15 -45 3 -54z" fill="#1f6f7d"/>
+            </g>
+          </g>
+          <g transform="translate(1372,478)">
+            <ellipse cx="0" cy="12" rx="52" ry="8" fill="#8a7859" opacity=".3"/>
+            <g fill="#7f6f56">
+              <rect x="-42" y="-16" width="84" height="10" rx="3"/><rect x="-42" y="-30" width="84" height="10" rx="3"/>
+              <rect x="-38" y="-6" width="7" height="14"/><rect x="31" y="-6" width="7" height="14"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- lifeguard stand, red flag flying -->
+        <g>
+          <ellipse cx="742" cy="508" rx="72" ry="11" fill="#8a7859" opacity=".32"/>
+          <g fill="#efe6d2">
+            <path d="M700 480 l64 0 -9 -46 -46 0z"/>
+            <rect x="712" y="404" width="40" height="32" rx="4"/>
+            <rect x="707" y="396" width="50" height="9" rx="4"/>
+            <rect x="704" y="480" width="6" height="26"/><rect x="754" y="480" width="6" height="26"/>
+          </g>
+          <path d="M700 480 l64 0 -3 -16 -58 0z" fill="#cdc3ac"/>
+          <rect x="768" y="376" width="4" height="106" fill="#8b7d63"/>
+          <path d="M772 380 h44 v26 h-44z" fill="#c2312a"/>
+        </g>
+
+        <!-- beach patrol pickup on the sand -->
+        <g transform="translate(1020,438) scale(1.15)">
+          <ellipse cx="76" cy="42" rx="94" ry="12" fill="#8a7859" opacity=".34"/>
+          <g fill="#f4f6f6">
+            <path d="M0 30 h150 v-22 h-42 l-16 -20 h-52 l-10 20 h-30z"/>
+            <path d="M40 8 h44 v-16 h-38z" fill="#bfe0e6"/>
+            <path d="M92 8 h16 l-14 -16 h-2z" fill="#bfe0e6"/>
+          </g>
+          <path d="M0 30 h150 v-6 h-150z" fill="#cfd6d8"/>
+          <rect x="0" y="14" width="150" height="8" fill="#0596a8"/>
+          <rect x="52" y="-16" width="30" height="6" rx="3" fill="#e0a12a"/>
+          <g fill="#242c30"><circle cx="30" cy="32" r="11"/><circle cx="118" cy="32" r="11"/></g>
+          <g fill="#8d9aa0"><circle cx="30" cy="32" r="4.5"/><circle cx="118" cy="32" r="4.5"/></g>
+        </g>
+
+        <!-- onlookers at the line, mid-ground, sharp -->
+        <g fill="#26333b">
+          <g transform="translate(84,596) scale(1.02)"><use href="#pp"/></g>
+          <g transform="translate(132,604) scale(1.12)"><use href="#pp"/></g>
+          <g transform="translate(186,598) scale(1.0)"><use href="#pp"/>
+            <rect x="14" y="-74" width="9" height="14" rx="2"/></g>
+          <g transform="translate(236,606) scale(1.08)"><use href="#pp"/></g>
+          <g transform="translate(1272,612) scale(1.06)"><use href="#pp"/>
+            <rect x="-22" y="-76" width="9" height="14" rx="2"/></g>
+          <g transform="translate(1330,618) scale(1.14)"><use href="#pp"/></g>
+          <g transform="translate(1392,610) scale(1.0)"><use href="#pp"/></g>
+          <g transform="translate(1448,616) scale(1.1)"><use href="#pp"/>
+            <rect x="16" y="-76" width="9" height="14" rx="2"/></g>
+        </g>
+
+        <!-- barricades and tape, close to the lens and out of focus -->
+        <g filter="url(#near)">
+          <path d="M-20 596 C300 626 620 606 940 634 C1220 658 1420 640 1620 656" stroke="#f2c400" stroke-width="27" fill="none"/>
+          <path d="M-20 600 C300 630 620 610 940 638 C1220 662 1420 644 1620 660" stroke="#d8a800" stroke-width="7" fill="none" opacity=".55"/>
+          <g font-family="Archivo,sans-serif" font-size="17" font-weight="800" fill="#1a1a1a" letter-spacing="3">
+            <text x="90" y="614" transform="rotate(2 90 614)">BEACH CLOSED — DO NOT ENTER</text>
+            <text x="640" y="632" transform="rotate(3.5 640 632)">BEACH CLOSED — DO NOT ENTER</text>
+            <text x="1180" y="656" transform="rotate(2.5 1180 656)">BEACH CLOSED</text>
+          </g>
+          <g transform="translate(300,600)">
+            <ellipse cx="150" cy="126" rx="168" ry="14" fill="#6f5f45" opacity=".3"/>
+            <rect x="0" y="0" width="300" height="30" rx="4" fill="#e8620f"/>
+            <g fill="#fff">
+              <path d="M8 0 h34 l-24 30 h-34z"/><path d="M76 0 h34 l-24 30 h-34z"/>
+              <path d="M144 0 h34 l-24 30 h-34z"/><path d="M212 0 h34 l-24 30 h-34z"/>
+            </g>
+            <rect x="0" y="34" width="300" height="9" rx="3" fill="#c9540d"/>
+            <rect x="18" y="43" width="14" height="76" fill="#d8600f"/><rect x="268" y="43" width="14" height="76" fill="#d8600f"/>
+          </g>
+        </g>
+
+        <!-- grade, vignette, grain -->
+        <rect width="1600" height="760" fill="url(#grade)"/>
+        <rect width="1600" height="760" fill="url(#vig)"/>
+        <rect width="1600" height="760" filter="url(#gr)" opacity=".16" style="mix-blend-mode:overlay"/>
+      </svg>
+    </div>
+
+    <div class="card">
+      <span class="kick">MBC 12 · Grand Strand</span>
+      <h1>A closed beach in the busiest week of the year: the Grand Strand is living underneath this</h1>
+      <p class="deck">Fourteen blocks of sand are off limits. The charter fleet is tied to the dock. City Hall says federal agencies have told it almost nothing. And every twenty minutes or so, everybody on the Strand looks up.</p>
+      <div class="by">
+        <span class="av">DW</span>
+        <span>By <b>Dara Whitlock</b> and <b>Cam Rutherford</b> · MBC News</span>
+        <span>Published Aug. 19, 2026, 12:15 p.m.</span>
+        <span>Updated <b>1:04 p.m.</b></span>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <p class="capbar"><b>The beach at 27th Avenue North, closed since before dawn</b> on what would normally be one of the ten busiest days of the year. Horry County Beach Patrol has been turning people back at every access point between 21st and 38th. <span class="credit">MBC 12 / Cam Rutherford</span></p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="cols">
+      <div class="body">
+
+        <p>MYRTLE BEACH — Whatever is sitting in the water four miles out, the Grand Strand is the place that has to live next to it.</p>
+
+        <p>By late Wednesday morning that meant fourteen closed blocks of the most valuable sand in South Carolina, a fishing fleet stuck at the dock on a flat-calm day, a boardwalk packed with people who came to look at a horizon where there is not much to see, and a city government that has spent nine hours asking federal agencies the same question and getting the same non-answer.</p>
+
+        <p>"I have three federal phone numbers and none of them will tell me what my own beach is closed for," said Renny Alcott, a Myrtle Beach city councilman whose district includes the closed stretch. "I'm not asking them to tell me what it is. I'm asking them how long."</p>
+
+        <h2><i></i>Fourteen blocks, in the third week of August</h2>
+
+        <p>The closure runs from 21st Avenue North to 38th Avenue North — public access points, the hotel walkovers, and the beach itself. Horry County Beach Patrol has staffed every entrance since 5 a.m. The rule they are enforcing came down from the county, which got it from the Coast Guard, which has not explained it to them either.</p>
+
+        <p>"People are being good about it, mostly," said Marla DeSoto, a beach patrol supervisor working the line at 27th. "But I've turned back probably four hundred people this morning and I've told every single one of them the same thing, which is that I don't know. That gets old for them and it gets old for me."</p>
+
+        <p>Third week of August is not a small thing to lose here. The stretch inside the closure holds roughly 2,900 hotel rooms. The businesses on Ocean Boulevard behind it — the pancake houses, the surf shops, the arcade at 29th — depend on a foot traffic that on Wednesday was pointed the wrong way, north toward the barricades instead of down onto the sand.</p>
+
+        <div class="box">
+          <div class="hd">What's closed, what's open</div>
+          <div class="split">
+            <div>
+              <h5>Closed</h5>
+              <ul>
+                <li><span class="x">✕</span> Beach and all access points, 21st–38th Ave. N.</li>
+                <li><span class="x">✕</span> All boating within two nautical miles of the site</li>
+                <li><span class="x">✕</span> Airspace within 10 nautical miles, surface to 18,000 ft</li>
+                <li><span class="x">✕</span> Drone flights of any kind inside the ring</li>
+                <li><span class="x">✕</span> Charter and headboat departures from three marinas</li>
+              </ul>
+            </div>
+            <div>
+              <h5>Open</h5>
+              <ul>
+                <li><span class="ok">✓</span> Beach south of 21st and north of 38th</li>
+                <li><span class="ok">✓</span> Ocean Boulevard, the boardwalk and the pier</li>
+                <li><span class="ok">✓</span> All hotels, including those on the closed stretch</li>
+                <li><span class="ok">✓</span> Municipal water — the city says it is unaffected</li>
+                <li><span class="ok">✓</span> Myrtle Beach International, with delays and reroutes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h2><i></i>The sound every twenty minutes</h2>
+
+        <p>The thing nobody on the Strand can ignore is not visible. It is audible.</p>
+
+        <p>Military aircraft have been running passes over the site since 3:19 a.m., and the low ones cross the beachfront on their way in. MBC 12 counted eleven passes audible from our Ocean Boulevard studio between 6 a.m. and noon. Two of them shook the glass.</p>
+
+        <p>Above those, according to national reporting and confirmed to MBC by a Northern Command spokesperson, a pair of fighter jets has held a continuous orbit over the site since before dawn — refueled in the air to keep them up there. Officials have been careful to describe those jets as standing by to assist rather than as an intercept posture, and locals have received that message in two very different ways.</p>
+
+        <div class="quote">
+          I'm a Navy wife for twenty-six years and I know exactly what I'm hearing up there. It doesn't scare me. What would scare me is if they left.
+          <cite>Jeanette Prue, Socastee</cite>
+        </div>
+
+        <p>Others put it the other way around. "You don't put jets over a beach in August because everything's fine," said Owen Marchetti, who drove down from Conway with his son to stand at the fence at 33rd. "That's not a criticism. I just don't think anyone should pretend that's normal."</p>
+
+        <p>The passes have also produced a measurable municipal problem. Horry County's non-emergency line took more than 600 calls between midnight and noon, and emergency management asked the public twice to stop calling 911 to report aircraft noise or lights. The call pattern tracks the flights almost exactly.</p>
+
+        <div class="chart">
+          <h4>Calls to Horry County's non-emergency line</h4>
+          <p class="sub">Midnight to noon Wednesday, by hour. Spikes line up with the splashdown at 3:07 a.m. and with the two lowest aircraft passes, at 7:04 and 11:48 a.m.</p>
+          <div class="legend">
+            <span><i style="background:#0596a8"></i> Aircraft noise</span>
+            <span><i style="background:#c2570c"></i> Sightings &amp; other reports</span>
+            <span style="color:#75858c">▲ Low pass over the beachfront</span>
+          </div>
+          <svg viewBox="0 0 1120 470" role="img" aria-label="Stacked bar chart of calls to the county non-emergency line by hour, peaking at 96 calls in the 3 a.m. hour and again at 82 at 7 a.m. and 74 at 11 a.m.">
+            <g font-family="'Source Sans 3',sans-serif" font-size="15" fill="#75858c">
+              <!-- gridlines -->
+              <g stroke="#e3eaec" stroke-width="1">
+                <path d="M64 380h1040M64 300h1040M64 220h1040M64 140h1040M64 60h1040"/>
+              </g>
+              <g text-anchor="end">
+                <text x="52" y="385">0</text><text x="52" y="305">25</text><text x="52" y="225">50</text>
+                <text x="52" y="145">75</text><text x="52" y="65">100</text>
+              </g>
+              <path d="M64 380h1040" stroke="#b9c7cb" stroke-width="1.5"/>
+
+              <!-- bars: x0=76, slot 80, bar 54 -->
+              <g class="bars">
+                <g class="bar" data-h="12 a.m." data-n="0" data-s="2">
+                  <rect x="76" y="373.6" width="54" height="6.4" rx="4" fill="#c2570c"/>
+                </g>
+                <g class="bar" data-h="1 a.m." data-n="0" data-s="3">
+                  <rect x="156" y="370.4" width="54" height="9.6" rx="4" fill="#c2570c"/>
+                </g>
+                <g class="bar" data-h="2 a.m." data-n="1" data-s="3">
+                  <rect x="236" y="370.4" width="54" height="9.6" rx="4" fill="#c2570c"/>
+                  <rect x="236" y="365.2" width="54" height="3.2" rx="3" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="3 a.m." data-n="38" data-s="58">
+                  <rect x="316" y="194.4" width="54" height="185.6" rx="4" fill="#c2570c"/>
+                  <rect x="316" y="70.4" width="54" height="122" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="4 a.m." data-n="44" data-s="27">
+                  <rect x="396" y="293.6" width="54" height="86.4" rx="4" fill="#c2570c"/>
+                  <rect x="396" y="152" width="54" height="139.6" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="5 a.m." data-n="31" data-s="13">
+                  <rect x="476" y="338.4" width="54" height="41.6" rx="4" fill="#c2570c"/>
+                  <rect x="476" y="239.2" width="54" height="97.2" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="6 a.m." data-n="26" data-s="12">
+                  <rect x="556" y="341.6" width="54" height="38.4" rx="4" fill="#c2570c"/>
+                  <rect x="556" y="256.4" width="54" height="83.2" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="7 a.m." data-n="61" data-s="21">
+                  <rect x="636" y="312.8" width="54" height="67.2" rx="4" fill="#c2570c"/>
+                  <rect x="636" y="117.6" width="54" height="193.2" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="8 a.m." data-n="47" data-s="16">
+                  <rect x="716" y="328.8" width="54" height="51.2" rx="4" fill="#c2570c"/>
+                  <rect x="716" y="178.4" width="54" height="148.4" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="9 a.m." data-n="39" data-s="12">
+                  <rect x="796" y="341.6" width="54" height="38.4" rx="4" fill="#c2570c"/>
+                  <rect x="796" y="216.8" width="54" height="122.8" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="10 a.m." data-n="35" data-s="11">
+                  <rect x="876" y="344.8" width="54" height="35.2" rx="4" fill="#c2570c"/>
+                  <rect x="876" y="232.8" width="54" height="110" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="11 a.m." data-n="58" data-s="16">
+                  <rect x="956" y="328.8" width="54" height="51.2" rx="4" fill="#c2570c"/>
+                  <rect x="956" y="143.2" width="54" height="183.6" rx="4" fill="#0596a8"/>
+                </g>
+                <g class="bar" data-h="12 p.m." data-n="30" data-s="9">
+                  <rect x="1036" y="351.2" width="54" height="28.8" rx="4" fill="#c2570c"/>
+                  <rect x="1036" y="254.4" width="54" height="94.8" rx="4" fill="#0596a8"/>
+                </g>
+              </g>
+
+              <!-- low-pass markers -->
+              <g fill="#75858c">
+                <path d="M343 58 l8 13 h-16z"/><path d="M663 105 l8 13 h-16z"/><path d="M983 131 l8 13 h-16z"/>
+              </g>
+
+              <!-- selective direct labels -->
+              <g font-size="16" font-weight="700" fill="#17242a" text-anchor="middle">
+                <text x="343" y="40">96</text><text x="663" y="88">82</text><text x="983" y="114">74</text>
+              </g>
+
+              <!-- x axis -->
+              <g text-anchor="middle" font-size="14">
+                <text x="103" y="404">12a</text><text x="183" y="404">1</text><text x="263" y="404">2</text>
+                <text x="343" y="404">3</text><text x="423" y="404">4</text><text x="503" y="404">5</text>
+                <text x="583" y="404">6</text><text x="663" y="404">7</text><text x="743" y="404">8</text>
+                <text x="823" y="404">9</text><text x="903" y="404">10</text><text x="983" y="404">11</text>
+                <text x="1063" y="404">12p</text>
+              </g>
+              <text x="64" y="442" font-size="14">Source: Horry County Emergency Management, hourly log provided to MBC 12.</text>
+            </g>
+          </svg>
+          <details>
+            <summary>View the data as a table</summary>
+            <table>
+              <thead><tr><th>Hour</th><th>Aircraft noise</th><th>Sightings &amp; other</th><th>Total</th></tr></thead>
+              <tbody>
+                <tr><td>12 a.m.</td><td>0</td><td>2</td><td>2</td></tr>
+                <tr><td>1 a.m.</td><td>0</td><td>3</td><td>3</td></tr>
+                <tr><td>2 a.m.</td><td>1</td><td>3</td><td>4</td></tr>
+                <tr><td>3 a.m.</td><td>38</td><td>58</td><td>96</td></tr>
+                <tr><td>4 a.m.</td><td>44</td><td>27</td><td>71</td></tr>
+                <tr><td>5 a.m.</td><td>31</td><td>13</td><td>44</td></tr>
+                <tr><td>6 a.m.</td><td>26</td><td>12</td><td>38</td></tr>
+                <tr><td>7 a.m.</td><td>61</td><td>21</td><td>82</td></tr>
+                <tr><td>8 a.m.</td><td>47</td><td>16</td><td>63</td></tr>
+                <tr><td>9 a.m.</td><td>39</td><td>12</td><td>51</td></tr>
+                <tr><td>10 a.m.</td><td>35</td><td>11</td><td>46</td></tr>
+                <tr><td>11 a.m.</td><td>58</td><td>16</td><td>74</td></tr>
+                <tr><td>12 p.m.</td><td>30</td><td>9</td><td>39</td></tr>
+              </tbody>
+            </table>
+          </details>
+          <figcaption><b>Call volume tracks the flight schedule.</b> The 3 a.m. spike is dominated by sighting reports; every spike after it is dominated by noise. <span class="credit">MBC 12 Data Desk</span></figcaption>
+        </div>
+
+        <h2><i></i>Tied up at the dock</h2>
+
+        <p>At the marinas, Wednesday was a total loss and everybody knew it by 4 a.m.</p>
+
+        <p>The exclusion zone sits directly across the run that the half-day and full-day boats take out of Little River and Murrells Inlet. Three marinas cancelled every departure. Captains estimated the lost revenue at $1,800 to $4,000 per boat for the day, on a Wednesday in August that was booked solid weeks ago.</p>
+
+        <p>"Flat seas, no wind, eighty-four degrees, and I'm standing on a dock," said Nolan Vestrick, a charter captain who was on the water when the object came down and was ordered out of the zone at 3:40 a.m. "I've been running this coast for nineteen years and I've never once been shut down by anything but weather."</p>
+
+        <p>Vestrick said he has been fielding calls all morning from customers who want to rebook, and a different set of calls from people who want to charter a boat to go look at it. He has turned those down. "It's a two-mile ring with federal boats in it. There's no version of that where I take paying people out there."</p>
+
+        <h2><i></i>Cancellations, then a rush</h2>
+
+        <p>Hotels along the closed stretch reported a wave of cancellations that started around 6 a.m. and largely stopped by 9 — and then reversed.</p>
+
+        <p>Two property managers told MBC 12 that by late morning they were booking more rooms than they had lost, from people driving in specifically because of the story. One reported forty-one new reservations before noon, most of them for tonight.</p>
+
+        <p>On Ocean Boulevard, a shop at 26th had shirts in the window by 9:30 reading <q>I WAS IN MYRTLE BEACH AUGUST 19, 2026</q>. The owner said he printed the first two dozen at 7 a.m. and had sold out of them by 11.</p>
+
+        <p>The city's tourism office declined to characterize the net effect, saying it was "not the day for that arithmetic."</p>
+
+        <h2><i></i>Sent to MBC 12</h2>
+
+        <p>Viewers have sent more than 900 photos and clips since 3 a.m. A selection, verified by our team:</p>
+
+        <div class="ugc">
+          <figure>
+            <div class="frame">
+              <!-- UGC 1: boats at the dock -->
+              <svg viewBox="0 0 600 450" role="img" aria-label="Charter boats tied up at a marina dock under a bright sky.">
+                <defs>
+                  <linearGradient id="u1s" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#4f9bcd"/><stop offset="1" stop-color="#cfe0e6"/>
+                  </linearGradient>
+                  <linearGradient id="u1w" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#3d7f92"/><stop offset="1" stop-color="#22525f"/>
+                  </linearGradient>
+                  <filter id="u1c" x="-5%" y="-5%" width="110%" height="110%">
+                    <feTurbulence type="fractalNoise" baseFrequency=".02 .1" numOctaves="3" seed="3" result="t"/>
+                    <feDisplacementMap in="SourceGraphic" in2="t" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+                  </filter>
+                  <filter id="u1g" x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="6"/>
+                    <feColorMatrix type="saturate" values="0"/>
+                  </filter>
+                </defs>
+                <rect width="600" height="450" fill="url(#u1s)"/>
+                <ellipse cx="150" cy="70" rx="170" ry="20" fill="#fff" opacity=".45"/>
+                <rect y="250" width="600" height="200" fill="url(#u1w)"/>
+                <line x1="0" y1="250" x2="600" y2="250" stroke="#e2ecef" stroke-width="1.4" opacity=".6"/>
+                <!-- far shoreline -->
+                <rect y="238" width="600" height="13" fill="#3f5b4a" opacity=".8"/>
+                <g fill="#2f4739"><rect x="60" y="226" width="14" height="14"/><rect x="180" y="228" width="12" height="12"/>
+                  <rect x="420" y="224" width="16" height="16"/></g>
+                <!-- boats -->
+                <g>
+                  <path d="M60 300 h180 l-16 34 h-150z" fill="#f1f4f5"/>
+                  <path d="M74 300 h96 v-30 h-84z" fill="#e5eaec"/>
+                  <rect x="86" y="276" width="60" height="16" fill="#2b6d80"/>
+                  <rect x="150" y="196" width="5" height="106" fill="#c9ced1"/>
+                  <rect x="120" y="230" width="4" height="72" fill="#c9ced1"/>
+                  <path d="M60 334 h164 l-8 8 h-148z" fill="#1d3a45"/>
+                </g>
+                <g transform="translate(268,16)">
+                  <path d="M60 300 h200 l-18 36 h-166z" fill="#eef2f4"/>
+                  <path d="M76 300 h104 v-34 h-92z" fill="#dfe6e9"/>
+                  <rect x="88" y="272" width="66" height="18" fill="#c2570c"/>
+                  <rect x="166" y="188" width="5" height="114" fill="#c9ced1"/>
+                  <path d="M60 336 h182 l-9 9 h-164z" fill="#1d3a45"/>
+                </g>
+                <!-- dock in the foreground -->
+                <g fill="#9a8467">
+                  <rect y="392" width="600" height="26"/>
+                  <rect y="418" width="600" height="10" fill="#7d6a51"/>
+                  <rect x="60" y="418" width="16" height="32"/><rect x="300" y="418" width="16" height="32"/>
+                  <rect x="520" y="418" width="16" height="32"/>
+                </g>
+                <g filter="url(#u1c)" stroke="#8ec2d1" fill="none" opacity=".4">
+                  <path d="M-20 352h640" stroke-width="2"/><path d="M-20 372h640" stroke-width="2.6"/>
+                </g>
+                <rect width="600" height="450" filter="url(#u1g)" opacity=".1" style="mix-blend-mode:overlay"/>
+              </svg>
+            </div>
+            <figcaption><span class="who">@dockside_dana</span> — "Nobody's going anywhere today." Little River, 8:12 a.m.</figcaption>
+          </figure>
+
+          <figure>
+            <div class="frame">
+              <!-- UGC 2: contrail over the boardwalk sign -->
+              <svg viewBox="0 0 600 450" role="img" aria-label="A contrail crossing a blue sky above a tall boardwalk sign and a palm tree.">
+                <defs>
+                  <linearGradient id="u2s" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#2b7fc0"/><stop offset="1" stop-color="#b9d8e8"/>
+                  </linearGradient>
+                  <linearGradient id="u2t" x1="1" y1="0" x2="0" y2="0">
+                    <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                  </linearGradient>
+                  <filter id="u2b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+                  <filter id="u2g" x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="3" seed="8"/>
+                    <feColorMatrix type="saturate" values="0"/>
+                  </filter>
+                </defs>
+                <rect width="600" height="450" fill="url(#u2s)"/>
+                <g filter="url(#u2b)">
+                  <path d="M40 96 C200 82 360 96 508 128" stroke="url(#u2t)" stroke-width="11" fill="none"/>
+                  <path d="M30 150 C180 140 340 152 470 178" stroke="url(#u2t)" stroke-width="7" fill="none" opacity=".7"/>
+                </g>
+                <g fill="#26343d"><ellipse cx="516" cy="129" rx="10" ry="3.2"/><rect x="509" y="125" width="5" height="9" rx="2"/></g>
+                <!-- sign -->
+                <g>
+                  <rect x="392" y="150" width="14" height="300" fill="#5c6a71"/>
+                  <rect x="330" y="150" width="140" height="118" rx="8" fill="#f2f4f5"/>
+                  <rect x="330" y="150" width="140" height="30" rx="8" fill="#c2570c"/>
+                  <g fill="#1f2c33">
+                    <rect x="344" y="192" width="112" height="9" rx="4"/>
+                    <rect x="344" y="210" width="86" height="9" rx="4"/>
+                    <rect x="344" y="228" width="98" height="9" rx="4"/>
+                    <rect x="344" y="246" width="64" height="9" rx="4"/>
+                  </g>
+                  <g fill="#ffd15c"><circle cx="340" cy="165" r="5"/><circle cx="400" cy="165" r="5"/><circle cx="460" cy="165" r="5"/></g>
+                </g>
+                <!-- palm -->
+                <g>
+                  <path d="M132 450 C126 350 118 286 112 244" stroke="#6b5a42" stroke-width="15" fill="none" stroke-linecap="round"/>
+                  <g fill="#2f6b3f">
+                    <path d="M112 244 c-56 -16 -92 4 -114 34 40 -14 78 -14 114 -10z"/>
+                    <path d="M112 244 c56 -18 96 -2 120 30 -42 -14 -82 -18 -120 -10z"/>
+                    <path d="M112 244 c-22 -46 -12 -82 10 -108 4 40 6 74 -4 108z"/>
+                    <path d="M112 244 c26 -42 62 -60 96 -60 -34 16 -66 34 -90 66z"/>
+                    <path d="M112 244 c-40 -30 -56 -66 -52 -102 16 36 34 66 60 94z"/>
+                  </g>
+                </g>
+                <rect y="428" width="600" height="22" fill="#c9b593"/>
+                <rect width="600" height="450" filter="url(#u2g)" opacity=".1" style="mix-blend-mode:overlay"/>
+              </svg>
+            </div>
+            <figcaption><span class="who">@strandkid04</span> — "That's the fourth one since breakfast." Ocean Blvd., 10:05 a.m.</figcaption>
+          </figure>
+
+          <figure>
+            <div class="frame">
+              <!-- UGC 3: crowd on the boardwalk, phones up -->
+              <svg viewBox="0 0 600 450" role="img" aria-label="Silhouettes of a crowd on a boardwalk holding phones up toward a bright ocean horizon.">
+                <defs>
+                  <linearGradient id="u3s" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#6fa9d4"/><stop offset=".62" stop-color="#dce9ef"/>
+                    <stop offset="1" stop-color="#f2f6f7"/>
+                  </linearGradient>
+                  <linearGradient id="u3w" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#4c93a8"/><stop offset="1" stop-color="#7fc0cb"/>
+                  </linearGradient>
+                  <filter id="u3g" x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="12"/>
+                    <feColorMatrix type="saturate" values="0"/>
+                  </filter>
+                  <filter id="u3b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+                </defs>
+                <rect width="600" height="450" fill="url(#u3s)"/>
+                <circle cx="470" cy="70" r="120" fill="#fff6d8" opacity=".55" filter="url(#u3b)"/>
+                <rect y="214" width="600" height="90" fill="url(#u3w)"/>
+                <line x1="0" y1="214" x2="600" y2="214" stroke="#fff" stroke-width="1.4" opacity=".7"/>
+                <g fill="#25505f"><rect x="330" y="206" width="34" height="8" rx="2"/><rect x="342" y="200" width="10" height="7"/></g>
+                <path d="M0 300 C120 292 220 308 340 300 C440 294 520 306 600 300 L600 320 L0 320Z" fill="#f4fafb" opacity=".85"/>
+                <rect y="316" width="600" height="42" fill="#c9b899"/>
+                <!-- railing -->
+                <g fill="#8d7c62"><rect y="352" width="600" height="9"/><rect y="392" width="600" height="7"/>
+                  <rect x="70" y="352" width="9" height="98"/><rect x="300" y="352" width="9" height="98"/><rect x="520" y="352" width="9" height="98"/></g>
+                <!-- crowd silhouettes, backlit, cropped by the frame -->
+                <defs>
+                  <g id="fig">
+                    <path d="M-36 130 C-39 62 -32 18 -23 -2 C-15 -20 15 -20 23 -2 C32 18 39 62 36 130 Z"/>
+                    <circle cx="0" cy="-32" r="18"/>
+                  </g>
+                </defs>
+                <g fill="#1b262d">
+                  <g transform="translate(54,330) scale(.92)"><use href="#fig"/></g>
+                  <g transform="translate(146,342) scale(1.04)"><use href="#fig"/>
+                    <path d="M20 -4 C40 -14 48 -40 44 -62 l11 3 C60 -34 50 -6 26 6 Z"/>
+                    <rect x="40" y="-84" width="19" height="30" rx="4"/></g>
+                  <g transform="translate(246,326) scale(.86)"><use href="#fig"/></g>
+                  <g transform="translate(330,346) scale(1.1)"><use href="#fig"/></g>
+                  <g transform="translate(424,332) scale(.95)"><use href="#fig"/>
+                    <path d="M-20 -4 C-40 -14 -48 -40 -44 -62 l-11 3 C-60 -34 -50 -6 -26 6 Z"/>
+                    <rect x="-59" y="-84" width="19" height="30" rx="4"/></g>
+                  <g transform="translate(524,340) scale(1.06)"><use href="#fig"/></g>
+                  <g transform="translate(596,330) scale(.9)"><use href="#fig"/></g>
+                </g>
+                <rect width="600" height="450" filter="url(#u3g)" opacity=".1" style="mix-blend-mode:overlay"/>
+              </svg>
+            </div>
+            <figcaption><span class="who">@carolinacarrie</span> — "Everybody's just standing here looking." Boardwalk, 11:20 a.m.</figcaption>
+          </figure>
+        </div>
+
+        <div class="send">
+          <b>Send us your photos</b>
+          <span>Have video of the passes or the closure? Send it to the MBC 12 newsroom through the station app. Do not fly a drone inside the restricted ring — the FAA says operators face penalties, and two aircraft have already been recovered from the sand.</span>
+        </div>
+
+        <h2><i></i>What the city can — and can't — tell you</h2>
+
+        <p>The most consistent complaint on the Grand Strand Wednesday was not about the closure. It was about the silence behind it.</p>
+
+        <p>Myrtle Beach's emergency manager has been on three interagency calls since 5 a.m. and told MBC 12 that the city has received no substantive briefing on what the object is, how long the closure will last, or what would trigger a wider evacuation. City officials were told there is no evacuation planned and no shelter-in-place order contemplated — and were given nothing further.</p>
+
+        <p>Rumors have filled that space quickly. By mid-morning the city was publicly knocking down three of them: there is no order to evacuate, the municipal water supply is unaffected, and the beach south of 21st is open and safe.</p>
+
+        <div class="quote">
+          The federal government is doing its job out there and I'm not going to second-guess it. But somebody needs to understand that a closed beach in August is not an abstraction here. It's payroll.
+          <cite>Renny Alcott, Myrtle Beach city council</cite>
+        </div>
+
+        <p>The county says it will reassess the closure at 6 p.m. Whether that means it lifts, holds, or grows is — like nearly everything else about Wednesday — not something anyone here has been told.</p>
+
+        <p style="color:var(--ink-3); font-size:15px; border-top:1px solid var(--rule); padding-top:18px; margin-top:32px">
+          <em>Dara Whitlock and Cam Rutherford reported from Myrtle Beach. MBC 12 is updating this story through the afternoon.</em>
+        </p>
+
+      </div>
+
+      <aside>
+        <div class="blk">
+          <h4 class="warn">Closings &amp; closures</h4>
+          <div class="in">
+            <ul class="clos">
+              <li><span>Beach, 21st–38th Ave. N.</span><b>Closed</b></li>
+              <li><span>All beach access points in that range</span><b>Closed</b></li>
+              <li><span>Boating within 2 nmi of the site</span><b>Closed</b></li>
+              <li><span>Charter departures, 3 marinas</span><b>Cancelled</b></li>
+              <li><span>Drone flights inside the 10-nmi ring</span><b>Prohibited</b></li>
+              <li><span>Boardwalk and pier</span><b class="open">Open</b></li>
+              <li><span>Beach south of 21st Ave. N.</span><b class="open">Open</b></li>
+              <li><span>Myrtle Beach International</span><b class="open">Open · delays</b></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h4>First Alert: what to do</h4>
+          <div class="in">
+            <ul class="dos">
+              <li><b>Do not call 911</b> to report aircraft noise, lights or sightings. Use the county's non-emergency line.</li>
+              <li><b>Do not launch a drone</b> anywhere inside the 10-nautical-mile ring. Penalties apply.</li>
+              <li><b>Do not take a boat out</b> to look. The two-mile ring is enforced by the Coast Guard.</li>
+              <li>There is <b>no evacuation order</b> and no shelter-in-place order. The city says municipal water is unaffected.</li>
+              <li>Beach access reopens <b>south of 21st</b> and <b>north of 38th</b>. Parking there is full — expect to walk.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h4>More coverage</h4>
+          <div class="in">
+            <ul class="more">
+              <li><a href="index.html">How the object was tracked out of orbit — and why it matches nothing in the catalog</a><small>Tidewater Signal · Partner</small></li>
+              <li><a href="mnn-fighters-standby.html">Fighter jets standing by as military aircraft run repeated passes</a><small>Meridian News Network · Partner</small></li>
+              <li><a href="#">Charter captains count the cost of a day at the dock</a><small>MBC 12 · 45m ago</small></li>
+              <li><a href="#">'It's payroll': businesses behind the closed blocks</a><small>MBC 12 · 1h ago</small></li>
+              <li><a href="#">First Alert Weather: clear and 88 through Friday</a><small>MBC 12 · 2h ago</small></li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div><b>MBC 12</b>Myrtle Beach Coastal<br>Grand Strand newsroom<br>Conway bureau</div>
+      <div><b>Sections</b>Grand Strand · Traffic<br>First Alert Weather<br>Carolina Sports · Community</div>
+      <div><b>Station</b>About MBC 12 · Contact<br>Public File · EEO Report<br>Closed Captioning</div>
+      <div><b>Connect</b>MBC 12 app<br>Newsletters · Alerts<br>Send us a tip</div>
+    </div>
+    <div class="wrap"><div class="disc">
+      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — MBC 12 / Myrtle Beach Coastal does not exist. This page is an invented local news broadcast website created as a writing and design exercise. Every person, quote, official statement, photo, viewer submission, closure and data figure on it is fabricated. No beach closure, flight restriction or emergency described here is real.
+    </div></div>
+  </footer>
+</div>
+
+<div id="tip"></div>
+<script>
+(function(){
+  var tip = document.getElementById('tip');
+  document.querySelectorAll('.bar').forEach(function(g){
+    var n = +g.dataset.n, s = +g.dataset.s;
+    g.addEventListener('mouseenter', function(){
+      tip.innerHTML = '<b>' + g.dataset.h + '</b>' +
+        'Aircraft noise: ' + n + '<br>Sightings &amp; other: ' + s +
+        '<br>Total: ' + (n + s) + ' calls';
+      tip.style.opacity = 1;
+    });
+    g.addEventListener('mousemove', function(e){
+      var x = Math.min(e.clientX + 14, window.innerWidth - 190);
+      tip.style.left = x + 'px';
+      tip.style.top = (e.clientY - 12) + 'px';
+    });
+    g.addEventListener('mouseleave', function(){ tip.style.opacity = 0; });
+  });
+})();
+</script>
+
+</body>
+</html>
