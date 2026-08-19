@@ -50,7 +50,7 @@ a{color:var(--brand-2)}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(179,38,30,0)}100%{box-shadow:0 0 0 0 rgba(179,38,30,0)}}
 
 .masthead{padding:22px 0 14px; text-align:center; border-bottom:1px solid var(--rule)}
-.logo{display:inline-flex; align-items:center; gap:14px}
+.logo{display:inline-flex; align-items:center; gap:14px; text-decoration:none}
 .logo .mark{flex:0 0 auto}
 .logo .word{text-align:left}
 .logo h1{
@@ -167,6 +167,13 @@ aside{position:sticky; top:74px; font-family:Inter,system-ui,sans-serif}
 @media (max-width:640px){ .gallery{grid-template-columns:1fr} }
 .gallery figure{margin:0}
 
+.contbox{
+  border:1px solid var(--rule); border-left:4px solid var(--alert); background:var(--paper-2);
+  padding:16px 18px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.55;
+}
+.contbox b{display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--alert); margin-bottom:6px}
+.contbox a{color:var(--ink); font-weight:600}
+
 footer.site{background:var(--ink); color:#aeb5bd; margin-top:0; padding:34px 0 44px;
   font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.7}
 footer.site .wrap{display:flex; flex-wrap:wrap; gap:26px; justify-content:space-between}
@@ -190,7 +197,7 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
   </div>
 
   <header class="masthead">
-    <div class="logo">
+    <a class="logo" href="index.html">
       <svg class="mark" width="62" height="62" viewBox="0 0 64 64" aria-label="Tidewater Signal logo">
         <circle cx="32" cy="32" r="31" fill="#0f3b6e"/>
         <path d="M4 40c6-5 10 3 16-1s10 4 16-1 10 3 16-2v22H4z" fill="#1c6fb8" opacity=".55"/>
@@ -206,7 +213,7 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
         <h1>Tidewater Signal</h1>
         <div class="tag">Carolina Coast · Independent Since 1974</div>
       </div>
-    </div>
+    </a>
   </header>
 
   <nav class="sections">
@@ -691,7 +698,27 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
 
           <p>A Coast Guard spokesperson confirmed the exclusion zone and the presence of three cutters and referred all questions about the object to "federal partners," which she declined to name. The FAA confirmed the flight restriction and said its origin was "an interagency request." The Department of Defense did not respond to four messages. NASA said the object is not theirs and that they have no launches in that inclination.</p>
 
-          <p>Two Navy aircraft flew racetrack patterns over the site through the morning. A salvage-capable vessel left Charleston at 6:20 a.m. on a heading that would put it on scene before noon, according to public vessel-tracking data reviewed by the Signal.</p>
+          <p>A salvage-capable vessel left Charleston at 6:20 a.m. on a heading that would put it on scene before noon, according to public vessel-tracking data reviewed by the Signal.</p>
+
+          <h3>Fighters overhead</h3>
+
+          <p>The most visible part of the response has been in the air. Two fighters from a South Carolina Air National Guard base were over the site at 3:19 a.m. — twelve minutes after the object hit the water — and a two-ship has held a continuous orbit above it ever since. The second pass, at 3:30 a.m., was low enough that people on the boardwalk heard it before they saw it.</p>
+
+          <p>It has grown from there. A maritime patrol aircraft has been flying a search pattern out to twenty miles since just after 5 a.m. A helicopter carrying radiological and chemical survey gear made a series of runs over the object and reported readings "nothing above background," according to a Northern Command spokesperson, Maj. Elise Trant. An Arleigh Burke-class destroyer took station on the eastern edge of the exclusion zone at 9:52 a.m., with an explosive ordnance disposal dive team staged aboard.</p>
+
+          <p>At 6 a.m., U.S. Northern Command assumed lead of the response from the Coast Guard. Officials have described every piece of it the same way — precautionary — and note that the standard playbook for any spacecraft that comes down intact assumes pressurized tanks, propellant or a power source until a survey team says otherwise. What they will not say is whether they are accounting for anything beyond that.</p>
+
+          <blockquote>
+            Nobody is going to shoot at it. That is not what this is. We put airplanes over an unidentified object in American water because that is the job, and because until somebody can tell me what it is, the safe assumption is that I don't know.
+            <cite>— Maj. Elise Trant, U.S. Northern Command</cite>
+          </blockquote>
+
+          <p>From the sand, the operation reads as two dark shapes coming around again every eleven minutes or so, a line of gray hulls, and a crowd several hundred deep at the fence line watching both.</p>
+
+          <div class="contbox">
+            <b>Full coverage</b>
+            The military response, mapped and timelined — the fighter orbit, the destroyer, the closed sky and the dive team nobody will discuss: <a href="military-response.html">Fighters, a destroyer and a ten-mile no-fly ring: the military takes the lead off Myrtle Beach</a>.
+          </div>
 
           <p>Nothing has been recovered. Nothing has been named. At 8:40 a.m., from the boardwalk, the exclusion zone was a line of gray hulls on a flat sea, and past them a shape in the water that the light kept finding and losing.</p>
 
@@ -710,10 +737,13 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
                 <li><time>1:38 A.M.</time><span>Descent begins. Track elevated by tracking center.</span></li>
                 <li><time>3:04 A.M.</time><span>First 911 calls from the Grand Strand. Phone video captured.</span></li>
                 <li class="hot"><time>3:07 A.M.</time><span>Object enters the water 4.1 nmi ESE of the 14th Ave. Pier. Does not sink.</span></li>
+                <li><time>3:19 A.M.</time><span>Two fighters over the site, twelve minutes after splashdown.</span></li>
                 <li><time>3:31 A.M.</time><span>Coast Guard establishes a half-mile exclusion zone.</span></li>
                 <li><time>4:15 A.M.</time><span>FAA issues a 10-nmi temporary flight restriction to 18,000 ft.</span></li>
                 <li><time>5:30 A.M.</time><span>Exclusion zone extended to two nautical miles.</span></li>
+                <li><time>6:00 A.M.</time><span>Northern Command assumes lead of the response.</span></li>
                 <li><time>6:20 A.M.</time><span>Salvage-capable vessel departs Charleston.</span></li>
+                <li><time>9:52 A.M.</time><span>Destroyer takes station with an EOD dive team aboard.</span></li>
                 <li class="hot"><time>8:47 A.M.</time><span>Object still floating and still lit. No agency has claimed it.</span></li>
               </ul>
             </div>
@@ -729,6 +759,7 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
                 <li><em>Orbit altitude</em><b>~210 miles</b></li>
                 <li><em>Catalog match</em><b>None</b></li>
                 <li><em>Claimed by</em><b>No one</b></li>
+                <li><em>Lead agency</em><b>NORTHCOM, 6 a.m.</b></li>
                 <li><em>Exclusion zone</em><b>2 nmi · active</b></li>
                 <li><em>Airspace</em><b>Closed to 18,000 ft</b></li>
               </ul>
@@ -739,6 +770,7 @@ footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18p
             <h4>More coverage</h4>
             <div class="in">
               <ul class="related">
+                <li><a href="military-response.html">Fighters, a destroyer and a ten-mile no-fly ring: the military takes the lead</a><small>Nation · 20m ago</small></li>
                 <li><a href="#">Beach access closed from 21st to 38th Avenue North as federal vessels arrive</a><small>Grand Strand · 1h ago</small></li>
                 <li><a href="#">'It stopped': four people who watched it come down</a><small>Grand Strand · 2h ago</small></li>
                 <li><a href="#">How 40,000 objects in orbit get counted — and what it means when one isn't</a><small>Explainer · 3h ago</small></li>

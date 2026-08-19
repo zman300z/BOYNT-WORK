@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tidewater Signal — Military takes the lead off Myrtle Beach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181d; --ink-soft:#41474f; --ink-faint:#6b727b;
+  --paper:#ffffff; --paper-2:#f6f4f0; --rule:#dcd8d1;
+  --brand:#0f3b6e; --brand-2:#1c6fb8; --alert:#b3261e; --amber:#b9791a;
+  --shell:#e9e6e0;
+  --max:1180px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--shell); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{max-width:100%}
+a{color:var(--brand-2)}
+
+/* ---------- fiction banner ---------- */
+.fiction{
+  position:sticky; top:0; z-index:50;
+  background:repeating-linear-gradient(135deg,#1d1d1d,#1d1d1d 14px,#262626 14px,#262626 28px);
+  color:#ffd66b; border-bottom:3px solid #ffd66b;
+  font-family:Inter,system-ui,sans-serif; font-size:12.5px; letter-spacing:.04em;
+  padding:9px 16px; text-align:center; line-height:1.5;
+}
+.fiction strong{color:#fff; letter-spacing:.12em; font-weight:700}
+@media (max-width:560px){ .fiction{font-size:11px; padding:7px 12px} }
+
+/* ---------- shell ---------- */
+.wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
+.sheet{background:var(--paper); max-width:1240px; margin:0 auto; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 60px rgba(0,0,0,.10)}
+
+/* ---------- masthead ---------- */
+.utility{
+  border-bottom:1px solid var(--rule); background:var(--paper-2);
+  font-family:Inter,system-ui,sans-serif; font-size:11.5px; color:var(--ink-faint);
+}
+.utility .wrap{display:flex; justify-content:space-between; align-items:center; gap:16px; height:34px}
+.utility .live{display:inline-flex; align-items:center; gap:7px; color:var(--alert); font-weight:600; letter-spacing:.09em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--alert);box-shadow:0 0 0 0 rgba(179,38,30,.6);animation:pulse 1.9s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(179,38,30,0)}100%{box-shadow:0 0 0 0 rgba(179,38,30,0)}}
+
+.masthead{padding:22px 0 14px; text-align:center; border-bottom:1px solid var(--rule)}
+.logo{display:inline-flex; align-items:center; gap:14px; text-decoration:none}
+.logo .mark{flex:0 0 auto}
+.logo .word{text-align:left}
+.logo h1{
+  margin:0; font-family:"Playfair Display",Georgia,serif; font-weight:900;
+  font-size:clamp(30px,5.4vw,54px); letter-spacing:-.015em; line-height:.95; color:var(--brand);
+}
+.logo .tag{
+  font-family:Inter,system-ui,sans-serif; font-size:9.5px; letter-spacing:.42em;
+  text-transform:uppercase; color:var(--ink-faint); margin-top:7px;
+}
+nav.sections{border-bottom:2px solid var(--ink); background:var(--paper)}
+nav.sections .wrap{display:flex; gap:26px; overflow-x:auto; height:42px; align-items:center;
+  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase}
+nav.sections span{white-space:nowrap; color:var(--ink-soft); padding-bottom:2px}
+nav.sections span.on{color:var(--alert); border-bottom:2px solid var(--alert)}
+
+/* ---------- headline block ---------- */
+article{padding:34px 0 0}
+.kicker{
+  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:700; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--alert); margin-bottom:14px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.kicker .sep{width:26px;height:1px;background:var(--alert);opacity:.5}
+h2.head{
+  font-family:"Playfair Display",Georgia,serif; font-weight:800;
+  font-size:clamp(31px,5.1vw,58px); line-height:1.04; letter-spacing:-.022em; margin:0 0 16px;
+  max-width:19ch;
+}
+.deck{
+  font-size:clamp(17px,2.1vw,21px); line-height:1.5; color:var(--ink-soft);
+  max-width:62ch; margin:0 0 22px;
+}
+.byline{
+  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
+  border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:12px 0; font-family:Inter,system-ui,sans-serif; font-size:12.5px; color:var(--ink-faint);
+}
+.byline b{color:var(--ink); font-weight:600}
+.byline .who{display:flex;align-items:center;gap:9px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#c9d6e6,#8fa9c4);
+  display:grid;place-items:center;color:#123; font-weight:700; font-size:11px; font-family:Inter,sans-serif}
+
+/* ---------- media ---------- */
+figure{margin:26px 0 0}
+figure .frame{background:#0a0d12; line-height:0; position:relative; overflow:hidden}
+figcaption{
+  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.55; color:var(--ink-faint);
+  padding:9px 2px 0; border-bottom:1px solid var(--rule); padding-bottom:12px;
+}
+figcaption b{color:var(--ink-soft); font-weight:600}
+.credit{text-transform:uppercase; letter-spacing:.09em; font-size:10px; color:#9aa1a9}
+
+/* ---------- body layout ---------- */
+.cols{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:44px; padding:30px 0 50px; align-items:start}
+@media (max-width:900px){ .cols{grid-template-columns:1fr; gap:34px} }
+
+.body{font-size:18.5px; line-height:1.72; max-width:66ch}
+.body p{margin:0 0 20px}
+.body p.lead::first-letter{
+  float:left; font-family:"Playfair Display",serif; font-weight:800; font-size:64px;
+  line-height:.82; padding:6px 10px 0 0; color:var(--brand);
+}
+.body h3{
+  font-family:Inter,system-ui,sans-serif; font-size:13px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink); margin:34px 0 14px; padding-top:16px; border-top:1px solid var(--rule);
+}
+blockquote{
+  margin:28px 0; padding:4px 0 4px 22px; border-left:3px solid var(--amber);
+  font-size:22px; line-height:1.45; font-style:italic; color:var(--ink);
+}
+blockquote cite{display:block; margin-top:12px; font-style:normal; font-family:Inter,sans-serif;
+  font-size:12px; letter-spacing:.06em; color:var(--ink-faint)}
+
+/* ---------- sidebar ---------- */
+aside{position:sticky; top:74px; font-family:Inter,system-ui,sans-serif}
+.card{border:1px solid var(--rule); margin-bottom:22px}
+.card h4{
+  margin:0; background:var(--ink); color:#fff; font-size:11.5px; letter-spacing:.14em;
+  text-transform:uppercase; padding:10px 14px; font-weight:700;
+}
+.card .in{padding:14px}
+.tl{list-style:none; margin:0; padding:0; font-size:13px; line-height:1.5}
+.tl li{position:relative; padding:0 0 16px 20px; border-left:2px solid var(--rule); margin-left:5px}
+.tl li:last-child{padding-bottom:0; border-left-color:transparent}
+.tl li::before{content:""; position:absolute; left:-6px; top:3px; width:10px; height:10px;
+  border-radius:50%; background:#fff; border:2px solid var(--brand-2)}
+.tl li.hot::before{border-color:var(--alert); background:var(--alert)}
+.tl time{display:block; font-weight:700; font-size:11px; letter-spacing:.08em; color:var(--ink); margin-bottom:3px}
+.tl span{color:var(--ink-soft)}
+
+.facts{font-size:13px; line-height:1.5; margin:0; padding:0; list-style:none}
+.facts li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dotted var(--rule)}
+.facts li:last-child{border-bottom:0}
+.facts b{color:var(--ink); font-weight:600; text-align:right}
+.facts em{font-style:normal; color:var(--ink-faint)}
+
+.related{list-style:none;margin:0;padding:0;font-size:13.5px;line-height:1.35}
+.related li{padding:11px 0;border-bottom:1px solid var(--rule)}
+.related li:last-child{border-bottom:0}
+.related a{color:var(--ink); text-decoration:none; font-weight:600}
+.related small{display:block;color:var(--ink-faint);font-weight:400;margin-top:4px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+
+/* ---------- inline extras ---------- */
+.pullbox{
+  background:var(--paper-2); border:1px solid var(--rule); border-top:3px solid var(--brand);
+  padding:18px 20px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.6;
+}
+.pullbox h5{margin:0 0 10px; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand)}
+.pullbox p{margin:0 0 10px; color:var(--ink-soft)}
+.pullbox p:last-child{margin:0}
+
+.gallery{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:30px 0}
+@media (max-width:640px){ .gallery{grid-template-columns:1fr} }
+.gallery figure{margin:0}
+
+.contbox{
+  border:1px solid var(--rule); border-left:4px solid var(--alert); background:var(--paper-2);
+  padding:16px 18px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.55;
+}
+.contbox b{display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--alert); margin-bottom:6px}
+.contbox a{color:var(--ink); font-weight:600}
+
+footer.site{background:var(--ink); color:#aeb5bd; margin-top:0; padding:34px 0 44px;
+  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.7}
+footer.site .wrap{display:flex; flex-wrap:wrap; gap:26px; justify-content:space-between}
+footer.site b{color:#fff; display:block; margin-bottom:8px; font-size:11px; letter-spacing:.13em; text-transform:uppercase}
+footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18px; color:#7f868e}
+</style>
+</head>
+<body>
+
+<div class="fiction">
+  <strong>FICTION</strong> &nbsp;·&nbsp; This is a fabricated news story written as a creative exercise. <b>Tidewater Signal</b> is not a real news organization, the people quoted do not exist, and no military operation of any kind is taking place off Myrtle Beach.
+</div>
+
+<div class="sheet">
+
+  <div class="utility">
+    <div class="wrap">
+      <span class="live"><i class="dot"></i>LIVE UPDATES</span>
+      <span>Wednesday, August 19, 2026 · Myrtle Beach, S.C. · 84°F</span>
+    </div>
+  </div>
+
+  <header class="masthead">
+    <a class="logo" href="index.html">
+      <svg class="mark" width="62" height="62" viewBox="0 0 64 64" aria-label="Tidewater Signal logo">
+        <circle cx="32" cy="32" r="31" fill="#0f3b6e"/>
+        <path d="M4 40c6-5 10 3 16-1s10 4 16-1 10 3 16-2v22H4z" fill="#1c6fb8" opacity=".55"/>
+        <path d="M4 46c6-5 10 3 16-1s10 4 16-1 10 3 16-2v20H4z" fill="#5ba7de" opacity=".45"/>
+        <g stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round">
+          <path d="M32 33V13"/>
+          <path d="M22.5 21.5a13 13 0 0 1 19 0" opacity=".95"/>
+          <path d="M17 15.5a21 21 0 0 1 30 0" opacity=".6"/>
+        </g>
+        <circle cx="32" cy="34.5" r="3.4" fill="#fff"/>
+      </svg>
+      <div class="word">
+        <h1>Tidewater Signal</h1>
+        <div class="tag">Carolina Coast · Independent Since 1974</div>
+      </div>
+    </a>
+  </header>
+
+  <nav class="sections">
+    <div class="wrap">
+      <span>Breaking</span><span>Grand Strand</span><span>State</span><span class="on">Nation</span>
+      <span>Weather</span><span>Business</span><span>Sports</span><span>Opinion</span><span>Obituaries</span>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <article>
+
+      <div class="kicker">Breaking <span class="sep"></span> Nation <span class="sep"></span> Updated 6 min ago</div>
+
+      <h2 class="head">Fighters, a destroyer and a ten-mile no-fly ring: the military takes the lead off Myrtle Beach</h2>
+
+      <p class="deck">Two F-16s were over the site within twelve minutes of the splashdown. By mid-morning the response had grown to a destroyer, a maritime patrol aircraft, a radiological survey helicopter and a dive team. Officials call the posture precautionary — and will not say what they are guarding against.</p>
+
+      <div class="byline">
+        <span class="who"><i class="avatar">CV</i> By <b>Curtis Vandermeer</b> and <b>Marisol Reyes</b></span>
+        <span>Tidewater Signal · Defense &amp; Coastal Bureaus</span>
+        <span>Published Aug. 19, 2026, 9:05 a.m. ET</span>
+        <span>Updated 11:52 a.m. ET</span>
+      </div>
+
+      <figure>
+        <div class="frame">
+          <!-- HERO: two fighters over the site at first light -->
+          <svg viewBox="0 0 1600 900" role="img" aria-label="Two fighter jets in formation over open water at dawn, seen from below and behind.">
+            <defs>
+              <linearGradient id="dsky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#17273b"/><stop offset=".42" stop-color="#3c5570"/>
+                <stop offset=".74" stop-color="#8c94a0"/><stop offset="1" stop-color="#cbbfae"/>
+              </linearGradient>
+              <linearGradient id="dsea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#5c6d80"/><stop offset=".35" stop-color="#3a4b5d"/>
+                <stop offset="1" stop-color="#14202c"/>
+              </linearGradient>
+              <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#f2f6fa" stop-opacity=".6"/>
+                <stop offset=".55" stop-color="#f2f6fa" stop-opacity=".22"/>
+                <stop offset="1" stop-color="#f2f6fa" stop-opacity="0"/>
+              </linearGradient>
+              <radialGradient id="hvig" cx="50%" cy="46%" r="74%">
+                <stop offset=".45" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".52"/>
+              </radialGradient>
+              <radialGradient id="wglow" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#ffe3ae" stop-opacity=".8"/>
+                <stop offset="1" stop-color="#ffb457" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="hgrain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="4" seed="21"/>
+                <feColorMatrix type="saturate" values="0"/>
+              </filter>
+              <filter id="hchop" x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence type="fractalNoise" baseFrequency=".007 .055" numOctaves="3" seed="14" result="t"/>
+                <feDisplacementMap in="SourceGraphic" in2="t" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+                <feGaussianBlur stdDeviation=".6"/>
+              </filter>
+              <filter id="hb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="13"/></filter>
+              <filter id="hb2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.5"/></filter>
+              <filter id="hb3" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5"/></filter>
+              <clipPath id="hsea"><rect y="560" width="1600" height="340"/></clipPath>
+
+              <g id="jet">
+                <path d="M72 -9 L120 -66 L142 -64 L152 -10 Z"/>
+                <path d="M72 9 L120 66 L142 64 L152 10 Z"/>
+                <path d="M152 -9 L184 -44 L196 -42 L190 -8 Z"/>
+                <path d="M152 9 L184 44 L196 42 L190 8 Z"/>
+                <path d="M0 0 C14 -6 44 -10 74 -11 L152 -12 L186 -8 L197 -3 L197 3 L186 8 L152 12 L74 11 C44 10 14 6 0 0 Z"/>
+                <path d="M150 -2 L202 -1 L202 1 L150 2 Z"/>
+                <rect x="112" y="-72" width="28" height="5" rx="2.5"/>
+                <rect x="112" y="67" width="28" height="5" rx="2.5"/>
+              </g>
+            </defs>
+
+            <rect width="1600" height="900" fill="url(#dsky)"/>
+            <!-- stratus decks -->
+            <ellipse cx="420" cy="180" rx="520" ry="44" fill="#93a3b4" opacity=".22" filter="url(#hb)"/>
+            <ellipse cx="1180" cy="120" rx="420" ry="34" fill="#aebac6" opacity=".18" filter="url(#hb)"/>
+            <ellipse cx="880" cy="430" rx="700" ry="46" fill="#d3cfc4" opacity=".20" filter="url(#hb)"/>
+
+            <!-- sea -->
+            <rect y="560" width="1600" height="340" fill="url(#dsea)"/>
+            <line x1="0" y1="560" x2="1600" y2="560" stroke="#b9bfc6" stroke-width="1.2" opacity=".5"/>
+            <rect y="524" width="1600" height="62" fill="#cfd4d8" opacity=".18" filter="url(#hb)"/>
+
+            <g clip-path="url(#hsea)">
+              <g filter="url(#hchop)" stroke="#c7d6e2" fill="none">
+                <g opacity=".12" stroke-width="1.1">
+                  <path d="M-40 574h1700"/><path d="M-40 586h1700"/><path d="M-40 600h1700"/><path d="M-40 616h1700"/>
+                </g>
+                <g opacity=".14" stroke-width="1.7">
+                  <path d="M-40 638h1700"/><path d="M-40 664h1700"/><path d="M-40 696h1700"/><path d="M-40 734h1700"/>
+                </g>
+                <g opacity=".16" stroke-width="2.6">
+                  <path d="M-40 778h1700"/><path d="M-40 828h1700"/><path d="M-40 880h1700"/>
+                </g>
+              </g>
+              <!-- the site, far below: glow ring and the picket of hulls -->
+              <ellipse cx="1010" cy="690" rx="150" ry="42" fill="url(#wglow)" opacity=".5" filter="url(#hb)"/>
+              <ellipse cx="1010" cy="688" rx="34" ry="10" fill="#1a222c"/>
+              <ellipse cx="1010" cy="684" rx="24" ry="6" fill="#ffeec6" opacity=".55"/>
+              <g fill="#101a24">
+                <rect x="826" y="646" width="46" height="9" rx="2"/><rect x="842" y="640" width="14" height="7"/>
+                <rect x="1148" y="666" width="52" height="10" rx="2"/><rect x="1166" y="659" width="15" height="8"/>
+                <rect x="980" y="778" width="66" height="12" rx="2"/><rect x="1002" y="769" width="18" height="10"/>
+              </g>
+              <g stroke="#dfe8ef" opacity=".2" fill="none" filter="url(#hchop)">
+                <path d="M812 662h84" stroke-width="2"/><path d="M1136 682h86" stroke-width="2"/>
+                <path d="M962 800h108" stroke-width="2.6"/>
+              </g>
+            </g>
+
+            <!-- contrails -->
+            <g filter="url(#hb3)">
+              <path d="M902 268 C1080 262 1280 268 1560 282" stroke="url(#trail)" stroke-width="13" fill="none" opacity=".7"/>
+              <path d="M512 434 C700 430 900 436 1180 448" stroke="url(#trail)" stroke-width="9" fill="none" opacity=".45"/>
+            </g>
+
+            <!-- wingman, farther and hazier -->
+            <g transform="translate(360,452) rotate(-7) scale(.72)" opacity=".82">
+              <use href="#jet" fill="#243244" filter="url(#hb2)"/>
+              <use href="#jet" fill="#8ea0b4" opacity=".18" transform="translate(0,-4)"/>
+              <circle cx="200" cy="0" r="7" fill="#ffb87a" opacity=".55" filter="url(#hb2)"/>
+            </g>
+
+            <!-- lead ship -->
+            <g transform="translate(700,300) rotate(-9)">
+              <g filter="url(#hb2)">
+                <use href="#jet" fill="#1b2534"/>
+                <use href="#jet" fill="#93a6bb" opacity=".22" transform="translate(0,-5)"/>
+              </g>
+              <!-- underside detail -->
+              <g fill="#0f1722" opacity=".9">
+                <ellipse cx="46" cy="0" rx="19" ry="8"/>
+                <rect x="96" y="-30" width="30" height="7" rx="3"/>
+                <rect x="96" y="23" width="30" height="7" rx="3"/>
+                <rect x="118" y="-16" width="22" height="6" rx="3"/>
+                <rect x="118" y="10" width="22" height="6" rx="3"/>
+              </g>
+              <g fill="#c8d6e4" opacity=".35">
+                <path d="M74 -11 L152 -12 L152 -9 L74 -8 Z"/>
+                <path d="M120 -66 L142 -64 L141 -60 L122 -62 Z"/>
+              </g>
+              <circle cx="200" cy="0" r="9" fill="#ffc98d" opacity=".7" filter="url(#hb2)"/>
+              <circle cx="206" cy="0" r="22" fill="#ffb35e" opacity=".22" filter="url(#hb3)"/>
+              <!-- wingtip vortices -->
+              <g stroke="#eef4fa" opacity=".2" fill="none" filter="url(#hb3)">
+                <path d="M132 -69 C210 -72 280 -66 356 -52" stroke-width="5"/>
+                <path d="M132 70 C210 73 280 67 356 53" stroke-width="5"/>
+              </g>
+            </g>
+
+            <rect width="1600" height="900" fill="url(#hvig)"/>
+            <rect width="1600" height="900" filter="url(#hgrain)" opacity=".16" style="mix-blend-mode:overlay"/>
+          </svg>
+        </div>
+        <figcaption><b>A two-ship flying a low pass over the exclusion zone shortly after 7 a.m.</b> Fighters have held a continuous orbit above the site since the airspace was closed, according to a Northern Command spokesperson. The vessels below are inside the two-mile ring. <span class="credit">Tidewater Signal</span></figcaption>
+      </figure>
+
+      <div class="cols">
+        <div class="body">
+
+          <p class="lead">MYRTLE BEACH, S.C. — Twelve minutes after the object hit the water, two fighters were on top of it.</p>
+
+          <p>They came from the west out of a South Carolina Air National Guard base, already airborne on an unrelated night training sortie when the tasking came, according to a Northern Command spokesperson, Maj. Elise Trant. The first pass was at 3:19 a.m., high and fast. The second, eleven minutes later, was low enough that people on the boardwalk heard it before they saw it.</p>
+
+          <p>What the pilots reported has not been released. What has been released is the shape of the response since, and it has only grown: a continuous fighter orbit over the site, a maritime patrol aircraft flying a search pattern out to twenty miles, a helicopter carrying radiological and chemical survey equipment, an Arleigh Burke-class destroyer that arrived shortly before 10 a.m., and an explosive ordnance disposal dive team staged aboard it.</p>
+
+          <p>At 6 a.m., U.S. Northern Command assumed lead of the response from the Coast Guard. The Coast Guard still owns the water. The military owns the question.</p>
+
+          <blockquote>
+            Nobody is going to shoot at it. That is not what this is. We put airplanes over an unidentified object in American water because that is the job, and because until somebody can tell me what it is, the safe assumption is that I don't know.
+            <cite>— Maj. Elise Trant, U.S. Northern Command</cite>
+          </blockquote>
+
+          <h3>What the fighters are actually doing</h3>
+
+          <p>Very little, deliberately. Three defense officials described the fighter orbit the same way: eyes, and a clock.</p>
+
+          <p>The aircraft are flying a racetrack pattern northeast of the site at what one official called "a comfortable altitude" — high enough that a surprise from below would not put them inside it. Their job is to watch the object, to keep civil aircraft out of a closed piece of sky, and to be able to react in minutes rather than in the forty it would take to launch from a cold start.</p>
+
+          <p>They are not, officials stressed repeatedly, an attack posture. Under standing rules, an intercept requires a hostile act or demonstrated hostile intent, and the object has done neither. It has floated. It has glowed on a cycle. It has not moved, transmitted on any monitored band, or responded to anything directed at it — including, according to one official, a series of directed light signals attempted from a cutter around 5 a.m.</p>
+
+          <div class="pullbox">
+            <h5>Why close the airspace at all?</h5>
+            <p><b>Debris and fuel.</b> Anything that comes out of orbit intact may still be carrying pressurized tanks, hypergolic propellant or a power source. Standard practice around a downed spacecraft is a wide keep-out radius until a survey team clears it — the same procedure used for a failed booster stage.</p>
+            <p><b>Air traffic.</b> A ten-mile ring to 18,000 feet keeps sightseers, news helicopters and drones out of the way of the aircraft actually working the site. Two civilian drones were recovered from the beach by 8 a.m., and the FAA warned that operators face penalties.</p>
+            <p><b>The unknown part.</b> Officials would not describe what other hazard they are accounting for, other than to say the survey helicopter's readings were "nothing above background" — no elevated radiation, no chemical signature in the air over the site.</p>
+          </div>
+
+          <h3>The safety case, and its limits</h3>
+
+          <p>Every official who spoke Wednesday returned to the same word: precautionary. The exclusion zone is precautionary. The flight restriction is precautionary. The destroyer is precautionary.</p>
+
+          <p>Dr. Alan Ruiz-Beck, a former range safety officer who now consults on launch and recovery operations, said the posture is exactly what he would expect for a piece of hardware of unknown provenance sitting in shallow water four miles from a city of 40,000 that swells past 400,000 in August.</p>
+
+          <p>"You do not need to believe anything exotic to justify any of this," he said. "You need to believe there is a large object made of unknown materials in the water near a beach with a hundred thousand people on it. That is enough. That was always enough."</p>
+
+          <p>The limit of the safety framing is what it does not cover. A destroyer is not required to keep swimmers away from debris. Neither is a fighter orbit. Asked directly whether the military considers the object a potential threat, Trant said she would not characterize it, and then added a sentence that the Signal has confirmed with a second official: the response is being run under a contingency framework normally used for a foreign object recovered on American soil.</p>
+
+          <div class="gallery">
+            <figure>
+              <div class="frame">
+                <!-- FROM THE SAND: contrails over the water -->
+                <svg viewBox="0 0 800 560" role="img" aria-label="Two distant jets and their contrails over the ocean, seen from a beach with a lifeguard stand in silhouette.">
+                  <defs>
+                    <linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#4b76a6"/><stop offset=".55" stop-color="#8fb2cf"/>
+                      <stop offset="1" stop-color="#d8dbd6"/>
+                    </linearGradient>
+                    <linearGradient id="bsea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#3f6c8c"/><stop offset="1" stop-color="#22485f"/>
+                    </linearGradient>
+                    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#c8b79b"/><stop offset="1" stop-color="#9c8a6f"/>
+                    </linearGradient>
+                    <linearGradient id="btrail" x1="1" y1="0" x2="0" y2="0">
+                      <stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="bg" x="0" y="0" width="100%" height="100%">
+                      <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="4" seed="5"/>
+                      <feColorMatrix type="saturate" values="0"/>
+                    </filter>
+                    <filter id="bch" x="-5%" y="-5%" width="110%" height="110%">
+                      <feTurbulence type="fractalNoise" baseFrequency=".012 .08" numOctaves="3" seed="6" result="t"/>
+                      <feDisplacementMap in="SourceGraphic" in2="t" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+                    </filter>
+                    <filter id="bb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+                  </defs>
+                  <rect width="800" height="560" fill="url(#bsky)"/>
+                  <ellipse cx="260" cy="120" rx="240" ry="26" fill="#fff" opacity=".22" filter="url(#bb)"/>
+                  <ellipse cx="640" cy="180" rx="200" ry="20" fill="#fff" opacity=".16" filter="url(#bb)"/>
+
+                  <!-- contrails and two specks -->
+                  <g filter="url(#bb)">
+                    <path d="M110 126 C260 122 420 124 552 128" stroke="url(#btrail)" stroke-width="9" fill="none" opacity=".9"/>
+                    <path d="M86 166 C240 162 400 164 504 168" stroke="url(#btrail)" stroke-width="6.5" fill="none" opacity=".7"/>
+                  </g>
+                  <g fill="#22303f">
+                    <ellipse cx="558" cy="128" rx="9" ry="3"/><rect x="552" y="124" width="5" height="8" rx="2.5"/>
+                    <path d="M566 128 l7 -1 l0 2 z"/>
+                    <ellipse cx="510" cy="168" rx="7" ry="2.6"/><rect x="505" y="165" width="4" height="6" rx="2"/>
+                  </g>
+
+                  <!-- sea -->
+                  <rect y="330" width="800" height="130" fill="url(#bsea)"/>
+                  <line x1="0" y1="330" x2="800" y2="330" stroke="#cfd8de" stroke-width="1" opacity=".6"/>
+                  <g filter="url(#bch)" stroke="#dfeaf1" fill="none">
+                    <g opacity=".2" stroke-width="1.4"><path d="M-20 348h840"/><path d="M-20 366h840"/><path d="M-20 388h840"/></g>
+                    <g opacity=".3" stroke-width="2.6"><path d="M-20 416h840"/><path d="M-20 442h840"/></g>
+                  </g>
+                  <!-- picket of hulls on the horizon -->
+                  <g fill="#1b2a37">
+                    <rect x="238" y="322" width="30" height="7" rx="1.5"/><rect x="248" y="317" width="9" height="6"/>
+                    <rect x="466" y="324" width="34" height="7" rx="1.5"/><rect x="478" y="318" width="10" height="7"/>
+                    <rect x="640" y="323" width="26" height="6" rx="1.5"/>
+                  </g>
+                  <!-- foam and wet sand -->
+                  <path d="M0 460 C160 448 300 470 460 458 C600 448 700 466 800 458 L800 470 L0 470 Z" fill="#eef3f4" opacity=".85" filter="url(#bch)"/>
+                  <rect y="466" width="800" height="94" fill="url(#sand)"/>
+                  <path d="M0 470 C180 480 320 466 500 476 C640 484 720 472 800 478 L800 470 L0 470Z" fill="#b6a68b" opacity=".7"/>
+
+                  <!-- lifeguard stand + two watchers -->
+                  <g fill="#1a212a">
+                    <path d="M96 466 l58 0 -8 -44 -42 0z"/>
+                    <rect x="112" y="398" width="34" height="26" rx="3"/>
+                    <rect x="108" y="392" width="42" height="7" rx="3"/>
+                    <rect x="100" y="466" width="5" height="26"/><rect x="146" y="466" width="5" height="26"/>
+                  </g>
+                  <g fill="#20272f">
+                    <path d="M628 470 c-6 0 -8 -8 -4 -14 -4 -3 -3 -9 2 -9 5 0 6 6 2 9 4 6 2 14 -0 14z"/>
+                    <ellipse cx="628" cy="472" rx="9" ry="2.4" opacity=".35"/>
+                    <path d="M660 470 c-6 0 -9 -9 -4 -15 -4 -3 -3 -10 2 -10 6 0 7 7 3 10 5 6 3 15 -1 15z"/>
+                    <ellipse cx="660" cy="472" rx="9" ry="2.4" opacity=".35"/>
+                  </g>
+                  <rect width="800" height="560" filter="url(#bg)" opacity=".1" style="mix-blend-mode:overlay"/>
+                </svg>
+              </div>
+              <figcaption><b>Seen from the sand at 29th Avenue North just after 7:30 a.m.</b> The fighter orbit has been visible from shore all morning, drawing crowds to a beach that is closed for fourteen blocks to the south. <span class="credit">Tidewater Signal</span></figcaption>
+            </figure>
+
+            <figure>
+              <div class="frame">
+                <!-- DESTROYER ON THE HORIZON -->
+                <svg viewBox="0 0 800 560" role="img" aria-label="A grey destroyer on the horizon under a hazy morning sky, with a helicopter above it.">
+                  <defs>
+                    <linearGradient id="msky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#6d829a"/><stop offset=".6" stop-color="#a6b3bf"/>
+                      <stop offset="1" stop-color="#cfd2d2"/>
+                    </linearGradient>
+                    <linearGradient id="msea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#5b6d7e"/><stop offset="1" stop-color="#293b4b"/>
+                    </linearGradient>
+                    <filter id="mg" x="0" y="0" width="100%" height="100%">
+                      <feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="4" seed="17"/>
+                      <feColorMatrix type="saturate" values="0"/>
+                    </filter>
+                    <filter id="mch" x="-5%" y="-5%" width="110%" height="110%">
+                      <feTurbulence type="fractalNoise" baseFrequency=".011 .075" numOctaves="3" seed="8" result="t"/>
+                      <feDisplacementMap in="SourceGraphic" in2="t" scale="12" xChannelSelector="R" yChannelSelector="G"/>
+                    </filter>
+                    <filter id="mb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+                    <filter id="mb2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter>
+                    <clipPath id="msc"><rect y="326" width="800" height="234"/></clipPath>
+                  </defs>
+                  <rect width="800" height="560" fill="url(#msky)"/>
+                  <ellipse cx="300" cy="150" rx="330" ry="34" fill="#c6ced6" opacity=".3" filter="url(#mb)"/>
+                  <ellipse cx="620" cy="240" rx="280" ry="26" fill="#dde1e3" opacity=".26" filter="url(#mb)"/>
+                  <rect y="300" width="800" height="46" fill="#d5d9db" opacity=".3" filter="url(#mb)"/>
+
+                  <rect y="326" width="800" height="234" fill="url(#msea)"/>
+                  <line x1="0" y1="326" x2="800" y2="326" stroke="#b9c2ca" stroke-width="1" opacity=".55"/>
+                  <g clip-path="url(#msc)" filter="url(#mch)" stroke="#c3d2de" fill="none">
+                    <g opacity=".12" stroke-width="1.1"><path d="M-20 340h840"/><path d="M-20 352h840"/><path d="M-20 366h840"/></g>
+                    <g opacity=".14" stroke-width="1.8"><path d="M-20 386h840"/><path d="M-20 412h840"/><path d="M-20 444h840"/></g>
+                    <g opacity=".16" stroke-width="2.8"><path d="M-20 484h840"/><path d="M-20 526h840"/></g>
+                  </g>
+
+                  <!-- destroyer -->
+                  <g filter="url(#mb2)" fill="#7d8791">
+                    <path d="M228 320 L600 328 L576 352 L272 352 Z"/>
+                    <path d="M228 320 L600 328 L598 333 L232 326 Z" fill="#9aa4ad"/>
+                    <path d="M272 352 L576 352 L562 361 L284 361 Z" fill="#28323c"/>
+                    <path d="M600 328 L622 344 L576 352 Z"/>
+                    <path d="M600 328 L622 344 L614 345 L598 333 Z" fill="#9aa4ad"/>
+                    <!-- superstructure -->
+                    <path d="M352 327 L356 288 L444 288 L446 328 Z"/>
+                    <path d="M366 288 L370 266 L426 266 L428 288 Z" fill="#89939d"/>
+                    <path d="M378 266 L382 250 L410 250 L412 266 Z" fill="#949ea8"/>
+                    <path d="M386 250 L388 240 L404 240 L406 250 Z" fill="#9ea8b1"/>
+                    <rect x="393" y="200" width="5" height="44"/>
+                    <rect x="385" y="212" width="20" height="4"/>
+                    <rect x="388" y="226" width="14" height="3"/>
+                    <!-- hangar aft + mast -->
+                    <rect x="470" y="304" width="62" height="22" fill="#828c96"/>
+                    <rect x="300" y="310" width="30" height="16" fill="#828c96"/>
+                    <rect x="316" y="300" width="4" height="12"/>
+                    <!-- deck gun -->
+                    <path d="M300 310 l14 0 6 -8 -20 0z" fill="#6e7883"/>
+                  </g>
+                  <g fill="#c8412f"><rect x="393" y="200" width="5" height="7"/></g>
+                  <!-- wake -->
+                  <g clip-path="url(#msc)" filter="url(#mch)" stroke="#e9eff4" fill="none">
+                    <path d="M258 368 h330" stroke-width="3.4" opacity=".28"/>
+                    <path d="M232 392 h390" stroke-width="2.6" opacity=".2"/>
+                    <path d="M198 424 h450" stroke-width="2" opacity=".14"/>
+                  </g>
+                  <!-- helicopter above -->
+                  <g fill="#2b3641">
+                    <ellipse cx="640" cy="176" rx="26" ry="8"/>
+                    <path d="M660 176 l34 -3 l0 6 l-34 3z"/>
+                    <path d="M692 168 l7 0 l0 16 l-7 0z"/>
+                    <rect x="614" y="182" width="4" height="9"/><rect x="652" y="182" width="4" height="9"/>
+                    <rect x="606" y="190" width="56" height="3" rx="1.5"/>
+                  </g>
+                  <g stroke="#2b3641" stroke-width="2.4" opacity=".5"><path d="M596 166 h94"/></g>
+                  <g stroke="#2b3641" stroke-width="1.4" opacity=".28"><path d="M600 170 h86"/></g>
+                  <rect width="800" height="560" filter="url(#mg)" opacity=".12" style="mix-blend-mode:overlay"/>
+                </svg>
+              </div>
+              <figcaption><b>A destroyer took station on the eastern edge of the exclusion zone shortly before 10 a.m.</b> An MH-60 flew survey patterns over the object for roughly forty minutes before returning to the ship. <span class="credit">Tidewater Signal</span></figcaption>
+            </figure>
+          </div>
+
+          <h3>The closed sky, mapped</h3>
+
+          <p>The temporary flight restriction issued at 4:15 a.m. covers a ten-nautical-mile circle from the surface to 18,000 feet, which takes in the entire Grand Strand shoreline and both airports serving it. Commercial traffic into Myrtle Beach International is being vectored around the northern edge of the ring; eleven arrivals were delayed and two diverted to Wilmington before 9 a.m.</p>
+
+          <figure>
+            <div class="frame" style="background:#0b1018">
+              <!-- AIRSPACE MAP -->
+              <svg viewBox="0 0 1600 900" role="img" aria-label="Map of the closed airspace: a ten-nautical-mile flight restriction ring and a two-mile exclusion zone off the Myrtle Beach shoreline, with fighter and patrol orbits marked.">
+                <defs>
+                  <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#232f3b"/><stop offset="1" stop-color="#1a242e"/>
+                  </linearGradient>
+                  <radialGradient id="site" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" stop-color="#ff7a4d" stop-opacity=".7"/>
+                    <stop offset="1" stop-color="#ff7a4d" stop-opacity="0"/>
+                  </radialGradient>
+                  <marker id="arw" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path d="M0 1 L9 5 L0 9 z" fill="#5fd0ff"/>
+                  </marker>
+                  <marker id="arw2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path d="M0 1 L9 5 L0 9 z" fill="#9bd18a"/>
+                  </marker>
+                </defs>
+
+                <rect width="1600" height="900" fill="#0a121c"/>
+                <g stroke="#152230" stroke-width="1">
+                  <path d="M0 150h1600M0 300h1600M0 450h1600M0 600h1600M0 750h1600"/>
+                  <path d="M200 0v900M400 0v900M600 0v900M800 0v900M1000 0v900M1200 0v900M1400 0v900"/>
+                </g>
+
+                <!-- land -->
+                <path d="M0 0 L300 0 C352 150 402 292 470 424 C520 522 578 640 620 760 L648 900 L0 900 Z" fill="url(#land)"/>
+                <path d="M300 0 C352 150 402 292 470 424 C520 522 578 640 620 760 L648 900" fill="none" stroke="#d9c9a6" stroke-width="2.6" opacity=".55"/>
+                <path d="M300 0 C352 150 402 292 470 424 C520 522 578 640 620 760 L648 900" fill="none" stroke="#d9c9a6" stroke-width="14" opacity=".07"/>
+
+                <!-- flight restriction ring: 10 nmi = 300px -->
+                <circle cx="640" cy="430" r="300" fill="#ff5a4a" opacity=".05"/>
+                <circle cx="640" cy="430" r="300" fill="none" stroke="#ff6b52" stroke-width="2.6" stroke-dasharray="14 10"/>
+                <!-- exclusion zone: 2 nmi = 60px -->
+                <circle cx="640" cy="430" r="60" fill="#ff5a4a" opacity=".14"/>
+                <circle cx="640" cy="430" r="60" fill="none" stroke="#ff8f6b" stroke-width="2"/>
+                <circle cx="640" cy="430" r="46" fill="url(#site)"/>
+                <circle cx="640" cy="430" r="7" fill="#ff6b4a"/>
+
+                <!-- fighter cap orbit -->
+                <g transform="rotate(-34 900 268)">
+                  <ellipse cx="900" cy="268" rx="196" ry="66" fill="none" stroke="#5fd0ff" stroke-width="2.6" stroke-dasharray="12 9"/>
+                  <path d="M704 262 A196 66 0 0 1 900 202" fill="none" stroke="#5fd0ff" stroke-width="2.6" marker-end="url(#arw)"/>
+                </g>
+                <!-- maritime patrol orbit -->
+                <g transform="rotate(-26 1090 596)">
+                  <ellipse cx="1090" cy="596" rx="300" ry="104" fill="none" stroke="#9bd18a" stroke-width="2.2" stroke-dasharray="9 11"/>
+                  <path d="M790 590 A300 104 0 0 1 1090 492" fill="none" stroke="#9bd18a" stroke-width="2.2" marker-end="url(#arw2)"/>
+                </g>
+
+                <!-- vessels -->
+                <g fill="#dfe8ef">
+                  <path d="M886 620 l16 0 l-3 7 l-10 0z"/><path d="M772 366 l14 0 l-3 6 l-8 0z"/>
+                  <path d="M584 316 l14 0 l-3 6 l-8 0z"/><path d="M700 528 l14 0 l-3 6 l-8 0z"/>
+                </g>
+
+                <g font-family="Inter,sans-serif" fill="#cfe0f0">
+                  <text x="150" y="286" font-size="24" font-weight="700" fill="#e6d9b8" letter-spacing="2">MYRTLE BEACH</text>
+                  <text x="150" y="314" font-size="16" opacity=".55">Beach closed 21st–38th Ave. N.</text>
+                  <text x="120" y="120" font-size="15" opacity=".45" letter-spacing="1.5">NORTH MYRTLE BEACH</text>
+                  <text x="300" y="742" font-size="15" opacity=".45" letter-spacing="1.5">SURFSIDE BEACH</text>
+
+                  <text x="706" y="404" font-size="19" font-weight="700" fill="#ff8f6b">SITE</text>
+                  <text x="706" y="428" font-size="15" opacity=".62">2 nmi exclusion zone · surface</text>
+
+                  <text x="880" y="792" font-size="19" font-weight="700" fill="#ff6b52">TFR · 10 NMI TO 18,000 FT</text>
+                  <text x="880" y="816" font-size="15" opacity=".6">Issued 4:15 a.m. · no civil traffic, no drones</text>
+
+                  <text x="1046" y="168" font-size="18" font-weight="700" fill="#5fd0ff">FIGHTER ORBIT</text>
+                  <text x="1046" y="192" font-size="15" opacity=".6">Continuous two-ship since 3:19 a.m.</text>
+
+                  <text x="1210" y="700" font-size="18" font-weight="700" fill="#9bd18a">MARITIME PATROL</text>
+                  <text x="1210" y="724" font-size="15" opacity=".6">Search pattern to 20 nmi</text>
+
+                  <text x="906" y="644" font-size="15" opacity=".7">Destroyer</text>
+
+                  <!-- north arrow -->
+                  <g transform="translate(1492,96)">
+                    <path d="M0 -38 L13 14 L0 4 L-13 14 Z" fill="#cfe0f0" opacity=".8"/>
+                    <text x="0" y="40" font-size="16" text-anchor="middle" opacity=".7">N</text>
+                  </g>
+                  <!-- scale bar -->
+                  <g transform="translate(120,830)">
+                    <rect width="300" height="7" fill="#cfe0f0" opacity=".7"/>
+                    <rect width="150" height="7" fill="#0a121c" opacity=".55"/>
+                    <rect width="300" height="7" fill="none" stroke="#cfe0f0" stroke-width="1" opacity=".7"/>
+                    <text x="0" y="-10" font-size="14" opacity=".65">0</text>
+                    <text x="292" y="-10" font-size="14" opacity=".65">10 nautical miles</text>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <figcaption><b>The closed airspace and water.</b> The ten-nautical-mile restriction takes in the whole developed shoreline; the two-mile surface exclusion zone is enforced by the Coast Guard. Orbit tracks are approximate, reconstructed from public flight-tracking data and observation from shore. <span class="credit">Graphic by Tidewater Signal</span></figcaption>
+          </figure>
+
+          <h3>Below, the part nobody is talking about</h3>
+
+          <p>The dive team is the detail that has drawn the most attention from the people who follow this kind of operation for a living. Explosive ordnance disposal divers are how the Navy approaches an object it does not want to touch with a crane.</p>
+
+          <p>Two officials confirmed a team is staged aboard the destroyer. Neither would say whether anyone has been in the water. A third, asked whether a recovery attempt was planned for Wednesday, said only: "Not today."</p>
+
+          <p>At the boardwalk railing, that answer landed about as well as it reads. A crowd of several hundred has held the fence line since dawn, watching a gray horizon and, every eleven minutes or so, two dark shapes coming around again.</p>
+
+          <div class="contbox">
+            <b>Continuing coverage</b>
+            The main story — how the object was tracked out of orbit, what the radar reconstruction shows, and why nothing in the catalog of 40,000 orbiting objects matches it — is here: <a href="index.html">Unidentified craft comes down in the Atlantic four miles off Myrtle Beach</a>.
+          </div>
+
+          <p style="color:var(--ink-faint); font-size:15px; border-top:1px solid var(--rule); padding-top:18px; margin-top:34px">
+            <em>This is a developing story and will be updated. Curtis Vandermeer reported from Washington and Marisol Reyes from Myrtle Beach. Reporting contributed by the Signal's Charleston bureau.</em>
+          </p>
+
+        </div>
+
+        <aside>
+          <div class="card">
+            <h4>Assets on scene</h4>
+            <div class="in">
+              <ul class="facts">
+                <li><em>Fighters</em><b>2, continuous orbit</b></li>
+                <li><em>Maritime patrol</em><b>1 aircraft</b></li>
+                <li><em>Survey helicopter</em><b>1, radiological</b></li>
+                <li><em>Destroyer</em><b>On station 9:52 a.m.</b></li>
+                <li><em>Coast Guard cutters</em><b>3</b></li>
+                <li><em>EOD dive team</em><b>Staged, not deployed</b></li>
+                <li><em>Lead agency</em><b>NORTHCOM, 6:00 a.m.</b></li>
+                <li><em>Posture</em><b>Precautionary</b></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>Military timeline</h4>
+            <div class="in">
+              <ul class="tl">
+                <li class="hot"><time>3:19 A.M.</time><span>First fighter pass over the site, twelve minutes after splashdown.</span></li>
+                <li><time>3:30 A.M.</time><span>Second pass, low. Heard from the boardwalk.</span></li>
+                <li><time>4:15 A.M.</time><span>FAA closes a 10-nmi ring to 18,000 ft at interagency request.</span></li>
+                <li><time>5:02 A.M.</time><span>Maritime patrol aircraft begins search pattern out to 20 nmi.</span></li>
+                <li><time>6:00 A.M.</time><span>Northern Command assumes lead of the response.</span></li>
+                <li><time>7:14 A.M.</time><span>Survey helicopter reports readings "nothing above background."</span></li>
+                <li><time>9:52 A.M.</time><span>Destroyer takes station on the eastern edge of the zone.</span></li>
+                <li class="hot"><time>11:40 A.M.</time><span>EOD dive team confirmed staged aboard. No recovery attempt announced.</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>More coverage</h4>
+            <div class="in">
+              <ul class="related">
+                <li><a href="index.html">Unidentified craft comes down in the Atlantic four miles off Myrtle Beach</a><small>Grand Strand · Main story</small></li>
+                <li><a href="index.html">The trajectory: what the radar reconstruction actually shows</a><small>Explainer · 2h ago</small></li>
+                <li><a href="#">Flights delayed and diverted as the no-fly ring swallows the Grand Strand</a><small>Business · 35m ago</small></li>
+                <li><a href="#">FAA warns drone operators: two aircraft already recovered from the sand</a><small>Nation · 1h ago</small></li>
+                <li><a href="#">What a dive team on station usually means — and what it doesn't</a><small>Analysis · 20m ago</small></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </article>
+  </div>
+
+  <footer class="site">
+    <div class="wrap">
+      <div><b>Tidewater Signal</b>Coastal Bureau · Myrtle Beach<br>Newsroom desk · Charleston<br>Columbia statehouse desk</div>
+      <div><b>Sections</b>Breaking · Grand Strand<br>State · Nation · Weather<br>Business · Sports · Opinion</div>
+      <div><b>The Signal</b>About us · Standards<br>Corrections · Ethics policy<br>Contact the newsroom</div>
+      <div><b>Follow</b>Newsletters<br>Storm alerts<br>Print delivery</div>
+    </div>
+    <div class="wrap"><div class="disc">
+      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — Tidewater Signal does not exist. This page is an invented news story created as a writing and design exercise. Every person, quote, agency statement, coordinate, map and photograph on it is fabricated. No military response, flight restriction or exclusion zone described here is real.
+    </div></div>
+  </footer>
+</div>
+
+</body>
+</html>
