@@ -1,802 +1,1254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tidewater Signal — Unidentified craft down off Myrtle Beach</title>
+<title>Tidewater Signal — Unidentified craft off Myrtle Beach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#14181d; --ink-soft:#41474f; --ink-faint:#6b727b;
-  --paper:#ffffff; --paper-2:#f6f4f0; --rule:#dcd8d1;
-  --brand:#0f3b6e; --brand-2:#1c6fb8; --alert:#b3261e; --amber:#b9791a;
+  --ink:#14181d; --ink-2:#414750; --ink-3:#6b727b;
+  --paper:#fff; --paper-2:#f6f4f0; --paper-3:#eeebe5;
+  --rule:#dcd8d1; --rule-2:#c8c3ba;
+  --brand:#0f3b6e; --brand-2:#1c6fb8; --alert:#b3261e; --amber:#b9791a; --good:#0f7a52;
   --shell:#e9e6e0;
   --max:1180px;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 12px 34px rgba(10,30,50,.08);
+}
+:root[data-theme="dark"]{
+  --ink:#eef1f4; --ink-2:#b3bcc5; --ink-3:#8b949e;
+  --paper:#12161b; --paper-2:#171c22; --paper-3:#1e242b;
+  --rule:#2a323b; --rule-2:#39434e;
+  --brand:#8fc0ef; --brand-2:#79b3e8; --alert:#ef6d63; --amber:#e0a851; --good:#4fbf90;
+  --shell:#0b0e12;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
-body{
-  margin:0; background:var(--shell); color:var(--ink);
-  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
-  -webkit-font-smoothing:antialiased;
-}
-img,svg{max-width:100%}
-a{color:var(--brand-2)}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--shell); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif; -webkit-font-smoothing:antialiased}
+button,input,select{font:inherit; color:inherit}
+a{color:var(--brand-2); text-decoration:none}
+a:hover{text-decoration:underline}
+.sans{font-family:Inter,system-ui,sans-serif}
+:focus-visible{outline:3px solid var(--brand-2); outline-offset:2px; border-radius:3px}
+#app:focus,#app:focus-visible{outline:none}
 
 /* ---------- fiction banner ---------- */
-.fiction{
-  position:sticky; top:0; z-index:50;
-  background:repeating-linear-gradient(135deg,#1d1d1d,#1d1d1d 14px,#262626 14px,#262626 28px);
+.fiction{position:sticky; top:0; z-index:120;
+  background:repeating-linear-gradient(135deg,#1b1b1b,#1b1b1b 14px,#252525 14px,#252525 28px);
   color:#ffd66b; border-bottom:3px solid #ffd66b;
-  font-family:Inter,system-ui,sans-serif; font-size:12.5px; letter-spacing:.04em;
-  padding:9px 16px; text-align:center; line-height:1.5;
-}
+  font-family:Inter,sans-serif; font-size:12.5px; letter-spacing:.03em;
+  padding:8px 16px; text-align:center; line-height:1.5}
 .fiction strong{color:#fff; letter-spacing:.12em; font-weight:700}
-@media (max-width:560px){ .fiction{font-size:11px; padding:7px 12px} }
+@media (max-width:600px){ .fiction{font-size:11px; padding:6px 12px} }
 
-/* ---------- shell ---------- */
+.sheet{max-width:1260px; margin:0 auto; background:var(--paper); box-shadow:var(--shadow); min-height:100vh}
 .wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
-.sheet{background:var(--paper); max-width:1240px; margin:0 auto; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 60px rgba(0,0,0,.10)}
+
+/* ---------- utility strip ---------- */
+.util{background:var(--paper-2); border-bottom:1px solid var(--rule);
+  font-family:Inter,sans-serif; font-size:11.5px; color:var(--ink-3)}
+.util .wrap{display:flex; align-items:center; gap:14px; height:36px}
+.util .live{display:inline-flex; align-items:center; gap:7px; color:var(--alert); font-weight:600; letter-spacing:.09em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--alert);animation:pulse 1.9s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.util .right{margin-left:auto; display:flex; align-items:center; gap:12px}
+.tbtn{background:none; border:1px solid var(--rule); border-radius:20px; padding:4px 11px;
+  font-family:Inter,sans-serif; font-size:11px; cursor:pointer; color:var(--ink-2); display:inline-flex; gap:6px; align-items:center}
+.tbtn:hover{border-color:var(--rule-2); background:var(--paper-3)}
+@media (max-width:700px){
+  .util .right > span{display:none}
+  .util .wrap{gap:10px}
+  #clock{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+}
 
 /* ---------- masthead ---------- */
-.utility{
-  border-bottom:1px solid var(--rule); background:var(--paper-2);
-  font-family:Inter,system-ui,sans-serif; font-size:11.5px; color:var(--ink-faint);
-}
-.utility .wrap{display:flex; justify-content:space-between; align-items:center; gap:16px; height:34px}
-.utility .live{display:inline-flex; align-items:center; gap:7px; color:var(--alert); font-weight:600; letter-spacing:.09em}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--alert);box-shadow:0 0 0 0 rgba(179,38,30,.6);animation:pulse 1.9s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(179,38,30,0)}100%{box-shadow:0 0 0 0 rgba(179,38,30,0)}}
-
-.masthead{padding:22px 0 14px; text-align:center; border-bottom:1px solid var(--rule)}
-.logo{display:inline-flex; align-items:center; gap:14px; text-decoration:none}
-.logo .mark{flex:0 0 auto}
+.mast{padding:20px 0 14px; text-align:center; border-bottom:1px solid var(--rule); position:relative}
+.logo{display:inline-flex; align-items:center; gap:13px; color:inherit}
+.logo:hover{text-decoration:none}
+.logo h1{margin:0; font-family:"Playfair Display",serif; font-weight:900;
+  font-size:clamp(26px,4.6vw,46px); letter-spacing:-.015em; line-height:.95; color:var(--brand)}
+.logo .tag{font-family:Inter,sans-serif; font-size:8.5px; letter-spacing:.4em;
+  text-transform:uppercase; color:var(--ink-3); margin-top:6px}
 .logo .word{text-align:left}
-.logo h1{
-  margin:0; font-family:"Playfair Display",Georgia,serif; font-weight:900;
-  font-size:clamp(30px,5.4vw,54px); letter-spacing:-.015em; line-height:.95; color:var(--brand);
-}
-.logo .tag{
-  font-family:Inter,system-ui,sans-serif; font-size:9.5px; letter-spacing:.42em;
-  text-transform:uppercase; color:var(--ink-faint); margin-top:7px;
-}
-nav.sections{border-bottom:2px solid var(--ink); background:var(--paper)}
-nav.sections .wrap{display:flex; gap:26px; overflow-x:auto; height:42px; align-items:center;
-  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase}
-nav.sections span{white-space:nowrap; color:var(--ink-soft); padding-bottom:2px}
-nav.sections span.on{color:var(--alert); border-bottom:2px solid var(--alert)}
 
-/* ---------- headline block ---------- */
-article{padding:34px 0 0}
-.kicker{
-  font-family:Inter,system-ui,sans-serif; font-size:12px; font-weight:700; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--alert); margin-bottom:14px;
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-}
-.kicker .sep{width:26px;height:1px;background:var(--alert);opacity:.5}
-h2.head{
-  font-family:"Playfair Display",Georgia,serif; font-weight:800;
-  font-size:clamp(31px,5.1vw,58px); line-height:1.04; letter-spacing:-.022em; margin:0 0 16px;
-  max-width:19ch;
-}
-.deck{
-  font-size:clamp(17px,2.1vw,21px); line-height:1.5; color:var(--ink-soft);
-  max-width:62ch; margin:0 0 22px;
-}
-.byline{
-  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
-  border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
-  padding:12px 0; font-family:Inter,system-ui,sans-serif; font-size:12.5px; color:var(--ink-faint);
-}
+/* ---------- nav ---------- */
+nav.sect{border-bottom:2px solid var(--ink); background:var(--paper); position:sticky; top:35px; z-index:100}
+:root[data-theme="dark"] nav.sect{border-bottom-color:var(--rule-2)}
+nav.sect .wrap{display:flex; gap:6px; align-items:center; height:46px}
+nav.sect a{font-family:Inter,sans-serif; font-size:12px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-2); padding:6px 10px; border-radius:5px; white-space:nowrap}
+nav.sect a:hover{background:var(--paper-3); text-decoration:none}
+nav.sect a[aria-current="page"]{color:var(--alert); box-shadow:inset 0 -2px 0 var(--alert)}
+.navlinks{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.navlinks::-webkit-scrollbar{display:none}
+.searchbox{margin-left:auto; display:flex; align-items:center; gap:6px;
+  border:1px solid var(--rule); border-radius:20px; padding:5px 12px; background:var(--paper-2)}
+.searchbox input{border:0; background:none; outline:none; width:150px; font-family:Inter,sans-serif; font-size:13px}
+.searchbox svg{flex:0 0 auto; opacity:.55}
+@media (max-width:800px){ .searchbox input{width:96px} }
+@media (max-width:560px){ .searchbox{display:none} }
+
+/* ---------- ticker ---------- */
+.ticker{display:flex; background:var(--ink); color:var(--paper); height:36px; overflow:hidden; align-items:stretch}
+:root[data-theme="dark"] .ticker{background:var(--paper-3); color:var(--ink)}
+.ticker .tag{background:var(--alert); color:#fff; font-family:Inter,sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.14em; display:flex; align-items:center; padding:0 13px; white-space:nowrap}
+.ticker .rail{flex:1; overflow:hidden; display:flex; align-items:center; min-width:0}
+.ticker .run{display:flex; align-items:center; gap:26px; white-space:nowrap; flex:0 0 auto;
+  font-family:Inter,sans-serif; font-size:12.5px; animation:roll 60s linear infinite; will-change:transform}
+.ticker .run span{flex:0 0 auto}
+.ticker .run b{color:var(--amber); flex:0 0 auto}
+@keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker:hover .run{animation-play-state:paused}
+
+/* ---------- generic ---------- */
+main{min-height:60vh}
+.view{padding:28px 0 54px}
+.crumb{font-family:Inter,sans-serif; font-size:12px; color:var(--ink-3); margin-bottom:16px}
+.crumb a{color:var(--ink-3)}
+.hd{font-family:Inter,sans-serif; font-size:12px; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--ink); border-bottom:2px solid var(--ink); padding-bottom:8px; margin:0 0 18px;
+  display:flex; align-items:center; gap:10px}
+:root[data-theme="dark"] .hd{border-bottom-color:var(--rule-2)}
+.hd .count{margin-left:auto; font-weight:500; color:var(--ink-3); letter-spacing:.06em}
+.kick{font-family:Inter,sans-serif; font-size:11px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--alert); display:inline-block; margin-bottom:9px}
+.kick.blue{color:var(--brand-2)}
+.meta{font-family:Inter,sans-serif; font-size:12px; color:var(--ink-3)}
+
+/* ---------- home ---------- */
+.lead{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:40px;
+  padding-bottom:26px; border-bottom:1px solid var(--rule)}
+@media (max-width:900px){ .lead{grid-template-columns:1fr; gap:28px} }
+.lead h2{font-family:"Playfair Display",serif; font-weight:800; letter-spacing:-.022em;
+  font-size:clamp(30px,4.6vw,52px); line-height:1.04; margin:0 0 15px}
+.lead h2 a{color:inherit}
+.lead .deck{font-size:clamp(16px,2vw,20px); line-height:1.5; color:var(--ink-2); margin:0 0 16px}
+.lead .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--rule);
+  border:1px solid var(--rule); margin:20px 0 0}
+.lead .stats div{background:var(--paper); padding:13px 12px}
+.lead .stats b{display:block; font-family:"Playfair Display",serif; font-size:25px; color:var(--brand); line-height:1}
+.lead .stats span{display:block; margin-top:6px; font-family:Inter,sans-serif; font-size:10.5px;
+  letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3)}
+@media (max-width:620px){ .lead .stats{grid-template-columns:1fr 1fr} }
+
+.sidebar-live{border:1px solid var(--rule); border-radius:4px; overflow:hidden}
+.sidebar-live .top{background:var(--ink); color:var(--paper); font-family:Inter,sans-serif; font-size:11px;
+  font-weight:700; letter-spacing:.14em; text-transform:uppercase; padding:10px 14px; display:flex; align-items:center; gap:8px}
+:root[data-theme="dark"] .sidebar-live .top{background:var(--paper-3); color:var(--ink)}
+.sidebar-live .in{padding:6px 14px 14px}
+.upd{padding:12px 0; border-bottom:1px solid var(--rule)}
+.upd:last-child{border-bottom:0}
+.upd time{font-family:Inter,sans-serif; font-size:10.5px; font-weight:700; letter-spacing:.08em;
+  color:var(--alert); display:block; margin-bottom:4px}
+.upd p{margin:0; font-size:14.5px; line-height:1.5; color:var(--ink-2)}
+.upd .cat{font-family:Inter,sans-serif; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); border:1px solid var(--rule); border-radius:3px; padding:1px 5px; margin-left:7px}
+
+.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:28px; padding:26px 0}
+@media (max-width:900px){ .grid{grid-template-columns:1fr 1fr} }
+@media (max-width:620px){ .grid{grid-template-columns:1fr} }
+.card{display:flex; flex-direction:column; border-top:3px solid var(--ink); padding-top:13px}
+:root[data-theme="dark"] .card{border-top-color:var(--rule-2)}
+.card h3{margin:0 0 9px; font-family:"Playfair Display",serif; font-weight:700;
+  font-size:21px; line-height:1.15; letter-spacing:-.01em}
+.card h3 a{color:inherit}
+.card p{margin:0 0 11px; font-size:15.5px; line-height:1.5; color:var(--ink-2)}
+.card .meta{margin-top:auto}
+
+.cols2{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:44px; padding:26px 0 0;
+  border-top:1px solid var(--rule)}
+@media (max-width:900px){ .cols2{grid-template-columns:1fr; gap:32px} }
+.listitem{display:grid; grid-template-columns:34px 1fr; gap:14px; padding:14px 0; border-bottom:1px solid var(--rule)}
+.listitem:last-child{border-bottom:0}
+.listitem .n{font-family:"Playfair Display",serif; font-size:26px; color:var(--rule-2); line-height:1}
+.listitem h4{margin:0 0 5px; font-size:17px; font-weight:600; line-height:1.3}
+.listitem h4 a{color:inherit}
+
+/* ---------- article ---------- */
+.artwrap{display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:46px; align-items:start}
+@media (max-width:900px){ .artwrap{grid-template-columns:1fr; gap:34px} }
+.art h2{font-family:"Playfair Display",serif; font-weight:800; letter-spacing:-.022em;
+  font-size:clamp(28px,4.4vw,50px); line-height:1.05; margin:0 0 15px; max-width:20ch}
+.art .deck{font-size:clamp(16px,2vw,20px); line-height:1.5; color:var(--ink-2); margin:0 0 20px; max-width:62ch}
+.byline{display:flex; flex-wrap:wrap; gap:7px 18px; align-items:center; border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule); padding:12px 0; font-family:Inter,sans-serif; font-size:12.5px; color:var(--ink-3)}
 .byline b{color:var(--ink); font-weight:600}
-.byline .who{display:flex;align-items:center;gap:9px}
-.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#c9d6e6,#8fa9c4);
-  display:grid;place-items:center;color:#123; font-weight:700; font-size:11px; font-family:Inter,sans-serif}
-
-/* ---------- media ---------- */
-figure{margin:26px 0 0}
-figure .frame{background:#0a0d12; line-height:0; position:relative; overflow:hidden}
-figcaption{
-  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.55; color:var(--ink-faint);
-  padding:9px 2px 0; border-bottom:1px solid var(--rule); padding-bottom:12px;
-}
-figcaption b{color:var(--ink-soft); font-weight:600}
-.credit{text-transform:uppercase; letter-spacing:.09em; font-size:10px; color:#9aa1a9}
-
-/* ---------- body layout ---------- */
-.cols{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:44px; padding:30px 0 50px; align-items:start}
-@media (max-width:900px){ .cols{grid-template-columns:1fr; gap:34px} }
-
-.body{font-size:18.5px; line-height:1.72; max-width:66ch}
+.byline .tools{margin-left:auto; display:flex; gap:8px}
+.body{font-size:18.5px; line-height:1.72; max-width:66ch; padding-top:24px}
 .body p{margin:0 0 20px}
-.body p.lead::first-letter{
-  float:left; font-family:"Playfair Display",serif; font-weight:800; font-size:64px;
-  line-height:.82; padding:6px 10px 0 0; color:var(--brand);
-}
-.body h3{
-  font-family:Inter,system-ui,sans-serif; font-size:13px; font-weight:700; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--ink); margin:34px 0 14px; padding-top:16px; border-top:1px solid var(--rule);
-}
-blockquote{
-  margin:28px 0; padding:4px 0 4px 22px; border-left:3px solid var(--amber);
-  font-size:22px; line-height:1.45; font-style:italic; color:var(--ink);
-}
-blockquote cite{display:block; margin-top:12px; font-style:normal; font-family:Inter,sans-serif;
-  font-size:12px; letter-spacing:.06em; color:var(--ink-faint)}
+.body p.first::first-letter{float:left; font-family:"Playfair Display",serif; font-weight:800;
+  font-size:62px; line-height:.82; padding:6px 10px 0 0; color:var(--brand)}
+.body h3{font-family:Inter,sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; margin:34px 0 14px; padding-top:16px; border-top:1px solid var(--rule)}
+.body blockquote{margin:26px 0; padding:2px 0 2px 22px; border-left:3px solid var(--amber);
+  font-size:21px; line-height:1.45; font-style:italic}
+.body blockquote cite{display:block; margin-top:11px; font-style:normal; font-family:Inter,sans-serif;
+  font-size:11.5px; letter-spacing:.06em; color:var(--ink-3)}
+.body .box{background:var(--paper-2); border:1px solid var(--rule); border-top:3px solid var(--brand);
+  padding:17px 20px; margin:28px 0; font-family:Inter,sans-serif; font-size:14px; line-height:1.6}
+.body .box h5{margin:0 0 9px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand)}
+.body .box p{margin:0 0 9px; color:var(--ink-2)}
+.body .box p:last-child{margin:0}
+.body ul.facts{margin:26px 0; padding:0; list-style:none; border-top:1px solid var(--rule); font-family:Inter,sans-serif}
+.body ul.facts li{display:flex; justify-content:space-between; gap:16px; padding:10px 0;
+  border-bottom:1px solid var(--rule); font-size:14.5px}
+.body ul.facts b{font-weight:600; text-align:right}
+.body ul.facts em{font-style:normal; color:var(--ink-3)}
 
-/* ---------- sidebar ---------- */
-aside{position:sticky; top:74px; font-family:Inter,system-ui,sans-serif}
-.card{border:1px solid var(--rule); margin-bottom:22px}
-.card h4{
-  margin:0; background:var(--ink); color:#fff; font-size:11.5px; letter-spacing:.14em;
-  text-transform:uppercase; padding:10px 14px; font-weight:700;
-}
-.card .in{padding:14px}
-.tl{list-style:none; margin:0; padding:0; font-size:13px; line-height:1.5}
-.tl li{position:relative; padding:0 0 16px 20px; border-left:2px solid var(--rule); margin-left:5px}
-.tl li:last-child{padding-bottom:0; border-left-color:transparent}
-.tl li::before{content:""; position:absolute; left:-6px; top:3px; width:10px; height:10px;
-  border-radius:50%; background:#fff; border:2px solid var(--brand-2)}
-.tl li.hot::before{border-color:var(--alert); background:var(--alert)}
-.tl time{display:block; font-weight:700; font-size:11px; letter-spacing:.08em; color:var(--ink); margin-bottom:3px}
-.tl span{color:var(--ink-soft)}
+.prog{position:fixed; left:0; top:0; height:3px; background:var(--alert); width:0; z-index:130; transition:width .1s}
 
-.facts{font-size:13px; line-height:1.5; margin:0; padding:0; list-style:none}
-.facts li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dotted var(--rule)}
-.facts li:last-child{border-bottom:0}
-.facts b{color:var(--ink); font-weight:600; text-align:right}
-.facts em{font-style:normal; color:var(--ink-faint)}
+.nextprev{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:36px 0 0; padding-top:22px; border-top:1px solid var(--rule)}
+@media (max-width:620px){ .nextprev{grid-template-columns:1fr} }
+.nextprev a{display:block; border:1px solid var(--rule); border-radius:4px; padding:14px 16px; color:inherit}
+.nextprev a:hover{border-color:var(--rule-2); background:var(--paper-2); text-decoration:none}
+.nextprev span{font-family:Inter,sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
+.nextprev strong{display:block; margin-top:6px; font-family:"Playfair Display",serif; font-weight:700; font-size:17px; line-height:1.25}
 
-.related{list-style:none;margin:0;padding:0;font-size:13.5px;line-height:1.35}
-.related li{padding:11px 0;border-bottom:1px solid var(--rule)}
-.related li:last-child{border-bottom:0}
-.related a{color:var(--ink); text-decoration:none; font-weight:600}
-.related small{display:block;color:var(--ink-faint);font-weight:400;margin-top:4px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+/* ---------- rail cards ---------- */
+.rail{position:sticky; top:96px; font-family:Inter,sans-serif}
+.rcard{border:1px solid var(--rule); border-radius:4px; margin-bottom:20px; overflow:hidden}
+.rcard h4{margin:0; background:var(--ink); color:var(--paper); font-size:11px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; padding:10px 14px}
+:root[data-theme="dark"] .rcard h4{background:var(--paper-3); color:var(--ink)}
+.rcard .in{padding:14px}
+.rlist{list-style:none; margin:0; padding:0; font-size:14px; line-height:1.35}
+.rlist li{padding:10px 0; border-bottom:1px solid var(--rule)}
+.rlist li:last-child{border-bottom:0}
+.rlist a{color:var(--ink); font-weight:600}
+.rlist small{display:block; margin-top:4px; font-size:10.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:400}
+.rlist.glance li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; font-size:13px}
+.rlist.glance span{color:var(--ink-3)}
+.rlist.glance b{color:var(--ink); font-weight:600; text-align:right}
 
-/* ---------- inline extras ---------- */
-.pullbox{
-  background:var(--paper-2); border:1px solid var(--rule); border-top:3px solid var(--brand);
-  padding:18px 20px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.6;
-}
-.pullbox h5{margin:0 0 10px; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand)}
-.pullbox p{margin:0 0 10px; color:var(--ink-soft)}
-.pullbox p:last-child{margin:0}
+/* ---------- live blog ---------- */
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 20px}
+.chip{font-family:Inter,sans-serif; font-size:12px; padding:6px 13px; border-radius:20px;
+  border:1px solid var(--rule); background:var(--paper); cursor:pointer; color:var(--ink-2)}
+.chip:hover{border-color:var(--rule-2)}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--brand-2); color:#0b0e12; border-color:var(--brand-2)}
+.newbar{display:none; width:100%; margin:0 0 18px; background:var(--alert); color:#fff; border:0;
+  border-radius:4px; padding:11px 14px; font-family:Inter,sans-serif; font-size:13px; font-weight:600; cursor:pointer}
+.newbar.show{display:block}
+.feed{list-style:none; margin:0; padding:0; max-width:74ch}
+.feed li{display:grid; grid-template-columns:96px 1fr; gap:20px; padding:20px 0; border-bottom:1px solid var(--rule)}
+@media (max-width:600px){ .feed li{grid-template-columns:1fr; gap:6px} }
+.feed .t{font-family:Inter,sans-serif; font-size:12.5px; font-weight:700; color:var(--alert); padding-top:3px}
+.feed .t small{display:block; font-weight:500; color:var(--ink-3); margin-top:3px; letter-spacing:.05em}
+.feed h4{margin:0 0 7px; font-size:19px; font-weight:600; line-height:1.3}
+.feed p{margin:0; font-size:16.5px; line-height:1.6; color:var(--ink-2)}
+.feed .cat{display:inline-block; font-family:Inter,sans-serif; font-size:9.5px; letter-spacing:.09em;
+  text-transform:uppercase; border:1px solid var(--rule); border-radius:3px; padding:2px 6px; color:var(--ink-3); margin-bottom:8px}
+.feed li.fresh{animation:pop .5s ease}
+@keyframes pop{from{background:rgba(179,38,30,.10)}to{background:transparent}}
 
-.gallery{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:30px 0}
-@media (max-width:640px){ .gallery{grid-template-columns:1fr} }
-.gallery figure{margin:0}
+/* ---------- timeline ---------- */
+.tl{list-style:none; margin:0; padding:0; max-width:70ch}
+.tl li{position:relative; padding:0 0 8px 30px; border-left:2px solid var(--rule); margin-left:8px}
+.tl li:last-child{border-left-color:transparent}
+.tl li::before{content:""; position:absolute; left:-7px; top:6px; width:12px; height:12px; border-radius:50%;
+  background:var(--paper); border:2px solid var(--brand-2)}
+.tl li.key::before{background:var(--alert); border-color:var(--alert)}
+.tl button{width:100%; text-align:left; background:none; border:0; cursor:pointer; padding:0 0 16px}
+.tl time{display:block; font-family:Inter,sans-serif; font-size:11.5px; font-weight:700;
+  letter-spacing:.08em; color:var(--ink); margin-bottom:4px}
+.tl .lab{font-size:17.5px; line-height:1.4; color:var(--ink-2)}
+.tl .det{max-height:0; overflow:hidden; transition:max-height .28s ease; font-size:15.5px;
+  line-height:1.6; color:var(--ink-3); padding-left:0}
+.tl li.open .det{max-height:260px; padding-bottom:16px}
+.tl .toggle{font-family:Inter,sans-serif; font-size:11px; color:var(--brand-2); letter-spacing:.06em; margin-top:6px; display:inline-block}
 
-.contbox{
-  border:1px solid var(--rule); border-left:4px solid var(--alert); background:var(--paper-2);
-  padding:16px 18px; margin:30px 0; font-family:Inter,system-ui,sans-serif; font-size:14px; line-height:1.55;
-}
-.contbox b{display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--alert); margin-bottom:6px}
-.contbox a{color:var(--ink); font-weight:600}
+/* ---------- faq ---------- */
+.faq{max-width:72ch}
+.faq details{border-bottom:1px solid var(--rule); padding:16px 0}
+.faq summary{cursor:pointer; font-size:19px; font-weight:600; list-style:none; display:flex; gap:12px; align-items:flex-start}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:"+"; font-family:Inter,sans-serif; color:var(--brand-2); font-weight:700; font-size:20px; line-height:1.2}
+.faq details[open] summary::before{content:"–"}
+.faq p{margin:12px 0 0 24px; font-size:16.5px; line-height:1.65; color:var(--ink-2)}
 
-footer.site{background:var(--ink); color:#aeb5bd; margin-top:0; padding:34px 0 44px;
-  font-family:Inter,system-ui,sans-serif; font-size:12px; line-height:1.7}
+/* ---------- poll ---------- */
+.poll{border:1px solid var(--rule); border-radius:4px; padding:18px 20px; font-family:Inter,sans-serif; margin:26px 0}
+.poll h4{margin:0 0 4px; font-size:15px}
+.poll .q{margin:0 0 14px; font-size:12.5px; color:var(--ink-3)}
+.poll button.opt{display:block; width:100%; text-align:left; background:var(--paper-2); border:1px solid var(--rule);
+  border-radius:4px; padding:11px 13px; margin-bottom:8px; cursor:pointer; font-size:14px}
+.poll button.opt:hover{border-color:var(--brand-2)}
+.poll .res{position:relative; background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+  padding:10px 13px; margin-bottom:8px; font-size:14px; overflow:hidden}
+.poll .res .fill{position:absolute; inset:0 auto 0 0; background:var(--brand-2); opacity:.18; width:0; transition:width .6s ease}
+.poll .res .lab{position:relative; display:flex; justify-content:space-between; gap:12px}
+.poll .res.me{border-color:var(--brand-2)}
+.poll .note{font-size:11.5px; color:var(--ink-3); margin:10px 0 0}
+
+/* ---------- data bars ---------- */
+.databar{font-family:Inter,sans-serif; margin:26px 0}
+.databar .row{display:grid; grid-template-columns:64px 1fr 48px; gap:12px; align-items:center; margin-bottom:7px; font-size:12.5px}
+.databar .track{background:var(--paper-3); height:16px; border-radius:3px; overflow:hidden}
+.databar .fill{height:100%; background:var(--brand-2); border-radius:3px; width:0; transition:width .8s ease}
+.databar .fill.hot{background:var(--alert)}
+.databar .val{text-align:right; color:var(--ink-3)}
+.databar .cap{font-size:11.5px; color:var(--ink-3); margin-top:12px; line-height:1.5}
+
+/* ---------- forms / misc ---------- */
+.signup{background:var(--paper-2); border:1px solid var(--rule); border-radius:4px; padding:20px;
+  font-family:Inter,sans-serif; margin:26px 0 0}
+.signup h4{margin:0 0 6px; font-size:15px}
+.signup p{margin:0 0 13px; font-size:13px; color:var(--ink-3); line-height:1.5}
+.signup form{display:flex; gap:8px; flex-wrap:wrap}
+.signup input{flex:1; min-width:160px; border:1px solid var(--rule); border-radius:4px; padding:10px 12px;
+  background:var(--paper); font-size:13.5px}
+.btn{background:var(--brand); color:#fff; border:0; border-radius:4px; padding:10px 18px;
+  font-family:Inter,sans-serif; font-size:13px; font-weight:600; cursor:pointer}
+:root[data-theme="dark"] .btn{background:var(--brand-2); color:#0b0e12}
+.btn:hover{opacity:.9}
+.btn.ghost{background:none; border:1px solid var(--rule); color:var(--ink-2); font-weight:500; padding:6px 12px; font-size:12px}
+.btn.ghost:hover{border-color:var(--rule-2); background:var(--paper-2)}
+.ok{color:var(--good); font-size:13px; margin:10px 0 0; display:none}
+.ok.show{display:block}
+
+.empty{padding:40px 0; color:var(--ink-3); font-size:17px}
+mark{background:#ffe89a; color:#14181d; padding:0 2px; border-radius:2px}
+:root[data-theme="dark"] mark{background:#6b5410; color:#fff}
+
+footer.site{background:var(--ink); color:#aeb5bd; padding:32px 0 42px; font-family:Inter,sans-serif;
+  font-size:12px; line-height:1.7; margin-top:20px}
+:root[data-theme="dark"] footer.site{background:var(--paper-2); color:var(--ink-3); border-top:1px solid var(--rule)}
 footer.site .wrap{display:flex; flex-wrap:wrap; gap:26px; justify-content:space-between}
-footer.site b{color:#fff; display:block; margin-bottom:8px; font-size:11px; letter-spacing:.13em; text-transform:uppercase}
-footer.site .disc{border-top:1px solid #2b3138; margin-top:26px; padding-top:18px; color:#7f868e}
+footer.site b{color:#fff; display:block; margin-bottom:8px; font-size:10.5px; letter-spacing:.13em; text-transform:uppercase}
+:root[data-theme="dark"] footer.site b{color:var(--ink)}
+footer.site a{color:inherit}
+footer.site .disc{border-top:1px solid rgba(255,255,255,.14); margin-top:24px; padding-top:18px; color:#7f868e}
+:root[data-theme="dark"] footer.site .disc{border-top-color:var(--rule)}
+.toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); z-index:140;
+  background:var(--ink); color:var(--paper); font-family:Inter,sans-serif; font-size:13px;
+  padding:11px 18px; border-radius:24px; opacity:0; pointer-events:none; transition:all .25s}
+:root[data-theme="dark"] .toast{background:var(--paper-3); color:var(--ink); border:1px solid var(--rule)}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 
 <div class="fiction">
-  <strong>FICTION</strong> &nbsp;·&nbsp; This is a fabricated news story written as a creative exercise. <b>Tidewater Signal</b> is not a real news organization, the people quoted do not exist, and no aircraft of unknown origin has landed off Myrtle Beach.
+  <strong>FICTION</strong> &nbsp;·&nbsp; This is an invented news website created as a writing and design exercise.
+  <b>Tidewater Signal</b> is not a real news organization, the people quoted do not exist, and no aircraft of unknown origin has landed off Myrtle Beach.
 </div>
+
+<div class="prog" id="prog"></div>
 
 <div class="sheet">
 
-  <div class="utility">
+  <div class="util">
     <div class="wrap">
       <span class="live"><i class="dot"></i>LIVE UPDATES</span>
-      <span>Wednesday, August 19, 2026 · Myrtle Beach, S.C. · 84°F</span>
+      <span id="clock">Wednesday, August 19, 2026</span>
+      <span class="right">
+        <span>Myrtle Beach, S.C. · 84°F</span>
+        <button class="tbtn" id="theme" aria-label="Toggle dark mode"><span id="themeIcon">☾</span> <span id="themeText">Dark</span></button>
+      </span>
     </div>
   </div>
 
-  <header class="masthead">
-    <a class="logo" href="index.html">
-      <svg class="mark" width="62" height="62" viewBox="0 0 64 64" aria-label="Tidewater Signal logo">
+  <header class="mast">
+    <a class="logo" href="#/">
+      <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="31" fill="#0f3b6e"/>
         <path d="M4 40c6-5 10 3 16-1s10 4 16-1 10 3 16-2v22H4z" fill="#1c6fb8" opacity=".55"/>
         <path d="M4 46c6-5 10 3 16-1s10 4 16-1 10 3 16-2v20H4z" fill="#5ba7de" opacity=".45"/>
         <g stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round">
-          <path d="M32 33V13"/>
-          <path d="M22.5 21.5a13 13 0 0 1 19 0" opacity=".95"/>
-          <path d="M17 15.5a21 21 0 0 1 30 0" opacity=".6"/>
+          <path d="M32 33V13"/><path d="M22.5 21.5a13 13 0 0 1 19 0"/><path d="M17 15.5a21 21 0 0 1 30 0" opacity=".6"/>
         </g>
         <circle cx="32" cy="34.5" r="3.4" fill="#fff"/>
       </svg>
-      <div class="word">
+      <span class="word">
         <h1>Tidewater Signal</h1>
-        <div class="tag">Carolina Coast · Independent Since 1974</div>
-      </div>
+        <span class="tag">Carolina Coast · Independent Since 1974</span>
+      </span>
     </a>
   </header>
 
-  <nav class="sections">
+  <nav class="sect" aria-label="Sections">
     <div class="wrap">
-      <span class="on">Breaking</span><span>Grand Strand</span><span>State</span><span>Nation</span>
-      <span>Weather</span><span>Business</span><span>Sports</span><span>Opinion</span><span>Obituaries</span>
+      <div class="navlinks" id="navlinks"></div>
+      <label class="searchbox">
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 11l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="Search coverage" aria-label="Search coverage">
+      </label>
     </div>
   </nav>
 
-  <div class="wrap">
-    <article>
-
-      <div class="kicker">Breaking <span class="sep"></span> Grand Strand <span class="sep"></span> Updated 11 min ago</div>
-
-      <h2 class="head">Unidentified craft comes down in the Atlantic four miles off Myrtle Beach</h2>
-
-      <p class="deck">Radar tracked the object on a descending path out of low Earth orbit before it entered the water shortly after 3 a.m. Officials say it matches nothing in the public catalog of satellites, spent boosters or debris — and no country has claimed it.</p>
-
-      <div class="byline">
-        <span class="who"><i class="avatar">MR</i> By <b>Marisol Reyes</b> and <b>Dean Ottaway</b></span>
-        <span>Tidewater Signal · Coastal Bureau</span>
-        <span>Published Aug. 19, 2026, 5:12 a.m. ET</span>
-        <span>Updated 8:47 a.m. ET</span>
-      </div>
-
-      <figure>
-        <div class="frame">
-          <!-- HERO: night ocean, glowing object partially submerged -->
-          <svg viewBox="0 0 1600 900" role="img" aria-label="A dim amber glow spreads across dark water off a pier, with a partially submerged object at its center.">
-            <defs>
-              <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#04060b"/><stop offset=".45" stop-color="#080f1b"/>
-                <stop offset=".8" stop-color="#12212f"/><stop offset="1" stop-color="#1b303f"/>
-              </linearGradient>
-              <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#152634"/><stop offset=".28" stop-color="#0c1723"/>
-                <stop offset="1" stop-color="#03070c"/>
-              </linearGradient>
-              <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0" stop-color="#fff4d8" stop-opacity=".95"/>
-                <stop offset=".2" stop-color="#ffc978" stop-opacity=".62"/>
-                <stop offset=".54" stop-color="#d9822a" stop-opacity=".24"/>
-                <stop offset="1" stop-color="#a34f0d" stop-opacity="0"/>
-              </radialGradient>
-              <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-                <stop offset="0" stop-color="#a8dcff" stop-opacity=".30"/>
-                <stop offset="1" stop-color="#a8dcff" stop-opacity="0"/>
-              </radialGradient>
-              <radialGradient id="vig" cx="50%" cy="46%" r="74%">
-                <stop offset=".45" stop-color="#000" stop-opacity="0"/>
-                <stop offset="1" stop-color="#000" stop-opacity=".70"/>
-              </radialGradient>
-              <filter id="grain" x="0" y="0" width="100%" height="100%">
-                <feTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="4" seed="7" result="n"/>
-                <feColorMatrix in="n" type="saturate" values="0" result="g"/>
-                <feComponentTransfer in="g"><feFuncA type="linear" slope=".55"/></feComponentTransfer>
-              </filter>
-              <filter id="clouds" x="-10%" y="-10%" width="120%" height="120%">
-                <feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="19"/>
-                <feColorMatrix type="saturate" values="0"/>
-                <feGaussianBlur stdDeviation="6"/>
-              </filter>
-              <filter id="chop" x="-5%" y="-5%" width="110%" height="110%">
-                <feTurbulence type="fractalNoise" baseFrequency=".006 .05" numOctaves="3" seed="4" result="t"/>
-                <feDisplacementMap in="SourceGraphic" in2="t" scale="26" xChannelSelector="R" yChannelSelector="G"/>
-                <feGaussianBlur stdDeviation=".7"/>
-              </filter>
-              <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="11"/></filter>
-              <filter id="soft2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>
-              <filter id="soft3" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="26"/></filter>
-              <clipPath id="seaclip"><rect y="470" width="1600" height="430"/></clipPath>
-            </defs>
-
-            <rect width="1600" height="900" fill="url(#sky2)"/>
-            <rect width="1600" height="470" filter="url(#clouds)" opacity=".10"/>
-
-            <g fill="#e6eefa">
-              <circle cx="180" cy="90" r="1.4" opacity=".75"/><circle cx="420" cy="58" r="1" opacity=".45"/>
-              <circle cx="700" cy="118" r="1.2" opacity=".6"/><circle cx="980" cy="70" r=".9" opacity=".4"/>
-              <circle cx="1230" cy="140" r="1.5" opacity=".65"/><circle cx="1420" cy="80" r="1" opacity=".42"/>
-              <circle cx="300" cy="198" r=".9" opacity=".32"/><circle cx="1120" cy="222" r="1.1" opacity=".38"/>
-              <circle cx="860" cy="178" r=".9" opacity=".28"/><circle cx="560" cy="242" r="1" opacity=".33"/>
-              <circle cx="1520" cy="300" r=".9" opacity=".22"/><circle cx="120" cy="330" r=".9" opacity=".2"/>
-            </g>
-
-            <!-- residual entry trail, mostly dissipated -->
-            <path d="M1570 30 C1330 140 1150 250 1000 396" stroke="#cfe4ff" stroke-width="2" fill="none" opacity=".13" filter="url(#soft2)"/>
-            <path d="M1570 30 C1330 140 1150 250 1000 396" stroke="#ffd9a3" stroke-width="9" fill="none" opacity=".05" filter="url(#soft)"/>
-
-            <!-- sea -->
-            <rect y="470" width="1600" height="430" fill="url(#sea)"/>
-            <line x1="0" y1="470" x2="1600" y2="470" stroke="#3d637f" stroke-width="1.4" opacity=".45"/>
-            <!-- haze band sitting on the horizon -->
-            <rect y="430" width="1600" height="70" fill="#4a6b86" opacity=".13" filter="url(#soft)"/>
-
-            <g clip-path="url(#seaclip)">
-              <!-- ambient chop -->
-              <g filter="url(#chop)" stroke="#7fa8c6" fill="none">
-                <g opacity=".13" stroke-width="1.2">
-                  <path d="M-40 486h1700"/><path d="M-40 496h1700"/><path d="M-40 508h1700"/>
-                  <path d="M-40 522h1700"/><path d="M-40 538h1700"/>
-                </g>
-                <g opacity=".16" stroke-width="1.7">
-                  <path d="M-40 558h1700"/><path d="M-40 582h1700"/><path d="M-40 610h1700"/>
-                  <path d="M-40 642h1700"/><path d="M-40 678h1700"/>
-                </g>
-                <g opacity=".18" stroke-width="2.6">
-                  <path d="M-40 720h1700"/><path d="M-40 766h1700"/><path d="M-40 818h1700"/>
-                  <path d="M-40 872h1700"/>
-                </g>
-              </g>
-
-              <!-- glow spilling across the water -->
-              <ellipse cx="900" cy="586" rx="520" ry="150" fill="url(#glow)" opacity=".50" filter="url(#soft3)"/>
-              <ellipse cx="900" cy="502" rx="320" ry="72" fill="url(#halo)" filter="url(#soft)"/>
-
-              <!-- lit chop inside the glow -->
-              <g filter="url(#chop)" stroke="#ffca7d" fill="none" opacity=".30">
-                <path d="M700 560h410" stroke-width="1.6"/><path d="M672 582h470" stroke-width="1.8"/>
-                <path d="M646 610h510" stroke-width="2"/><path d="M614 644h570" stroke-width="2.2"/>
-                <path d="M586 684h624" stroke-width="2.4"/><path d="M548 730h692" stroke-width="2.6"/>
-                <path d="M512 786h760" stroke-width="2.8"/><path d="M470 848h820" stroke-width="3"/>
-              </g>
-            </g>
-
-            <!-- the object: low, tilted, mostly under -->
-            <g transform="rotate(-3.5 900 500)">
-              <ellipse cx="900" cy="524" rx="230" ry="46" fill="#ffb459" opacity=".16" filter="url(#soft)"/>
-              <g filter="url(#soft2)">
-                <path d="M772 504 C790 486 830 476 900 476 C970 476 1010 486 1028 504 C1000 518 950 524 900 524 C850 524 800 518 772 504z" fill="#171d24"/>
-                <path d="M786 500 C806 488 842 481 900 481 C958 481 994 488 1014 500 C990 508 950 512 900 512 C850 512 810 508 786 500z" fill="#28323d"/>
-                <path d="M842 486 C862 480 880 478 900 478 C920 478 938 480 958 486 C938 492 920 494 900 494 C880 494 862 492 842 486z" fill="#fff1d3" opacity=".9"/>
-                <path d="M842 486 C862 480 880 478 900 478 C920 478 938 480 958 486 C938 492 920 494 900 494 C880 494 862 492 842 486z" fill="#ffcf8a" opacity=".55" filter="url(#soft2)"/>
-                <rect x="868" y="470" width="64" height="7" rx="3.5" fill="#3a4653"/>
-                <circle cx="1004" cy="497" r="3.4" fill="#ffe6b5" opacity=".85"/>
-                <circle cx="800" cy="498" r="3" fill="#9fd7ff" opacity=".7"/>
-              </g>
-              <!-- waterline froth -->
-              <g filter="url(#chop)" stroke="#e8f2fb" opacity=".28" fill="none">
-                <path d="M768 516 C820 526 980 526 1032 516" stroke-width="3"/>
-                <path d="M754 524 C816 536 986 536 1048 524" stroke-width="2"/>
-              </g>
-            </g>
-            <!-- steam rising off the hull -->
-            <g filter="url(#soft3)" opacity=".17">
-              <ellipse cx="930" cy="444" rx="130" ry="44" fill="#cfe0ee"/>
-              <ellipse cx="872" cy="404" rx="80" ry="34" fill="#b9cfe2" opacity=".7"/>
-            </g>
-
-            <!-- distant vessels on station -->
-            <g>
-              <rect x="1272" y="452" width="52" height="15" fill="#070c13"/>
-              <rect x="1288" y="444" width="16" height="9" fill="#0a1119"/>
-              <circle cx="1290" cy="441" r="2.6" fill="#ffe9b8"/><circle cx="1310" cy="447" r="2" fill="#9fd7ff"/>
-              <rect x="1272" y="467" width="52" height="7" fill="#0d1620" opacity=".7"/>
-            </g>
-            <g>
-              <rect x="392" y="458" width="38" height="11" fill="#070c13"/>
-              <circle cx="404" cy="454" r="2.2" fill="#ffd9a0"/>
-            </g>
-
-            <!-- pier silhouette, left, slightly out of frame -->
-            <g fill="#03060a">
-              <rect x="-10" y="450" width="342" height="18"/>
-              <rect x="-10" y="436" width="66" height="32"/>
-              <rect x="150" y="414" width="54" height="36"/>
-              <rect x="24" y="466" width="10" height="170"/><rect x="88" y="466" width="10" height="158"/>
-              <rect x="152" y="466" width="10" height="146"/><rect x="216" y="466" width="9" height="132"/>
-              <rect x="278" y="466" width="9" height="118"/>
-            </g>
-            <g fill="#ffc96a">
-              <circle cx="62" cy="444" r="2.4" opacity=".9"/><circle cx="142" cy="444" r="2.4" opacity=".75"/>
-              <circle cx="232" cy="446" r="2" opacity=".6"/><circle cx="176" cy="424" r="2" opacity=".8"/>
-            </g>
-            <g filter="url(#soft)" opacity=".35">
-              <circle cx="62" cy="444" r="9" fill="#ffc96a"/><circle cx="142" cy="444" r="8" fill="#ffc96a"/>
-            </g>
-
-            <!-- helicopter with searchlight, right -->
-            <g opacity=".5">
-              <path d="M1428 252 L1338 470 L1524 470 Z" fill="#cfe6ff" opacity=".11" filter="url(#soft)"/>
-              <circle cx="1428" cy="248" r="2.6" fill="#fff"/>
-              <circle cx="1442" cy="242" r="2.2" fill="#ff5d4d"/>
-            </g>
-
-            <!-- lens/atmosphere -->
-            <rect width="1600" height="900" fill="url(#vig)"/>
-            <rect width="1600" height="900" filter="url(#grain)" opacity=".28" style="mix-blend-mode:overlay"/>
-            <rect width="1600" height="900" fill="#1a2b3d" opacity=".08" style="mix-blend-mode:screen"/>
-          </svg>
-        </div>
-        <figcaption><b>Long exposure from the north end of the pier at 3:41 a.m.</b> shows an object roughly 60 feet across sitting low in the water inside the Coast Guard exclusion zone. The amber light dimmed and brightened on a slow cycle for about ninety minutes, witnesses said. <span class="credit">Tidewater Signal / Handout via reader submission</span></figcaption>
-      </figure>
-
-      <div class="cols">
-        <div class="body">
-
-          <p class="lead">MYRTLE BEACH, S.C. — Something came down out of the sky over the Grand Strand early Wednesday morning, and more than five hours later nobody in a position to know would say what it was.</p>
-
-          <p>The object entered the Atlantic roughly four nautical miles east-southeast of the 14th Avenue Pier at 3:07 a.m., according to two people briefed on the tracking data who spoke on condition of anonymity because they were not authorized to discuss it. It did not sink. As of 8:30 a.m. it was still there, sitting low and mostly submerged, ringed by three Coast Guard cutters and a two-mile exclusion zone that the Coast Guard's Sector Charleston office extended twice before sunrise.</p>
-
-          <p>What has federal agencies moving quickly is not the splashdown itself — the ocean off the Carolinas catches falling hardware a few times a year — but the path it took getting here.</p>
-
-          <p>Radar returns reviewed by the Signal show the object in a stable, roughly circular orbit about 210 miles up for at least four passes before it began to descend. Then, over the course of a single 90-minute orbit, it dropped. The descent was smooth and shallow, and it slowed at the end.</p>
-
-          <blockquote>
-            It came out of orbit. That part is not in dispute and it is not interesting. What is interesting is that it was in orbit at all, and we cannot tell you when it got there.
-            <cite>— A senior official at a U.S. space-tracking facility, speaking on condition of anonymity</cite>
-          </blockquote>
-
-          <p>Every object larger than about four inches in Earth orbit is supposed to be in a catalog. There are more than 40,000 of them: working satellites, dead satellites, spent upper stages, bolts, paint flecks, a lost tool bag. Each is tracked, numbered and matched to a launch. Objects do not simply appear in the catalog. They are put into orbit by rockets, and rockets are visible from a long way off.</p>
-
-          <p>This one is not in the catalog. Three current and former tracking officials confirmed that no entry in the public catalog matches its orbit, and none of them could point to a launch it could plausibly have come from.</p>
-
-          <h3>Where it came from</h3>
-
-          <p>The honest answer, five people involved in the response said in some version or another, is that nobody knows.</p>
-
-          <p>The object was first noted at 11:52 p.m. Tuesday, already in orbit, on a track that crossed the eastern seaboard on a northwest-to-southeast diagonal. Analysts initially logged it as an uncorrelated target — routine, usually resolved within a day when the object turns out to be a fragment of something already known. It was not resolved. By 1:30 a.m. the track had been elevated.</p>
-
-          <p>Working backward from the descent, the object's earlier orbit does not extrapolate cleanly to any launch window in the last six weeks. That leaves two possibilities that space-surveillance people are willing to say out loud: either it was launched by someone who did not want it seen and it went unnoticed for some period, or it arrived from outside Earth orbit and inserted itself — which is a very different sentence, and one that no official would put their name to on Wednesday morning.</p>
-
-          <div class="pullbox">
-            <h5>What we know, what we don't</h5>
-            <p><b>Known:</b> An object approximately 55–70 feet across entered the water 4.1 nautical miles off Myrtle Beach at 3:07 a.m. It descended from a low Earth orbit at roughly 210 miles. It is intact, floating and emitting light on an irregular cycle. Federal agencies have closed the airspace and the water around it.</p>
-            <p><b>Not known:</b> What it is, who built it, how long it was in orbit, how it got into orbit, whether anything aboard is alive, and whether the light is a signal, a byproduct or an accident.</p>
-          </div>
-
-          <h3>On the beach</h3>
-
-          <p>The first calls to Horry County dispatch came in at 3:04 a.m., three minutes before the water. Callers described a light "like a welding arc" moving south to north, slower than a meteor and without the sound that usually follows one.</p>
-
-          <p>Delia Karounos, 62, was walking her dog on the beach near 29th Avenue North when she saw it. "I've lived here forty years and I've watched the rockets go up from the Cape and come down again," she said. "That's a rocket. It roars, it's over, it's gone. This one took its time. It went out over the water and it stopped. Things do not stop."</p>
-
-          <p>Nolan Vestrick, a charter captain who had just cast off from the marina at Little River, said he was inside the exclusion zone when it was established. "The water lit up under the boat before I saw anything on the surface," he said. "Green, then orange. My depth sounder went to garbage for about a minute — just noise. Then it came back and there it was, two hundred yards off my starboard, half under."</p>
-
-          <p>The Coast Guard ordered him out at 3:40 a.m. He said cutters were already on station when he turned for shore, which would put them on the water before the object came down.</p>
-
-          <div class="gallery">
-            <figure>
-              <div class="frame">
-                <!-- CUTTER AT DAWN -->
-                <svg viewBox="0 0 800 560" role="img" aria-label="A Coast Guard cutter at dawn with floodlights aimed at the water.">
-                  <defs>
-                    <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stop-color="#243347"/><stop offset=".5" stop-color="#4d5f72"/>
-                      <stop offset=".78" stop-color="#8b95a0"/><stop offset="1" stop-color="#bdb9ae"/>
-                    </linearGradient>
-                    <linearGradient id="dawnsea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stop-color="#68798b"/><stop offset=".4" stop-color="#455768"/>
-                      <stop offset="1" stop-color="#1f2c39"/>
-                    </linearGradient>
-                    <radialGradient id="dvig" cx="50%" cy="46%" r="72%">
-                      <stop offset=".45" stop-color="#000" stop-opacity="0"/>
-                      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
-                    </radialGradient>
-                    <filter id="g2" x="0" y="0" width="100%" height="100%">
-                      <feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="4" seed="3"/>
-                      <feColorMatrix type="saturate" values="0"/>
-                    </filter>
-                    <filter id="chop2" x="-5%" y="-5%" width="110%" height="110%">
-                      <feTurbulence type="fractalNoise" baseFrequency=".01 .07" numOctaves="3" seed="9" result="t"/>
-                      <feDisplacementMap in="SourceGraphic" in2="t" scale="14" xChannelSelector="R" yChannelSelector="G"/>
-                      <feGaussianBlur stdDeviation=".5"/>
-                    </filter>
-                    <filter id="b2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>
-                    <filter id="b3" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
-                    <clipPath id="sc2"><rect y="300" width="800" height="260"/></clipPath>
-                  </defs>
-
-                  <rect width="800" height="560" fill="url(#dawn)"/>
-                  <!-- stratus over the horizon -->
-                  <ellipse cx="200" cy="150" rx="250" ry="30" fill="#8d9aa8" opacity=".32" filter="url(#b2)"/>
-                  <ellipse cx="640" cy="104" rx="220" ry="24" fill="#aab5c0" opacity=".26" filter="url(#b2)"/>
-                  <ellipse cx="430" cy="238" rx="330" ry="26" fill="#c3c8cc" opacity=".22" filter="url(#b2)"/>
-
-                  <rect y="300" width="800" height="260" fill="url(#dawnsea)"/>
-                  <line x1="0" y1="300" x2="800" y2="300" stroke="#a6b0ba" stroke-width="1" opacity=".55"/>
-                  <rect y="276" width="800" height="46" fill="#c9ced3" opacity=".16" filter="url(#b2)"/>
-
-                  <g clip-path="url(#sc2)">
-                    <g filter="url(#chop2)" stroke="#c2d2df" fill="none">
-                      <g opacity=".13" stroke-width="1">
-                        <path d="M-20 312h840"/><path d="M-20 322h840"/><path d="M-20 334h840"/><path d="M-20 348h840"/>
-                      </g>
-                      <g opacity=".15" stroke-width="1.5">
-                        <path d="M-20 366h840"/><path d="M-20 388h840"/><path d="M-20 414h840"/><path d="M-20 444h840"/>
-                      </g>
-                      <g opacity=".17" stroke-width="2.4">
-                        <path d="M-20 478h840"/><path d="M-20 516h840"/><path d="M-20 552h840"/>
-                      </g>
-                    </g>
-                  </g>
-
-                  <!-- floodlight cones -->
-                  <g filter="url(#b2)">
-                    <path d="M470 232 L296 336 L474 344 Z" fill="#fffbe9" opacity=".28"/>
-                    <path d="M486 236 L338 356 L502 362 Z" fill="#fffbe9" opacity=".20"/>
-                  </g>
-
-                  <!-- cutter -->
-                  <g filter="url(#b3)">
-                    <path d="M420 300 L700 300 L676 336 L444 336 Z" fill="#dedbd3"/>
-                    <path d="M420 300 L700 300 L698 306 L422 306 Z" fill="#f3f1eb" opacity=".8"/>
-                    <path d="M444 336 L676 336 L664 349 L456 349 Z" fill="#141d27"/>
-                    <rect x="470" y="264" width="120" height="36" fill="#d3d0c8"/>
-                    <rect x="470" y="264" width="120" height="5" fill="#eae7e0"/>
-                    <rect x="500" y="240" width="66" height="26" fill="#e3e0da"/>
-                    <rect x="506" y="246" width="52" height="12" fill="#2f3d4d"/>
-                    <rect x="530" y="204" width="5" height="38" fill="#bfbcb5"/>
-                    <path d="M535 206 h32 v9 h-32z" fill="#c4382c"/>
-                    <path d="M600 300 L648 300 L624 336 L576 336 Z" fill="#c4382c"/>
-                    <path d="M652 300 L666 300 L642 336 L628 336 Z" fill="#12263f"/>
-                    <rect x="452" y="290" width="18" height="10" fill="#c9c6be"/>
-                    <circle cx="470" cy="232" r="3.4" fill="#fffdf2"/><circle cx="486" cy="236" r="3" fill="#fffdf2"/>
-                    <circle cx="596" cy="210" r="2.6" fill="#ff5f4f"/>
-                  </g>
-                  <g filter="url(#b2)" opacity=".5">
-                    <circle cx="470" cy="232" r="9" fill="#fffdf2"/><circle cx="486" cy="236" r="8" fill="#fffdf2"/>
-                  </g>
-
-                  <!-- rigid-hull inflatable running the line -->
-                  <g filter="url(#b3)">
-                    <path d="M182 342 h94 l-13 15 h-70z" fill="#101d2b"/>
-                    <rect x="208" y="329" width="28" height="13" fill="#26374b"/>
-                    <circle cx="197" cy="325" r="2.6" fill="#ffe9b8"/>
-                  </g>
-
-                  <!-- wake -->
-                  <g clip-path="url(#sc2)" filter="url(#chop2)" stroke="#e6edf3" fill="none">
-                    <path d="M436 358 h250" stroke-width="3" opacity=".24"/>
-                    <path d="M404 384 h316" stroke-width="2.4" opacity=".18"/>
-                    <path d="M366 420 h392" stroke-width="2" opacity=".14"/>
-                    <path d="M170 366 h130" stroke-width="2" opacity=".16"/>
-                  </g>
-
-                  <rect width="800" height="560" fill="url(#dvig)"/>
-                  <rect width="800" height="560" filter="url(#g2)" opacity=".13" style="mix-blend-mode:overlay"/>
-                </svg>
-              </div>
-              <figcaption><b>A Coast Guard cutter holds station at first light</b> along the southern edge of the exclusion zone. Two more cutters and a buoy tender were on scene by 6 a.m. <span class="credit">Tidewater Signal</span></figcaption>
-            </figure>
-
-            <figure>
-              <div class="frame">
-                <!-- PHONE STILL: streak over beach houses -->
-                <svg viewBox="0 0 800 560" role="img" aria-label="A blurry phone photo of a bright streak crossing the night sky above beachfront rooftops.">
-                  <defs>
-                    <linearGradient id="nsky" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stop-color="#070a12"/><stop offset="1" stop-color="#1b2334"/>
-                    </linearGradient>
-                    <filter id="g3"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="4" seed="11"/>
-                      <feColorMatrix type="saturate" values="0"/></filter>
-                    <filter id="bloom"><feGaussianBlur stdDeviation="14"/></filter>
-                    <filter id="bloom2"><feGaussianBlur stdDeviation="4"/></filter>
-                  </defs>
-                  <rect width="800" height="560" fill="url(#nsky)"/>
-                  <g fill="#c9d6e8" opacity=".5">
-                    <circle cx="120" cy="70" r="1.4"/><circle cx="330" cy="40" r="1"/><circle cx="600" cy="90" r="1.2"/>
-                    <circle cx="740" cy="50" r="1"/><circle cx="470" cy="130" r="1"/>
-                  </g>
-                  <!-- streak -->
-                  <g filter="url(#bloom)" opacity=".85">
-                    <path d="M60 40 C260 130 440 210 700 250" stroke="#ffe9bd" stroke-width="26" fill="none" opacity=".55"/>
-                  </g>
-                  <g filter="url(#bloom2)">
-                    <path d="M60 40 C260 130 440 210 700 250" stroke="#fffdf4" stroke-width="6" fill="none"/>
-                    <circle cx="700" cy="250" r="16" fill="#fff"/>
-                    <circle cx="700" cy="250" r="34" fill="#ffd68d" opacity=".45"/>
-                  </g>
-                  <!-- rooftops -->
-                  <g fill="#080c14">
-                    <rect y="380" width="800" height="180"/>
-                    <path d="M40 380 v-70 h130 v70z"/><path d="M30 312 l75-42 75 42z"/>
-                    <path d="M210 380 v-96 h150 v96z"/><path d="M200 286 l85-46 85 46z"/>
-                    <path d="M400 380 v-60 h120 v60z"/>
-                    <path d="M560 380 v-104 h180 v104z"/><path d="M550 278 l100-50 100 50z"/>
-                    <rect x="742" y="300" width="58" height="80"/>
-                  </g>
-                  <g fill="#ffcf7a" opacity=".9">
-                    <rect x="66" y="330" width="16" height="20"/><rect x="126" y="330" width="16" height="20" opacity=".5"/>
-                    <rect x="240" y="312" width="18" height="22" opacity=".7"/><rect x="316" y="312" width="18" height="22"/>
-                    <rect x="596" y="304" width="20" height="24" opacity=".6"/><rect x="686" y="304" width="20" height="24"/>
-                  </g>
-                  <!-- palm silhouette -->
-                  <g stroke="#05080e" stroke-width="7" fill="none" stroke-linecap="round">
-                    <path d="M108 560 C104 490 100 450 96 418"/>
-                  </g>
-                  <g fill="#05080e">
-                    <path d="M96 418 c-34 -8 -56 4 -70 22 24 -8 48 -8 70 -6z"/>
-                    <path d="M96 418 c34 -10 58 0 74 18 -26 -8 -50 -10 -74 -6z"/>
-                    <path d="M96 418 c-14 -28 -8 -50 6 -66 2 24 4 44 -2 66z"/>
-                  </g>
-                  <!-- ui overlay -->
-                  <g font-family="Inter,sans-serif" fill="#fff" opacity=".85">
-                    <rect x="20" y="500" width="196" height="30" fill="#000" opacity=".45"/>
-                    <text x="32" y="520" font-size="15" letter-spacing="1">03:04:51  ·  0.5×  ·  LIVE</text>
-                  </g>
-                  <rect width="800" height="560" filter="url(#g3)" opacity=".3" style="mix-blend-mode:overlay"/>
-                </svg>
-              </div>
-              <figcaption><b>A frame pulled from a resident's phone video</b> taken from a balcony near 29th Avenue North at 3:04 a.m. The object crossed roughly 60 degrees of sky in eleven seconds without an audible sonic boom. <span class="credit">Handout · Verified by Tidewater Signal</span></figcaption>
-            </figure>
-          </div>
-
-          <h3>The trajectory</h3>
-
-          <p>The Signal reconstructed the descent from radar returns and two independent amateur-satellite observers in Georgia and Virginia who recorded the object on its final two passes. The reconstruction is approximate, but the shape of it is not in question: a stable orbit, a controlled-looking drop, and a terminal deceleration that a ballistic object cannot perform.</p>
-
-          <figure>
-            <div class="frame" style="background:#0b1018">
-              <!-- TRAJECTORY DIAGRAM -->
-              <svg viewBox="0 0 1600 720" role="img" aria-label="Diagram showing a stable orbit at 210 miles, a descending path, and the splashdown point off Myrtle Beach.">
-                <defs>
-                  <linearGradient id="earthg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#1c4f7a"/><stop offset="1" stop-color="#0c2036"/>
-                  </linearGradient>
-                  <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0" stop-color="#57c7ff" stop-opacity="0"/>
-                    <stop offset=".25" stop-color="#57c7ff" stop-opacity=".8"/>
-                    <stop offset="1" stop-color="#ffb454" stop-opacity="1"/>
-                  </linearGradient>
-                </defs>
-                <rect width="1600" height="720" fill="#0b1018"/>
-                <g stroke="#1b2735" stroke-width="1">
-                  <path d="M0 120h1600M0 240h1600M0 360h1600M0 480h1600M0 600h1600"/>
-                  <path d="M200 0v720M500 0v720M800 0v720M1100 0v720M1400 0v720"/>
-                </g>
-
-                <!-- earth limb -->
-                <path d="M-200 900 A1250 1250 0 0 1 1800 900 Z" fill="url(#earthg)"/>
-                <path d="M-200 900 A1250 1250 0 0 1 1800 900" fill="none" stroke="#5fd0ff" stroke-width="3" opacity=".8"/>
-                <path d="M-200 916 A1250 1250 0 0 1 1800 916" fill="none" stroke="#5fd0ff" stroke-width="26" opacity=".10"/>
-
-                <!-- orbit line -->
-                <path d="M60 172 C420 118 1120 132 1540 214" fill="none" stroke="#57c7ff" stroke-width="2.4" stroke-dasharray="10 8" opacity=".65"/>
-                <!-- descent -->
-                <path d="M700 140 C980 190 1180 330 1288 596" fill="none" stroke="url(#fade)" stroke-width="4.5"/>
-                <!-- deceleration marks -->
-                <g stroke="#5b6b7d" stroke-width="1.2" stroke-dasharray="4 5" fill="none">
-                  <path d="M980 322 H1108"/>
-                  <path d="M1030 486 H1198"/>
-                  <path d="M1195 648 H1276 V612"/>
-                </g>
-                <g fill="#ffb454">
-                  <circle cx="1000" cy="228" r="4"/><circle cx="1120" cy="322" r="4"/>
-                  <circle cx="1210" cy="440" r="4"/><circle cx="1262" cy="530" r="4"/>
-                </g>
-                <circle cx="1288" cy="596" r="10" fill="#ff6b4a"/>
-                <circle cx="1288" cy="596" r="22" fill="#ff6b4a" opacity=".25"/>
-
-                <g font-family="Inter,sans-serif" fill="#cfe0f0">
-                  <text x="70" y="92" font-size="21" fill="#57c7ff" font-weight="600">STABLE ORBIT · ~210 mi · 4+ observed passes</text>
-                  <text x="70" y="120" font-size="17" opacity=".6">First logged 11:52 p.m. Aug. 18 as an uncorrelated target</text>
-
-                  <text x="600" y="330" font-size="19" font-weight="600" fill="#ffd9a3">DESCENT BEGINS 1:38 a.m.</text>
-                  <text x="600" y="358" font-size="16" opacity=".62">Shallow, non-ballistic profile</text>
-
-                  <text x="690" y="492" font-size="19" font-weight="600" fill="#ffb454">TERMINAL DECELERATION</text>
-                  <text x="690" y="520" font-size="16" opacity=".62">Est. 17,000 mph → under 200 mph</text>
-
-                  <text x="830" y="654" font-size="21" font-weight="700" fill="#ff8f6b">SPLASHDOWN 3:07 a.m.</text>
-                  <text x="830" y="682" font-size="16" opacity=".62">33.69°N, 78.80°W — 4.1 nmi ESE of Myrtle Beach</text>
-
-                  <text x="70" y="676" font-size="14" opacity=".45">Reconstruction: Tidewater Signal, from radar returns and independent optical observations. Not to scale.</text>
-                </g>
-              </svg>
-            </div>
-            <figcaption><b>The reconstructed path.</b> The object held a circular orbit for at least six hours before beginning a shallow descent at 1:38 a.m. and slowing sharply in the final ninety seconds. <span class="credit">Graphic by Tidewater Signal</span></figcaption>
-          </figure>
-
-          <p>Dr. Priya Anand, an orbital-dynamics researcher at a Southeastern university who reviewed the Signal's reconstruction, cautioned that amateur observations carry wide error bars. She would not endorse the deceleration figure. But she said the descent profile itself was, in her word, "wrong."</p>
-
-          <blockquote>
-            Things that fall out of orbit fall on a curve you can write down in one line. This did not follow that curve. Either the observations are bad, or the object was doing something.
-            <cite>— Dr. Priya Anand, orbital dynamics</cite>
-          </blockquote>
-
-          <h3>The response</h3>
-
-          <p>By 4:15 a.m. the Federal Aviation Administration had issued a temporary flight restriction covering a ten-nautical-mile radius from the surface to 18,000 feet. The Coast Guard's exclusion zone went to two nautical miles at 5:30 a.m. Horry County closed beach access from 21st Avenue North to 38th Avenue North "pending a federal operation," a phrase the county could not expand on when asked.</p>
-
-          <p>A Coast Guard spokesperson confirmed the exclusion zone and the presence of three cutters and referred all questions about the object to "federal partners," which she declined to name. The FAA confirmed the flight restriction and said its origin was "an interagency request." The Department of Defense did not respond to four messages. NASA said the object is not theirs and that they have no launches in that inclination.</p>
-
-          <p>A salvage-capable vessel left Charleston at 6:20 a.m. on a heading that would put it on scene before noon, according to public vessel-tracking data reviewed by the Signal.</p>
-
-          <h3>Fighters overhead</h3>
-
-          <p>The most visible part of the response has been in the air. Two fighters from a South Carolina Air National Guard base were over the site at 3:19 a.m. — twelve minutes after the object hit the water — and a two-ship has held a continuous orbit above it ever since. The second pass, at 3:30 a.m., was low enough that people on the boardwalk heard it before they saw it.</p>
-
-          <p>It has grown from there. A maritime patrol aircraft has been flying a search pattern out to twenty miles since just after 5 a.m. A helicopter carrying radiological and chemical survey gear made a series of runs over the object and reported readings "nothing above background," according to a Northern Command spokesperson, Maj. Elise Trant. An Arleigh Burke-class destroyer took station on the eastern edge of the exclusion zone at 9:52 a.m., with an explosive ordnance disposal dive team staged aboard.</p>
-
-          <p>At 6 a.m., U.S. Northern Command assumed lead of the response from the Coast Guard. Officials have described every piece of it the same way — precautionary — and note that the standard playbook for any spacecraft that comes down intact assumes pressurized tanks, propellant or a power source until a survey team says otherwise. What they will not say is whether they are accounting for anything beyond that.</p>
-
-          <blockquote>
-            Nobody is going to shoot at it. That is not what this is. We put airplanes over an unidentified object in American water because that is the job, and because until somebody can tell me what it is, the safe assumption is that I don't know.
-            <cite>— Maj. Elise Trant, U.S. Northern Command</cite>
-          </blockquote>
-
-          <p>From the sand, the operation reads as two dark shapes coming around again every eleven minutes or so, a line of gray hulls, and a crowd several hundred deep at the fence line watching both.</p>
-
-          <div class="contbox">
-            <b>Partner coverage</b>
-            Meridian News Network is reporting the military side of the response in detail — the count of overflights, the aerial refuellings keeping the fighter orbit unbroken, and the rescue crews on alert: <a href="mnn-fighters-standby.html">Fighter jets standing by off the South Carolina coast as military aircraft run repeated passes over the object</a>.
-          </div>
-
-          <p>Nothing has been recovered. Nothing has been named. At 8:40 a.m., from the boardwalk, the exclusion zone was a line of gray hulls on a flat sea, and past them a shape in the water that the light kept finding and losing.</p>
-
-          <p style="color:var(--ink-faint); font-size:15px; border-top:1px solid var(--rule); padding-top:18px; margin-top:34px">
-            <em>This is a developing story and will be updated. Marisol Reyes reported from Myrtle Beach and Dean Ottaway from Columbia. Reporting contributed by the Signal's Charleston bureau.</em>
-          </p>
-
-        </div>
-
-        <aside>
-          <div class="card">
-            <h4>Live timeline</h4>
-            <div class="in">
-              <ul class="tl">
-                <li><time>11:52 P.M. TUE</time><span>Object logged in low Earth orbit as an uncorrelated target.</span></li>
-                <li><time>1:38 A.M.</time><span>Descent begins. Track elevated by tracking center.</span></li>
-                <li><time>3:04 A.M.</time><span>First 911 calls from the Grand Strand. Phone video captured.</span></li>
-                <li class="hot"><time>3:07 A.M.</time><span>Object enters the water 4.1 nmi ESE of the 14th Ave. Pier. Does not sink.</span></li>
-                <li><time>3:19 A.M.</time><span>Two fighters over the site, twelve minutes after splashdown.</span></li>
-                <li><time>3:31 A.M.</time><span>Coast Guard establishes a half-mile exclusion zone.</span></li>
-                <li><time>4:15 A.M.</time><span>FAA issues a 10-nmi temporary flight restriction to 18,000 ft.</span></li>
-                <li><time>5:30 A.M.</time><span>Exclusion zone extended to two nautical miles.</span></li>
-                <li><time>6:00 A.M.</time><span>Northern Command assumes lead of the response.</span></li>
-                <li><time>6:20 A.M.</time><span>Salvage-capable vessel departs Charleston.</span></li>
-                <li><time>9:52 A.M.</time><span>Destroyer takes station with an EOD dive team aboard.</span></li>
-                <li class="hot"><time>8:47 A.M.</time><span>Object still floating and still lit. No agency has claimed it.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="card">
-            <h4>At a glance</h4>
-            <div class="in">
-              <ul class="facts">
-                <li><em>Impact point</em><b>33.69°N, 78.80°W</b></li>
-                <li><em>Distance from shore</em><b>4.1 nautical miles</b></li>
-                <li><em>Est. width</em><b>55–70 feet</b></li>
-                <li><em>Orbit altitude</em><b>~210 miles</b></li>
-                <li><em>Catalog match</em><b>None</b></li>
-                <li><em>Claimed by</em><b>No one</b></li>
-                <li><em>Lead agency</em><b>NORTHCOM, 6 a.m.</b></li>
-                <li><em>Exclusion zone</em><b>2 nmi · active</b></li>
-                <li><em>Airspace</em><b>Closed to 18,000 ft</b></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="card">
-            <h4>More coverage</h4>
-            <div class="in">
-              <ul class="related">
-                <li><a href="mnn-fighters-standby.html">Fighter jets standing by as military aircraft run repeated passes over the object</a><small>Meridian News Network · Partner</small></li>
-                <li><a href="mbc-grand-strand.html">A closed beach in the busiest week of the year: the Grand Strand is living underneath this</a><small>MBC 12 · Partner</small></li>
-                <li><a href="#">Beach access closed from 21st to 38th Avenue North as federal vessels arrive</a><small>Grand Strand · 1h ago</small></li>
-                <li><a href="#">'It stopped': four people who watched it come down</a><small>Grand Strand · 2h ago</small></li>
-                <li><a href="#">How 40,000 objects in orbit get counted — and what it means when one isn't</a><small>Explainer · 3h ago</small></li>
-                <li><a href="#">Charter captains stuck at the dock as the exclusion zone holds</a><small>Business · 40m ago</small></li>
-                <li><a href="#">Hotels report cancellations, and a wave of new bookings</a><small>Business · 25m ago</small></li>
-              </ul>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </article>
+  <div class="ticker" aria-hidden="true">
+    <div class="tag">BREAKING</div>
+    <div class="rail"><div class="run" id="run"></div></div>
   </div>
+
+  <main id="app" tabindex="-1"></main>
 
   <footer class="site">
     <div class="wrap">
       <div><b>Tidewater Signal</b>Coastal Bureau · Myrtle Beach<br>Newsroom desk · Charleston<br>Columbia statehouse desk</div>
-      <div><b>Sections</b>Breaking · Grand Strand<br>State · Nation · Weather<br>Business · Sports · Opinion</div>
-      <div><b>The Signal</b>About us · Standards<br>Corrections · Ethics policy<br>Contact the newsroom</div>
-      <div><b>Follow</b>Newsletters<br>Storm alerts<br>Print delivery</div>
+      <div><b>Coverage</b><a href="#/live">Live updates</a><br><a href="#/timeline">Timeline</a><br><a href="#/faq">What we know</a></div>
+      <div><b>Sections</b><a href="#/s/grand-strand">Grand Strand</a><br><a href="#/s/nation">Nation</a><br><a href="#/s/business">Business</a></div>
+      <div><b>The Signal</b>Standards · Ethics<br>Corrections<br>Contact the newsroom</div>
     </div>
     <div class="wrap"><div class="disc">
-      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — Tidewater Signal does not exist. This page is an invented news story created as a writing and design exercise. Every person, quote, agency statement, coordinate and photograph on it is fabricated. Nothing here describes a real event.
+      <b style="display:inline;color:#ffd66b;letter-spacing:.12em">FICTION</b> — Tidewater Signal does not exist. Every article, person, quote, agency statement, coordinate, figure and update on this site is fabricated. Nothing here describes a real event, and no closure, flight restriction or emergency described here is real.
     </div></div>
   </footer>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================ CONTENT ============================ */
+
+const SECTIONS = [
+  {id:'home',         name:'Top Stories', href:'#/'},
+  {id:'grand-strand', name:'Grand Strand',href:'#/s/grand-strand'},
+  {id:'nation',       name:'Nation',      href:'#/s/nation'},
+  {id:'business',     name:'Business',    href:'#/s/business'},
+  {id:'explainer',    name:'Explainers',  href:'#/s/explainer'},
+  {id:'live',         name:'Live Updates',href:'#/live'},
+  {id:'timeline',     name:'Timeline',    href:'#/timeline'},
+  {id:'faq',          name:'What We Know',href:'#/faq'}
+];
+
+const P = (x) => ({t:'p', x});
+const H = (x) => ({t:'h', x});
+const Q = (x, c) => ({t:'q', x, c});
+
+const ARTICLES = [
+{
+  id:'craft-down', section:'grand-strand', kicker:'Breaking', lead:true, read:7,
+  title:'Unidentified craft comes down in the Atlantic four miles off Myrtle Beach',
+  deck:'Radar tracked the object on a descending path out of low Earth orbit before it entered the water shortly after 3 a.m. Officials say it matches nothing in the public catalog of satellites, spent boosters or debris — and no country has claimed it.',
+  by:'Marisol Reyes and Dean Ottaway', desk:'Coastal Bureau',
+  pub:'Aug. 19, 2026, 5:12 a.m. ET', upd:'8:47 a.m. ET',
+  tags:['object','orbit','coast guard'],
+  body:[
+    P('MYRTLE BEACH, S.C. — Something came down out of the sky over the Grand Strand early Wednesday morning, and more than five hours later nobody in a position to know would say what it was.'),
+    P('The object entered the Atlantic roughly four nautical miles east-southeast of the 14th Avenue Pier at 3:07 a.m., according to two people briefed on the tracking data who spoke on condition of anonymity because they were not authorized to discuss it. It did not sink. As of 8:30 a.m. it was still there, sitting low and mostly submerged, ringed by three Coast Guard cutters and a two-mile exclusion zone that Sector Charleston extended twice before sunrise.'),
+    P('What has federal agencies moving quickly is not the splashdown itself — the ocean off the Carolinas catches falling hardware a few times a year — but the path it took getting here.'),
+    P('Radar returns reviewed by the Signal show the object in a stable, roughly circular orbit about 210 miles up for at least four passes before it began to descend. Then, over the course of a single 90-minute orbit, it dropped. The descent was smooth and shallow, and it slowed at the end.'),
+    Q('It came out of orbit. That part is not in dispute and it is not interesting. What is interesting is that it was in orbit at all, and we cannot tell you when it got there.','A senior official at a U.S. space-tracking facility'),
+    H('Where it came from'),
+    P('Every object larger than about four inches in Earth orbit is supposed to be in a catalog. There are more than 40,000 of them: working satellites, dead satellites, spent upper stages, bolts, paint flecks, a lost tool bag. Each is tracked, numbered and matched to a launch. Objects do not simply appear in the catalog.'),
+    P('This one is not in it. Three current and former tracking officials confirmed that no entry matches its orbit, and none could point to a launch it could plausibly have come from.'),
+    P('The object was first noted at 11:52 p.m. Tuesday, already in orbit, on a track crossing the eastern seaboard northwest to southeast. Analysts logged it as an uncorrelated target — routine, usually resolved within a day. It was not resolved.'),
+    {t:'box', h:'What we know, what we don’t', p:[
+      '<b>Known:</b> An object approximately 55–70 feet across entered the water 4.1 nautical miles off Myrtle Beach at 3:07 a.m. It descended from a low Earth orbit at roughly 210 miles. It is intact, floating and emitting light on an irregular cycle.',
+      '<b>Not known:</b> What it is, who built it, how long it was in orbit, how it got into orbit, whether anything aboard is alive, and whether the light is a signal, a byproduct or an accident.'
+    ]},
+    H('On the beach'),
+    P('The first calls to Horry County dispatch came in at 3:04 a.m., three minutes before the water. Callers described a light "like a welding arc" moving south to north, slower than a meteor and without the sound that usually follows one.'),
+    P('Delia Karounos, 62, was walking her dog near 29th Avenue North. "I’ve lived here forty years and I’ve watched the rockets go up from the Cape and come down again," she said. "That’s a rocket. It roars, it’s over, it’s gone. This one took its time. It went out over the water and it stopped. Things do not stop."'),
+    P('Nolan Vestrick, a charter captain who had just cast off from Little River, said he was inside the exclusion zone when it was established. "The water lit up under the boat before I saw anything on the surface," he said. "Green, then orange. My depth sounder went to garbage for about a minute. Then it came back and there it was, two hundred yards off my starboard, half under."'),
+    H('The response'),
+    P('By 4:15 a.m. the FAA had issued a temporary flight restriction covering ten nautical miles from the surface to 18,000 feet. The Coast Guard’s exclusion zone went to two nautical miles at 5:30. Horry County closed beach access from 21st Avenue North to 38th "pending a federal operation," a phrase the county could not expand on.'),
+    P('A Coast Guard spokesperson confirmed the zone and the three cutters and referred all questions about the object to "federal partners," whom she declined to name. The FAA confirmed the restriction and said its origin was "an interagency request." The Department of Defense did not respond to four messages. NASA said the object is not theirs and that they have no launches in that inclination.'),
+    P('Nothing has been recovered. Nothing has been named. At 8:40 a.m., from the boardwalk, the exclusion zone was a line of gray hulls on a flat sea, and past them a shape in the water that the light kept finding and losing.')
+  ],
+  stats:[['4.1 nmi','Distance from shore'],['3:07 a.m.','Time of splashdown'],['~210 mi','Orbit altitude'],['0','Agencies claiming it']]
+},
+{
+  id:'fighters-standby', section:'nation', kicker:'Nation', read:6,
+  title:'Fighters, a destroyer and a ten-mile no-fly ring: the military takes the lead',
+  deck:'Two fighters were over the site within twelve minutes of the splashdown. Officials describe the posture as precautionary — the jets are up to observe and to be close enough to help, not to intercept.',
+  by:'Curtis Vandermeer and Marisol Reyes', desk:'Defense & Coastal Bureaus',
+  pub:'Aug. 19, 2026, 9:05 a.m. ET', upd:'12:06 p.m. ET',
+  tags:['military','fighters','flyovers','northcom'],
+  body:[
+    P('Twelve minutes after the object hit the water, two fighters were on top of it.'),
+    P('They came from the west out of a South Carolina Air National Guard base, already airborne on an unrelated night training sortie when the tasking came, according to a Northern Command spokesperson, Maj. Elise Trant. The first pass was at 3:19 a.m., high and fast. The second, eleven minutes later, was low enough that people on the boardwalk heard it before they saw it.'),
+    P('What the pilots reported has not been released. What has been released is the shape of the response since, and it has only grown: a continuous fighter orbit over the site, a maritime patrol aircraft flying a search pattern out to twenty miles, a helicopter carrying radiological and chemical survey equipment, an Arleigh Burke-class destroyer that arrived shortly before 10 a.m., and an explosive ordnance disposal dive team staged aboard it.'),
+    P('At 6 a.m., U.S. Northern Command assumed lead of the response from the Coast Guard. The Coast Guard still owns the water. The military owns the question.'),
+    Q('Nobody is going to shoot at it. That is not what this is. We put airplanes over an unidentified object in American water because that is the job, and because until somebody can tell me what it is, the safe assumption is that I don’t know.','Maj. Elise Trant, U.S. Northern Command'),
+    H('What the fighters are actually doing'),
+    P('Very little, deliberately. Three defense officials described the fighter orbit the same way: eyes, and a clock.'),
+    P('The aircraft are flying a racetrack pattern northeast of the site at what one official called "a comfortable altitude" — high enough that a surprise from below would not put them inside it. Their job is to watch the object, to keep civil aircraft out of a closed piece of sky, and to be able to react in minutes rather than in the forty it would take to launch from a cold start.'),
+    P('They are not, officials stressed repeatedly, an attack posture. Under standing rules, an intercept requires a hostile act or demonstrated hostile intent, and the object has done neither. It has floated. It has glowed on a cycle. It has not moved, transmitted on any monitored band, or responded to anything directed at it — including a series of directed light signals attempted from a cutter around 5 a.m.'),
+    {t:'box', h:'Why close the airspace at all?', p:[
+      '<b>Debris and fuel.</b> Anything that comes out of orbit intact may still carry pressurized tanks, hypergolic propellant or a power source. Standard practice around a downed spacecraft is a wide keep-out radius until a survey team clears it.',
+      '<b>Air traffic.</b> A ten-mile ring to 18,000 feet keeps sightseers, news helicopters and drones clear of the aircraft actually working the site. Two civilian drones were recovered from the beach by 8 a.m.',
+      '<b>The unknown part.</b> Officials would not describe what other hazard they are accounting for, other than to say the survey helicopter’s readings were "nothing above background."'
+    ]},
+    H('Standing by, and what that means'),
+    P('"Standing by" is not a figure of speech here. Aircraft on station overhead are the fastest possible response to anything that happens below them, and the reasons they might be needed are mostly mundane: a recreational boat that pushes the line and swamps, a drone operator whose aircraft goes into the water near a cutter, a crewman hurt on a small boat working the perimeter.'),
+    P('A fighter cannot pull anyone out of the water. It can find them in seconds, mark the position, and hold overhead until a helicopter arrives. That helicopter is also standing by: a rescue crew with swimmers has been on alert at a coastal air station since 4 a.m., and a second aircrew went to alert status at 9. Neither has launched.'),
+    P('The less mundane version is the one nobody will discuss in specifics. Pressed on what else the fighters would be reacting to, Trant said only that "an unidentified object is unidentified in every direction."'),
+    H('The limits of the safety framing'),
+    P('Every official who spoke Wednesday returned to the same word: precautionary. The exclusion zone is precautionary. The flight restriction is precautionary. The destroyer is precautionary.'),
+    P('Asked directly whether the military considers the object a potential threat, Trant said she would not characterize it, and then added a sentence the Signal has confirmed with a second official: the response is being run under a contingency framework normally used for a foreign object recovered on American soil.'),
+    P('Asked the simplest version of the question — is the public in danger — a senior officer said: "Right now, from that object, we have no indication that anybody is. That is a real answer and it is not a promise. It’s why the airplanes are up."')
+  ],
+  stats:[['14+','Passes over the site'],['9 hrs','Unbroken fighter orbit'],['10 nmi','Closed airspace'],['0','Engagement authority sought']]
+},
+{
+  id:'closed-beach', section:'grand-strand', kicker:'Grand Strand', read:6,
+  title:'A closed beach in the busiest week of the year',
+  deck:'Fourteen blocks of sand are off limits, the charter fleet is tied to the dock, and City Hall says federal agencies have told it almost nothing. Every twenty minutes or so, everybody on the Strand looks up.',
+  by:'Dara Whitlock and Cam Rutherford', desk:'Coastal Bureau',
+  pub:'Aug. 19, 2026, 12:15 p.m. ET', upd:'1:04 p.m. ET',
+  tags:['closure','business','community','flyovers'],
+  body:[
+    P('Whatever is sitting in the water four miles out, the Grand Strand is the place that has to live next to it.'),
+    P('By late Wednesday morning that meant fourteen closed blocks of the most valuable sand in South Carolina, a fishing fleet stuck at the dock on a flat-calm day, a boardwalk packed with people looking at a horizon where there is not much to see, and a city government that has spent nine hours asking federal agencies the same question and getting the same non-answer.'),
+    P('"I have three federal phone numbers and none of them will tell me what my own beach is closed for," said Renny Alcott, a Myrtle Beach city councilman whose district includes the closed stretch. "I’m not asking them to tell me what it is. I’m asking them how long."'),
+    H('Fourteen blocks, in the third week of August'),
+    P('The closure runs from 21st Avenue North to 38th Avenue North — public access points, the hotel walkovers, and the beach itself. Horry County Beach Patrol has staffed every entrance since 5 a.m. The rule they are enforcing came from the county, which got it from the Coast Guard, which has not explained it to them either.'),
+    P('"People are being good about it, mostly," said Marla DeSoto, a beach patrol supervisor working the line at 27th. "But I’ve turned back probably four hundred people this morning and I’ve told every single one of them the same thing, which is that I don’t know. That gets old for them and it gets old for me."'),
+    P('The third week of August is not a small thing to lose here. The stretch inside the closure holds roughly 2,900 hotel rooms, and the businesses on Ocean Boulevard behind it depend on foot traffic that on Wednesday was pointed the wrong way — north toward the barricades instead of down onto the sand.'),
+    H('The sound every twenty minutes'),
+    P('The thing nobody on the Strand can ignore is not visible. It is audible.'),
+    P('Military aircraft have been running passes over the site since 3:19 a.m., and the low ones cross the beachfront on the way in. The Signal counted eleven passes audible from Ocean Boulevard between 6 a.m. and noon. Two of them shook glass.'),
+    Q('I’m a Navy wife for twenty-six years and I know exactly what I’m hearing up there. It doesn’t scare me. What would scare me is if they left.','Jeanette Prue, Socastee'),
+    P('Others put it the other way around. "You don’t put jets over a beach in August because everything’s fine," said Owen Marchetti, who drove down from Conway with his son to stand at the fence at 33rd. "That’s not a criticism. I just don’t think anyone should pretend that’s normal."'),
+    P('The passes have produced a measurable municipal problem too. Horry County’s non-emergency line took more than 600 calls between midnight and noon, and emergency management asked the public twice to stop calling 911 to report aircraft noise or lights.'),
+    {t:'calls'},
+    H('Tied up at the dock'),
+    P('At the marinas, Wednesday was a total loss and everybody knew it by 4 a.m. The exclusion zone sits directly across the run the half-day and full-day boats take out of Little River and Murrells Inlet. Three marinas cancelled every departure.'),
+    P('Captains estimated the lost revenue at $1,800 to $4,000 per boat for a day that was booked solid weeks ago. "Flat seas, no wind, eighty-four degrees, and I’m standing on a dock," said Nolan Vestrick. "I’ve been running this coast for nineteen years and I’ve never once been shut down by anything but weather."'),
+    H('Cancellations, then a rush'),
+    P('Hotels along the closed stretch reported a wave of cancellations that started around 6 a.m. and largely stopped by 9 — and then reversed. Two property managers said that by late morning they were booking more rooms than they had lost, from people driving in specifically because of the story. One reported forty-one new reservations before noon, most for that night.'),
+    P('On Ocean Boulevard, a shop at 26th had shirts in the window by 9:30 reading "I WAS IN MYRTLE BEACH AUGUST 19, 2026." The owner said he printed the first two dozen at 7 a.m. and sold out by 11. The city’s tourism office declined to characterize the net effect, saying it was "not the day for that arithmetic."'),
+    H('What the city can — and can’t — tell you'),
+    P('The most consistent complaint Wednesday was not about the closure. It was about the silence behind it. Myrtle Beach’s emergency manager has been on three interagency calls since 5 a.m. and said the city has received no substantive briefing on what the object is, how long the closure will last, or what would trigger a wider evacuation.'),
+    P('Rumors filled that space quickly. By mid-morning the city was publicly knocking down three of them: there is no order to evacuate, the municipal water supply is unaffected, and the beach south of 21st is open and safe.'),
+    Q('The federal government is doing its job out there and I’m not going to second-guess it. But somebody needs to understand that a closed beach in August is not an abstraction here. It’s payroll.','Renny Alcott, Myrtle Beach city council'),
+    P('The county says it will reassess the closure at 6 p.m. Whether that means it lifts, holds, or grows is — like nearly everything else about Wednesday — not something anyone here has been told.')
+  ],
+  stats:[['14','Blocks of beach closed'],['2,900','Hotel rooms inside it'],['600+','Calls before noon'],['3','Marinas shut down']]
+},
+{
+  id:'trajectory', section:'explainer', kicker:'Explainer', read:5,
+  title:'The trajectory: what the radar reconstruction actually shows',
+  deck:'A stable orbit, a shallow descent, and a terminal deceleration that a falling object cannot perform on its own. Three specialists walk through what is solid and what is not.',
+  by:'Dean Ottaway', desk:'Science Desk',
+  pub:'Aug. 19, 2026, 7:40 a.m. ET', upd:'10:22 a.m. ET',
+  tags:['orbit','radar','science'],
+  body:[
+    P('The Signal reconstructed the object’s descent from radar returns and from two independent amateur-satellite observers, in Georgia and Virginia, who recorded it on its final two passes. The reconstruction is approximate. The shape of it is not in question.'),
+    P('Three things happened in sequence, and it is the third that has specialists arguing.'),
+    H('One: a stable orbit'),
+    P('For at least six hours before it came down, the object held a roughly circular orbit at about 210 miles, crossing the eastern seaboard on a northwest-to-southeast diagonal. That is an ordinary low Earth orbit — the altitude band that holds most imaging satellites and, roughly, the space station.'),
+    P('An orbit is not a hiding place. Objects at that altitude are tracked continuously, and a new one appears in the catalog only when a launch puts it there. This one was logged at 11:52 p.m. Tuesday as an uncorrelated target and never resolved.'),
+    H('Two: a shallow descent'),
+    P('At 1:38 a.m. the object began to lose altitude, gradually, over most of one 90-minute orbit. Debris coming out of orbit generally does not do this. Orbital decay is slow until it is sudden: an object skims the upper atmosphere for weeks or months, then drops in a matter of one or two orbits, steeply and hot.'),
+    P('The Signal’s reconstruction shows a descent both shallower and more even than that profile — closer to a controlled entry than a decay.'),
+    H('Three: it slowed'),
+    P('In the final ninety seconds, the reconstruction shows the object shedding speed sharply — on the order of 17,000 miles per hour down to under 200 before it entered the water. This is the figure specialists will not endorse.'),
+    P('Dr. Priya Anand, an orbital-dynamics researcher at a Southeastern university who reviewed the reconstruction, cautioned that amateur observations carry wide error bars and would not stand behind the deceleration number. She said the descent profile itself was, in her word, "wrong."'),
+    Q('Things that fall out of orbit fall on a curve you can write down in one line. This did not follow that curve. Either the observations are bad, or the object was doing something.','Dr. Priya Anand, orbital dynamics'),
+    P('There is a mundane reading available, and two of the three specialists the Signal spoke to raised it unprompted: a body that is very light for its size — mostly empty volume — sheds velocity in the lower atmosphere far faster than a dense one. A large, hollow, structurally intact object would decelerate hard without anything exotic happening.'),
+    P('That reading requires an object roughly sixty feet across that is mostly air, survived entry intact, and belongs to no one. It resolves the physics. It does not resolve anything else.'),
+    {t:'box', h:'What would settle it', p:[
+      'Radar data from the tracking network itself, which is not public and which no agency has indicated it will release.',
+      'The object’s mass, which can be estimated once anyone gets close enough to measure how it sits in the water.',
+      'A launch record from any government that matches the orbit. As of Wednesday afternoon, none has been offered.'
+    ]}
+  ]
+},
+{
+  id:'catalog', section:'explainer', kicker:'Explainer', read:4,
+  title:'How 40,000 objects in orbit get counted — and what it means when one isn’t',
+  deck:'The catalog is the backbone of everything humans do in space. An entry that does not exist in it is not a mystery in the poetic sense. It is a procedural impossibility.',
+  by:'Dean Ottaway', desk:'Science Desk',
+  pub:'Aug. 19, 2026, 6:30 a.m. ET', upd:'9:15 a.m. ET',
+  tags:['orbit','science','catalog'],
+  body:[
+    P('The reason officials keep saying the same strange sentence — that the object does not match anything in the catalog — takes a minute to explain, and the minute is worth it.'),
+    P('A global network of radars and optical telescopes tracks every object in Earth orbit larger than roughly four inches. There are more than 40,000 of them. Each gets a number, an orbit, and, crucially, a parent: the launch that put it there.'),
+    H('Nothing arrives quietly'),
+    P('Getting to orbit requires roughly 17,500 miles per hour of velocity. Nothing on Earth produces that except a large rocket, and large rockets are visible from a long way off — by infrared satellites built to see exactly that, by radar, and generally by anyone standing within a hundred miles of the pad.'),
+    P('This is why an unexplained catalog entry is such an odd thing. A satellite whose owner will not admit to it is common. A satellite whose launch nobody saw is not.'),
+    H('Uncorrelated targets are routine'),
+    P('Analysts log unidentified returns constantly — "uncorrelated targets," in the jargon. A fragment sheds from an old rocket body; a piece of debris tumbles into a new orbit after a collision. Nearly all are resolved within a day by matching them to a known parent.'),
+    P('The object off Myrtle Beach was logged as an uncorrelated target at 11:52 p.m. Tuesday. It was never resolved, and it began descending less than two hours later.'),
+    H('The three explanations on the table'),
+    P('<b>A launch that went unnoticed.</b> Difficult, but not impossible for a small payload from an unusual site. It does not fit an object this size.'),
+    P('<b>A long-dormant object that maneuvered.</b> Something already in orbit, catalogued as inert debris, that changed its orbit and became "new." This would mean the catalog was wrong about it for some time.'),
+    P('<b>It came from outside Earth orbit.</b> Something that arrived and inserted itself. No official will say this on the record, and every specialist the Signal spoke to noted it is the explanation that requires the most evidence and currently has the least.'),
+    P('All three remain open. What is closed is the comfortable option: that this is an ordinary piece of hardware whose paperwork will turn up. The paperwork has been looked for, by the people whose job that is, for fourteen hours.')
+  ]
+},
+{
+  id:'it-stopped', section:'grand-strand', kicker:'Eyewitness', read:5,
+  title:'‘It stopped’: four people who watched it come down',
+  deck:'They were on a beach, on a balcony, on a boat, and in a parking lot at 3 in the morning. Their accounts differ on color and duration. They agree on the part that is hardest to explain.',
+  by:'Marisol Reyes', desk:'Coastal Bureau',
+  pub:'Aug. 19, 2026, 7:02 a.m. ET', upd:'11:30 a.m. ET',
+  tags:['witnesses','community'],
+  body:[
+    P('The Signal interviewed eleven people who say they saw the object descend. Four gave accounts detailed enough, and consistent enough with the timeline, to publish. They were interviewed separately.'),
+    H('Delia Karounos, 62, on the sand at 29th Avenue North'),
+    P('"The dog stopped before I did. That’s the part I keep thinking about. She just sat down in the wet sand and would not move."'),
+    P('"It came in from the south, and it was white — not orange like a meteor, white like a welding arc, and you couldn’t look right at it. It took its time. I’ve watched rockets from the Cape my whole life. Those roar and they’re gone. This went out over the water and it stopped. Things do not stop."'),
+    H('Priscilla Vance, 58, from a fourteenth-floor balcony at 32nd'),
+    P('"I was up because I’m always up at three. I saw it cross the whole window, left to right, and I had time to put my glasses on and pick up my phone and get eleven seconds of it. Eleven seconds. A shooting star is one."'),
+    P('"There was no boom. That’s what my son keeps asking me about. Something moving like that, low like that — I grew up near an air base. There was no boom."'),
+    H('Nolan Vestrick, 47, aboard the Second Chance, two miles out'),
+    P('"The water lit up under the boat before I saw anything on the surface. Green first, then orange, coming from below like a light on the bottom, and I’m in eighty feet of water."'),
+    P('"My depth sounder went to garbage for about a minute. Just noise, the whole column. Then it cleared and there it was, two hundred yards off my starboard, half under, dead quiet. The Coast Guard put me out of there at 3:40. I didn’t argue."'),
+    H('Officer Ray Bethune, Horry County, in a parking lot at 21st'),
+    P('"I called it in as a possible aircraft down, because that’s what it looked like on the way in and that’s what you say. Then it slowed and I stopped talking mid-sentence."'),
+    P('"I have been to eleven aircraft accidents. I know what those look like coming down. That was not that."'),
+    H('Where they disagree'),
+    P('The four accounts differ on color — white, white-then-orange, green-then-orange — and on duration, from eight seconds to nearly twenty. Two describe a sound like a "low freight train" arriving several seconds after the light; two are certain there was no sound at all.'),
+    P('They agree on the last part. All four independently used a version of the same word for what the object did before it entered the water: it slowed, it hesitated, it stopped.')
+  ]
+},
+{
+  id:'charter-cost', section:'business', kicker:'Business', read:4,
+  title:'Charter captains count the cost of a day at the dock',
+  deck:'Three marinas cancelled every departure Wednesday. On a booked-solid August day with flat seas, the fleet estimates $1,800 to $4,000 per boat — with no mechanism to recover any of it.',
+  by:'Cam Rutherford', desk:'Business Desk',
+  pub:'Aug. 19, 2026, 11:10 a.m. ET', upd:'12:48 p.m. ET',
+  tags:['business','closure','marinas'],
+  body:[
+    P('The exclusion zone off Myrtle Beach sits directly across the run that half-day and full-day charter boats take out of Little River and Murrells Inlet. By 4 a.m. Wednesday, every operator working that water knew the day was gone.'),
+    P('Three marinas cancelled all departures. The Signal spoke to nine captains; all nine had a full book for the day, and none had been able to move customers to another date this month.'),
+    H('What a lost August Wednesday costs'),
+    P('Captains put the direct hit at $1,800 to $4,000 per boat depending on size and whether the day was a split of two half-day trips or one offshore run. That figure does not include deckhand pay, which most captains said they were covering anyway, or the bait and ice already bought.'),
+    P('"You don’t buy fuel and bait for a Wednesday in August and then not run," said Terrance Beltre, who operates two headboats out of Little River. "The bait’s bought. The kid’s scheduled. That money’s spent whether I leave the dock or not."'),
+    H('No mechanism to recover it'),
+    P('A federal closure of this kind carries no compensation program. Fishery disaster relief applies to fishery failures; small-business disaster loans require a declared disaster. Neither has been triggered, and both would take months.'),
+    P('The county’s economic development office said Wednesday afternoon that it was "aware of the exposure" and had no program to announce.'),
+    H('And the calls they are turning down'),
+    P('Nearly every captain reported the same second set of calls: people asking to charter a boat to go look at the object.'),
+    P('"I’ve had nine of those since eight o’clock and I’ve said no nine times," said Nolan Vestrick. "It’s a two-mile ring with federal boats in it. There’s no version of that where I take paying people out there. Somebody will, and I hope the Coast Guard is ready for it."')
+  ],
+  stats:[['$1,800–4,000','Lost per boat'],['3','Marinas closed'],['9 of 9','Captains booked solid'],['$0','Compensation available']]
+},
+{
+  id:'flights', section:'business', kicker:'Travel', read:3,
+  title:'Flights delayed and diverted as the no-fly ring swallows the Grand Strand',
+  deck:'A ten-nautical-mile restriction to 18,000 feet takes in the whole developed shoreline and both airports serving it. Eleven arrivals were delayed and two diverted before 9 a.m.',
+  by:'Cam Rutherford', desk:'Business Desk',
+  pub:'Aug. 19, 2026, 9:38 a.m. ET', upd:'12:20 p.m. ET',
+  tags:['travel','faa','closure'],
+  body:[
+    P('The temporary flight restriction the FAA issued at 4:15 a.m. covers a ten-nautical-mile circle from the surface to 18,000 feet, centered on a point four miles off the 14th Avenue Pier. That circle takes in the entire Grand Strand shoreline and both airports serving it.'),
+    P('Commercial traffic into Myrtle Beach International is being vectored around the northern edge of the ring. Eleven arrivals were delayed and two diverted to Wilmington before 9 a.m. Departures have been less affected, since aircraft can climb out to the west.'),
+    H('What a TFR actually stops'),
+    P('The restriction is absolute for the airspace it covers below 18,000 feet: no general aviation, no helicopter tours, no banner-tow aircraft — a summer staple along this beach — and no drones of any size.'),
+    P('The banner operators may be the quietest casualty. Four aircraft that would normally fly the length of the Strand from morning to dusk in August have been grounded since before dawn, with no indication when they will fly again.'),
+    H('Drones are the enforcement problem'),
+    P('The FAA warned Wednesday morning that drone operators inside the ring face civil penalties, and Horry County said two aircraft had already been recovered from the sand by 8 a.m. after losing signal or being ordered down.'),
+    P('"People do not understand that this is not a rule about privacy or nuisance," a county spokesperson said. "There are manned aircraft working at low altitude over that water. A drone in that airspace is a genuine hazard to a crew."'),
+    P('The restriction has no stated end. It will remain, the FAA said, "until the requesting agency withdraws the request."')
+  ]
+},
+{
+  id:'rumor-control', section:'grand-strand', kicker:'Rumor Control', read:3,
+  title:'What the city is knocking down: no evacuation, no water advisory, no shelter order',
+  deck:'By mid-morning Myrtle Beach officials were spending as much time correcting things that are not happening as describing the things that are.',
+  by:'Dara Whitlock', desk:'Coastal Bureau',
+  pub:'Aug. 19, 2026, 10:50 a.m. ET', upd:'1:00 p.m. ET',
+  tags:['community','officials','misinformation'],
+  body:[
+    P('An information vacuum fills fast. By 10 a.m. Wednesday, Myrtle Beach and Horry County officials had publicly corrected three widely shared claims, none of which is true.'),
+    H('There is no evacuation order'),
+    P('No evacuation has been ordered, recommended or, according to the city’s emergency manager, discussed on any of the three interagency calls the city has joined since 5 a.m. A screenshot circulating Wednesday morning that appeared to show a county evacuation notice was fabricated; the county said it did not originate from any of its systems.'),
+    H('The water supply is not affected'),
+    P('Municipal drinking water on the Grand Strand does not come from the ocean. The city said there is no mechanism by which an object floating four miles offshore affects the supply, and that no testing anomaly has been recorded.'),
+    H('There is no shelter-in-place order'),
+    P('Residents inside the closed blocks are not restricted to their homes, and hotels within the closure are open and operating. The closure applies to the beach and the water, not to the streets or the buildings behind them.'),
+    H('What officials will not say'),
+    P('The corrections have a limit, and officials reach it quickly. The city will say what is not happening. It will not say what the object is, how long the closure will last, or what condition would change any of the above — because, its emergency manager said, it has not been told.'),
+    P('"I can tell you with complete confidence that we are not evacuating anybody," she said. "I cannot tell you what is out there. Those are two different sentences and I need people to hear both of them."')
+  ]
+}
+];
+
+const UPDATES = [
+  {time:'1:04 p.m.', cat:'Community', title:'County will reassess the beach closure at 6 p.m.',
+   text:'Horry County says it will revisit the closure between 21st and 38th Avenue North at 6 p.m. Officials would not say what conditions would lift it, hold it, or extend it.'},
+  {time:'12:48 p.m.', cat:'Business', title:'Charter fleet puts the day’s losses at $1,800 to $4,000 a boat',
+   text:'Nine captains told the Signal their books were full for Wednesday. No compensation mechanism exists for a federal closure of this kind.'},
+  {time:'12:06 p.m.', cat:'Military', title:'No recovery attempt planned for today, official says',
+   text:'Asked whether divers would enter the water Wednesday, a defense official said only: "Not today." An EOD dive team remains staged aboard the destroyer.'},
+  {time:'11:48 a.m.', cat:'Military', title:'Fourteenth pass over the site, low and out of the north',
+   text:'Audible across the northern Grand Strand and reported by callers as far inland as Socastee. Emergency management repeated its request that residents stop calling 911 to report aircraft noise.'},
+  {time:'11:12 a.m.', cat:'Military', title:'Second rescue aircrew goes to alert status',
+   text:'A second crew with rescue swimmers is now on alert at a coastal air station. Neither alert crew has launched.'},
+  {time:'10:50 a.m.', cat:'Officials', title:'City knocks down evacuation rumor as fabricated',
+   text:'A screenshot appearing to show a county evacuation notice did not come from any county system, officials said. There is no evacuation order and no shelter-in-place order.'},
+  {time:'9:52 a.m.', cat:'Military', title:'Destroyer takes station on the eastern edge of the zone',
+   text:'An Arleigh Burke-class destroyer arrived with an explosive ordnance disposal dive team aboard. A helicopter flew survey patterns over the object for roughly forty minutes.'},
+  {time:'9:15 a.m.', cat:'Object', title:'Three tracking officials confirm no catalog match',
+   text:'Current and former officials tell the Signal that no entry in the public catalog of more than 40,000 tracked objects matches the object’s orbit, and none can point to a plausible launch.'},
+  {time:'8:47 a.m.', cat:'Object', title:'Object still floating, still lit, still unclaimed',
+   text:'Nine hours after entering the water it has not moved, sunk, or transmitted on any monitored frequency. No government has claimed it.'},
+  {time:'8:00 a.m.', cat:'Closures', title:'Two drones recovered from the sand',
+   text:'Horry County says two civilian drones have been recovered after being flown inside the restricted ring. The FAA warns operators face civil penalties.'},
+  {time:'7:14 a.m.', cat:'Military', title:'Survey helicopter reports "nothing above background"',
+   text:'A helicopter carrying radiological and chemical survey equipment found no elevated radiation and no chemical signature in the air over the site.'},
+  {time:'6:20 a.m.', cat:'Military', title:'Salvage-capable vessel departs Charleston',
+   text:'Public vessel-tracking data reviewed by the Signal shows a salvage-capable vessel on a heading that would put it on scene before noon.'},
+  {time:'6:00 a.m.', cat:'Military', title:'Northern Command assumes lead of the response',
+   text:'NORTHCOM takes over from the Coast Guard, which retains control of the surface exclusion zone.'},
+  {time:'5:30 a.m.', cat:'Closures', title:'Exclusion zone extended to two nautical miles',
+   text:'The Coast Guard doubles the zone for the second time since the splashdown. Beach access closes from 21st to 38th Avenue North.'},
+  {time:'4:15 a.m.', cat:'Closures', title:'FAA closes the airspace within ten nautical miles',
+   text:'A temporary flight restriction covers the surface to 18,000 feet. The FAA says the request came from an interagency partner it would not name.'},
+  {time:'3:31 a.m.', cat:'Closures', title:'Coast Guard establishes a half-mile exclusion zone',
+   text:'Three cutters are on station. A charter captain inside the zone is ordered out at 3:40.'},
+  {time:'3:19 a.m.', cat:'Military', title:'Two fighters over the site, twelve minutes after splashdown',
+   text:'The aircraft were already airborne on an unrelated training sortie when the tasking came, according to a Northern Command spokesperson.'},
+  {time:'3:07 a.m.', cat:'Object', title:'Object enters the water 4.1 nautical miles off Myrtle Beach', key:true,
+   text:'It does not sink. Witnesses on the beach describe a light that slowed before it reached the surface.'},
+  {time:'3:04 a.m.', cat:'Object', title:'First 911 calls from the Grand Strand',
+   text:'Callers describe a light "like a welding arc" moving south to north, slower than a meteor and without the sound that usually follows one.'},
+  {time:'1:38 a.m.', cat:'Object', title:'Descent begins; track elevated by the tracking center',
+   text:'The object starts a shallow, even descent from roughly 210 miles over the course of a single 90-minute orbit.'},
+  {time:'11:52 p.m. Tue', cat:'Object', title:'Object logged in low Earth orbit as an uncorrelated target',
+   text:'Analysts note an unmatched return crossing the eastern seaboard. Such targets are usually resolved within a day. This one is not.'}
+];
+
+/* held back, revealed by the "new updates" button */
+const PENDING = [
+  {time:'1:26 p.m.', cat:'Officials', title:'Governor asks for a federal briefing "within the hour"',
+   text:'The governor’s office says it has formally requested a briefing for state and local officials, and has not yet received a response.'},
+  {time:'1:19 p.m.', cat:'Military', title:'Fifteenth pass, the lowest yet',
+   text:'Witnesses on the boardwalk describe the aircraft crossing the beachfront below the height of the taller hotels. The Signal has asked NORTHCOM to confirm the altitude.'},
+  {time:'1:12 p.m.', cat:'Object', title:'Light cycle has slowed, two observers say',
+   text:'Two people watching through spotting scopes from the pier report the object’s cycle has lengthened from roughly 40 seconds to more than two minutes since mid-morning.'}
+];
+
+const TIMELINE = [
+  {t:'11:52 p.m. Tue', lab:'An unmatched object is logged in low Earth orbit',
+   det:'Analysts record an uncorrelated target at roughly 210 miles, crossing the eastern seaboard northwest to southeast. Such returns are logged constantly and nearly always resolved within a day by matching them to a known parent launch. This one is never resolved.'},
+  {t:'1:38 a.m.', lab:'The descent begins',
+   det:'The object starts losing altitude gradually over most of one 90-minute orbit — shallower and more even than the steep, hot profile of ordinary orbital decay. The track is elevated by the tracking center.'},
+  {t:'3:04 a.m.', lab:'The first 911 calls come in from the beach', key:true,
+   det:'Three minutes before the water. Callers describe a white light moving south to north, slower than a meteor. Accounts differ on color and duration; several report no sonic boom at all.'},
+  {t:'3:07 a.m.', lab:'The object enters the Atlantic, 4.1 nautical miles offshore', key:true,
+   det:'At 33.69°N, 78.80°W — east-southeast of the 14th Avenue Pier. It does not sink. Witnesses describe it slowing sharply in the final seconds before the surface.'},
+  {t:'3:19 a.m.', lab:'Two fighters arrive overhead', key:true,
+   det:'Twelve minutes after splashdown. The aircraft were already airborne on an unrelated night training sortie. A second, lower pass follows at 3:30 and is heard from the boardwalk.'},
+  {t:'3:31 a.m.', lab:'The Coast Guard establishes an exclusion zone',
+   det:'Initially half a mile, with three cutters on station. A charter captain still inside the zone is ordered out at 3:40 a.m.'},
+  {t:'4:15 a.m.', lab:'The FAA closes the airspace',
+   det:'A temporary flight restriction covers ten nautical miles from the surface to 18,000 feet — taking in the entire developed shoreline and both airports serving it.'},
+  {t:'5:30 a.m.', lab:'The zone doubles; fourteen blocks of beach close',
+   det:'The exclusion zone goes to two nautical miles. Horry County closes beach access from 21st Avenue North to 38th "pending a federal operation."'},
+  {t:'6:00 a.m.', lab:'Northern Command assumes lead of the response',
+   det:'The Coast Guard retains the surface zone. From this point the military is running the response, under what one official describes as a framework normally used for a foreign object recovered on American soil.'},
+  {t:'7:14 a.m.', lab:'Survey aircraft finds nothing above background',
+   det:'A helicopter carrying radiological and chemical survey equipment reports no elevated radiation and no chemical signature in the air over the site.'},
+  {t:'9:52 a.m.', lab:'A destroyer takes station with a dive team aboard',
+   det:'An Arleigh Burke-class destroyer arrives on the eastern edge of the zone carrying an explosive ordnance disposal team. As of Wednesday afternoon, no one has entered the water.'},
+  {t:'12:06 p.m.', lab:'"Not today," an official says of recovery', key:true,
+   det:'Asked whether divers would go in Wednesday, a defense official gives a two-word answer. The dive team remains staged. The object remains floating, lit, and unclaimed.'}
+];
+
+const FAQ = [
+  {q:'What actually came down?', a:'Nobody has said, and the people who would normally know say they do not. What is established: an object roughly 55 to 70 feet across entered the water 4.1 nautical miles off Myrtle Beach at 3:07 a.m. Wednesday, descending from a stable low Earth orbit. It did not sink, and it has not moved since.'},
+  {q:'Why is this different from ordinary space debris?', a:'Debris falls a few times a year off this coast and nobody closes a beach for it. Two things make this different: the object is intact and floating rather than broken up, and it matches no entry in the public catalog of more than 40,000 tracked objects — meaning no known launch put it in orbit.'},
+  {q:'Is the public in danger?', a:'No agency has said so. A survey aircraft reported no elevated radiation and no chemical signature in the air over the site. Officials describe every restriction as precautionary, and note that the standard playbook around any downed spacecraft assumes pressurized tanks or propellant until a survey team says otherwise. Asked directly, a senior officer said: "Right now, from that object, we have no indication that anybody is. That is a real answer and it is not a promise."'},
+  {q:'Why are there fighter jets over a beach?', a:'Officials have been unusually consistent on this: the jets are standing by, not standing off. Aircraft already overhead can respond in seconds rather than the forty minutes it would take to launch from the ground — for a boat in trouble inside the zone, an aircraft that strays in, or anything that changes. No engagement authority has been sought or granted.'},
+  {q:'What is closed, and for how long?', a:'The beach and all access points between 21st and 38th Avenue North; boating within two nautical miles; airspace within ten nautical miles to 18,000 feet, including all drones. The county says it will reassess the beach closure at 6 p.m. The FAA restriction has no stated end date.'},
+  {q:'Is there an evacuation order?', a:'No. There is no evacuation order and no shelter-in-place order, and the city says neither has been discussed on any interagency call. A screenshot circulating Wednesday that appeared to show a county evacuation notice was fabricated. Municipal water is unaffected.'},
+  {q:'Could this be a secret satellite or a foreign launch?', a:'It is one of three explanations still open, along with a long-dormant catalogued object that maneuvered, and an arrival from outside Earth orbit. Specialists note the first is hard to reconcile with an object this large, and the third currently has the least supporting evidence. What has been ruled out is the comfortable option — that this is routine hardware whose paperwork will simply turn up.'},
+  {q:'How is the Signal verifying any of this?', a:'Every fact on this site is fabricated; it is a fiction exercise. Within the story, the reporting is attributed to named and anonymous officials, public flight- and vessel-tracking data, amateur satellite observers, and interviews conducted separately with witnesses whose accounts were checked against the timeline.'}
+];
+
+const CALLS = [
+  ['12a',2],['1a',3],['2a',4],['3a',96],['4a',71],['5a',44],['6a',38],
+  ['7a',82],['8a',63],['9a',51],['10a',46],['11a',74],['12p',39]
+];
+
+const POLL_Q = 'What do you think the most likely explanation is?';
+const POLL_OPTS = [
+  'A satellite or booster nobody has admitted to',
+  'A classified U.S. program',
+  'Something that did not originate on Earth',
+  'Too early to guess — wait for the recovery'
+];
+const POLL_SEED = [412, 688, 1104, 1533];
+
+/* ============================ STATE ============================ */
+
+const state = {
+  liveFilter:'All',
+  liveSort:'new',
+  shown:[...UPDATES],
+  pending:[...PENDING],
+  revealed:false
+};
+
+const $ = (s, r) => (r||document).querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const byId = id => ARTICLES.find(a => a.id === id);
+const sectionName = id => (SECTIONS.find(s => s.id === id) || {name:id}).name;
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================ CHROME ============================ */
+
+$('#navlinks').innerHTML = SECTIONS.map(s =>
+  `<a href="${s.href}" data-nav="${s.id}">${esc(s.name)}</a>`).join('');
+
+$('#run').innerHTML = (() => {
+  const items = UPDATES.slice(0, 6).map(u => `<span>${esc(u.title)}</span><b>•</b>`).join('');
+  return items + items;
+})();
+
+/* theme */
+const savedTheme = (() => { try { return localStorage.getItem('ts-theme'); } catch(e){ return null; } })();
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+function syncTheme(){
+  const dark = document.documentElement.dataset.theme === 'dark';
+  $('#themeIcon').textContent = dark ? '☀' : '☾';
+  $('#themeText').textContent = dark ? 'Light' : 'Dark';
+}
+syncTheme();
+$('#theme').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('ts-theme', document.documentElement.dataset.theme); } catch(e){}
+  syncTheme();
+});
+
+/* search */
+$('#search').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = e.target.value.trim();
+    location.hash = q ? '#/search/' + encodeURIComponent(q) : '#/';
+  }
+});
+
+/* ============================ RENDERERS ============================ */
+
+function cardHTML(a){
+  return `<article class="card">
+    <span class="kick${a.section==='explainer'?' blue':''}">${esc(a.kicker)}</span>
+    <h3><a href="#/a/${a.id}">${esc(a.title)}</a></h3>
+    <p>${esc(a.deck)}</p>
+    <div class="meta">${esc(a.by)} · ${a.read} min read</div>
+  </article>`;
+}
+
+function updatesRailHTML(n){
+  return `<div class="sidebar-live">
+    <div class="top"><i class="dot"></i>Live updates</div>
+    <div class="in">
+      ${state.shown.slice(0, n).map(u => `<div class="upd">
+        <time>${esc(u.time)}<span class="cat">${esc(u.cat)}</span></time>
+        <p>${esc(u.title)}</p></div>`).join('')}
+      <div style="padding-top:12px"><a class="sans" style="font-size:13px" href="#/live">See all ${state.shown.length} updates →</a></div>
+    </div>
+  </div>`;
+}
+
+function callsChartHTML(){
+  const max = Math.max(...CALLS.map(c => c[1]));
+  return `<div class="databar">
+    <div class="sans" style="font-weight:700;font-size:15px;margin-bottom:3px">Calls to Horry County’s non-emergency line</div>
+    <div class="cap" style="margin:0 0 12px">Midnight to noon Wednesday, by hour. The spikes track the splashdown at 3:07 a.m. and the two lowest aircraft passes, at 7:04 and 11:48.</div>
+    ${CALLS.map(([h, v]) => `<div class="row">
+      <span>${h}</span>
+      <span class="track"><span class="fill${v > 70 ? ' hot' : ''}" data-w="${Math.round(v / max * 100)}"></span></span>
+      <span class="val">${v}</span></div>`).join('')}
+    <div class="cap">Source: Horry County Emergency Management hourly log. Hours over 70 calls shown in red.</div>
+  </div>`;
+}
+
+function pollHTML(){
+  let voted = null, counts = POLL_SEED.slice();
+  try {
+    voted = localStorage.getItem('ts-poll');
+    const saved = JSON.parse(localStorage.getItem('ts-poll-counts') || 'null');
+    if (Array.isArray(saved) && saved.length === 4) counts = saved;
+  } catch(e){}
+  const total = counts.reduce((a, b) => a + b, 0);
+  const inner = voted === null
+    ? POLL_OPTS.map((o, i) => `<button class="opt" data-vote="${i}">${esc(o)}</button>`).join('')
+    : POLL_OPTS.map((o, i) => `<div class="res${String(i) === voted ? ' me' : ''}">
+        <span class="fill" data-w="${Math.round(counts[i] / total * 100)}"></span>
+        <span class="lab"><span>${esc(o)}${String(i) === voted ? ' ✓' : ''}</span>
+        <b>${Math.round(counts[i] / total * 100)}%</b></span></div>`).join('');
+  return `<div class="poll" id="poll">
+    <h4>Reader poll</h4>
+    <p class="q">${esc(POLL_Q)}</p>
+    ${inner}
+    <p class="note">${voted === null ? 'Unscientific survey of Signal readers.'
+      : total.toLocaleString() + ' responses. Unscientific survey of Signal readers.'}</p>
+  </div>`;
+}
+
+const GLANCE = [['Impact point','33.69°N, 78.80°W'],['Distance from shore','4.1 nautical miles'],
+  ['Est. width','55–70 feet'],['Orbit altitude','~210 miles'],['Catalog match','None'],
+  ['Claimed by','No one'],['Exclusion zone','2 nmi · active'],['Airspace','Closed to 18,000 ft'],
+  ['Lead agency','NORTHCOM, 6 a.m.']];
+
+function glanceHTML(){
+  return `<div class="rcard"><h4>At a glance</h4><div class="in"><ul class="rlist glance">
+    ${GLANCE.map(g => `<li><span>${esc(g[0])}</span><b>${esc(g[1])}</b></li>`).join('')}
+  </ul></div></div>`;
+}
+
+function startHereHTML(skip){
+  const links = [
+    ['#/live', 'Live updates', state.shown.length + ' posts'],
+    ['#/timeline', 'The full timeline, hour by hour', TIMELINE.length + ' entries'],
+    ['#/faq', 'What we know and what we don’t', FAQ.length + ' questions'],
+    ['#/a/craft-down', 'The main story', 'Grand Strand']
+  ].filter(l => l[0] !== skip);
+  return `<div class="rcard"><h4>Start here</h4><div class="in"><ul class="rlist">
+    ${links.map(l => `<li><a href="${l[0]}">${esc(l[1])}</a><small>${esc(l[2])}</small></li>`).join('')}
+  </ul></div></div>`;
+}
+
+function renderHome(){
+  const lead = ARTICLES.find(a => a.lead);
+  const rest = ARTICLES.filter(a => !a.lead);
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <section class="lead">
+      <div>
+        <span class="kick">${esc(lead.kicker)} · Updated 11 min ago</span>
+        <h2><a href="#/a/${lead.id}">${esc(lead.title)}</a></h2>
+        <p class="deck">${esc(lead.deck)}</p>
+        <div class="meta">By ${esc(lead.by)} · ${esc(lead.pub)}</div>
+        <div class="stats">${lead.stats.map(s => `<div><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}</div>
+      </div>
+      <div>${updatesRailHTML(5)}</div>
+    </section>
+
+    <h3 class="hd">More coverage<span class="count">${ARTICLES.length} stories</span></h3>
+    <section class="grid">${rest.slice(0, 6).map(cardHTML).join('')}</section>
+
+    <div class="cols2">
+      <div>
+        <h3 class="hd">Also reporting</h3>
+        ${rest.slice(6).map((a, i) => `<div class="listitem">
+          <span class="n">${i + 7}</span>
+          <div><h4><a href="#/a/${a.id}">${esc(a.title)}</a></h4>
+          <div class="meta">${esc(sectionName(a.section))} · ${a.read} min read</div></div>
+        </div>`).join('')}
+        ${callsChartHTML()}
+      </div>
+      <div class="rail">
+        ${pollHTML()}
+        <div class="rcard"><h4>Start here</h4><div class="in"><ul class="rlist">
+          <li><a href="#/timeline">The full timeline, hour by hour</a><small>21 entries</small></li>
+          <li><a href="#/faq">What we know and what we don’t</a><small>8 questions</small></li>
+          <li><a href="#/live">Live updates</a><small>${state.shown.length} posts</small></li>
+        </ul></div></div>
+        <div class="signup">
+          <h4>Grand Strand alerts</h4>
+          <p>Get Signal updates on the closure and the response as they post.</p>
+          <form data-signup><input type="email" placeholder="you@example.com" required aria-label="Email address">
+          <button class="btn" type="submit">Sign up</button></form>
+          <p class="ok">Thanks — you’re on the list. (Not really: this site is fiction.)</p>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  animateBars();
+}
+
+function renderArticle(id){
+  const a = byId(id);
+  if (!a) return renderNotFound();
+  const idx = ARTICLES.indexOf(a);
+  const prev = ARTICLES[idx - 1], next = ARTICLES[idx + 1];
+  const related = ARTICLES.filter(x => x !== a &&
+    (x.section === a.section || x.tags.some(t => a.tags.includes(t)))).slice(0, 4);
+
+  const body = a.body.map(b => {
+    if (b.t === 'p') return `<p>${b.x}</p>`;
+    if (b.t === 'h') return `<h3>${esc(b.x)}</h3>`;
+    if (b.t === 'q') return `<blockquote>${esc(b.x)}<cite>— ${esc(b.c)}</cite></blockquote>`;
+    if (b.t === 'box') return `<div class="box"><h5>${esc(b.h)}</h5>${b.p.map(p => `<p>${p}</p>`).join('')}</div>`;
+    if (b.t === 'calls') return callsChartHTML();
+    return '';
+  }).join('');
+
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › <a href="#/s/${a.section}">${esc(sectionName(a.section))}</a></div>
+    <div class="artwrap">
+      <article class="art">
+        <span class="kick">${esc(a.kicker)}</span>
+        <h2>${esc(a.title)}</h2>
+        <p class="deck">${esc(a.deck)}</p>
+        <div class="byline">
+          <span>By <b>${esc(a.by)}</b></span>
+          <span>Tidewater Signal · ${esc(a.desk)}</span>
+          <span>Published ${esc(a.pub)}</span>
+          <span>Updated ${esc(a.upd)}</span>
+          <span class="tools">
+            <button class="btn ghost" data-copy>Copy link</button>
+            <button class="btn ghost" data-top>Top ↑</button>
+          </span>
+        </div>
+        ${a.stats ? `<ul class="facts">${a.stats.map(s => `<li><em>${esc(s[1])}</em><b>${esc(s[0])}</b></li>`).join('')}</ul>` : ''}
+        <div class="body">${body.replace('<p>', '<p class="first">')}</div>
+        <div class="nextprev">
+          ${prev ? `<a href="#/a/${prev.id}"><span>← Previous</span><strong>${esc(prev.title)}</strong></a>` : '<span></span>'}
+          ${next ? `<a href="#/a/${next.id}" style="text-align:right"><span>Next →</span><strong>${esc(next.title)}</strong></a>` : '<span></span>'}
+        </div>
+      </article>
+      <aside class="rail">
+        ${updatesRailHTML(4)}
+        ${related.length ? `<div class="rcard"><h4>Related</h4><div class="in"><ul class="rlist">
+          ${related.map(r => `<li><a href="#/a/${r.id}">${esc(r.title)}</a><small>${esc(sectionName(r.section))} · ${r.read} min</small></li>`).join('')}
+        </ul></div></div>` : ''}
+        <div class="rcard"><h4>Keep reading</h4><div class="in"><ul class="rlist">
+          <li><a href="#/timeline">Full timeline</a><small>Hour by hour</small></li>
+          <li><a href="#/faq">What we know</a><small>8 questions answered</small></li>
+        </ul></div></div>
+      </aside>
+    </div>
+  </div></div>`;
+  animateBars();
+}
+
+function renderSection(id){
+  const list = ARTICLES.filter(a => a.section === id);
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › ${esc(sectionName(id))}</div>
+    <h3 class="hd">${esc(sectionName(id))}<span class="count">${list.length} ${list.length === 1 ? 'story' : 'stories'}</span></h3>
+    ${list.length ? `<section class="grid">${list.map(cardHTML).join('')}</section>`
+      : '<p class="empty">No stories in this section yet.</p>'}
+  </div></div>`;
+}
+
+function renderLive(){
+  const cats = ['All', ...Array.from(new Set(UPDATES.concat(PENDING).map(u => u.cat)))];
+  let list = state.shown.filter(u => state.liveFilter === 'All' || u.cat === state.liveFilter);
+  if (state.liveSort === 'old') list = list.slice().reverse();
+
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › Live updates</div>
+    <h3 class="hd"><i class="dot"></i>Live updates<span class="count">${state.shown.length} posts · updated 1:04 p.m.</span></h3>
+    <button class="newbar${state.pending.length && !state.revealed ? ' show' : ''}" id="newbar">
+      ↑ ${state.pending.length} new update${state.pending.length === 1 ? '' : 's'} — tap to show
+    </button>
+    <div class="chips" role="group" aria-label="Filter updates by topic">
+      ${cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${state.liveFilter === c}">${esc(c)}</button>`).join('')}
+      <button class="chip" data-sort style="margin-left:auto">
+        ${state.liveSort === 'new' ? 'Newest first ↓' : 'Oldest first ↑'}
+      </button>
+    </div>
+    <div class="artwrap">
+      <div>
+        ${list.length ? `<ul class="feed">${list.map(u => `<li${u.fresh ? ' class="fresh"' : ''}>
+          <div class="t">${esc(u.time)}<small>Aug. 19</small></div>
+          <div><span class="cat">${esc(u.cat)}</span>
+            <h4>${esc(u.title)}</h4><p>${esc(u.text)}</p></div>
+        </li>`).join('')}</ul>` : '<p class="empty">No updates match that filter.</p>'}
+      </div>
+      <aside class="rail">${glanceHTML()}${startHereHTML('#/live')}</aside>
+    </div>
+  </div></div>`;
+}
+
+function renderTimeline(){
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › Timeline</div>
+    <h3 class="hd">How Wednesday unfolded<span class="count">Tap any entry to expand</span></h3>
+    <div class="artwrap">
+      <ul class="tl">
+        ${TIMELINE.map((e, i) => `<li class="${e.key ? 'key' : ''}" data-tl="${i}">
+          <button aria-expanded="false">
+            <time>${esc(e.t)}</time>
+            <div class="lab">${esc(e.lab)}</div>
+            <div class="det">${esc(e.det)}</div>
+            <span class="toggle">MORE ▾</span>
+          </button>
+        </li>`).join('')}
+      </ul>
+      <aside class="rail">${glanceHTML()}${startHereHTML('#/timeline')}</aside>
+    </div>
+  </div></div>`;
+}
+
+function renderFaq(){
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › What we know</div>
+    <h3 class="hd">What we know, and what we don’t</h3>
+    <div class="artwrap">
+      <div class="faq">${FAQ.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('')}
+        ${pollHTML()}</div>
+      <aside class="rail">${glanceHTML()}${startHereHTML('#/faq')}</aside>
+    </div>
+  </div></div>`;
+  animateBars();
+}
+
+function renderSearch(q){
+  const term = q.toLowerCase();
+  const hits = ARTICLES.filter(a => {
+    const hay = (a.title + ' ' + a.deck + ' ' + a.tags.join(' ') + ' ' +
+      a.body.map(b => b.t === 'box' ? b.h + b.p.join(' ') : (b.x || '')).join(' ')).toLowerCase();
+    return hay.includes(term);
+  });
+  const upd = state.shown.filter(u => (u.title + ' ' + u.text).toLowerCase().includes(term));
+  const hl = s => esc(s).replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'), '<mark>$1</mark>');
+
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <div class="crumb"><a href="#/">Home</a> › Search</div>
+    <h3 class="hd">Results for “${esc(q)}”<span class="count">${hits.length} stories · ${upd.length} updates</span></h3>
+    ${hits.length ? hits.map(a => `<div class="listitem">
+      <span class="n">›</span>
+      <div><h4><a href="#/a/${a.id}">${hl(a.title)}</a></h4>
+      <p style="margin:6px 0 0;font-size:15.5px;line-height:1.5;color:var(--ink-2)">${hl(a.deck)}</p>
+      <div class="meta" style="margin-top:6px">${esc(sectionName(a.section))} · ${a.read} min read</div></div>
+    </div>`).join('') : '<p class="empty">No stories match that search.</p>'}
+    ${upd.length ? `<h3 class="hd" style="margin-top:36px">Matching live updates</h3>
+      <ul class="feed">${upd.map(u => `<li>
+        <div class="t">${esc(u.time)}</div>
+        <div><span class="cat">${esc(u.cat)}</span><h4>${hl(u.title)}</h4><p>${hl(u.text)}</p></div></li>`).join('')}</ul>` : ''}
+  </div></div>`;
+}
+
+function renderNotFound(){
+  app.innerHTML = `<div class="view"><div class="wrap">
+    <h3 class="hd">Page not found</h3>
+    <p class="empty">That story isn’t here. <a href="#/">Back to the front page</a>.</p>
+  </div></div>`;
+}
+
+function animateBars(){
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.fill[data-w]').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  });
+}
+
+/* ============================ ROUTER ============================ */
+
+function route(){
+  const h = location.hash.replace(/^#/, '') || '/';
+  const parts = h.split('/').filter(Boolean);
+  let navId = 'home';
+
+  if (!parts.length) { renderHome(); }
+  else if (parts[0] === 'a') { const a = byId(parts[1]); navId = a ? a.section : ''; renderArticle(parts[1]); }
+  else if (parts[0] === 's') { navId = parts[1]; renderSection(parts[1]); }
+  else if (parts[0] === 'live') { navId = 'live'; renderLive(); }
+  else if (parts[0] === 'timeline') { navId = 'timeline'; renderTimeline(); }
+  else if (parts[0] === 'faq') { navId = 'faq'; renderFaq(); }
+  else if (parts[0] === 'search') { navId = ''; renderSearch(decodeURIComponent(parts.slice(1).join('/'))); }
+  else { navId = ''; renderNotFound(); }
+
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    if (el.dataset.nav === navId) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  });
+  window.scrollTo(0, 0);
+  app.focus({preventScroll:true});
+}
+
+window.addEventListener('hashchange', route);
+
+/* ============================ INTERACTIONS ============================ */
+
+document.addEventListener('click', e => {
+  const t = e.target;
+
+  const chip = t.closest('.chip[data-cat]');
+  if (chip) { state.liveFilter = chip.dataset.cat; renderLive(); return; }
+
+  if (t.closest('.chip[data-sort]')) {
+    state.liveSort = state.liveSort === 'new' ? 'old' : 'new'; renderLive(); return;
+  }
+
+  if (t.closest('#newbar')) {
+    state.pending.forEach(u => { u.fresh = true; });
+    state.shown = state.pending.concat(state.shown);
+    state.pending = []; state.revealed = true;
+    renderLive(); toast('3 new updates added');
+    setTimeout(() => { state.shown.forEach(u => delete u.fresh); }, 900);
+    return;
+  }
+
+  const tl = t.closest('.tl button');
+  if (tl) {
+    const li = tl.parentElement;
+    const open = li.classList.toggle('open');
+    tl.setAttribute('aria-expanded', String(open));
+    $('.toggle', tl).textContent = open ? 'LESS ▴' : 'MORE ▾';
+    return;
+  }
+
+  const vote = t.closest('[data-vote]');
+  if (vote) {
+    const i = vote.dataset.vote;
+    let counts = POLL_SEED.slice();
+    try {
+      const saved = JSON.parse(localStorage.getItem('ts-poll-counts') || 'null');
+      if (Array.isArray(saved) && saved.length === 4) counts = saved;
+      counts[+i] += 1;
+      localStorage.setItem('ts-poll', i);
+      localStorage.setItem('ts-poll-counts', JSON.stringify(counts));
+    } catch(err){}
+    const holder = t.closest('#poll');
+    holder.outerHTML = pollHTML();
+    animateBars(); toast('Vote recorded');
+    return;
+  }
+
+  if (t.closest('[data-copy]')) {
+    const url = location.href;
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast(url));
+    else toast(url);
+    return;
+  }
+
+  if (t.closest('[data-top]')) { window.scrollTo({top:0, behavior:'smooth'}); return; }
+});
+
+document.addEventListener('submit', e => {
+  const f = e.target.closest('[data-signup]');
+  if (!f) return;
+  e.preventDefault();
+  f.reset();
+  const ok = f.parentElement.querySelector('.ok');
+  if (ok) ok.classList.add('show');
+  toast('Signed up (this site is fiction)');
+});
+
+/* reading progress */
+window.addEventListener('scroll', () => {
+  const art = $('.art');
+  const bar = $('#prog');
+  if (!art) { bar.style.width = '0'; return; }
+  const total = art.offsetHeight - window.innerHeight;
+  const done = Math.min(1, Math.max(0, (window.scrollY - art.offsetTop + 200) / (total || 1)));
+  bar.style.width = (done * 100) + '%';
+}, {passive:true});
+
+/* the "new updates" banner arrives a little after you land on the live page */
+setTimeout(() => {
+  if (!state.revealed && state.pending.length) {
+    const b = $('#newbar');
+    if (b) b.classList.add('show');
+  }
+}, 8000);
+
+/* clock */
+(function tick(){
+  const d = new Date();
+  const t = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  $('#clock').textContent = (window.innerWidth < 700 ? 'Aug. 19, 2026' : 'Wednesday, August 19, 2026') +
+    ' · page open since ' + t;
+  setTimeout(tick, 60000);
+})();
+
+route();
+</script>
 </body>
 </html>
