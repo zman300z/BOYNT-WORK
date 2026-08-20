@@ -36,15 +36,6 @@ a:hover{text-decoration:underline}
 :focus-visible{outline:3px solid var(--brand-2); outline-offset:2px; border-radius:3px}
 #app:focus,#app:focus-visible{outline:none}
 
-/* ---------- fiction banner ---------- */
-.fiction{position:sticky; top:0; z-index:120;
-  background:repeating-linear-gradient(135deg,#1b1b1b,#1b1b1b 14px,#252525 14px,#252525 28px);
-  color:#ffd66b; border-bottom:3px solid #ffd66b;
-  font-family:Inter,sans-serif; font-size:12.5px; letter-spacing:.03em;
-  padding:8px 16px; text-align:center; line-height:1.5}
-.fiction strong{color:#fff; letter-spacing:.12em; font-weight:700}
-@media (max-width:600px){ .fiction{font-size:11px; padding:6px 12px} }
-
 .sheet{max-width:1260px; margin:0 auto; background:var(--paper); box-shadow:var(--shadow); min-height:100vh}
 .wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
 
@@ -76,7 +67,7 @@ a:hover{text-decoration:underline}
 .logo .word{text-align:left}
 
 /* ---------- nav ---------- */
-nav.sect{border-bottom:2px solid var(--ink); background:var(--paper); position:sticky; top:35px; z-index:100}
+nav.sect{border-bottom:2px solid var(--ink); background:var(--paper); position:sticky; top:0; z-index:100}
 :root[data-theme="dark"] nav.sect{border-bottom-color:var(--rule-2)}
 nav.sect .wrap{display:flex; gap:6px; align-items:center; height:46px}
 nav.sect a{font-family:Inter,sans-serif; font-size:12px; font-weight:600; letter-spacing:.08em;
@@ -210,7 +201,7 @@ main{min-height:60vh}
 .nextprev strong{display:block; margin-top:6px; font-family:"Playfair Display",serif; font-weight:700; font-size:17px; line-height:1.25}
 
 /* ---------- rail cards ---------- */
-.rail{position:sticky; top:96px; font-family:Inter,sans-serif}
+.siderail{position:sticky; top:62px; font-family:Inter,sans-serif}
 .rcard{border:1px solid var(--rule); border-radius:4px; margin-bottom:20px; overflow:hidden}
 .rcard h4{margin:0; background:var(--ink); color:var(--paper); font-size:11px; font-weight:700;
   letter-spacing:.14em; text-transform:uppercase; padding:10px 14px}
@@ -334,11 +325,6 @@ footer.site .disc{border-top:1px solid rgba(255,255,255,.14); margin-top:24px; p
 </style>
 </head>
 <body>
-
-<div class="fiction">
-  <strong>FICTION</strong> &nbsp;·&nbsp; This is an invented news website created as a writing and design exercise.
-  <b>Tidewater Signal</b> is not a real news organization, the people quoted do not exist, and no aircraft of unknown origin has landed off Myrtle Beach.
-</div>
 
 <div class="prog" id="prog"></div>
 
@@ -940,7 +926,7 @@ function renderHome(){
         </div>`).join('')}
         ${callsChartHTML()}
       </div>
-      <div class="rail">
+      <div class="siderail">
         ${pollHTML()}
         <div class="rcard"><h4>Start here</h4><div class="in"><ul class="rlist">
           <li><a href="#/timeline">The full timeline, hour by hour</a><small>21 entries</small></li>
@@ -1001,7 +987,7 @@ function renderArticle(id){
           ${next ? `<a href="#/a/${next.id}" style="text-align:right"><span>Next →</span><strong>${esc(next.title)}</strong></a>` : '<span></span>'}
         </div>
       </article>
-      <aside class="rail">
+      <aside class="siderail">
         ${updatesRailHTML(4)}
         ${related.length ? `<div class="rcard"><h4>Related</h4><div class="in"><ul class="rlist">
           ${related.map(r => `<li><a href="#/a/${r.id}">${esc(r.title)}</a><small>${esc(sectionName(r.section))} · ${r.read} min</small></li>`).join('')}
@@ -1051,7 +1037,7 @@ function renderLive(){
             <h4>${esc(u.title)}</h4><p>${esc(u.text)}</p></div>
         </li>`).join('')}</ul>` : '<p class="empty">No updates match that filter.</p>'}
       </div>
-      <aside class="rail">${glanceHTML()}${startHereHTML('#/live')}</aside>
+      <aside class="siderail">${glanceHTML()}${startHereHTML('#/live')}</aside>
     </div>
   </div></div>`;
 }
@@ -1071,7 +1057,7 @@ function renderTimeline(){
           </button>
         </li>`).join('')}
       </ul>
-      <aside class="rail">${glanceHTML()}${startHereHTML('#/timeline')}</aside>
+      <aside class="siderail">${glanceHTML()}${startHereHTML('#/timeline')}</aside>
     </div>
   </div></div>`;
 }
@@ -1083,7 +1069,7 @@ function renderFaq(){
     <div class="artwrap">
       <div class="faq">${FAQ.map(f => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('')}
         ${pollHTML()}</div>
-      <aside class="rail">${glanceHTML()}${startHereHTML('#/faq')}</aside>
+      <aside class="siderail">${glanceHTML()}${startHereHTML('#/faq')}</aside>
     </div>
   </div></div>`;
   animateBars();
