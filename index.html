@@ -2815,8 +2815,10 @@ function renderPanel() {
   btn.textContent = '🚀 Coming Soon — Back Us on Kickstarter'; btn.classList.remove('added'); btn.classList.add('ks-soon');
 }
 function handleAddToCart() {
-  // Sunglasses aren't sold on the site yet — they're funding on Kickstarter.
-  showBoyntPopup('sunglasses');
+  // Sunglasses aren't sold on the site yet — the button says Kickstarter, so
+  // send people straight there in a new tab (the site stays open behind it).
+  window.open('https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses',
+              '_blank', 'noopener');
 }
 document.querySelectorAll('.product-card[data-product]').forEach(card => {
   card.addEventListener('click', () => openPanel(card.dataset.product, parseInt(card.dataset.color||0)));
