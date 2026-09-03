@@ -123,7 +123,7 @@ function photo(s, file, x, y, w, h, caption) {
 }
 
 /* =========================================================================
-   1 — TITLE                                                        [0:15]
+   1 — TITLE
    ========================================================================= */
 {
   n++;
@@ -137,18 +137,50 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Le Royaume de Belgique", { x: M, y: 3.32, w: 6.4, h: 0.45, fontSize: 22, color: GOLDL, fontFace: SERIF, italic: true });
   txt(s, "Koninkrijk België  ·  Königreich Belgien  ·  Kingdom of Belgium", { x: M, y: 3.82, w: 6.4, h: 0.3, fontSize: 12.5, color: LMUTE });
 
-  s.addShape(pres.ShapeType.roundRect, { x: M, y: 4.5, w: 5.6, h: 1.0, rectRadius: 0.09, fill: { color: INK2 }, line: { color: "3A3A44", width: 1 } });
-  txt(s, "A French-speaking country in the heart of Europe —", { x: M + 0.28, y: 4.66, w: 5.05, h: 0.3, fontSize: 12, color: LMUTE });
-  txt(s, "and the capital of the European Union.", { x: M + 0.28, y: 4.96, w: 5.05, h: 0.3, fontSize: 12, color: LMUTE });
+  {
+    s.addShape(pres.ShapeType.roundRect, { x: M, y: 4.5, w: 5.6, h: 1.0, rectRadius: 0.09, fill: { color: INK2 }, line: { color: "3A3A44", width: 1 } });
+    txt(s, "A French-speaking country in the heart of Europe —", { x: M + 0.28, y: 4.66, w: 5.05, h: 0.3, fontSize: 12, color: LMUTE });
+    txt(s, "and the capital of the European Union.", { x: M + 0.28, y: 4.96, w: 5.05, h: 0.3, fontSize: 12, color: LMUTE });
+  }
 
   txt(s, "Nom  ______________________________     Date  ____________________", {
     x: M, y: 6.55, w: 7.2, h: 0.3, fontSize: 11, color: "8A8A96",
   });
-  s.addNotes("[0:15] Open: Belgium — a French-speaking country in Europe, and the one that happens to host the capital of the EU. Region chosen for the assignment: Europe.");
+  s.addNotes("FREN 201 Francophonie project. Region chosen: Europe. Country: Belgium — a French-speaking country in Western Europe.");
 }
 
 /* =========================================================================
-   2 — WHERE IS BELGIUM (the marked map + the land)                  [0:45]
+   2 — CONTENTS
+   ========================================================================= */
+{
+  const s = slide("Au sommaire", "What this presentation covers");
+  const items = [
+    ["Où se trouve la Belgique ?", "Location, neighbours and the map"],
+    ["La Belgique en chiffres", "The country's identity card"],
+    ["Géographie et paysages", "Three landscapes, one small country"],
+    ["Régions, communautés, langues", "How one country holds three languages"],
+    ["Le nom, hier et aujourd'hui", "From the Belgae to the Kingdom of Belgium"],
+    ["Histoire", "Rome, the Habsburgs, France, independence, the wars"],
+    ["Statut et alliances", "An independent state at the centre of Europe"],
+    ["Organisation politique", "A federal parliamentary constitutional monarchy"],
+    ["Le Roi et le gouvernement", "Who leads Belgium today"],
+    ["Bruxelles, capitale de l'Europe", "The EU, NATO and a bilingual city"],
+    ["Culture et gastronomie", "Painters, comic strips, chocolate and beer"],
+    ["Infos pratiques", "What a visitor needs to know"],
+  ];
+  const colW = 5.7, gap = 0.53, rowH = 0.79;
+  items.forEach((it, i) => {
+    const c = i < 6 ? 0 : 1, r = i % 6;
+    const x = M + c * (colW + gap), y = TOP + r * rowH;
+    badge(s, x, y + 0.05, 0.4, String(i + 1));
+    txt(s, it[0], { x: x + 0.58, y: y + 0.01, w: colW - 0.58, h: 0.3, fontSize: 13.5, bold: true, color: INK });
+    txt(s, it[1], { x: x + 0.58, y: y + 0.31, w: colW - 0.58, h: 0.3, fontSize: 11, color: MUTE });
+  });
+  s.addNotes("Roadmap of the presentation — every item required by the assignment is covered.");
+}
+
+/* =========================================================================
+   3 — WHERE IS BELGIUM (the marked map)
    ========================================================================= */
 {
   const s = slide("Où se trouve la Belgique ?", "Western Europe, on the North Sea");
@@ -159,32 +191,34 @@ function photo(s, file, x, y, w, h, caption) {
   });
 
   const px = 7.32, pw = W - M - px;
-  card(s, px, TOP, pw, 2.02);
+  card(s, px, TOP, pw, 2.50);
   txt(s, "LAND BORDERS  ·  1,297 km IN TOTAL", { x: px + 0.28, y: TOP + 0.16, w: pw - 0.56, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
   factRows(s, [
     ["France", "556 km — south and south-west"],
     ["Netherlands", "478 km — north"],
     ["Germany", "133 km — east"],
     ["Luxembourg", "130 km — south-east"],
-  ], px + 0.28, TOP + 0.48, pw - 0.56, 0.36, 1.42, 11);
-
-  card(s, px, TOP + 2.18, pw, 1.88);
-  txt(s, "THREE LANDSCAPES", { x: px + 0.28, y: TOP + 2.34, w: pw - 0.56, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
-  factRows(s, [
-    ["Coast", "66.5 km of North Sea beach and polder"],
-    ["Middle", "Fertile loam plateaus — Brussels sits here"],
-    ["Ardennes", "Forest and river valleys, up to 694 m"],
-  ], px + 0.28, TOP + 2.66, pw - 0.56, 0.46, 1.15, 11);
-
-  card(s, px, TOP + 4.22, pw, 0.80, INK);
-  txt(s, "About 50° N, 4° E — where Germanic and Latin Europe meet.", {
-    x: px + 0.28, y: TOP + 4.40, w: pw - 0.56, h: 0.46, fontSize: 10.5, color: GOLDL, lineSpacingMultiple: 1.04,
+  ], px + 0.28, TOP + 0.48, pw - 0.56, 0.40, 1.42, 11.5);
+  txt(s, "Plus 66.5 km of North Sea coastline.", {
+    x: px + 0.28, y: TOP + 2.10, w: pw - 0.56, h: 0.3, fontSize: 11, italic: true, color: MUTE,
   });
-  s.addNotes("[0:45] The assignment's map requirement. Belgium is the red country: France below, the Netherlands above, Germany and Luxembourg to the east, and a short North Sea coast facing Britain. It is small — 30,689 km2, about Maryland — but it sits exactly where Germanic and Latin Europe meet, which explains both its wealth and its wars.");
+
+  card(s, px, TOP + 2.66, pw, 1.32);
+  txt(s, "POSITION", { x: px + 0.28, y: TOP + 2.82, w: pw - 0.56, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "About 50° N, 4° E — the crossroads where Germanic northern Europe meets Latin southern Europe. That position made Belgium rich in trade, and made it a battlefield.", {
+    x: px + 0.28, y: TOP + 3.12, w: pw - 0.56, h: 0.80, fontSize: 11, color: BODY, lineSpacingMultiple: 1.04,
+  });
+
+  card(s, px, TOP + 4.14, pw, 0.88, INK);
+  txt(s, "BY TRAIN FROM BRUSSELS", { x: px + 0.28, y: TOP + 4.28, w: pw - 0.56, h: 0.24, fontSize: 10, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "Paris 1 h 25  ·  London 2 h 00  ·  Amsterdam 1 h 50  ·  Cologne 1 h 50", {
+    x: px + 0.28, y: TOP + 4.56, w: pw - 0.56, h: 0.3, fontSize: 10, color: "D8D8DE",
+  });
+  s.addNotes("Assignment requirement: mark the chosen country on a blank map of the region and show what surrounds it. Belgium sits between France, Germany, Luxembourg and the Netherlands, with a short North Sea coast.");
 }
 
 /* =========================================================================
-   3 — BY THE NUMBERS + STATUS                                      [0:35]
+   4 — BELGIUM BY THE NUMBERS
    ========================================================================= */
 {
   const s = slide("La Belgique en chiffres", "The country's identity card");
@@ -218,21 +252,45 @@ function photo(s, file, x, y, w, h, caption) {
   ], M, y2 + 0.32, 7.15, 0.35, 1.75, 11.5);
 
   const px = M + 7.5, pw = W - M - px;
-  const fh = 1.90;
-  s.addImage({ path: IMG + "flag.jpg", x: px, y: y2 + 0.32, w: pw, h: fh, sizing: { type: "cover", w: pw, h: fh } });
-  txt(s, "The tricolour of 1830 — black, yellow and red, from the arms of Brabant.", {
-    x: px, y: y2 + 0.42 + fh, w: pw, h: 0.34, fontSize: 10, color: MUTE, italic: true,
+  s.addImage({ path: IMG + "flag.jpg", x: px, y: y2 + 0.32, w: pw, h: pw / 1.875, sizing: { type: "cover", w: pw, h: pw / 1.875 } });
+  txt(s, "The tricolour of 1830 — black, yellow and red, taken from the arms of the Duchy of Brabant.", {
+    x: px, y: y2 + 0.44 + pw / 1.875, w: pw, h: 0.55, fontSize: 10, color: MUTE, italic: true,
   });
-  card(s, px, y2 + 0.86 + fh, pw, 0.88, INK);
-  txt(s, "INDEPENDENT — NOT A TERRITORY", { x: px + 0.26, y: y2 + 1.00 + fh, w: pw - 0.52, h: 0.24, fontSize: 9.5, bold: true, charSpacing: 1, color: GOLD });
-  txt(s, "A sovereign state since 1830, not a French possession — it simply shares the language.", {
-    x: px + 0.26, y: y2 + 1.26 + fh, w: pw - 0.52, h: 0.40, fontSize: 10.5, color: "D2D2DA", lineSpacingMultiple: 1.04,
+  card(s, px, y2 + 1.06 + pw / 1.875, pw, 0.80, INK);
+  txt(s, "Roughly the land area of Maryland, with twice the people.", {
+    x: px + 0.26, y: y2 + 1.24 + pw / 1.875, w: pw - 0.52, h: 0.46, fontSize: 11, color: GOLDL,
   });
-  s.addNotes("[0:35] The identity card. Two things to stress: Belgium is fully independent — it is NOT a French territory, it just shares the language. And it is a monarchy with a prime minister, which the next slides unpack.");
+  s.addNotes("Key figures. Population 11.8 million; area 30,689 km2 — roughly the size of Maryland.");
 }
 
 /* =========================================================================
-   4 — REGIONS, COMMUNITIES, LANGUAGES                              [0:50]
+   5 — GEOGRAPHY
+   ========================================================================= */
+{
+  const s = slide("Géographie et paysages", "Three landscapes in 30,689 km²");
+  const lw = 7.0;
+  const belts = [
+    ["BASSE-BELGIQUE", "Lower Belgium — 0 to 100 m", "A flat coastal plain: 66.5 km of North Sea beaches, polders reclaimed from the sea, canals and the Flemish plain. Nearly all of it is below 50 m."],
+    ["MOYENNE-BELGIQUE", "Middle Belgium — 100 to 200 m", "Gently rolling, very fertile loam plateaus. This is the busy, urban heart of the country: Brussels, Hainaut, Brabant and the Hesbaye farmland."],
+    ["HAUTE-BELGIQUE", "High Belgium — 200 to 700 m", "The Ardennes: forest, deep river valleys, caves and moorland. The Signal de Botrange, 694 m, is the highest point in the country."],
+  ];
+  belts.forEach((b, i) => {
+    const y = TOP + i * 1.66;
+    card(s, M, y, lw, 1.44);
+    badge(s, M + 0.26, y + 0.24, 0.42, String(i + 1));
+    txt(s, b[0], { x: M + 0.84, y: y + 0.2, w: lw - 1.1, h: 0.28, fontSize: 13.5, bold: true, color: INK });
+    txt(s, b[1], { x: M + 0.84, y: y + 0.48, w: lw - 1.1, h: 0.24, fontSize: 10.5, color: GOLD, bold: true });
+    txt(s, b[2], { x: M + 0.84, y: y + 0.75, w: lw - 1.1, h: 0.6, fontSize: 11, color: BODY, lineSpacingMultiple: 1.02 });
+  });
+
+  const px = M + lw + 0.5, pw = W - M - px;
+  photo(s, "meuse_huy.jpg", px, TOP, pw, 2.05, "The Meuse near Huy, Wallonia — one of Belgium's two great rivers, with the Scheldt.");
+  photo(s, "burgreuland.jpg", px, TOP + 2.62, pw, 2.05, "Burg-Reuland in the eastern Ardennes — the German-speaking corner of Belgium.");
+  s.addNotes("Climate: temperate maritime — mild, grey and wet, about 800 mm of rain a year. Two major rivers: the Scheldt (l'Escaut) and the Meuse.");
+}
+
+/* =========================================================================
+   6 — REGIONS, COMMUNITIES, LANGUAGES
    ========================================================================= */
 {
   const s = slide("Régions, communautés, langues", "One country, three languages");
@@ -263,11 +321,11 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Dutch is spoken by about 60 % of Belgians, French by about 40 %, German by under 1 %.", {
     x: 1.28, y: TOP + mh + 0.14, w: mw, h: 0.3, fontSize: 10.5, color: MUTE, italic: true,
   });
-  s.addNotes("[0:50] The single most important thing to understand about Belgium. Gold is Dutch-speaking Flanders, red is French-speaking Wallonia, and Brussels is the bilingual capital — a French-speaking island inside Flanders. This split runs through everything: the parties, the parliaments, the governments.");
+  s.addNotes("Federalisation ran through six state reforms from 1970 onward. Article 1 of the Constitution now reads: Belgium is a federal State composed of Communities and Regions.");
 }
 
 /* =========================================================================
-   5 — THE NAME                                                     [0:30]
+   7 — THE NAME
    ========================================================================= */
 {
   const s = slide("Le nom, hier et aujourd'hui", "Former names and the name today");
@@ -295,14 +353,35 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "The monarch's title is Roi des Belges — King of the Belgians, not King of Belgium. The crown belongs to a people, not to a piece of land. That wording was deliberate in 1831 and it still says something about how the country understands itself.", {
     x: px + 0.3, y: TOP + 3.28, w: pw - 0.6, h: 1.5, fontSize: 11, color: BODY, lineSpacingMultiple: 1.05,
   });
-  s.addNotes("[0:30] The name traces straight back to Caesar. Hit the Caesar quote and the King of the Belgians detail — both are memorable and both make the point that Belgium's identity is about a people, not a fixed territory.");
 }
 
 /* =========================================================================
-   6 — HISTORY I                                                    [0:45]
+   8 — HISTORY I
    ========================================================================= */
 {
-  const s = slide("Histoire I  ·  57 av. J.-C. – 1815", "Ruled by everyone else", { titleW: 6.6 });
+  const s = slide("Histoire I  ·  57 av. J.-C. – 1794", "From Rome to the Habsburgs");
+  const rows = [
+    ["57 BC", "Rome conquers the Belgae", "Caesar defeats the Belgic tribes. The land becomes the Roman province of Gallia Belgica and stays Roman for four centuries."],
+    ["5th c.", "The Franks", "Roman rule collapses and Frankish kingdoms take over. The Merovingians and then the Carolingians rule from the Meuse valley — Charlemagne's family heartland."],
+    ["11th–14th c.", "The cloth cities", "Bruges, Ghent and Ypres grow rich weaving English wool. Bruges becomes one of the great trading ports of Europe. Power sits with the County of Flanders, the Duchy of Brabant and the Prince-Bishopric of Liège."],
+    ["1384–1477", "The Burgundian Netherlands", "The Dukes of Burgundy unite the Low Countries. Under Philip the Good, Flemish painting has its golden age — Jan van Eyck finishes the Ghent Altarpiece in 1432."],
+    ["1477–1794", "The Habsburgs", "The territory passes to the Habsburgs: the Spanish Netherlands from 1556, then the Austrian Netherlands from 1714. The Dutch Revolt (1568–1648) splits the Protestant north away from the Catholic south — the origin of the border between Belgium and the Netherlands today."],
+  ];
+  const ws = CW;
+  let y = TOP;
+  rows.forEach((r, i) => {
+    const h = i >= 2 ? 1.14 : 0.9;
+    tlRow(s, M, y, ws, r[0], r[1], r[2], 1.35);
+    y += h - 0.05;
+  });
+  s.addNotes("The key takeaway: for nearly 2,000 years this land was ruled from somewhere else — Rome, Burgundy, Madrid, Vienna, Paris, The Hague. Independence in 1830 is very recent.");
+}
+
+/* =========================================================================
+   9 — HISTORY II
+   ========================================================================= */
+{
+  const s = slide("Histoire II  ·  1795 – 1839", "From France to independence", { titleW: 6.6 });
   s.addImage({ path: IMG + "waterloo.jpg", x: 7.35, y: 0, w: W - 7.35, h: H, sizing: { type: "cover", w: W - 7.35, h: H } });
   s.addShape(pres.ShapeType.rect, { x: 7.35, y: 5.55, w: W - 7.35, h: 1.95, fill: { color: INK, transparency: 12 } });
   txt(s, "THE LION'S MOUND, WATERLOO", { x: 7.7, y: 5.82, w: 5.2, h: 0.28, fontSize: 11, bold: true, charSpacing: 1.4, color: GOLD });
@@ -312,21 +391,20 @@ function photo(s, file, x, y, w, h, caption) {
 
   const lw = 6.35;
   const rows = [
-    ["57 BC", "Rome conquers the Belgae", "Caesar defeats the Belgic tribes and the land becomes the Roman province of Gallia Belgica. It stays Roman for four centuries."],
-    ["5th c.", "The Franks", "Roman rule collapses. The Merovingians and then the Carolingians rule from the Meuse valley — Charlemagne's family heartland."],
-    ["11th–15th c.", "Cloth cities and Burgundy", "Bruges, Ghent and Ypres grow rich weaving English wool. The Dukes of Burgundy unite the Low Countries and Flemish painting has its golden age."],
-    ["1556–1794", "The Habsburgs", "The Spanish Netherlands, then the Austrian Netherlands. The Dutch Revolt splits the Protestant north from the Catholic south — the origin of today's border."],
-    ["1795–1815", "France, then Waterloo", "Revolutionary France annexes the territory and makes French the language of law. Napoleon is beaten at Waterloo, and the powers hand the land to the Dutch."],
+    ["1795", "Annexed by France", "Revolutionary France annexes the Austrian Netherlands and divides it into départements. French becomes the language of law and administration — a legacy that has never gone away."],
+    ["1815", "Waterloo, then the Dutch", "Napoleon is beaten at Waterloo. The great powers hand the territory to the Dutch, creating the United Kingdom of the Netherlands under William I."],
+    ["1830", "Revolution in Brussels", "On 25 August a performance of the opera La Muette de Portici sets off riots. Dutch troops are driven out on 27 September, and on 4 October a provisional government declares independence."],
+    ["1831", "A king and a constitution", "A strikingly liberal constitution is adopted on 7 February. On 21 July Leopold of Saxe-Coburg is sworn in as Leopold I, first King of the Belgians — still the national day."],
+    ["1839", "Recognised at last", "The Treaty of London: the Netherlands finally accepts Belgian independence, and the powers guarantee Belgium's permanent neutrality."],
   ];
-  rows.forEach((r, i) => tlRow(s, M, TOP + i * 0.99, lw, r[0], r[1], r[2], 1.15));
-  s.addNotes("[0:45] The through-line: for nearly two thousand years this land was ruled from somewhere else — Rome, Burgundy, Madrid, Vienna, Paris, The Hague. Independence in 1830 is very recent. Don't read every row; land the pattern and point at Waterloo.");
+  rows.forEach((r, i) => tlRow(s, M, TOP + i * 0.99, lw, r[0], r[1], r[2], 0.95));
 }
 
 /* =========================================================================
-   7 — HISTORY II                                                   [0:50]
+   10 — HISTORY III
    ========================================================================= */
 {
-  const s = slide("Histoire II  ·  1830 – aujourd'hui", "Independence, empire and war", { titleW: 6.6 });
+  const s = slide("Histoire III  ·  1885 – aujourd'hui", "Empire, war, and federalism", { titleW: 6.6 });
   s.addImage({ path: IMG + "ypres_menin.jpg", x: 7.35, y: 0, w: W - 7.35, h: H, sizing: { type: "cover", w: W - 7.35, h: H } });
   s.addShape(pres.ShapeType.rect, { x: 7.35, y: 5.55, w: W - 7.35, h: 1.95, fill: { color: INK, transparency: 12 } });
   txt(s, "THE MENIN GATE, YPRES", { x: 7.7, y: 5.82, w: 5.2, h: 0.28, fontSize: 11, bold: true, charSpacing: 1.4, color: GOLD });
@@ -336,18 +414,60 @@ function photo(s, file, x, y, w, h, caption) {
 
   const lw = 6.35;
   const rows = [
-    ["1830–31", "Revolution and a king", "A performance of the opera La Muette de Portici sets off riots in Brussels. Independence is declared on 4 October 1830, and Leopold I is sworn in on 21 July 1831 — still the national day."],
-    ["1839", "Recognised at last", "The Treaty of London: the Netherlands accepts Belgian independence and the powers guarantee Belgium's permanent neutrality."],
-    ["1885–1960", "The Congo", "Leopold II takes the Congo as personal property; his regime's violence forces Belgium to take it over in 1908. The Congo becomes independent in 1960, Rwanda and Burundi in 1962."],
-    ["1914–1945", "Neutrality broken twice", "Germany invades in 1914 and again in 1940. The Western Front settles into Flanders — Ypres, Passchendaele — and the Ardennes see the Battle of the Bulge."],
-    ["1970–2014", "Six state reforms", "Tension between Dutch and French speakers is answered by rebuilding the country from the inside, turning a unitary state into today's federation."],
+    ["1885", "The Congo Free State", "King Leopold II takes the Congo as his personal possession. His regime's forced labour and violence cause enormous suffering; international outcry forces Belgium to take the colony over from him in 1908."],
+    ["1914–18", "Neutrality broken", "Germany invades neutral Belgium. The Western Front settles into Flanders: Ypres, Passchendaele, the Yser. The poppies of Flanders Fields become the symbol of remembrance."],
+    ["1940–45", "Occupied again", "A second German occupation. The last great German offensive of the war, the Battle of the Bulge, is fought in the Ardennes in the winter of 1944–45."],
+    ["1960–62", "Decolonisation", "The Congo becomes independent on 30 June 1960; Rwanda and Burundi follow on 1 July 1962. In 2020 King Philippe expressed his “deepest regrets” for the wounds of the colonial past."],
+    ["1970–2014", "Six state reforms", "Tension between Dutch and French speakers is answered by rebuilding the country from the inside. Six reforms turn a unitary state into the federation Belgium is today."],
   ];
-  rows.forEach((r, i) => tlRow(s, M, TOP + i * 0.99, lw, r[0], r[1], r[2], 1.15));
-  s.addNotes("[0:50] The modern country in five beats. Worth saying out loud: in 2020 King Philippe expressed his 'deepest regrets' for the wounds of the colonial past — the first Belgian monarch to do so. Then the Menin Gate photo: the Last Post still sounds there every night.");
+  rows.forEach((r, i) => tlRow(s, M, TOP + i * 0.99, lw, r[0], r[1], r[2], 1.05));
 }
 
 /* =========================================================================
-   8 — POLITICAL ORGANISATION                                       [0:50]
+   11 — STATUS
+   ========================================================================= */
+{
+  const s = slide("Statut", "Independent since 1830", { titleW: 7.4 });
+  const lw = 7.2;
+  card(s, M, TOP, lw, 1.5, INK);
+  txt(s, "INDEPENDENT — NOT A TERRITORY OF ANY OTHER COUNTRY", { x: M + 0.3, y: TOP + 0.24, w: lw - 0.6, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "Belgium declared independence on 4 October 1830 and has been a fully sovereign state ever since, recognised internationally by the Treaty of London in 1839. It is not, and has never been, a French overseas territory — it simply shares France's language.", {
+    x: M + 0.3, y: TOP + 0.58, w: lw - 0.6, h: 0.85, fontSize: 11.5, color: "D4D4DC", lineSpacingMultiple: 1.05,
+  });
+
+  txt(s, "FROM NEUTRALITY TO ALLIANCE", { x: M, y: TOP + 1.78, w: lw, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.2, color: GOLD });
+  txt(s, "The 1839 treaty made Belgium permanently neutral. Germany violated that neutrality in 1914 and again in 1940. After the Second World War Belgium abandoned neutrality for good and helped build the alliances that replaced it.", {
+    x: M, y: TOP + 2.1, w: lw, h: 0.85, fontSize: 11.5, color: BODY, lineSpacingMultiple: 1.05,
+  });
+
+  const mem = [
+    ["1944", "Benelux", "Customs union with the Netherlands and Luxembourg — a rehearsal for European integration."],
+    ["1945", "United Nations", "A founding member."],
+    ["1949", "NATO", "A founding member; the alliance's headquarters moved to Brussels in 1967."],
+    ["1951 / 1957", "The European Union", "Founding member of the Coal and Steel Community and then, by the Treaty of Rome, of the EEC."],
+    ["1999", "The eurozone", "A founding member of the single currency."],
+    ["1970", "La Francophonie", "A founding member — with two seats, the Kingdom and the French Community."],
+  ];
+  const cw2 = (lw - 0.3) / 2;
+  mem.forEach((m, i) => {
+    const x = M + (i % 2) * (cw2 + 0.3), y = TOP + 3.12 + Math.floor(i / 2) * 0.62;
+    txt(s, m[0] + "  ·  " + m[1], { x, y, w: cw2, h: 0.24, fontSize: 11.5, bold: true, color: INK });
+    txt(s, m[2], { x, y: y + 0.23, w: cw2, h: 0.36, fontSize: 10, color: MUTE, lineSpacingMultiple: 1.0 });
+  });
+
+  const px = M + lw + 0.45, pw = W - M - px;
+  photo(s, "berlaymont.jpg", px, TOP, pw, 3.2, null);
+  txt(s, "The Berlaymont in Brussels — headquarters of the European Commission, and the reason Brussels is called the capital of Europe.", {
+    x: px, y: TOP + 3.32, w: pw, h: 0.8, fontSize: 10.5, color: MUTE, italic: true, lineSpacingMultiple: 1.05,
+  });
+  card(s, px, TOP + 4.2, pw, 0.72, INK);
+  txt(s, "A founding member of both the EU and NATO — and the host of both.", {
+    x: px + 0.24, y: TOP + 4.34, w: pw - 0.48, h: 0.5, fontSize: 11, bold: true, color: GOLDL, lineSpacingMultiple: 1.0,
+  });
+}
+
+/* =========================================================================
+   12 — POLITICAL ORGANISATION (diagram)
    ========================================================================= */
 {
   const s = slide("Organisation politique", "A federal parliamentary constitutional monarchy");
@@ -387,63 +507,93 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Voting is compulsory from the age of 18, and because parties are organised by language, every federal government is a coalition.", {
     x: 1.28, y: TOP + 4.86, w: CW - 0.58, h: 0.3, fontSize: 10.5, italic: true, color: MUTE,
   });
-  s.addNotes("[0:50] Answers the assignment's question directly: democracy not dictatorship, monarchy not republic. The four chips are the fastest way to say it. Then the three levels — a country of 11.8 million with six parliaments. Mention compulsory voting; it usually gets a reaction.");
+  s.addNotes("Article 1 of the Constitution: Belgium is a federal State composed of Communities and Regions. Six state reforms: 1970, 1980, 1988-89, 1993, 2001 and 2011-14.");
 }
 
 /* =========================================================================
-   9 — THE KING AND THE GOVERNMENT                                  [0:45]
+   13 — THE KING
    ========================================================================= */
 {
-  const s = slide("Le Roi et le gouvernement", "Who leads Belgium today", { titleW: 6.4 });
+  const s = slide("Le Roi Philippe", "Head of State since 21 July 2013", { titleW: 6.4 });
   s.addImage({ path: IMG + "royalpalace.jpg", x: 7.35, y: 0, w: W - 7.35, h: H, sizing: { type: "cover", w: W - 7.35, h: H } });
   s.addShape(pres.ShapeType.rect, { x: 7.35, y: 5.7, w: W - 7.35, h: 1.8, fill: { color: INK, transparency: 12 } });
   txt(s, "THE ROYAL PALACE, BRUSSELS", { x: 7.7, y: 5.96, w: 5.2, h: 0.28, fontSize: 11, bold: true, charSpacing: 1.4, color: GOLD });
   txt(s, "The King's official workplace. The royal family actually lives at Laeken, on the edge of the city.", {
     x: 7.7, y: 6.28, w: 5.2, h: 0.8, fontSize: 11, color: "E2E2E8", lineSpacingMultiple: 1.05,
   });
+  const rows = [
+    ["Full title", "Philippe, Roi des Belges — King of the Belgians, the seventh since 1831"],
+    ["House", "Saxe-Coburg and Gotha — the dynasty founded by Leopold I in 1831"],
+    ["Accession", "21 July 2013, when his father Albert II abdicated for health reasons"],
+    ["Born", "15 April 1960, Brussels. Married to Queen Mathilde; four children"],
+    ["Heir", "Princess Elisabeth, Duchess of Brabant — Belgium's first reigning queen, under absolute primogeniture since 1991"],
+    ["Languages", "Dutch, French, German, English, Italian and Spanish"],
+  ];
+  factRows(s, rows, M, TOP + 0.06, 6.2, 0.56, 1.35, 11.5);
 
-  const lw = 6.35;
-  card(s, M, TOP, lw, 2.30, INK);
-  txt(s, "CHEF DE L'ÉTAT  ·  HEAD OF STATE", { x: M + 0.3, y: TOP + 0.20, w: lw - 0.6, h: 0.26, fontSize: 10, bold: true, charSpacing: 1.1, color: GOLD });
-  txt(s, "King Philippe", { x: M + 0.3, y: TOP + 0.50, w: lw - 0.6, h: 0.58, fontSize: 28, bold: true, color: WHITE, fontFace: SERIF });
-  txt(s, "Seventh King of the Belgians, on the throne since 21 July 2013, when his father Albert II abdicated. His heir is Princess Elisabeth, who will be Belgium's first reigning queen.", {
-    x: M + 0.3, y: TOP + 1.14, w: lw - 0.6, h: 0.66, fontSize: 10.5, color: "C4C4CE", lineSpacingMultiple: 1.04,
+  card(s, M, TOP + 3.68, 6.2, 1.30, INK);
+  txt(s, "WHAT THE KING CAN AND CANNOT DO", { x: M + 0.28, y: TOP + 3.84, w: 5.65, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "He appoints the government, signs laws and royal decrees, is commander-in-chief and represents Belgium abroad — but he has no veto and no personal policy. His real influence is quiet: appointing the negotiators who assemble a coalition, and holding the country together when its two language groups cannot agree.", {
+    x: M + 0.28, y: TOP + 4.14, w: 5.65, h: 0.78, fontSize: 10.5, color: "D2D2DA", lineSpacingMultiple: 1.04,
   });
-  txt(s, "He signs laws but cannot veto them. His real power is quiet: choosing the negotiators who build a coalition.", {
-    x: M + 0.3, y: TOP + 1.82, w: lw - 0.6, h: 0.42, fontSize: 10.5, color: GOLDL, lineSpacingMultiple: 1.04,
-  });
-
-  card(s, M, TOP + 2.48, lw, 2.24);
-  txt(s, "PREMIER MINISTRE  ·  PRIME MINISTER", { x: M + 0.3, y: TOP + 2.66, w: lw - 0.6, h: 0.26, fontSize: 10, bold: true, charSpacing: 1.1, color: GOLD });
-  txt(s, "Bart De Wever", { x: M + 0.3, y: TOP + 2.96, w: lw - 0.6, h: 0.58, fontSize: 28, bold: true, color: INK, fontFace: SERIF });
-  txt(s, "Sworn in on 3 February 2025, leading the five-party “Arizona” coalition: N-VA · MR · Les Engagés · Vooruit · CD&V. Head of government, accountable to the Chamber.", {
-    x: M + 0.3, y: TOP + 3.60, w: lw - 0.6, h: 0.66, fontSize: 10.5, color: BODY, lineSpacingMultiple: 1.04,
-  });
-  txt(s, "It took eight months of negotiation to form. Belgium once went 541 days without an elected government.", {
-    x: M + 0.3, y: TOP + 4.28, w: lw - 0.6, h: 0.42, fontSize: 10.5, bold: true, color: RED, lineSpacingMultiple: 1.04,
-  });
-  s.addNotes("[0:45] Two people, two jobs. The King reigns but does not rule — no veto. De Wever governs, and he is the first Flemish nationalist ever to lead the country. The 541-day record is the line people remember; use it to explain why the language split makes governing so hard.");
 }
 
 /* =========================================================================
-   10 — BRUSSELS                                                    [0:40]
+   14 — THE GOVERNMENT
+   ========================================================================= */
+{
+  const s = slide("Le gouvernement fédéral", "Who governs Belgium today");
+  card(s, M, TOP, 6.1, 2.05, INK);
+  txt(s, "PREMIER MINISTRE  ·  PRIME MINISTER", { x: M + 0.32, y: TOP + 0.24, w: 5.46, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "Bart De Wever", { x: M + 0.32, y: TOP + 0.56, w: 5.46, h: 0.62, fontSize: 32, bold: true, color: WHITE, fontFace: SERIF });
+  txt(s, "Sworn in on 3 February 2025. Leader of the New Flemish Alliance (N-VA) and the first Flemish nationalist ever to head the Belgian federal government.", {
+    x: M + 0.32, y: TOP + 1.24, w: 5.46, h: 0.7, fontSize: 11, color: "C4C4CE", lineSpacingMultiple: 1.05,
+  });
+
+  const px = M + 6.4, pw = W - M - px;
+  card(s, px, TOP, pw, 2.05);
+  txt(s, "“L'ARIZONA” — THE COALITION", { x: px + 0.3, y: TOP + 0.24, w: pw - 0.6, h: 0.26, fontSize: 10.5, bold: true, charSpacing: 1.1, color: GOLD });
+  txt(s, "Five parties, named after the colours of the Arizona flag:", { x: px + 0.3, y: TOP + 0.56, w: pw - 0.6, h: 0.26, fontSize: 11, color: MUTE });
+  txt(s, "N-VA  ·  MR  ·  Les Engagés  ·  Vooruit  ·  CD&V", { x: px + 0.3, y: TOP + 0.86, w: pw - 0.6, h: 0.3, fontSize: 13, bold: true, color: INK });
+  txt(s, "Three Flemish parties and two French-speaking ones. Deputy prime ministers include Jan Jambon, David Clarinval, Maxime Prévot, Frank Vandenbroucke and Vincent Van Peteghem.", {
+    x: px + 0.3, y: TOP + 1.22, w: pw - 0.6, h: 0.72, fontSize: 10.5, color: BODY, lineSpacingMultiple: 1.03,
+  });
+
+  const y2 = TOP + 2.23;
+  const st = [
+    ["150", "seats in the Chamber of Representatives, elected by proportional representation"],
+    ["5", "parties needed to form the current federal majority"],
+    ["8", "months of negotiation after the June 2024 election before a government was sworn in"],
+    ["541", "days without an elected government in 2010–11 — a world record at the time"],
+  ];
+  const sw = (CW - 3 * 0.3) / 4;
+  st.forEach((x0, i) => {
+    const x = M + i * (sw + 0.3);
+    card(s, x, y2, sw, 1.68);
+    txt(s, x0[0], { x: x + 0.15, y: y2 + 0.16, w: sw - 0.3, h: 0.66, fontSize: 36, bold: true, color: RED, fontFace: SERIF, align: "center" });
+    txt(s, x0[1], { x: x + 0.22, y: y2 + 0.86, w: sw - 0.44, h: 0.74, fontSize: 10.5, color: BODY, align: "center", lineSpacingMultiple: 1.03 });
+  });
+
+  card(s, M, y2 + 1.84, CW, 0.86, INK);
+  txt(s, "Why coalitions are so hard: Belgian parties do not compete nationally. Voters in Flanders and voters in Wallonia choose from two entirely separate sets of parties, so a federal majority must always be negotiated across the language border.", {
+    x: M + 0.32, y: y2 + 2.0, w: CW - 0.64, h: 0.58, fontSize: 10.5, color: "D2D2DA", lineSpacingMultiple: 1.05,
+  });
+}
+
+/* =========================================================================
+   15 — BRUSSELS
    ========================================================================= */
 {
   const s = slide("Bruxelles", "The capital of Belgium — and of Europe");
-  const ih = 3.16;
-  const iwA = 4.55, iwB = 2.56;
-  s.addImage({ path: IMG + "brussels_aerial.jpg", x: M, y: TOP, w: iwA, h: ih, sizing: { type: "cover", w: iwA, h: ih } });
-  s.addImage({ path: IMG + "berlaymont.jpg", x: M + iwA + 0.24, y: TOP, w: iwB, h: ih, sizing: { type: "cover", w: iwB, h: ih } });
-  txt(s, "Brussels from the Koekelberg basilica — the Atomium is on the horizon. Right: the Berlaymont, home of the European Commission.", {
-    x: M, y: TOP + ih + 0.10, w: iwA + iwB + 0.24, h: 0.4, fontSize: 9.5, color: MUTE, italic: true,
-  });
+  const iw = 7.35, ih = 3.16;
+  photo(s, "brussels_aerial.jpg", M, TOP, iw, ih, "Brussels from the Koekelberg basilica. The Atomium, built for the 1958 World's Fair, is visible on the horizon.");
 
-  const px = 8.15, pw = W - M - px;
+  const px = M + iw + 0.45, pw = W - M - px;
   const facts = [
     ["1.25 million", "people in the Brussels-Capital Region; about 2.1 million in the wider metropolitan area."],
     ["Officially bilingual", "French and Dutch have equal status. In practice around 80 % of residents speak French — a French-speaking region surrounded by Flanders."],
     ["Capital of the EU", "Home to the European Commission, the Council of the EU and part of the European Parliament."],
-    ["NATO headquarters", "Since 1967 — Belgium was a founding member in 1949."],
+    ["NATO headquarters", "Since 1967."],
   ];
   let y = TOP;
   facts.forEach((f) => {
@@ -454,14 +604,13 @@ function photo(s, file, x, y, w, h, caption) {
 
   card(s, M, TOP + 3.96, CW, 1.02, INK);
   txt(s, "WHAT TO SEE", { x: M + 0.32, y: TOP + 4.10, w: CW - 0.64, h: 0.24, fontSize: 10, bold: true, charSpacing: 1.2, color: GOLD });
-  txt(s, "The Grand-Place, a UNESCO World Heritage site since 1998  ·  Manneken Pis  ·  the Art Nouveau town houses of Victor Horta, also UNESCO  ·  the Atomium  ·  the Magritte Museum  ·  the Belgian Comic Strip Center", {
+  txt(s, "The Grand-Place, a UNESCO World Heritage site since 1998 and one of the most complete baroque squares in Europe  ·  Manneken Pis  ·  the Art Nouveau town houses of Victor Horta, also UNESCO  ·  the Atomium  ·  the Royal Museums of Fine Arts and the Magritte Museum  ·  the Belgian Comic Strip Center", {
     x: M + 0.32, y: TOP + 4.38, w: CW - 0.64, h: 0.50, fontSize: 10.5, color: "D2D2DA", lineSpacingMultiple: 1.06,
   });
-  s.addNotes("[0:40] Brussels is the payoff slide. A city of 1.25 million that runs a continent: the Commission, the Council, and NATO. And it is a French-speaking island inside Dutch-speaking Flanders — which is exactly why it works as neutral ground.");
 }
 
 /* =========================================================================
-   11 — CULTURE                                                     [0:35]
+   16 — CULTURE I
    ========================================================================= */
 {
   const s = slide("Culture", "Painters, surrealists and the ninth art");
@@ -481,11 +630,10 @@ function photo(s, file, x, y, w, h, caption) {
   const px = M + lw + 0.5, pw = W - M - px;
   photo(s, "antwerp_cathedral.jpg", px, TOP, pw, 2.25, "The Cathedral of Our Lady, Antwerp — its belfry is UNESCO-listed and it holds four Rubens altarpieces.");
   photo(s, "mannekenpis.jpg", px, TOP + 2.92, pw, 1.72, "Manneken Pis, Brussels — cast in bronze in 1619.");
-  s.addNotes("[0:35] Pick two, don't read all three. Best bets: Magritte, because everyone has seen the pipe; and Tintin and the Smurfs, because almost nobody knows they are Belgian. Adolphe Sax and the saxophone is a good closer.");
 }
 
 /* =========================================================================
-   12 — FOOD                                                        [0:25]
+   17 — FOOD
    ========================================================================= */
 {
   const s = slide("Gastronomie", "Four things Belgium is famous for — and rightly so");
@@ -508,11 +656,10 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Moules-frites  ·  carbonnade flamande, beef stewed in beer  ·  waterzooi from Ghent  ·  chicons au gratin  ·  speculoos biscuits  ·  and, in season, the grey shrimp of the North Sea coast.", {
     x: M + 0.32, y: TOP + 4.48, w: CW - 0.64, h: 0.46, fontSize: 11, color: "D2D2DA", lineSpacingMultiple: 1.05,
   });
-  s.addNotes("[0:25] Move fast, the pictures do the work. Two facts worth saying: the praline was invented in Brussels in 1912, and Belgian beer culture is on the UNESCO heritage list. The frites-are-Belgian-not-French claim usually gets a laugh.");
 }
 
 /* =========================================================================
-   13 — CITIES OF ART                                               [0:30]
+   18 — CITIES OF ART
    ========================================================================= */
 {
   const s = slide("Les villes d'art", "Three cities worth the trip");
@@ -531,11 +678,10 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Belgium has 13 UNESCO World Heritage sites in a country the size of Maryland — including 33 of the belfries of Belgium and France, and the Carnival of Binche on the Intangible Heritage list.", {
     x: 1.28, y: TOP + 4.74, w: CW - 0.58, h: 0.3, fontSize: 10.5, italic: true, color: MUTE,
   });
-  s.addNotes("[0:30] Bruges is the postcard, Ghent is the one locals prefer, Antwerp is the working city. The diamond statistic — over 70 % of the world's rough diamonds — is the one that lands.");
 }
 
 /* =========================================================================
-   14 — VISITOR INFORMATION                                         [0:25]
+   19 — VISITOR INFORMATION
    ========================================================================= */
 {
   const s = slide("Infos pratiques", "What a visitor needs to know");
@@ -560,11 +706,10 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Dinant on the Meuse, in Wallonia — birthplace of Adolphe Sax, inventor of the saxophone.", {
     x: 1.28, y: by + 0.86, w: CW - 0.58, h: 0.3, fontSize: 10, color: MUTE, italic: true,
   });
-  s.addNotes("[0:25] Fastest slide in the deck — do not read the boxes. Say three things: it is in Schengen so no visa for 90 days, the trains reach everything in two hours, and which language you open with matters. Then move on.");
 }
 
 /* =========================================================================
-   15 — FRANCOPHONIE / CONCLUSION                                   [0:30]
+   20 — FRANCOPHONIE / CONCLUSION
    ========================================================================= */
 {
   n++;
@@ -598,11 +743,11 @@ function photo(s, file, x, y, w, h, caption) {
     x: M + 0.34, y: 5.48, w: CW - 0.68, h: 0.85, fontSize: 12.5, bold: true, color: INK, lineSpacingMultiple: 1.06,
   });
   chrome(s, true);
-  s.addNotes("[0:30] Close here. Read the gold box out loud — it is the thesis. Then stop and take questions. Do not click to the sources slide unless someone asks.");
+  s.addNotes("Conclusion: Belgium's identity is built on being a meeting point rather than a single nation.");
 }
 
 /* =========================================================================
-   16 — SOURCES                                                     [0:05]
+   21 — SOURCES
    ========================================================================= */
 {
   const s = slide("Sources", "Where the facts in this presentation come from");
@@ -625,7 +770,6 @@ function photo(s, file, x, y, w, h, caption) {
   txt(s, "Photographs licensed from Adobe Stock. The map of Europe is the blank outline map supplied with the assignment, with Belgium marked and its neighbours labelled; the map of Belgium's regions was drawn from that same outline. Language and community boundaries are shown approximately.", {
     x: 1.28, y: TOP + 4.62, w: CW - 0.58, h: 0.7, fontSize: 10, color: MUTE, italic: true, lineSpacingMultiple: 1.06,
   });
-  s.addNotes("[0:05] Leave this up during questions. Timings on each slide add up to 9 minutes 15, leaving about 45 seconds of buffer in a 10-minute slot.");
 }
 
-pres.writeFile({ fileName: __dirname + "/La_Belgique_FREN201.pptx" }).then((f) => console.log("wrote", f, "—", n, "slides"));
+pres.writeFile({ fileName: __dirname + "/La_Belgique_FREN201_long.pptx" }).then((f) => console.log("wrote", f, "—", n, "slides"));
