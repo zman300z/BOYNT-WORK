@@ -3,13 +3,18 @@
 Two versions of the same presentation on Belgium, built for the FREN 201
 Francophonie assignment (region chosen: Europe).
 
-| File | Slides | Use |
-|---|---|---|
-| `La_Belgique_FREN201.pptx` | 16 | **The one to present.** Speaker notes carry a per-slide target time; they total 9:15, leaving buffer in a 10-minute slot. |
-| `La_Belgique_FREN201_long.pptx` | 21 | The fuller version — separate slides for geography, status, the contents page, and three history slides instead of two. |
+| File | Slides | Language | Use |
+|---|---|---|---|
+| `Belgium_FREN201_English.pptx` | 16 | Fully English | **The one to present.** Simplified — roughly half the words per slide, and every heading, label and map is in English. |
+| `La_Belgique_FREN201.pptx` | 16 | English body, French headings | Same structure, denser text, French section labels and maps. |
+| `La_Belgique_FREN201_long.pptx` | 21 | English body, French headings | The fullest version — separate geography and status slides, a contents page, and three history slides. |
 
-Both are above the assignment's 15-slide minimum. Both are written in English;
-only section labels and Belgian proper nouns are in French.
+All three are above the assignment's 15-slide minimum. Every version's speaker
+notes carry a per-slide target time totalling about 9:15, for a 10-minute slot.
+
+In the English version the only non-English words left are proper nouns that
+have no English form (Liège, René Magritte, Grand-Place, Manneken Pis) and the
+Dutch and German forms of the country's name, which the assignment asks for.
 
 ## What the assignment asked for, and where it is
 
@@ -45,14 +50,17 @@ the assignment.
 ```
 npm install pptxgenjs
 pip install Pillow
-python3 make_map.py          # writes img/map_europe_belgium.png
-python3 make_regions.py      # writes img/map_belgium_regions.png
+python3 make_map.py          # French-labelled Europe map
+python3 make_regions.py      # French-labelled regions map
+python3 make_map_en.py       # English-labelled Europe map
+python3 make_regions_en.py   # English-labelled regions map
+node build_deck_en.js        # writes Belgium_FREN201_English.pptx (16 slides)
 node build_deck.js           # writes La_Belgique_FREN201.pptx (16 slides)
 node build_deck_long.js      # writes La_Belgique_FREN201_long.pptx (21 slides)
 ```
 
-`build_deck.js` concatenates a shared helper block with `slides_short.js`. Both
-build scripts expect the photographs in `deckimg/`. They are licensed Adobe
+Each build script concatenates a shared helper block with its slide file
+(`slides_en.js`, `slides_short.js`). All build scripts expect the photographs in `deckimg/`. They are licensed Adobe
 Stock images and are not committed here; the deck ships with them embedded.
 
 ## Sources
