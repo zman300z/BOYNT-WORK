@@ -1679,18 +1679,23 @@ function startWave(n){
   document.getElementById('sonar-depth').textContent = 'DEPTH ' + (38 + n*4) + ' FM';
 }
 function updateWaves(dt){
-  if(!waveActive) return;
-  if(queue.length){
-    spawnTimer -= dt;
-    if(spawnTimer <= 0){
-      const item = queue.shift();
-      const p = spawnPoint();
-      makeEnemy(item.k, p.x, p.y);
-      spawnTimer = queue.length ? queue[0].delay : 0;
+  if(waveActive){
+    if(queue.length){
+      spawnTimer -= dt;
+      if(spawnTimer <= 0){
+        const item = queue.shift();
+        const p = spawnPoint();
+        makeEnemy(item.k, p.x, p.y);
+        spawnTimer = queue.length ? queue[0].delay : 0;
+      }
+    } else if(hostiles.length === 0){
+      // swell cleared: haul in whatever is still floating, then open the manifest
+      waveActive = false;
+      restT = 1.5;
+      for(const p of pickups) p.mag = true;
+      toast('SWELL CLEAR');
+      Snd.wave();
     }
-  } else if(hostiles.length === 0){
-    waveActive = false;
-    restT = 0.85;
   }
   if(!waveActive && restT > 0){
     restT -= dt;
@@ -1698,6 +1703,8 @@ function updateWaves(dt){
   }
 }
 function endWave(){
+  for(const p of pickups.slice()) collect(p);
+  pickups.length = 0;
   const bonus = 60 + waveN*30;
   P.score += bonus;
   P.floaters += 5 + Math.floor(waveN*1.5);
