@@ -1,0 +1,3212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<!-- PILEDRIVER - single-file build. Save it anywhere and open it in any browser. -->
+<title>PILEDRIVER — a roguelike solitaire</title>
+<style>
+/* ============================================================
+   PILEDRIVER — stylesheet
+   dark felt, hot neon, chunky cards
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+:root{
+  --cw: 76px;
+  --ch: 106px;
+  --felt:#0d1b16;
+  --felt2:#123024;
+  --ink:#06110d;
+  --paper:#f7f3e6;
+  --gold:#ffd166;
+  --hot:#ff4d6d;
+  --cool:#4cc9f0;
+  --lime:#7ee787;
+  --violet:#b07cff;
+  --line:rgba(255,255,255,.13);
+  --shadow: 0 10px 24px rgba(0,0,0,.5);
+  --font: 'Space Grotesk', system-ui, sans-serif;
+  --display: 'Bungee', 'Space Grotesk', system-ui, sans-serif;
+}
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; margin:0; }
+body{
+  font-family:var(--font);
+  color:var(--paper);
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #1d4736 0%, transparent 60%),
+    radial-gradient(900px 600px at 100% 100%, #2a1140 0%, transparent 55%),
+    var(--felt);
+  overflow:hidden;
+  user-select:none;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
+  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+  opacity:.35;
+}
+
+#app{ position:relative; z-index:2; height:100%; display:flex; flex-direction:column; }
+#app.shaking{ animation: shake .38s ease; }
+@keyframes shake{
+  0%,100%{ transform:translate(0,0) }
+  20%{ transform:translate(calc(var(--shake) * -1), calc(var(--shake)/2)) rotate(-.4deg) }
+  40%{ transform:translate(var(--shake), calc(var(--shake) / -2)) rotate(.4deg) }
+  60%{ transform:translate(calc(var(--shake) / -1.6), 0) }
+  80%{ transform:translate(calc(var(--shake) / 2), var(--shake)) }
+}
+
+/* ---------------- HUD ---------------- */
+#hud{
+  display:flex; align-items:center; gap:12px; padding:8px 14px;
+  background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.15));
+  border-bottom:2px solid var(--line);
+}
+.hud-group{ display:flex; align-items:center; gap:8px; }
+.hud-group.right{ margin-left:auto; }
+.badge{
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  background:rgba(255,255,255,.06); border:1px solid var(--line);
+  padding:5px 10px; border-radius:8px; white-space:nowrap;
+}
+.badge b{ font-size:15px; margin-left:5px; font-family:var(--display); }
+.badge.ante b{ color:var(--violet); }
+.badge.round b{ color:var(--cool); }
+.badge.score b{ color:var(--gold); }
+.badge.cash{ font-family:var(--display); font-size:17px; color:var(--gold); padding:4px 12px;
+  border-color:rgba(255,209,102,.45); background:rgba(255,209,102,.1); text-shadow:0 0 12px rgba(255,209,102,.5); }
+.icon{
+  width:34px; height:32px; border-radius:8px; cursor:pointer; position:relative;
+  background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--paper);
+  font-size:15px; display:flex; align-items:center; justify-content:center;
+}
+.icon:hover{ background:rgba(255,255,255,.14); }
+.icon.off{ opacity:.45; }
+#deck-count{ position:absolute; bottom:-2px; right:1px; font-size:9px; font-weight:700; color:var(--cool); }
+
+.hud-quota{ flex:1; min-width:120px; max-width:460px; }
+.quota-cap{ font-size:9px; letter-spacing:.18em; opacity:.55; margin-bottom:3px; }
+.quota-bar{
+  position:relative; height:20px; border-radius:10px; overflow:hidden;
+  background:rgba(0,0,0,.45); border:1px solid var(--line);
+}
+.quota-fill{
+  position:absolute; inset:0 auto 0 0; width:0%;
+  background:linear-gradient(90deg, var(--hot), var(--gold));
+  transition:width .35s cubic-bezier(.2,.9,.25,1);
+  box-shadow:0 0 18px rgba(255,209,102,.55);
+}
+.quota-bar.met .quota-fill{ background:linear-gradient(90deg, var(--lime), var(--cool)); }
+.quota-bar.met{ animation:pulseGlow 1.4s infinite; }
+@keyframes pulseGlow{ 50%{ box-shadow:0 0 22px rgba(126,231,135,.6) } }
+.quota-text{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; letter-spacing:.06em; text-shadow:0 1px 3px #000;
+}
+
+/* ---------------- MANTEL ---------------- */
+#mantel{
+  display:flex; align-items:center; gap:8px; padding:8px 14px; min-height:82px;
+  background:linear-gradient(180deg, rgba(80,40,120,.25), transparent);
+  border-bottom:1px dashed var(--line);
+}
+.mslot{
+  position:relative; width:74px; height:66px; border-radius:10px; cursor:pointer;
+  background:linear-gradient(160deg,#2b2140,#1a1226);
+  border:2px solid rgba(255,255,255,.18);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:3px; text-align:center; transition:transform .12s, box-shadow .15s;
+  box-shadow:var(--shadow);
+}
+.mslot:hover{ transform:translateY(-4px) rotate(-1deg); }
+.mslot.empty{ background:rgba(255,255,255,.03); border-style:dashed; box-shadow:none; cursor:default; }
+.mslot.empty:hover{ transform:none; }
+.slot-mark{ opacity:.25; font-size:20px; }
+.mslot .c-art{ font-size:24px; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.mslot .c-name{ font-size:8px; line-height:1.05; margin-top:3px; text-transform:uppercase; letter-spacing:.03em; opacity:.9; }
+.mslot .c-counter{
+  position:absolute; bottom:-7px; right:-6px; font-family:var(--display); font-size:11px;
+  background:var(--hot); color:#fff; padding:1px 5px; border-radius:7px; border:2px solid #1a1226;
+}
+.mslot.r-common{ border-color:#6d7f8c; }
+.mslot.r-uncommon{ border-color:var(--cool); box-shadow:0 0 14px rgba(76,201,240,.28), var(--shadow); }
+.mslot.r-rare{ border-color:var(--hot); box-shadow:0 0 16px rgba(255,77,109,.35), var(--shadow); }
+.mslot.r-legendary{ border-color:var(--violet); box-shadow:0 0 22px rgba(176,124,255,.5), var(--shadow); animation:legend 2.6s infinite; }
+@keyframes legend{ 50%{ box-shadow:0 0 34px rgba(176,124,255,.85), var(--shadow) } }
+.mslot.trigger{ animation:curioPop .3s ease; }
+@keyframes curioPop{ 0%{ transform:scale(1) } 40%{ transform:scale(1.22) rotate(-4deg) } 100%{ transform:scale(1) } }
+.mantel-label{ margin-left:auto; font-size:9px; letter-spacing:.2em; opacity:.5; }
+.mantel-label b{ color:var(--gold); }
+
+/* ---------------- TABLE ---------------- */
+#table{ flex:1; display:flex; flex-direction:column; gap:10px; padding:12px 14px 4px; min-height:0; }
+#top-row{ display:flex; align-items:flex-start; gap:10px; }
+.pile{ position:relative; width:var(--cw); height:var(--ch); border-radius:9px; }
+#top-row .pile{ border:2px dashed rgba(255,255,255,.14); }
+.waste-pile{ width:calc(var(--cw) + 28px); border-style:dashed; }
+.foundations{ display:flex; gap:8px; margin-left:auto; }
+.foundation{ box-shadow:inset 0 0 22px rgba(0,0,0,.5); }
+.pile-ghost{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:30px; opacity:.2; font-family:var(--display);
+}
+.pile-ghost.suit-red{ color:var(--hot); opacity:.35; }
+.pile-count{
+  position:absolute; bottom:-8px; right:-4px; font-size:10px; font-weight:700;
+  background:#000a; border:1px solid var(--line); border-radius:8px; padding:0 5px; z-index:99;
+}
+.stock-pile{ cursor:pointer; }
+.stock-pile:hover{ border-color:var(--gold); }
+.drop-ok{ box-shadow:0 0 0 3px var(--lime), 0 0 26px rgba(126,231,135,.6) !important; border-color:var(--lime) !important; }
+.drop-no{ box-shadow:0 0 0 3px var(--hot) !important; border-color:var(--hot) !important; }
+.hinted{ animation:hintPulse 1.4s ease; box-shadow:0 0 0 3px var(--gold), 0 0 30px rgba(255,209,102,.7); border-radius:9px; }
+@keyframes hintPulse{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.5) } }
+
+#tableau{
+  flex:1; display:grid; gap:10px; justify-content:center; align-content:start;
+  grid-template-columns:repeat(var(--cols,7), var(--cw)); min-height:0;
+}
+.tab-pile{ height:100%; min-height:var(--ch); border-radius:9px; border:2px dashed rgba(255,255,255,.09); }
+
+/* ---------------- CARDS ---------------- */
+.card{
+  position:absolute; left:0; top:0; width:var(--cw); height:var(--ch);
+  border-radius:8px; background:var(--paper); color:#1a1a1a;
+  box-shadow:0 3px 0 rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.45);
+  border:2px solid #1a1a1a; overflow:hidden;
+  transition:transform .1s ease, box-shadow .12s ease, filter .12s;
+}
+.card.grabbable{ cursor:grab; }
+.card.grabbable:active{ cursor:grabbing; }
+.card .face{ position:absolute; inset:0; padding:4px; }
+.card .corner{ position:absolute; display:flex; flex-direction:column; align-items:center; line-height:.92; }
+.card .corner.tl{ top:3px; left:4px; }
+.card .corner.br{ bottom:3px; right:4px; transform:rotate(180deg); }
+.card .rk{ font-family:var(--display); font-size:15px; }
+.card .st{ font-size:12px; }
+.card .mid{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:34px; opacity:.9;
+}
+.card.red{ color:#d92b4b; }
+.card.black{ color:#16181d; }
+.card .shine{
+  position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:linear-gradient(115deg, transparent 35%, rgba(255,255,255,.8) 50%, transparent 65%);
+}
+.card:hover .shine{ opacity:.5; transform:translateX(6px); }
+.card.down{ background:linear-gradient(135deg,#2b1b4d,#402266); border-color:#0b0713; }
+.card .back{
+  position:absolute; inset:3px; border-radius:5px; display:flex; align-items:center; justify-content:center;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.09) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg,#5b2ea8,#2a1152);
+  border:1px solid rgba(255,255,255,.22); color:rgba(255,255,255,.5); font-size:20px;
+}
+.card.down.peek{ background:var(--paper); }
+.card.peek{ filter:saturate(.5) brightness(.78); }
+.card.peek::after{
+  content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,rgba(0,0,0,.25) 0 5px,transparent 5px 10px);
+  pointer-events:none;
+}
+.card.under{ filter:brightness(.8); }
+.card.sel{ transform:translateY(-10px); box-shadow:0 0 0 3px var(--gold), 0 12px 22px rgba(0,0,0,.6); z-index:900 !important; }
+.card.lifted{ opacity:.28; }
+.card.trigger{ animation:cardPop .28s ease; z-index:950 !important; }
+@keyframes cardPop{ 0%{ transform:scale(1) } 45%{ transform:scale(1.18) translateY(-8px) } 100%{ transform:scale(1) } }
+.card.nope, .nope{ animation:nope .35s ease; }
+@keyframes nope{ 0%,100%{ transform:translateX(0) } 25%{ transform:translateX(-7px) rotate(-2deg) } 75%{ transform:translateX(7px) rotate(2deg) } }
+.card.shattering{ animation:shatterOut .4s forwards; }
+@keyframes shatterOut{ to{ transform:scale(1.3) rotate(12deg); opacity:0; filter:blur(3px) } }
+.card.mini{ position:relative; width:46px; height:64px; }
+.card.mini .rk{ font-size:11px; } .card.mini .st{ font-size:9px; } .card.mini .mid{ font-size:20px; }
+.card.pickable{ cursor:pointer; }
+.card.pickable:hover{ transform:translateY(-6px) scale(1.06); box-shadow:0 0 0 3px var(--gold); }
+
+.enh-badge{
+  position:absolute; top:2px; right:3px; font-size:11px; line-height:1;
+  background:#000c; color:#fff; border-radius:6px; padding:2px 4px;
+}
+.seal-dot{ position:absolute; bottom:4px; left:4px; width:11px; height:11px; border-radius:50%; border:2px solid #0007; }
+.seal-red .seal-dot{ background:#e63946; }
+.seal-gold .seal-dot{ background:var(--gold); }
+.seal-blue .seal-dot{ background:var(--cool); }
+
+/* enhancements */
+.enh-gilded{ background:linear-gradient(150deg,#fff6d8,#ffe9a8); border-color:#b8860b; box-shadow:0 0 14px rgba(255,209,102,.55), 0 6px 14px rgba(0,0,0,.5); }
+.enh-voltaic{ background:linear-gradient(150deg,#fff,#ffd9e2); border-color:var(--hot); box-shadow:0 0 14px rgba(255,77,109,.5), 0 6px 14px rgba(0,0,0,.5); }
+.enh-glass{ background:linear-gradient(150deg, rgba(210,245,255,.9), rgba(160,225,255,.75)); border-color:#8fd8f5; backdrop-filter:blur(2px); box-shadow:0 0 16px rgba(140,220,255,.6); }
+.enh-wild{ background:linear-gradient(150deg,#ffd9f4,#d9f4ff,#e2ffd9); border-color:var(--violet); animation:wildShift 5s linear infinite; }
+@keyframes wildShift{ 50%{ filter:hue-rotate(60deg) } }
+.enh-phantom{ background:linear-gradient(150deg,#e9e6ff,#cfc6ff); border-color:#8a7bd8; opacity:.93; box-shadow:0 0 18px rgba(150,120,255,.5); }
+.enh-lucky{ background:linear-gradient(150deg,#e8ffe9,#c9f7cd); border-color:#3aa84a; }
+.enh-steel{ background:linear-gradient(150deg,#dfe5ea,#aeb9c4); border-color:#7c8894; }
+.enh-bomb{ background:linear-gradient(150deg,#ffe2cf,#ffbe9b); border-color:#ff7a2f; animation:fuse 1.6s infinite; }
+@keyframes fuse{ 50%{ box-shadow:0 0 20px rgba(255,122,47,.75) } }
+.enh-bullion{ background:linear-gradient(150deg,#ffeaa0,#e0b950); border-color:#8a6d1a; }
+
+/* finishes */
+.fin-foil{ box-shadow:0 0 0 2px #9fe8ff inset, 0 0 16px rgba(76,201,240,.6), 0 6px 14px rgba(0,0,0,.5); }
+.fin-holo{ box-shadow:0 0 0 2px #ff9ff3 inset, 0 0 18px rgba(255,120,220,.6), 0 6px 14px rgba(0,0,0,.5); }
+.fin-poly{ animation:poly 3s linear infinite; }
+@keyframes poly{ 0%{ filter:hue-rotate(0) saturate(1.3) } 100%{ filter:hue-rotate(360deg) saturate(1.3) } }
+.fin-neg{ filter:invert(1) hue-rotate(180deg); }
+
+/* ---------------- SCOREBOX ---------------- */
+#scorebox{
+  --heat:0;
+  flex:1; min-width:150px; height:var(--ch); margin:0 6px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  border-radius:12px; border:2px solid var(--line);
+  background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.25));
+  box-shadow:inset 0 0 30px rgba(255,77,109, calc(var(--heat) * .55));
+  transition:box-shadow .2s;
+}
+.sb-side{ font-family:var(--display); font-size:clamp(18px,3vw,32px); padding:4px 14px; border-radius:10px; min-width:70px; text-align:center; }
+.sb-side.chips{ background:rgba(76,201,240,.16); color:var(--cool); border:2px solid rgba(76,201,240,.4); text-shadow:0 0 14px rgba(76,201,240,.7); }
+.sb-side.mult{ background:rgba(255,77,109,.16); color:var(--hot); border:2px solid rgba(255,77,109,.45); text-shadow:0 0 14px rgba(255,77,109,.7); }
+.sb-x{ font-family:var(--display); opacity:.6; font-size:16px; }
+.sb-side{ position:relative; }
+.sb-side::after{
+  content:attr(data-cap); position:absolute; left:0; right:0; bottom:-15px;
+  font-family:var(--font); font-size:8px; letter-spacing:.24em; opacity:.5; color:var(--paper);
+}
+#scorebox.live{ border-color:var(--gold); }
+#scorebox.slam{ animation:slam .38s ease; }
+@keyframes slam{ 0%{ transform:scale(1) } 30%{ transform:scale(1.09) } 100%{ transform:scale(1) } }
+
+/* ---------------- CONTROLS ---------------- */
+#controls{
+  display:flex; align-items:center; gap:10px; padding:8px 14px 12px;
+  border-top:1px solid var(--line); background:linear-gradient(0deg, rgba(0,0,0,.5), transparent);
+}
+.ctl-mid{ display:flex; gap:8px; margin:0 auto; }
+.ctl-right{ margin-left:auto; }
+.chip{ font-size:10px; letter-spacing:.12em; opacity:.75; }
+.chip b{ font-family:var(--display); color:var(--cool); font-size:14px; margin-left:4px; }
+.btn{
+  font-family:var(--display); font-size:13px; letter-spacing:.05em; cursor:pointer;
+  padding:9px 16px; border-radius:10px; color:#12100f;
+  background:linear-gradient(180deg, var(--gold), #e0a93b);
+  border:2px solid #0006; box-shadow:0 4px 0 #8a651c, 0 8px 18px rgba(0,0,0,.45);
+  transition:transform .08s, box-shadow .08s, filter .12s;
+}
+.btn:hover{ filter:brightness(1.08); }
+.btn:active{ transform:translateY(3px); box-shadow:0 1px 0 #8a651c; }
+.btn:disabled{ opacity:.35; cursor:not-allowed; box-shadow:none; }
+.btn.ghost{ background:rgba(255,255,255,.08); color:var(--paper); border:2px solid var(--line); box-shadow:0 4px 0 rgba(0,0,0,.4); }
+.btn.ghost b{ color:var(--gold); }
+.btn.big{ font-size:17px; padding:13px 26px; }
+.btn.danger{ background:linear-gradient(180deg,#ff6b81,#c92a45); color:#fff; box-shadow:0 4px 0 #7d1225; }
+.cash-btn{ background:linear-gradient(180deg,#7ee787,#39a04a); color:#062210; box-shadow:0 4px 0 #1d5c2a, 0 8px 18px rgba(0,0,0,.45); }
+.cash-btn.urgent{ animation:urgent 1s infinite; }
+@keyframes urgent{ 50%{ filter:brightness(1.35); box-shadow:0 4px 0 #1d5c2a, 0 0 26px rgba(126,231,135,.8) } }
+
+/* ---------------- FX ---------------- */
+#fxlayer,#draglayer{ position:fixed; inset:0; pointer-events:none; z-index:5000; }
+.ghost-stack{ position:absolute; top:0; left:0; will-change:transform; filter:drop-shadow(0 18px 22px rgba(0,0,0,.6)); }
+.ghost-stack .card{ transform:rotate(0); }
+body.dragging-now{ cursor:grabbing; }
+
+.fx-float{
+  position:fixed; transform:translate(-50%,0); font-family:var(--display); font-size:15px;
+  text-shadow:0 2px 6px #000; animation:floatUp .9s ease-out forwards; white-space:nowrap;
+}
+@keyframes floatUp{ 0%{ opacity:0; transform:translate(-50%,10px) scale(.7) } 20%{ opacity:1; transform:translate(-50%,-4px) scale(1.1) } 100%{ opacity:0; transform:translate(-50%,-52px) scale(1) } }
+.fx-chips{ color:var(--cool); }
+.fx-mult{ color:var(--hot); }
+.fx-xmult{ color:#ff9ff3; font-size:19px; }
+.fx-money{ color:var(--gold); }
+.fx-flash{ color:#fff; }
+.fx-again{ color:var(--lime); }
+.fx-shatter{ color:#9fe8ff; }
+.fx-total{
+  position:fixed; transform:translate(-50%,0); font-family:var(--display);
+  font-size:44px; color:var(--gold); text-shadow:0 0 24px rgba(255,209,102,.9), 0 4px 0 #7a5410;
+  animation:totalPop 1s ease-out forwards;
+}
+@keyframes totalPop{ 0%{ opacity:0; transform:translate(-50%,20px) scale(.5) } 25%{ opacity:1; transform:translate(-50%,-6px) scale(1.2) } 100%{ opacity:0; transform:translate(-50%,-70px) scale(1) } }
+.fx-banner{
+  position:fixed; left:50%; top:34%; transform:translate(-50%,-50%);
+  font-family:var(--display); font-size:clamp(22px,5vw,44px); letter-spacing:.05em;
+  color:#fff; text-shadow:0 0 30px var(--hot), 0 4px 0 #6c1024;
+  animation:bannerIn 1.1s ease-out forwards;
+}
+@keyframes bannerIn{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.4) rotate(-8deg) } 25%{ opacity:1; transform:translate(-50%,-50%) scale(1.1) rotate(2deg) } 80%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,-70%) scale(1) } }
+.particle{
+  position:fixed; width:8px; height:8px; border-radius:2px;
+  animation:partFly .8s ease-out forwards;
+}
+@keyframes partFly{ 0%{ opacity:1; transform:translate(0,0) scale(1) rotate(0) } 100%{ opacity:0; transform:translate(var(--dx),var(--dy)) scale(.2) rotate(220deg) } }
+
+#toast{
+  position:fixed; left:50%; bottom:86px; transform:translate(-50%,20px); opacity:0;
+  background:#000d; border:2px solid var(--gold); color:var(--paper);
+  padding:9px 18px; border-radius:12px; font-size:13px; font-weight:600; z-index:6000;
+  transition:opacity .2s, transform .2s; pointer-events:none;
+}
+#toast.show{ opacity:1; transform:translate(-50%,0); }
+
+#tooltip{
+  position:fixed; width:250px; background:#0b0b12f2; border:2px solid var(--line);
+  border-radius:10px; padding:10px; font-size:11.5px; line-height:1.45; z-index:7000;
+  opacity:0; pointer-events:none; transition:opacity .12s; box-shadow:var(--shadow);
+}
+#tooltip.show{ opacity:1; }
+.tip-title{ font-family:var(--display); font-size:13px; margin-bottom:4px; }
+.tip-title.r-uncommon{ color:var(--cool); } .tip-title.r-rare{ color:var(--hot); } .tip-title.r-legendary{ color:var(--violet); }
+.tip-text{ opacity:.9; }
+.tip-text.hot{ color:var(--gold); }
+.tip-fin{ color:#ff9ff3; margin-bottom:3px; }
+.tip-foot{ margin-top:6px; font-size:9.5px; letter-spacing:.12em; opacity:.5; text-transform:uppercase; }
+
+/* ---------------- OVERLAYS ---------------- */
+#overlay{ position:fixed; inset:0; z-index:8000; display:none; }
+#overlay.show{ display:flex; align-items:center; justify-content:center; padding:16px;
+  background:radial-gradient(900px 600px at 50% 40%, rgba(20,8,40,.86), rgba(2,6,4,.95)); backdrop-filter:blur(3px); }
+#overlay.show > *{ animation:panelIn .3s cubic-bezier(.2,1.2,.3,1); }
+@keyframes panelIn{ 0%{ opacity:0; transform:translateY(24px) scale(.94) } 100%{ opacity:1; transform:none } }
+.panel{
+  background:linear-gradient(170deg,#161328,#0d1118); border:2px solid var(--line);
+  border-radius:18px; padding:24px; max-width:560px; width:100%; text-align:center;
+  box-shadow:0 30px 70px rgba(0,0,0,.7);
+  max-height:92vh; overflow:auto;
+}
+#overlay.wide .panel{ max-width:820px; }
+.panel-flag{
+  display:inline-block; font-family:var(--display); font-size:15px; letter-spacing:.08em;
+  background:var(--hot); color:#fff; padding:6px 18px; border-radius:20px; margin-bottom:12px;
+  box-shadow:0 0 26px rgba(255,77,109,.6);
+}
+.panel-flag.good{ background:var(--lime); color:#062210; box-shadow:0 0 26px rgba(126,231,135,.6); }
+.panel-flag.bad{ background:#8b1e35; }
+.big-score{ font-family:var(--display); font-size:clamp(40px,9vw,68px); color:var(--gold); text-shadow:0 0 34px rgba(255,209,102,.55); line-height:1; }
+.big-score.bad{ color:#ff8fa3; }
+.sub{ font-size:12px; opacity:.6; margin-bottom:16px; letter-spacing:.06em; }
+.quota-block{ background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:14px; }
+.quota-block.met{ border-color:var(--lime); box-shadow:0 0 22px rgba(126,231,135,.25) inset; }
+.qb-row{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; }
+.qb-row b{ font-family:var(--display); color:var(--gold); }
+.qb-bar{ height:12px; background:#0008; border-radius:6px; overflow:hidden; }
+.qb-bar div{ height:100%; background:linear-gradient(90deg,var(--hot),var(--gold)); }
+.quota-block.met .qb-bar div{ background:linear-gradient(90deg,var(--lime),var(--cool)); }
+.qb-note{ font-size:11px; margin-top:7px; opacity:.75; }
+.payout{ text-align:left; background:rgba(255,255,255,.04); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+.pay-title{ font-size:10px; letter-spacing:.2em; opacity:.5; margin-bottom:6px; }
+.pay-line{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+.pay-line b{ color:var(--gold); font-family:var(--display); }
+.pay-line.total{ border-top:1px dashed var(--line); margin-top:6px; padding-top:7px; font-size:15px; }
+.stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px 14px; margin:12px 0 18px; }
+.stat{ display:flex; justify-content:space-between; font-size:12px; border-bottom:1px dotted var(--line); padding:4px 0; }
+.stat b{ color:var(--gold); }
+
+/* shop */
+#overlay.shop-open{ align-items:flex-start; padding-top:14px; overflow:auto; }
+.shop{
+  width:100%; max-width:980px; background:linear-gradient(170deg,#1c1030,#0d1118);
+  border:2px solid var(--violet); border-radius:18px; padding:18px;
+  box-shadow:0 0 60px rgba(176,124,255,.25), 0 30px 70px rgba(0,0,0,.7);
+}
+.shop-head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.shop-title{ font-family:var(--display); font-size:24px; color:var(--violet); text-shadow:0 0 24px rgba(176,124,255,.7); }
+.shop-flag{ font-size:11px; background:var(--lime); color:#062210; padding:4px 12px; border-radius:20px; font-weight:700; }
+.shop-cash{ margin-left:auto; font-family:var(--display); font-size:26px; color:var(--gold); text-shadow:0 0 20px rgba(255,209,102,.6); }
+.shop-hint{ font-size:11px; opacity:.55; margin:6px 0 12px; }
+.shop-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.shop-row.houses{ grid-template-columns:repeat(2,1fr); max-width:520px; }
+.shop-sub{ font-family:var(--display); font-size:12px; letter-spacing:.1em; margin:18px 0 8px; color:var(--cool); }
+.shop-sub span{ font-family:var(--font); font-size:10px; opacity:.5; letter-spacing:0; margin-left:6px; }
+.shop-item{
+  position:relative; background:linear-gradient(170deg,#241a3a,#151021);
+  border:2px solid var(--line); border-radius:14px; padding:12px 10px 30px;
+  cursor:pointer; text-align:center; transition:transform .12s, box-shadow .15s;
+}
+.shop-item:hover{ transform:translateY(-5px); box-shadow:0 12px 26px rgba(0,0,0,.6); }
+.shop-item.r-uncommon{ border-color:var(--cool); }
+.shop-item.r-rare{ border-color:var(--hot); }
+.shop-item.r-legendary{ border-color:var(--violet); box-shadow:0 0 22px rgba(176,124,255,.4); }
+.shop-item.house{ border-color:var(--gold); background:linear-gradient(170deg,#2a2313,#151021); }
+.shop-item.tincture{ border-color:#5b8f6f; }
+.shop-item.bought{ opacity:.3; pointer-events:none; filter:grayscale(1); }
+.shop-item.broke{ opacity:.62; }
+.si-art{ font-size:34px; line-height:1; margin-bottom:6px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+.si-name{ font-family:var(--display); font-size:13px; margin-bottom:4px; }
+.si-fin{ font-size:10px; color:#ff9ff3; margin-bottom:3px; }
+.si-text{ font-size:10.5px; line-height:1.4; opacity:.82; min-height:44px; }
+.si-tag{ font-size:8px; letter-spacing:.16em; text-transform:uppercase; opacity:.4; margin-top:6px; }
+.si-price{
+  position:absolute; bottom:-1px; left:50%; transform:translateX(-50%);
+  font-family:var(--display); font-size:14px; color:#12100f;
+  background:var(--gold); padding:2px 16px; border-radius:12px 12px 0 0;
+}
+.shop-foot{ display:flex; gap:10px; align-items:center; margin-top:18px; }
+.shop-foot .btn.big{ margin-left:auto; }
+
+/* deck view */
+.deck-grid{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.deck-row{ display:flex; align-items:flex-start; gap:10px; }
+.deck-suit{ font-size:26px; width:30px; flex:none; }
+.deck-suit.red{ color:var(--hot); }
+.deck-cards{ display:flex; flex-wrap:wrap; gap:4px; }
+
+/* help / title */
+.help-body{ text-align:left; font-size:13px; line-height:1.6; }
+.help-body p{ margin:0 0 10px; }
+.help-body .c{ color:var(--cool); font-weight:700; }
+.help-body .m{ color:var(--hot); font-weight:700; }
+.help-body .x{ opacity:.6; }
+.help-body .keys{ font-size:11.5px; opacity:.65; border-top:1px dashed var(--line); padding-top:10px; }
+.menu-btns{ display:flex; flex-direction:column; gap:10px; align-items:center; margin:10px 0; }
+.menu-btns .btn{ width:230px; }
+.menu-foot{ font-size:11px; opacity:.5; margin-top:8px; }
+.title-panel{ max-width:600px; }
+.logo{ font-family:var(--display); font-size:clamp(40px,10vw,76px); line-height:1; color:var(--gold); text-shadow:0 0 40px rgba(255,209,102,.6), 0 6px 0 #7a5410; }
+.logo span{ color:var(--hot); text-shadow:0 0 40px rgba(255,77,109,.7), 0 6px 0 #6c1024; }
+.tagline{ font-size:12.5px; opacity:.65; margin:10px 0 22px; letter-spacing:.04em; }
+
+/* ---------------- responsive ---------------- */
+@media (min-width:1250px){ :root{ --cw:92px; --ch:128px; } .card .rk{ font-size:18px } .card .st{ font-size:14px } .card .mid{ font-size:42px } }
+@media (max-width:1100px){ :root{ --cw:66px; --ch:92px; } }
+@media (max-width:860px){
+  :root{ --cw:56px; --ch:78px; }
+  #hud{ flex-wrap:wrap; }
+  .hud-quota{ order:3; flex-basis:100%; max-width:none; }
+  .shop-row{ grid-template-columns:repeat(2,1fr); }
+  #scorebox{ min-width:110px; }
+  .mslot{ width:60px; height:58px; }
+  .mslot .c-art{ font-size:19px; }
+}
+@media (max-width:560px){
+  :root{ --cw:42px; --ch:60px; }
+  .card .rk{ font-size:11px } .card .mid{ font-size:20px } .card .st{ font-size:9px }
+  #top-row{ flex-wrap:wrap; }
+  #scorebox{ order:5; flex-basis:100%; height:56px; margin:6px 0 0; }
+  .foundations{ gap:5px; }
+  .ctl-mid .btn{ padding:8px 10px; font-size:11px; }
+}
+
+/* bank-the-ante + victory */
+.btn.bank{ background:linear-gradient(180deg,#b07cff,#6a37c9); color:#fff; box-shadow:0 4px 0 #3c1c73; margin-right:10px; }
+.bank-note{ font-size:11px; opacity:.55; margin-top:10px; }
+.logo.small{ font-size:clamp(26px,6vw,42px); }
+.win-panel{ border-color:var(--lime); box-shadow:0 0 60px rgba(126,231,135,.25), 0 30px 70px rgba(0,0,0,.7); }
+
+/* the mantel, mirrored inside the shop so you can sell without closing it */
+.mantel-inline{
+  display:flex; align-items:center; gap:8px; padding:10px 12px; margin:10px 0 14px;
+  background:rgba(0,0,0,.32); border:1px dashed var(--line); border-radius:12px; min-height:86px;
+}
+.mantel-inline .mantel-label{ margin-left:auto; }
+
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="hud">
+    <div class="hud-group">
+      <div class="badge ante">ANTE <b id="ante-num">1</b></div>
+      <div class="badge round">ROUND <b id="round-num">1/3</b></div>
+    </div>
+
+    <div class="hud-quota">
+      <div class="quota-cap">QUOTA — ante total</div>
+      <div id="quota-bar" class="quota-bar">
+        <div id="quota-fill" class="quota-fill"></div>
+        <span id="quota-text" class="quota-text">0 / 0</span>
+      </div>
+    </div>
+
+    <div class="hud-group right">
+      <div class="badge score">SCORE <b id="round-score">0</b></div>
+      <div class="badge cash" id="money">$0</div>
+      <button class="icon" id="btn-deck" title="View deck (D)">🂠<span id="deck-count">52</span></button>
+      <button class="icon" id="btn-help" title="How to play">?</button>
+      <button class="icon" id="btn-sound" title="Sound">🔊</button>
+      <button class="icon" id="btn-menu" title="Menu (Esc)">☰</button>
+    </div>
+  </header>
+
+  <div id="mantel"></div>
+
+  <main id="table">
+    <div id="top-row">
+      <div class="pile stock-pile" id="stock" data-zone="stock"></div>
+      <div class="pile waste-pile" id="waste" data-zone="waste"></div>
+
+      <div id="scorebox">
+        <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
+        <div class="sb-x">X</div>
+        <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+      </div>
+
+      <div class="foundations">
+        <div class="pile foundation" id="f-S" data-zone="foundation" data-suit="S"></div>
+        <div class="pile foundation" id="f-H" data-zone="foundation" data-suit="H"></div>
+        <div class="pile foundation" id="f-D" data-zone="foundation" data-suit="D"></div>
+        <div class="pile foundation" id="f-C" data-zone="foundation" data-suit="C"></div>
+      </div>
+    </div>
+
+    <div id="tableau"></div>
+  </main>
+
+  <footer id="controls">
+    <div class="ctl-left">
+      <div class="chip" id="passes">PASSES <b>3</b></div>
+    </div>
+    <div class="ctl-mid">
+      <button class="btn ghost" id="btn-undo">UNDO <b>3</b></button>
+      <button class="btn ghost" id="btn-hint">HINT</button>
+      <button class="btn ghost" id="btn-collect">AUTO</button>
+    </div>
+    <div class="ctl-right">
+      <button class="btn cash-btn" id="btn-cash">CASH OUT</button>
+    </div>
+  </footer>
+
+</div>
+
+<div id="fxlayer"></div>
+<div id="draglayer"></div>
+<div id="tooltip"></div>
+<div id="toast"></div>
+<div id="overlay"></div>
+
+<script>
+/* ===== js/data.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  data.js
+   All content: ranks, suits, enhancements, finishes, seals,
+   Curios (the joker-likes), House Rules (vouchers) and the shop pools.
+   ============================================================ */
+
+const RANK_NAMES = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const SUITS = {
+  S: { sym: '♠', name: 'Spades',   color: 'black' },
+  H: { sym: '♥', name: 'Hearts',   color: 'red'   },
+  D: { sym: '♦', name: 'Diamonds', color: 'red'   },
+  C: { sym: '♣', name: 'Clubs',    color: 'black' }
+};
+const SUIT_KEYS = ['S', 'H', 'D', 'C'];
+
+/* ---------- tuning knobs (all the balance lives here) ---------- */
+const TUNE = {
+  baseQuota: 2500,
+  quotaGrowth: 2.2,
+  roundsPerAnte: 3,
+  finalAnte: 8,
+  skipBonus: 5,
+  baseMoney: 3,
+  interestPer: 5,
+  interestCap: 5,
+  moneyPerEmptyColumn: 1,
+  moneyPerSuitDone: 2,
+  startingMantelSlots: 3,
+  maxMantelSlots: 5,
+  startingStockPasses: 3,
+  startingUndos: 3,
+  rerollBase: 5,
+  rerollStep: 2,
+  // scoring
+  chipsPerDepth: 6,
+  revealChips: 20,
+  clearChips: 120,
+  clearMult: 3,
+  suitDoneChips: 400,
+  suitDoneMult: 5
+};
+
+function rankChips(rank) {
+  if (rank === 1) return 11;
+  if (rank >= 11) return 10;
+  return rank;
+}
+
+/* =========================================================
+   ENHANCEMENTS  -- printed onto the face of a card
+   ========================================================= */
+const ENHANCEMENTS = {
+  none:    { name: 'Plain',     cls: '', text: '' },
+  gilded:  { name: 'Gilded',    cls: 'enh-gilded',  glyph: '✦', text: '+50 Chips when scored.' },
+  voltaic: { name: 'Voltaic',   cls: 'enh-voltaic', glyph: '⚡', text: '+4 Mult when scored.' },
+  glass:   { name: 'Glass',     cls: 'enh-glass',   glyph: '◇', text: 'X2 Mult. 1 in 5 chance to shatter (removed from deck).' },
+  wild:    { name: 'Chameleon', cls: 'enh-wild',    glyph: '✿', text: 'Counts as every suit.' },
+  phantom: { name: 'Phantom',   cls: 'enh-phantom', glyph: '◌', text: 'Stacks onto any rank in the tableau. +2 Mult.' },
+  lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.' },
+  steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.' },
+  bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.' },
+  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$',      text: 'Earn $4 when scored.' }
+};
+
+/* Finishes -- the shiny layer, works on cards AND curios */
+const FINISHES = {
+  none: { name: '', cls: '', text: '' },
+  foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.' },
+  holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.' },
+  poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.' },
+  neg:  { name: 'Negative',    cls: 'fin-neg',  text: '+1 Mantel slot (curios only).' }
+};
+
+/* Seals -- stamped on the back corner */
+const SEALS = {
+  none: { name: '', cls: '', text: '' },
+  red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.' },
+  gold: { name: 'Gold Seal', cls: 'seal-gold', text: 'Earn $4 when scored.' },
+  blue: { name: 'Blue Seal', cls: 'seal-blue', text: '+30 Chips.' }
+};
+
+/* =========================================================
+   CURIOS -- the trinkets that sit on your MANTEL
+   hooks:
+     score(ctx)      every scoring event  (ctx.event: foundation|reveal|clear|suit)
+     roundStart(run) once at deal
+     roundEnd(run)   returns extra $  (optional)
+     mods            static rule changes
+   ========================================================= */
+const CURIOS = [
+  /* ---------------- commons ---------------- */
+  { id: 'rubber_duck', name: 'Rubber Duck', art: '\u{1F986}', rarity: 'common', cost: 4,
+    text: '+4 Mult on every score.',
+    hooks: { score: c => c.addMult(4) } },
+
+  { id: 'lucky_coin', name: 'Lucky Coin', art: '\u{1FA99}', rarity: 'common', cost: 4,
+    text: '+40 Chips on every score.',
+    hooks: { score: c => c.addChips(40) } },
+
+  { id: 'greasy_thumb', name: 'Greasy Thumb', art: '\u{1F44D}', rarity: 'common', cost: 5,
+    text: 'X1.25 Mult on every score.',
+    hooks: { score: c => c.xMult(1.25) } },
+
+  { id: 'red_baron', name: 'Red Baron', art: '\u{1F9E3}', rarity: 'common', cost: 5,
+    text: 'Red cards give +6 Mult.',
+    hooks: { score: c => { if (c.card && c.isRed(c.card)) c.addMult(6); } } },
+
+  { id: 'coal_miner', name: 'Coal Miner', art: '⛏️', rarity: 'common', cost: 5,
+    text: '+8 Chips for each card still face-down.',
+    hooks: { score: c => c.addChips(8 * c.faceDownCount()) } },
+
+  { id: 'undertaker', name: 'The Undertaker', art: '\u{1FAA6}', rarity: 'common', cost: 6,
+    text: '+45 Chips for each empty column.',
+    hooks: { score: c => c.addChips(45 * c.emptyColumns()) } },
+
+  { id: 'court_jester', name: 'Court Jester', art: '\u{1F0CF}', rarity: 'common', cost: 5,
+    text: 'J, Q and K give +55 Chips.',
+    hooks: { score: c => { if (c.card && c.card.rank >= 11) c.addChips(55); } } },
+
+  { id: 'ace_sleeve', name: 'Ace Up The Sleeve', art: '\u{1F454}', rarity: 'common', cost: 6,
+    text: 'Aces give X3 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank === 1) c.xMult(3); } } },
+
+  { id: 'shovel_knight', name: 'Shovel Cult', art: '\u{1F3F4}', rarity: 'common', cost: 5,
+    text: 'Spades give +7 Mult.',
+    hooks: { score: c => { if (c.hasSuit(c.card, 'S')) c.addMult(7); } } },
+
+  { id: 'heart_throb', name: 'Heart Throb', art: '\u{1F495}', rarity: 'common', cost: 5,
+    text: 'Hearts give +1 Mult for every Heart already on the foundations.',
+    hooks: { score: c => { if (c.hasSuit(c.card, 'H')) c.addMult(Math.max(1, c.foundationCount('H'))); } } },
+
+  { id: 'club_sandwich', name: 'Club Sandwich', art: '\u{1F96A}', rarity: 'common', cost: 5,
+    text: 'Clubs give +45 Chips.',
+    hooks: { score: c => { if (c.hasSuit(c.card, 'C')) c.addChips(45); } } },
+
+  { id: 'diamond_hands', name: 'Diamond Hands', art: '\u{1F48E}', rarity: 'common', cost: 6,
+    text: 'Diamonds give +30 Chips and a 1 in 3 chance of $1.',
+    hooks: { score: c => { if (c.hasSuit(c.card, 'D')) { c.addChips(30); if (c.chance(3)) c.money(1); } } } },
+
+  { id: 'even_steven', name: 'Even Steven', art: '\u{1F45F}', rarity: 'common', cost: 5,
+    text: 'Even ranks give +5 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank % 2 === 0) c.addMult(5); } } },
+
+  { id: 'odd_todd', name: 'Odd Todd', art: '\u{1F9E6}', rarity: 'common', cost: 5,
+    text: 'Odd ranks give +60 Chips.',
+    hooks: { score: c => { if (c.card && c.card.rank % 2 === 1) c.addChips(60); } } },
+
+  { id: 'boynt_floaters', name: 'BOYNT Floaters', art: '\u{1F576}️', rarity: 'common', cost: 4,
+    text: '+3 Mult. It floats. Sells for full price, forever.',
+    sellsFull: true,
+    hooks: { score: c => c.addMult(3) } },
+
+  /* ---------------- uncommons ---------------- */
+  { id: 'the_ladder', name: 'The Ladder', art: '\u{1FA9C}', rarity: 'uncommon', cost: 7,
+    text: 'Your Cascade bonus counts double.',
+    mods: { cascadeMult: 2 } },
+
+  { id: 'metronome', name: 'Metronome', art: '\u{1F3BC}', rarity: 'uncommon', cost: 7,
+    text: 'Every 3rd card scored this round gets X3 Mult.',
+    hooks: { score: c => { if (c.event === 'foundation' && c.round.scoredCards % 3 === 0) c.xMult(3); } } },
+
+  { id: 'hoarder', name: 'Hoarder', art: '\u{1F5C3}️', rarity: 'uncommon', cost: 7,
+    text: '+3 Mult for every card in the waste pile.',
+    hooks: { score: c => c.addMult(3 * c.wasteCount()) } },
+
+  { id: 'vacuum', name: 'Shop Vac', art: '\u{1F9F9}', rarity: 'uncommon', cost: 6,
+    text: 'Emptying a column earns $4.',
+    hooks: { score: c => { if (c.event === 'clear') c.money(4); } } },
+
+  { id: 'time_turner', name: 'Time Turner', art: '⏳', rarity: 'uncommon', cost: 8,
+    text: '+2 passes through the stock. +1 Undo per round.',
+    mods: { stockPasses: 2, undos: 1 } },
+
+  { id: 'cheat_sheet', name: 'Cheat Sheet', art: '\u{1F5D2}️', rarity: 'uncommon', cost: 8,
+    text: 'You can see every face-down card. +1 Mult.',
+    mods: { xray: true },
+    hooks: { score: c => c.addMult(1) } },
+
+  { id: 'anarchist', name: 'The Anarchist', art: '\u{1F4A3}', rarity: 'uncommon', cost: 8,
+    text: 'Any card may be moved into an empty column, not just Kings.',
+    mods: { anyIntoEmpty: true } },
+
+  { id: 'perpetual', name: 'Perpetual Motion', art: '⚙️', rarity: 'uncommon', cost: 8,
+    text: 'Gains +1 Mult every time you flip a card face-up. Resets each Ante.',
+    counter: 0, counterLabel: 'Mult',
+    hooks: {
+      score: c => {
+        c.addMult(c.self.counter || 0);
+        if (c.event === 'reveal') { c.self.counter = (c.self.counter || 0) + 1; c.flash(); }
+      }
+    } },
+
+  { id: 'bubble_wrap', name: 'Bubble Wrap', art: '\u{1FAE7}', rarity: 'uncommon', cost: 8,
+    text: 'X1.1 Mult, growing by X0.05 with every card scored. Resets each round.',
+    counter: 1.1, counterLabel: 'X',
+    hooks: {
+      roundStart: (run, self) => { self.counter = 1.1; },
+      score: c => {
+        c.xMult(c.self.counter || 1);
+        if (c.event === 'foundation') { c.self.counter = +(((c.self.counter || 1) + 0.05).toFixed(2)); c.flash(); }
+      }
+    } },
+
+  { id: 'espresso', name: 'Double Espresso', art: '☕', rarity: 'uncommon', cost: 7,
+    text: 'The first 3 cards scored each round get X2 Mult.',
+    hooks: { score: c => { if (c.event === 'foundation' && c.round.scoredCards <= 3) c.xMult(2); } } },
+
+  { id: 'fibonacci', name: 'Fibonacci Fred', art: '\u{1F41A}', rarity: 'uncommon', cost: 8,
+    text: 'A, 2, 3, 5 and 8 give +10 Mult.',
+    hooks: { score: c => { if (c.card && [1, 2, 3, 5, 8].includes(c.card.rank)) c.addMult(10); } } },
+
+  { id: 'grandfather', name: 'Grandfather Clock', art: '\u{1F570}️', rarity: 'uncommon', cost: 7,
+    text: 'Kings earn $2 and give +80 Chips.',
+    hooks: { score: c => { if (c.card && c.card.rank === 13) { c.money(2); c.addChips(80); } } } },
+
+  { id: 'rain_cloud', name: 'Rain Cloud', art: '\u{1F327}️', rarity: 'uncommon', cost: 6,
+    text: '1 in 3 chance for +150 Chips on any score.',
+    hooks: { score: c => { if (c.chance(3)) { c.addChips(150); c.flash(); } } } },
+
+  { id: 'static_cling', name: 'Static Cling', art: '\u{1F9E6}', rarity: 'uncommon', cost: 6,
+    text: '+250 Chips. X0.5 Mult. A terrible, wonderful bargain.',
+    hooks: { score: c => { c.addChips(250); c.xMult(0.5); } } },
+
+  { id: 'sunk_cost', name: 'Sunk Cost', art: '\u{1F6A2}', rarity: 'uncommon', cost: 7,
+    text: 'Gains +2 Mult every time you attempt an illegal move. Resets each round.',
+    counter: 0, counterLabel: 'Mult',
+    hooks: {
+      roundStart: (run, self) => { self.counter = 0; },
+      score: c => c.addMult(c.self.counter || 0)
+    } },
+
+  { id: 'the_deep_end', name: 'The Deep End', art: '\u{1F30A}', rarity: 'uncommon', cost: 7,
+    text: '+4 Mult for every card on your SHORTEST foundation.',
+    hooks: { score: c => c.addMult(4 * c.shortestFoundation()) } },
+
+  /* ---------------- rares ---------------- */
+  { id: 'the_collector', name: 'The Collector', art: '\u{1F5FF}', rarity: 'rare', cost: 9,
+    text: '+400 Chips for every completed suit.',
+    hooks: { score: c => c.addChips(400 * c.completedSuits()) } },
+
+  { id: 'mirror_ball', name: 'Mirror Ball', art: '\u{1FAA9}', rarity: 'rare', cost: 9,
+    text: 'The first card scored each round is scored 3 times.',
+    mods: { firstRetrigger: 2 } },
+
+  { id: 'doomsday', name: 'Doomsday Clock', art: '⏰', rarity: 'rare', cost: 9,
+    text: '+1 Mult for every move you have made this round.',
+    hooks: { score: c => c.addMult(c.round.moves) } },
+
+  { id: 'copycat', name: 'Copycat', art: '\u{1F43E}', rarity: 'rare', cost: 10,
+    text: 'Copies the Curio directly to its left.',
+    mods: { copyLeft: true } },
+
+  { id: 'sunglasses_hut', name: 'Polarized Lens', art: '\u{1F60E}', rarity: 'rare', cost: 10,
+    text: 'X1.5 Mult. Every 5th score is X3 instead.',
+    hooks: { score: c => c.xMult(c.round.scoreEvents % 5 === 0 ? 3 : 1.5) } },
+
+  { id: 'gravedigger', name: 'Gravedigger', art: '\u{1F480}', rarity: 'rare', cost: 10,
+    text: 'Clearing a column gives X2 Mult for the rest of the round.',
+    counter: 1, counterLabel: 'X',
+    hooks: {
+      roundStart: (run, self) => { self.counter = 1; },
+      score: c => {
+        c.xMult(c.self.counter || 1);
+        if (c.event === 'clear') { c.self.counter = (c.self.counter || 1) * 2; c.flash(); }
+      }
+    } },
+
+  { id: 'loan_shark', name: 'Loan Shark', art: '\u{1F988}', rarity: 'rare', cost: 9,
+    text: 'Earn $6 at the end of every round. Interest is capped at $0.',
+    mods: { noInterest: true },
+    hooks: { roundEnd: () => 6 } },
+
+  { id: 'the_ritual', name: 'The Ritual', art: '\u{1F56F}️', rarity: 'rare', cost: 11,
+    text: 'Every 8th score is X8 Mult.',
+    hooks: { score: c => { if (c.round.scoreEvents % 8 === 0) { c.xMult(8); c.flash(); } } } },
+
+  { id: 'chromatic', name: 'Chromatic Scale', art: '\u{1F308}', rarity: 'rare', cost: 10,
+    text: 'Suit Runs give double Mult and +100 Chips each.',
+    mods: { suitRunMult: 2 },
+    hooks: { score: c => { if (c.round.suitRun > 1) c.addChips(100 * c.round.suitRun); } } },
+
+  /* ---------------- legendaries ---------------- */
+  { id: 'the_dealer', name: 'The Dealer', art: '\u{1F0A0}', rarity: 'legendary', cost: 16,
+    text: 'X0.25 Mult for each card left in your stock... but X4 Mult when the stock is empty.',
+    hooks: { score: c => { const n = c.stockCount(); c.xMult(n === 0 ? 4 : Math.max(0.6, 2 - n * 0.05)); } } },
+
+  { id: 'house_always_wins', name: 'The House', art: '\u{1F3E0}', rarity: 'legendary', cost: 18,
+    text: 'X1 Mult, permanently increased by X0.25 every time you finish a suit.',
+    counter: 1, counterLabel: 'X',
+    hooks: {
+      score: c => {
+        c.xMult(c.self.counter || 1);
+        if (c.event === 'suit') { c.self.counter = +(((c.self.counter || 1) + 0.25).toFixed(2)); c.flash(); }
+      }
+    } },
+
+  { id: 'infinity_pool', name: 'Infinity Pool', art: '♾️', rarity: 'legendary', cost: 18,
+    text: 'The stock never runs out of passes, and Kings may be stacked onto Aces. +8 Mult.',
+    mods: { infinitePasses: true, wrapAround: true },
+    hooks: { score: c => c.addMult(8) } },
+
+  { id: 'midas_touch', name: 'Midas Touch', art: '\u{1F91A}', rarity: 'legendary', cost: 17,
+    text: 'Every card you place on a foundation earns $1. X1.5 Mult.',
+    hooks: { score: c => { c.xMult(1.5); if (c.event === 'foundation') c.money(1); } } }
+];
+
+const CURIO_BY_ID = {};
+CURIOS.forEach(c => { CURIO_BY_ID[c.id] = c; });
+
+const RARITY_WEIGHT = { common: 100, uncommon: 45, rare: 16, legendary: 3 };
+
+/* =========================================================
+   HOUSE RULES -- permanent, run-long upgrades
+   ========================================================= */
+const HOUSE_RULES = [
+  { id: 'bigger_table', name: 'Bigger Table', art: '\u{1FA91}', cost: 12, max: 2,
+    text: '+1 Mantel slot.', apply: run => { run.mantelSlots = Math.min(TUNE.maxMantelSlots, run.mantelSlots + 1); } },
+  { id: 'generous_dealer', name: 'Generous Dealer', art: '\u{1F91D}', cost: 8, max: 2,
+    text: '+1 pass through the stock each round.', apply: run => { run.bonusPasses++; } },
+  { id: 'rewind_ribbon', name: 'Rewind Ribbon', art: '↩️', cost: 7, max: 2,
+    text: '+2 Undos each round.', apply: run => { run.bonusUndos += 2; } },
+  { id: 'deep_pockets', name: 'Deep Pockets', art: '\u{1F45B}', cost: 9, max: 2,
+    text: '+$3 at the end of every round.', apply: run => { run.bonusMoney += 3; } },
+  { id: 'loose_change', name: 'Loose Change', art: '\u{1FA99}', cost: 10, max: 2,
+    text: 'Interest cap raised by $3.', apply: run => { run.interestCap += 3; } },
+  { id: 'discount_club', name: 'Discount Club', art: '\u{1F3F7}️', cost: 10, max: 2,
+    text: 'Everything in the shop is 25% cheaper.', apply: run => { run.discount += 0.25; } },
+  { id: 'marked_deck', name: 'Marked Deck', art: '\u{1F50D}', cost: 9, max: 1,
+    text: 'The top face-down card of every column is revealed.', apply: run => { run.markedDeck = true; } },
+  { id: 'head_start', name: 'Head Start', art: '\u{1F3C1}', cost: 11, max: 2,
+    text: 'Every round begins with +500 banked Chips of score.', apply: run => { run.headStart += 500; } },
+  { id: 'wider_felt', name: 'Wider Felt', art: '\u{1F7E9}', cost: 14, max: 1,
+    text: 'Deal an 8th tableau column.', apply: run => { run.columns = 8; } },
+  { id: 'gilded_frame', name: 'Gilded Frame', art: '\u{1F5BC}️', cost: 13, max: 2,
+    text: 'All Curios give an extra +2 Mult.', apply: run => { run.curioBonusMult += 2; } },
+  { id: 'lucky_horseshoe', name: 'Lucky Horseshoe', art: '\u{1F40E}', cost: 10, max: 1,
+    text: 'All "1 in X" chances are twice as likely.', apply: run => { run.luck = 2; } },
+  { id: 'shorter_ladder', name: 'Shorter Ladder', art: '\u{1FA9C}', cost: 15, max: 1,
+    text: 'All future quotas are 15% smaller.', apply: run => { run.quotaScale *= 0.85; } }
+];
+const HOUSE_BY_ID = {};
+HOUSE_RULES.forEach(h => { HOUSE_BY_ID[h.id] = h; });
+
+/* =========================================================
+   TINCTURES -- shop items that alter the deck itself
+   kind: 'enhance' | 'finish' | 'seal' | 'add' | 'remove' | 'duplicate'
+   ========================================================= */
+const TINCTURES = [
+  { id: 't_gilded',  name: 'Gold Leaf',       art: '✦', cost: 5, kind: 'enhance', value: 'gilded',  text: 'Make one card Gilded (+50 Chips).' },
+  { id: 't_voltaic', name: 'Neon Tube',       art: '⚡', cost: 5, kind: 'enhance', value: 'voltaic', text: 'Make one card Voltaic (+4 Mult).' },
+  { id: 't_glass',   name: 'Glassblower',     art: '◇', cost: 5, kind: 'enhance', value: 'glass',   text: 'Make one card Glass (X2 Mult, fragile).' },
+  { id: 't_wild',    name: 'Chameleon Dust',  art: '✿', cost: 6, kind: 'enhance', value: 'wild',    text: 'Make one card a Chameleon (every suit).' },
+  { id: 't_phantom', name: 'Ectoplasm',       art: '◌', cost: 6, kind: 'enhance', value: 'phantom', text: 'Make one card a Phantom (stacks anywhere).' },
+  { id: 't_lucky',   name: "Rabbit's Foot",   art: '♣', cost: 5, kind: 'enhance', value: 'lucky',   text: "Make one card Rabbit's (random big Mult / cash)." },
+  { id: 't_steel',   name: 'Anvil',           art: '⚒', cost: 5, kind: 'enhance', value: 'steel',   text: 'Make one card Steel (X1.5 off the tableau).' },
+  { id: 't_bomb',    name: 'Stick of TNT',    art: '✹', cost: 6, kind: 'enhance', value: 'bomb',    text: 'Make one card a Fuse (scores the card beneath).' },
+  { id: 't_bullion', name: 'Bullion Stamp',   art: '$',      cost: 5, kind: 'enhance', value: 'bullion', text: 'Make one card Bullion (earn $4).' },
+  { id: 't_foil',    name: 'Foil Press',      art: '\u{1F4C0}', cost: 6, kind: 'finish', value: 'foil', text: 'Give one card a Foil finish (+60 Chips).' },
+  { id: 't_holo',    name: 'Hologram Kit',    art: '\u{1F52E}', cost: 7, kind: 'finish', value: 'holo', text: 'Give one card a Holographic finish (+12 Mult).' },
+  { id: 't_poly',    name: 'Prism',           art: '\u{1F308}', cost: 8, kind: 'finish', value: 'poly', text: 'Give one card a Polychrome finish (X1.5 Mult).' },
+  { id: 't_red',     name: 'Red Wax Seal',    art: '\u{1F534}', cost: 6, kind: 'seal', value: 'red',  text: 'Stamp a Red Seal: the card scores twice.' },
+  { id: 't_gold',    name: 'Gold Wax Seal',   art: '\u{1F7E1}', cost: 5, kind: 'seal', value: 'gold', text: 'Stamp a Gold Seal: earn $4 when scored.' },
+  { id: 't_blue',    name: 'Blue Wax Seal',   art: '\u{1F535}', cost: 5, kind: 'seal', value: 'blue', text: 'Stamp a Blue Seal: +30 Chips.' },
+  { id: 't_dupe',    name: 'Twin Press',      art: '\u{1F46F}', cost: 7, kind: 'duplicate', text: 'Add an exact copy of any card in your deck.' },
+  { id: 't_shred',   name: 'The Shredder',    art: '✂️', cost: 6, kind: 'remove', text: 'Permanently remove one card from your deck.' },
+  { id: 't_ace',     name: 'Spare Ace',       art: '\u{1F0A1}', cost: 7, kind: 'add', build: () => ({ rank: 1, suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'gilded' }), text: 'Add a random Gilded Ace to the deck.' },
+  { id: 't_joker',   name: 'The Wanderer',    art: '\u{1F0CF}', cost: 9, kind: 'add', build: () => ({ rank: 1 + Math.floor(Math.random() * 13), suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'wild', finish: 'poly' }), text: 'Add a Polychrome Chameleon card of a random rank.' },
+  { id: 't_ghost',   name: 'Poltergeist',     art: '\u{1F47B}', cost: 8, kind: 'add', build: () => ({ rank: 1 + Math.floor(Math.random() * 13), suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'phantom' }), text: 'Add a random Phantom card to the deck.' }
+];
+const TINCTURE_BY_ID = {};
+TINCTURES.forEach(t => { TINCTURE_BY_ID[t.id] = t; });
+
+/* ===== js/engine.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  engine.js
+   Run state, deck construction, the deal, and every solitaire rule.
+   ============================================================ */
+
+const Engine = (() => {
+  let uid = 1;
+  const nextId = () => 'c' + (uid++);
+
+  function newCard(rank, suit, extra) {
+    return Object.assign({
+      id: nextId(), rank, suit,
+      enhancement: 'none', finish: 'none', seal: 'none',
+      faceUp: false
+    }, extra || {});
+  }
+
+  function standardDeck() {
+    const d = [];
+    for (const s of SUIT_KEYS) for (let r = 1; r <= 13; r++) d.push(newCard(r, s));
+    return d;
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /* ---------------- run creation ---------------- */
+  function newRun() {
+    return {
+      ante: 1,
+      round: 1,
+      anteScore: 0,
+      money: 8,
+      deck: standardDeck(),
+      mantel: [],
+      mantelSlots: TUNE.startingMantelSlots,
+      houseRules: {},
+      bonusPasses: 0,
+      bonusUndos: 0,
+      bonusMoney: 0,
+      interestCap: TUNE.interestCap,
+      discount: 0,
+      markedDeck: false,
+      headStart: 0,
+      columns: 7,
+      curioBonusMult: 0,
+      luck: 1,
+      quotaScale: 1,
+      finalAnte: TUNE.finalAnte,
+      shop: null,
+      rerollCount: 0,
+      history: [],
+      stats: { roundsPlayed: 0, cardsScored: 0, best: 0, suitsDone: 0 }
+    };
+  }
+
+  function quotaFor(run) {
+    return Math.round(TUNE.baseQuota * Math.pow(TUNE.quotaGrowth, run.ante - 1) * run.quotaScale / 25) * 25;
+  }
+
+  /* ---------------- mantel helpers ---------------- */
+  function mods(run) {
+    const m = {
+      cascadeMult: 1, suitRunMult: 1, stockPasses: 0, undos: 0,
+      xray: false, anyIntoEmpty: false, firstRetrigger: 0,
+      infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false
+    };
+    run.mantel.forEach(inst => {
+      const def = CURIO_BY_ID[inst.id];
+      if (!def || !def.mods) return;
+      for (const k in def.mods) {
+        const v = def.mods[k];
+        if (typeof v === 'number') m[k] += v; else m[k] = m[k] || v;
+      }
+    });
+    return m;
+  }
+
+  /* ---------------- the deal ---------------- */
+  function deal(run) {
+    const deck = shuffle(run.deck.map(c => Object.assign({}, c, { faceUp: false })));
+    const cols = run.columns;
+    const tableau = [];
+    let i = 0;
+    for (let c = 0; c < cols; c++) tableau.push([]);
+    for (let c = 0; c < cols; c++) {
+      for (let r = c; r < cols; r++) {
+        if (i >= deck.length) break;
+        tableau[r].push(deck[i++]);
+      }
+    }
+    tableau.forEach(p => { if (p.length) p[p.length - 1].faceUp = true; });
+    const stock = deck.slice(i);
+    stock.forEach(c => { c.faceUp = false; });
+
+    const m = mods(run);
+    return {
+      tableau,
+      foundations: { S: [], H: [], D: [], C: [] },
+      stock,
+      waste: [],
+      passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
+      undos: TUNE.startingUndos + run.bonusUndos + m.undos
+    };
+  }
+
+  function newRound(run) {
+    run.mantel.forEach(inst => {
+      const def = CURIO_BY_ID[inst.id];
+      if (def && def.hooks && def.hooks.roundStart) def.hooks.roundStart(run, inst);
+    });
+    return {
+      board: deal(run),
+      round: {
+        score: run.headStart,
+        moves: 0,
+        cascade: 0,
+        suitRun: 0,
+        lastSuit: null,
+        scoredCards: 0,
+        scoreEvents: 0,
+        illegal: 0,
+        money: 0,
+        over: false,
+        won: false
+      }
+    };
+  }
+
+  /* ---------------- rules ---------------- */
+  const isRed = c => c.enhancement === 'wild' ? true : (SUITS[c.suit].color === 'red');
+  const isBlack = c => c.enhancement === 'wild' ? true : (SUITS[c.suit].color === 'black');
+  const suitsOf = c => c.enhancement === 'wild' ? SUIT_KEYS.slice() : [c.suit];
+
+  function altColor(under, over) {
+    // over goes on top of under -> colours must differ (chameleons satisfy anything)
+    if (under.enhancement === 'wild' || over.enhancement === 'wild') return true;
+    return SUITS[under.suit].color !== SUITS[over.suit].color;
+  }
+
+  function canStack(under, over, m) {
+    if (over.enhancement === 'phantom') return true;
+    if (under.enhancement === 'phantom') return true;
+    if (!altColor(under, over)) return false;
+    if (under.rank === over.rank + 1) return true;
+    if (m && m.wrapAround && under.rank === 1 && over.rank === 13) return true;
+    return false;
+  }
+
+  function canPlaceOnFoundation(board, card, suit) {
+    const f = board.foundations[suit];
+    if (!suitsOf(card).includes(suit)) return false;
+    const need = f.length + 1;
+    return card.rank === need;
+  }
+
+  function foundationTargetFor(board, card) {
+    for (const s of suitsOf(card)) if (canPlaceOnFoundation(board, card, s)) return s;
+    return null;
+  }
+
+  function canPlaceOnColumn(board, col, card, m) {
+    const pile = board.tableau[col];
+    if (!pile.length) return (card.rank === 13 || card.enhancement === 'phantom' || (m && m.anyIntoEmpty));
+    const top = pile[pile.length - 1];
+    if (!top.faceUp) return false;
+    return canStack(top, card, m);
+  }
+
+  /* is the run starting at index i in column col a legal moveable sequence? */
+  function isRunFrom(board, col, index, m) {
+    const pile = board.tableau[col];
+    if (index < 0 || index >= pile.length) return false;
+    if (!pile[index].faceUp) return false;
+    for (let i = index; i < pile.length - 1; i++) {
+      if (!canStack(pile[i], pile[i + 1], m)) return false;
+    }
+    return true;
+  }
+
+  /* ---------------- move enumeration ---------------- */
+  function anyMoveAvailable(state, run) {
+    const b = state.board, m = mods(run);
+    if (b.stock.length) return true;
+    if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
+    const wasteTop = b.waste[b.waste.length - 1];
+    if (wasteTop) {
+      if (foundationTargetFor(b, wasteTop)) return true;
+      for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, wasteTop, m)) return true;
+    }
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      if (!pile.length) continue;
+      const top = pile[pile.length - 1];
+      if (top.faceUp && foundationTargetFor(b, top)) return true;
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp) continue;
+        if (!isRunFrom(b, c, i, m)) continue;
+        const head = pile[i];
+        // moving a whole face-up column to another empty column is pointless
+        const movingWholePile = (i === 0);
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c) continue;
+          if (!b.tableau[d].length && movingWholePile) continue;
+          if (canPlaceOnColumn(b, d, head, m)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function isWon(state) {
+    return SUIT_KEYS.every(s => state.board.foundations[s].length >= 13);
+  }
+
+  return {
+    newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
+    isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
+    canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId
+  };
+})();
+
+/* ===== js/score.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  score.js
+   The Chips x Mult pipeline. Every scoring event walks through
+   card -> enhancement -> finish -> seal -> combo -> curios.
+   ============================================================ */
+
+const Score = (() => {
+
+  function makeCtx(G, ev) {
+    const run = G.run, board = G.board, round = G.round;
+    const ctx = {
+      event: ev.event,
+      card: ev.card || null,
+      fromZone: ev.fromZone || null,
+      run, board, round,
+      chips: 0, mult: 1,
+      triggers: [],
+      _src: null,
+
+      addChips(n) {
+        if (!n) return;
+        ctx.chips += n;
+        ctx.triggers.push({ kind: 'chips', amount: n, src: ctx._src });
+      },
+      addMult(n) {
+        if (!n) return;
+        ctx.mult += n;
+        ctx.triggers.push({ kind: 'mult', amount: n, src: ctx._src });
+      },
+      xMult(n) {
+        if (n === 1 || n == null) return;
+        ctx.mult *= n;
+        ctx.triggers.push({ kind: 'xmult', amount: n, src: ctx._src });
+      },
+      money(n) {
+        if (!n) return;
+        run.money += n;
+        round.money += n;
+        ctx.triggers.push({ kind: 'money', amount: n, src: ctx._src });
+      },
+      flash() {
+        ctx.triggers.push({ kind: 'flash', src: ctx._src });
+      },
+      chance(n) {
+        return Math.random() < (run.luck || 1) / n;
+      },
+      /* --- board queries used by curios --- */
+      isRed: c => c && Engine.isRed(c),
+      hasSuit: (c, s) => !!c && Engine.suitsOf(c).includes(s),
+      faceDownCount: () => board.tableau.reduce((a, p) => a + p.filter(c => !c.faceUp).length, 0),
+      emptyColumns: () => board.tableau.filter(p => !p.length).length,
+      wasteCount: () => board.waste.length,
+      stockCount: () => board.stock.length,
+      foundationCount: s => board.foundations[s].length,
+      completedSuits: () => SUIT_KEYS.filter(s => board.foundations[s].length >= 13).length,
+      shortestFoundation: () => Math.min.apply(null, SUIT_KEYS.map(s => board.foundations[s].length)),
+      self: null
+    };
+    return ctx;
+  }
+
+  /* run one pass of card-intrinsic effects */
+  function cardPass(ctx) {
+    const card = ctx.card;
+    if (!card) return;
+    ctx._src = { type: 'card', id: card.id };
+
+    ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+
+    switch (card.enhancement) {
+      case 'gilded':  ctx.addChips(50); break;
+      case 'voltaic': ctx.addMult(4); break;
+      case 'glass':   ctx.xMult(2); break;
+      case 'phantom': ctx.addMult(2); break;
+      case 'bomb':    ctx.addChips(30); break;
+      case 'bullion': ctx.money(4); break;
+      case 'steel':   if (ctx.fromZone === 'tableau') ctx.xMult(1.5); break;
+      case 'lucky':
+        if (ctx.chance(4)) { ctx.addMult(20); ctx.flash(); }
+        if (ctx.chance(8)) { ctx.money(3); }
+        break;
+    }
+    switch (card.finish) {
+      case 'foil': ctx.addChips(60); break;
+      case 'holo': ctx.addMult(12); break;
+      case 'poly': ctx.xMult(1.5); break;
+    }
+    switch (card.seal) {
+      case 'gold': ctx.money(4); break;
+      case 'blue': ctx.addChips(30); break;
+    }
+    ctx._src = null;
+  }
+
+  /* run every curio's score hook, honouring Copycat */
+  function curioPass(ctx) {
+    const run = ctx.run;
+    run.mantel.forEach((inst, idx) => {
+      let def = CURIO_BY_ID[inst.id];
+      let self = inst;
+      if (def && def.mods && def.mods.copyLeft) {
+        const left = run.mantel[idx - 1];
+        if (!left) return;
+        def = CURIO_BY_ID[left.id];
+        self = left;
+        if (!def) return;
+      }
+      if (!def) return;
+      ctx._src = { type: 'curio', index: idx };
+      ctx.self = self;
+      if (def.hooks && def.hooks.score) def.hooks.score(ctx);
+      // finishes on the curio itself
+      if (inst.finish === 'foil') ctx.addChips(60);
+      if (inst.finish === 'holo') ctx.addMult(12);
+      if (inst.finish === 'poly') ctx.xMult(1.5);
+      if (run.curioBonusMult) ctx.addMult(run.curioBonusMult);
+      ctx._src = null;
+      ctx.self = null;
+    });
+  }
+
+  /* combo layer: Cascade + Suit Run */
+  function comboPass(ctx) {
+    const m = Engine.mods(ctx.run);
+    ctx._src = { type: 'combo' };
+    if (ctx.round.cascade > 1) ctx.addMult(ctx.round.cascade * m.cascadeMult);
+    if (ctx.round.suitRun > 1) ctx.addMult(ctx.round.suitRun * 2 * m.suitRunMult);
+    ctx._src = null;
+  }
+
+  /*
+    Score one event.
+    ev = { event:'foundation'|'reveal'|'clear'|'suit', card, fromZone, depth, label }
+  */
+  function event(G, ev) {
+    const ctx = makeCtx(G, ev);
+    ctx.depth = ev.depth || 0;
+    const m = Engine.mods(G.run);
+
+    G.round.scoreEvents++;
+
+    let base = { chips: 0, mult: 1 };
+    if (ev.event === 'reveal') base = { chips: TUNE.revealChips, mult: 1 };
+    if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
+    if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
+    ctx.chips = base.chips;
+    ctx.mult = base.mult;
+
+    let retriggers = 1;
+    if (ev.card && ev.card.seal === 'red') retriggers += 1;
+    if (ev.event === 'foundation' && G.round.scoredCards === 1 && m.firstRetrigger) retriggers += m.firstRetrigger;
+
+    for (let t = 0; t < retriggers; t++) {
+      cardPass(ctx);
+      if (ev.event === 'foundation') comboPass(ctx);
+      curioPass(ctx);
+      if (t > 0) ctx.triggers.push({ kind: 'retrigger', src: { type: 'card', id: ev.card ? ev.card.id : null } });
+    }
+
+    ctx.mult = Math.max(0, ctx.mult);
+    const total = Math.round(ctx.chips * ctx.mult);
+    G.round.score += total;
+    G.run.stats.best = Math.max(G.run.stats.best, total);
+
+    return {
+      event: ev.event,
+      label: ev.label || labelFor(ev),
+      card: ev.card || null,
+      chips: Math.round(ctx.chips),
+      mult: +ctx.mult.toFixed(2),
+      total,
+      triggers: ctx.triggers,
+      anchor: ev.anchor || null
+    };
+  }
+
+  function labelFor(ev) {
+    if (ev.event === 'reveal') return 'FLIP!';
+    if (ev.event === 'clear') return 'COLUMN CLEARED!';
+    if (ev.event === 'suit') return SUITS[ev.suit].name.toUpperCase() + ' COMPLETE!';
+    return null;
+  }
+
+  /* end-of-round payout */
+  function payout(G) {
+    const run = G.run, b = G.board;
+    const m = Engine.mods(run);
+    const lines = [];
+    let total = 0;
+
+    const base = TUNE.baseMoney + run.bonusMoney;
+    lines.push({ label: 'Round played', amount: base }); total += base;
+
+    const empties = b.tableau.filter(p => !p.length).length;
+    if (empties) { const a = empties * TUNE.moneyPerEmptyColumn; lines.push({ label: empties + ' empty column' + (empties > 1 ? 's' : ''), amount: a }); total += a; }
+
+    const suits = SUIT_KEYS.filter(s => b.foundations[s].length >= 13).length;
+    if (suits) { const a = suits * TUNE.moneyPerSuitDone; lines.push({ label: suits + ' finished suit' + (suits > 1 ? 's' : ''), amount: a }); total += a; }
+
+    if (G.round.won) { lines.push({ label: 'BOARD CLEARED', amount: 8 }); total += 8; }
+
+    run.mantel.forEach((inst, i) => {
+      const def = CURIO_BY_ID[inst.id];
+      if (def && def.hooks && def.hooks.roundEnd) {
+        const a = def.hooks.roundEnd(run, inst) || 0;
+        if (a) { lines.push({ label: def.name, amount: a }); total += a; }
+      }
+    });
+
+    if (!m.noInterest) {
+      const interest = Math.min(run.interestCap, Math.floor(run.money / TUNE.interestPer));
+      if (interest > 0) { lines.push({ label: 'Interest ($1 per $' + TUNE.interestPer + ')', amount: interest }); total += interest; }
+    }
+
+    return { lines, total };
+  }
+
+  return { event, payout };
+})();
+
+/* ===== js/game.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  game.js
+   Move execution, round lifecycle, the shop, saves.
+   Pushes visual events onto G.fx for ui.js to animate.
+   ============================================================ */
+
+const Game = (() => {
+  const SAVE_KEY = 'piledriver.save.v1';
+
+  const G = {
+    run: null, board: null, round: null,
+    phase: 'menu',            // menu | play | roundEnd | shop | gameOver | victory
+    fx: [],                   // score packets waiting to be animated
+    undoStack: [],
+    pending: null,            // a tincture waiting for a card choice
+    payout: null,
+    lastResult: null
+  };
+
+  const push = p => { G.fx.push(p); return p; };
+
+  /* ---------------- lifecycle ---------------- */
+  function startRun() {
+    G.run = Engine.newRun();
+    G.undoStack = [];
+    startRound();
+  }
+
+  function startRound() {
+    const s = Engine.newRound(G.run);
+    G.board = s.board;
+    G.round = s.round;
+    G.undoStack = [];
+    G.phase = 'play';
+    G.payout = null;
+    save();
+  }
+
+  function quota() { return Engine.quotaFor(G.run); }
+  function anteTotal() { return G.run.anteScore + (G.round ? G.round.score : 0); }
+
+  /* ---------------- undo ---------------- */
+  function snapshot() {
+    G.undoStack.push(JSON.stringify({
+      board: G.board,
+      round: G.round,
+      money: G.run.money,
+      counters: G.run.mantel.map(c => c.counter)
+    }));
+    if (G.undoStack.length > 60) G.undoStack.shift();
+  }
+
+  function undo() {
+    if (!G.undoStack.length || G.board.undos <= 0) return false;
+    const s = JSON.parse(G.undoStack.pop());
+    const undos = G.board.undos;
+    G.board = s.board;
+    G.round = s.round;
+    G.board.undos = undos - 1;
+    G.run.money = s.money;
+    s.counters.forEach((v, i) => { if (G.run.mantel[i]) G.run.mantel[i].counter = v; });
+    G.round.over = false;
+    save();
+    return true;
+  }
+
+  /* ---------------- scoring plumbing ---------------- */
+  function scoreEvent(ev) {
+    const packet = Score.event(G, ev);
+    push(packet);
+    if (ev.card && ev.card.enhancement === 'glass' && Math.random() < (G.run.luck || 1) / 5) {
+      shatter(ev.card);
+    }
+    return packet;
+  }
+
+  function shatter(card) {
+    const i = G.run.deck.findIndex(c => c.id === card.id);
+    if (i >= 0) G.run.deck.splice(i, 1);
+    card.shattered = true;
+    push({ event: 'shatter', label: 'SHATTERED', card, chips: 0, mult: 0, total: 0, triggers: [] });
+  }
+
+  function breakCascade() {
+    G.round.cascade = 0;
+    G.round.suitRun = 0;
+    G.round.lastSuit = null;
+  }
+
+  /* flip the newly exposed card of a column, score reveals + clears */
+  function settleColumn(col) {
+    const pile = G.board.tableau[col];
+    if (pile.length) {
+      const top = pile[pile.length - 1];
+      if (!top.faceUp) {
+        top.faceUp = true;
+        scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
+      }
+    } else {
+      scoreEvent({ event: 'clear', anchor: { zone: 'tableau', col } });
+    }
+  }
+
+  function checkSuitComplete(suit, anchor) {
+    if (G.board.foundations[suit].length === 13) {
+      G.run.stats.suitsDone++;
+      scoreEvent({ event: 'suit', suit, anchor });
+    }
+  }
+
+  /* ---------------- moves ---------------- */
+  function drawStock() {
+    if (G.phase !== 'play') return false;
+    const b = G.board;
+    const m = Engine.mods(G.run);
+    if (!b.stock.length) {
+      if (!b.waste.length) return false;
+      if (b.passesLeft <= 0 && !m.infinitePasses) return false;
+      snapshot();
+      if (!m.infinitePasses) b.passesLeft--;
+      b.stock = b.waste.reverse();
+      b.stock.forEach(c => { c.faceUp = false; });
+      b.waste = [];
+      breakCascade();
+      G.round.moves++;
+      push({ event: 'recycle', label: 'RESHUFFLE', chips: 0, mult: 0, total: 0, triggers: [] });
+      save();
+      return true;
+    }
+    snapshot();
+    const c = b.stock.pop();
+    c.faceUp = true;
+    b.waste.push(c);
+    breakCascade();
+    G.round.moves++;
+    save();
+    return true;
+  }
+
+  /*
+    src: {zone:'waste'} | {zone:'tableau', col, index} | {zone:'foundation', suit}
+    dst: {zone:'tableau', col} | {zone:'foundation', suit?}
+  */
+  function tryMove(src, dst) {
+    if (G.phase !== 'play') return false;
+    const b = G.board, m = Engine.mods(G.run);
+    const cards = grab(src, m);
+    if (!cards || !cards.length) return illegal();
+
+    if (dst.zone === 'foundation') {
+      if (cards.length !== 1) return illegal();
+      const card = cards[0];
+      const suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit)
+        ? dst.suit : Engine.foundationTargetFor(b, card);
+      if (!suit) return illegal();
+      snapshot();
+      removeFrom(src, 1);
+      const depth = b.foundations[suit].length;
+      b.foundations[suit].push(card);
+      G.round.moves++;
+      G.round.scoredCards++;
+      G.run.stats.cardsScored++;
+      G.round.cascade++;
+      const cardSuits = Engine.suitsOf(card);
+      if (G.round.lastSuit && cardSuits.includes(G.round.lastSuit)) G.round.suitRun++;
+      else G.round.suitRun = 1;
+      G.round.lastSuit = suit;
+
+      const anchor = { zone: 'foundation', suit };
+      const replay = !!card.scoredRound;
+      if (replay) {
+        G.round.scoredCards--;
+        G.round.cascade--;
+        push({ event: 'replay', label: 'ALREADY PAID', card, chips: 0, mult: 0, total: 0, triggers: [], anchor });
+      } else {
+        card.scoredRound = true;
+        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor });
+      }
+
+      /* Fuse cards detonate the card they were sitting on */
+      if (card.enhancement === 'bomb' && src.zone === 'tableau') {
+        const pile = b.tableau[src.col];
+        const below = pile[pile.length - 1];
+        if (below) {
+          if (!below.faceUp) below.faceUp = true;
+          scoreEvent({ event: 'foundation', card: below, fromZone: 'tableau', depth: 0,
+                       label: 'BOOM!', anchor: { zone: 'tableau', col: src.col } });
+        }
+      }
+
+      if (src.zone === 'tableau') settleColumn(src.col);
+      checkSuitComplete(suit, anchor);
+      afterMove();
+      return true;
+    }
+
+    if (dst.zone === 'tableau') {
+      const col = dst.col;
+      if (src.zone === 'tableau' && src.col === col) return illegal();
+      if (!Engine.canPlaceOnColumn(b, col, cards[0], m)) return illegal();
+      snapshot();
+      removeFrom(src, cards.length);
+      cards.forEach(c => { c.faceUp = true; b.tableau[col].push(c); });
+      G.round.moves++;
+      breakCascade();
+      if (src.zone === 'tableau') settleColumn(src.col);
+      afterMove();
+      return true;
+    }
+    return illegal();
+  }
+
+  function illegal() {
+    G.round.illegal++;
+    const sunk = G.run.mantel.find(c => c.id === 'sunk_cost');
+    if (sunk) { sunk.counter = (sunk.counter || 0) + 2; push({ event: 'curioFlash', curio: 'sunk_cost' }); }
+    push({ event: 'illegal', label: 'NOPE', chips: 0, mult: 0, total: 0, triggers: [] });
+    return false;
+  }
+
+  function grab(src, m) {
+    const b = G.board;
+    if (src.zone === 'waste') {
+      const c = b.waste[b.waste.length - 1];
+      return c ? [c] : null;
+    }
+    if (src.zone === 'foundation') {
+      const f = b.foundations[src.suit];
+      const c = f[f.length - 1];
+      return c ? [c] : null;
+    }
+    if (src.zone === 'tableau') {
+      const pile = b.tableau[src.col];
+      const idx = src.index != null ? src.index : pile.length - 1;
+      if (!Engine.isRunFrom(b, src.col, idx, m)) return null;
+      return pile.slice(idx);
+    }
+    return null;
+  }
+
+  function removeFrom(src, n) {
+    const b = G.board;
+    if (src.zone === 'waste') b.waste.splice(b.waste.length - n, n);
+    else if (src.zone === 'foundation') b.foundations[src.suit].splice(b.foundations[src.suit].length - n, n);
+    else if (src.zone === 'tableau') b.tableau[src.col].splice(b.tableau[src.col].length - n, n);
+  }
+
+  function afterMove() {
+    save();
+    if (Engine.isWon(G)) {
+      G.round.won = true;
+      endRound(true);
+      return;
+    }
+    if (!Engine.anyMoveAvailable(G, G.run)) {
+      G.round.stuck = true;
+    } else {
+      G.round.stuck = false;
+    }
+  }
+
+  /* auto-play every card that can go straight home */
+  function autoCollect() {
+    let moved = 0, guard = 0;
+    let again = true;
+    while (again && guard++ < 300) {
+      again = false;
+      const b = G.board;
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        if (!pile.length) continue;
+        const top = pile[pile.length - 1];
+        if (top.faceUp && Engine.foundationTargetFor(b, top)) {
+          if (tryMove({ zone: 'tableau', col: c, index: pile.length - 1 }, { zone: 'foundation' })) { moved++; again = true; }
+        }
+      }
+      const w = G.board.waste[G.board.waste.length - 1];
+      if (w && Engine.foundationTargetFor(G.board, w)) {
+        if (tryMove({ zone: 'waste' }, { zone: 'foundation' })) { moved++; again = true; }
+      }
+      if (G.phase !== 'play') break;
+    }
+    return moved;
+  }
+
+  function hint() {
+    const b = G.board, m = Engine.mods(G.run);
+    const w = b.waste[b.waste.length - 1];
+    if (w && Engine.foundationTargetFor(b, w)) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      if (!pile.length) continue;
+      const top = pile[pile.length - 1];
+      if (top.faceUp && Engine.foundationTargetFor(b, top)) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
+    }
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        const gainsFlip = i > 0 && !pile[i - 1].faceUp;
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c) continue;
+          if (!b.tableau[d].length && i === 0) continue;
+          if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
+            if (gainsFlip || !b.tableau[d].length || i === 0) return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d } };
+          }
+        }
+      }
+    }
+    if (w) {
+      for (let d = 0; d < b.tableau.length; d++) if (Engine.canPlaceOnColumn(b, d, w, m)) return { src: { zone: 'waste' }, dst: { zone: 'tableau', col: d } };
+    }
+    if (b.stock.length || b.waste.length) return { src: { zone: 'stock' } };
+    return null;
+  }
+
+  /* ---------------- round end ---------------- */
+  function endRound(won) {
+    if (G.phase !== 'play') return;
+    G.round.over = true;
+    G.round.won = !!won || Engine.isWon(G);
+    G.phase = 'roundEnd';
+    G.payout = Score.payout(G);
+    G.run.money += G.payout.total;
+    G.run.anteScore += G.round.score;
+    G.run.stats.roundsPlayed++;
+    save();
+  }
+
+  function clearAnte() {
+    const run = G.run;
+    run.ante++;
+    run.round = 1;
+    run.anteScore = 0;
+    run.mantel.forEach(inst => { if (inst.id === 'perpetual') inst.counter = 0; });
+    if (run.ante > (run.finalAnte || TUNE.finalAnte)) { G.phase = 'victory'; save(); return; }
+    openShop(true);
+  }
+
+  /* called from the round-end screen */
+  function advance() {
+    const run = G.run;
+    if (run.round >= TUNE.roundsPerAnte) {
+      if (run.anteScore >= Engine.quotaFor(run)) clearAnte();
+      else { G.phase = 'gameOver'; save(); }
+    } else {
+      run.round++;
+      openShop(false);
+    }
+  }
+
+  /* quota already met with rounds to spare -- bank it and take the cash */
+  function bankAnte() {
+    const run = G.run;
+    if (run.anteScore < Engine.quotaFor(run)) return false;
+    const skipped = TUNE.roundsPerAnte - run.round;
+    run.money += skipped * TUNE.skipBonus;
+    clearAnte();
+    return skipped * TUNE.skipBonus;
+  }
+
+  /* ---------------- the shop ---------------- */
+  function weightedCurio(exclude) {
+    const pool = CURIOS.filter(c => !exclude.has(c.id));
+    if (!pool.length) return null;
+    let total = 0;
+    pool.forEach(c => { total += RARITY_WEIGHT[c.rarity]; });
+    let r = Math.random() * total;
+    for (const c of pool) { r -= RARITY_WEIGHT[c.rarity]; if (r <= 0) return c; }
+    return pool[0];
+  }
+
+  function rollFinish() {
+    const r = Math.random();
+    if (r < 0.03) return 'neg';
+    if (r < 0.07) return 'poly';
+    if (r < 0.13) return 'holo';
+    if (r < 0.21) return 'foil';
+    return 'none';
+  }
+
+  function priceOf(item) {
+    let base = item.cost;
+    if (item.finish && item.finish !== 'none') base += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
+    const price = Math.max(1, Math.ceil(base * (1 - Math.min(0.75, G.run.discount))));
+    return price;
+  }
+
+  function rollShopItems() {
+    const owned = new Set(G.run.mantel.map(c => c.id));
+    const items = [];
+    const used = new Set();
+    for (let i = 0; i < 4; i++) {
+      if (Math.random() < 0.55) {
+        const c = weightedCurio(new Set([...owned, ...used]));
+        if (c) {
+          used.add(c.id);
+          items.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
+          continue;
+        }
+      }
+      const t = TINCTURES[Math.floor(Math.random() * TINCTURES.length)];
+      items.push({ type: 'tincture', id: t.id, cost: t.cost });
+    }
+    const avail = HOUSE_RULES.filter(h => (G.run.houseRules[h.id] || 0) < h.max);
+    Engine.shuffle(avail);
+    const houses = avail.slice(0, 2).map(h => ({ type: 'house', id: h.id, cost: h.cost }));
+    return { items, houses };
+  }
+
+  function openShop(anteCleared) {
+    const rolled = rollShopItems();
+    G.run.shop = { items: rolled.items, houses: rolled.houses, rerolls: 0, sold: [] };
+    G.run.anteCleared = !!anteCleared;
+    G.phase = 'shop';
+    save();
+  }
+
+  function rerollCost() {
+    return Math.max(1, Math.ceil((TUNE.rerollBase + TUNE.rerollStep * G.run.shop.rerolls) * (1 - Math.min(0.75, G.run.discount))));
+  }
+
+  function reroll() {
+    const cost = rerollCost();
+    if (G.run.money < cost) return false;
+    G.run.money -= cost;
+    const rolled = rollShopItems();
+    G.run.shop.items = rolled.items;
+    G.run.shop.rerolls++;
+    save();
+    return true;
+  }
+
+  function effectiveSlots() {
+    return G.run.mantelSlots + G.run.mantel.filter(c => c.finish === 'neg').length;
+  }
+
+  function buy(index, kind) {
+    const shop = G.run.shop;
+    const list = kind === 'house' ? shop.houses : shop.items;
+    const item = list[index];
+    if (!item || item.bought) return { ok: false, reason: 'gone' };
+    const price = priceOf(kind === 'house' ? Object.assign({}, item, { cost: HOUSE_BY_ID[item.id].cost }) : item);
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash.' };
+
+    if (item.type === 'curio') {
+      const slots = effectiveSlots() + (item.finish === 'neg' ? 1 : 0);
+      if (G.run.mantel.length >= slots) return { ok: false, reason: 'Your mantel is full. Sell something first.' };
+      const def = CURIO_BY_ID[item.id];
+      G.run.money -= price;
+      G.run.mantel.push({ id: item.id, finish: item.finish || 'none', counter: def.counter != null ? def.counter : 0, paid: price });
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'curio' };
+    }
+    if (item.type === 'house') {
+      const def = HOUSE_BY_ID[item.id];
+      G.run.money -= price;
+      def.apply(G.run);
+      G.run.houseRules[item.id] = (G.run.houseRules[item.id] || 0) + 1;
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'house' };
+    }
+    if (item.type === 'tincture') {
+      const def = TINCTURE_BY_ID[item.id];
+      if (def.kind === 'add') {
+        G.run.money -= price;
+        const spec = def.build();
+        G.run.deck.push(Engine.newCard(spec.rank, spec.suit, {
+          enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
+        }));
+        item.bought = true;
+        save();
+        return { ok: true, kind: 'card' };
+      }
+      // needs a card chosen from the deck
+      G.pending = { itemIndex: index, def };
+      return { ok: true, kind: 'select', def, price };
+    }
+    return { ok: false, reason: 'nope' };
+  }
+
+  function applyPending(cardId) {
+    if (!G.pending) return false;
+    const { itemIndex, def } = G.pending;
+    const item = G.run.shop.items[itemIndex];
+    if (!item || item.bought) { G.pending = null; return false; }
+    const price = priceOf(item);
+    if (G.run.money < price) { G.pending = null; return false; }
+    const idx = G.run.deck.findIndex(c => c.id === cardId);
+    if (idx < 0) return false;
+    const card = G.run.deck[idx];
+
+    if (def.kind === 'enhance') card.enhancement = def.value;
+    else if (def.kind === 'finish') card.finish = def.value;
+    else if (def.kind === 'seal') card.seal = def.value;
+    else if (def.kind === 'remove') G.run.deck.splice(idx, 1);
+    else if (def.kind === 'duplicate') {
+      G.run.deck.push(Engine.newCard(card.rank, card.suit, {
+        enhancement: card.enhancement, finish: card.finish, seal: card.seal
+      }));
+    }
+    G.run.money -= price;
+    item.bought = true;
+    G.pending = null;
+    save();
+    return true;
+  }
+
+  function cancelPending() { G.pending = null; }
+
+  function sellCurio(index) {
+    const inst = G.run.mantel[index];
+    if (!inst) return false;
+    const def = CURIO_BY_ID[inst.id];
+    const value = def.sellsFull ? (inst.paid || def.cost) : Math.max(1, Math.floor((inst.paid || def.cost) / 2));
+    G.run.money += value;
+    G.run.mantel.splice(index, 1);
+    save();
+    return value;
+  }
+
+  function reorderCurio(from, to) {
+    if (from === to || from < 0 || to < 0) return;
+    const arr = G.run.mantel;
+    if (from >= arr.length || to >= arr.length) return;
+    const [x] = arr.splice(from, 1);
+    arr.splice(to, 0, x);
+    save();
+  }
+
+  function leaveShop() {
+    G.run.shop = null;
+    startRound();
+  }
+
+  /* ---------------- persistence ---------------- */
+  function save() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        run: G.run, board: G.board, round: G.round, phase: G.phase, payout: G.payout
+      }));
+    } catch (e) { /* private mode, whatever */ }
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      if (!s || !s.run) return false;
+      G.run = s.run; G.board = s.board; G.round = s.round;
+      G.phase = s.phase === 'menu' ? 'play' : s.phase;
+      G.payout = s.payout || null;
+      // keep new fields alive across versions
+      const fresh = Engine.newRun();
+      for (const k in fresh) if (G.run[k] === undefined) G.run[k] = fresh[k];
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+  return {
+    G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
+    undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
+    sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
+    bankAnte, clearAnte
+  };
+})();
+
+/* ===== js/audio.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  audio.js   tiny web-audio noise box
+   ============================================================ */
+const Sfx = (() => {
+  let ctx = null, on = true, master = null;
+
+  function init() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.22;
+    master.connect(ctx.destination);
+  }
+
+  function beep(freq, dur, type, vol, slide) {
+    if (!on) return;
+    init();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, slide), ctx.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol || 0.3, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol) {
+    if (!on) return;
+    init();
+    if (!ctx) return;
+    const len = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = vol || 0.2;
+    const f = ctx.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = 1200;
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start();
+  }
+
+  const api = {
+    toggle(v) { on = v == null ? !on : v; return on; },
+    isOn: () => on,
+    click: () => beep(420, 0.05, 'square', 0.15),
+    flip:  () => { noise(0.06, 0.12); beep(700, 0.05, 'triangle', 0.12); },
+    place: () => beep(520, 0.07, 'triangle', 0.2, 780),
+    deal:  () => noise(0.05, 0.08),
+    error: () => beep(150, 0.14, 'sawtooth', 0.18, 90),
+    money: () => { beep(880, 0.06, 'square', 0.16); setTimeout(() => beep(1320, 0.09, 'square', 0.14), 60); },
+    chip: (i) => beep(340 + Math.min(24, i) * 42, 0.05, 'square', 0.13),
+    mult: (i) => beep(520 + Math.min(24, i) * 55, 0.06, 'sawtooth', 0.11),
+    score: (mag) => {
+      const base = 300 + Math.min(900, mag * 6);
+      beep(base, 0.12, 'square', 0.22, base * 2);
+      setTimeout(() => beep(base * 1.5, 0.16, 'triangle', 0.18, base * 3), 90);
+    },
+    big: () => {
+      [0, 90, 180, 300].forEach((t, i) => setTimeout(() => beep(440 * Math.pow(1.26, i), 0.2, 'square', 0.2), t));
+    },
+    shatter: () => { noise(0.3, 0.3); beep(1800, 0.2, 'sawtooth', 0.12, 200); },
+    win: () => [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.3, 'triangle', 0.22), i * 110)),
+    lose: () => [400, 330, 260, 180].forEach((f, i) => setTimeout(() => beep(f, 0.35, 'sawtooth', 0.2), i * 150))
+  };
+  return api;
+})();
+
+/* ===== js/ui.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  ui.js
+   Board rendering, pointer drag & drop, and the score fireworks.
+   ============================================================ */
+
+const UI = (() => {
+  const G = Game.G;
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  function el(tag, cls, html) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+
+  let displayScore = 0;
+  let fxBusy = false;
+  let selection = null;      // {zone, col, index, suit}
+  let hintCells = [];
+
+  /* ============ CARD ELEMENT ============ */
+  function cardEl(card, opts) {
+    opts = opts || {};
+    const suit = SUITS[card.suit];
+    const xray = Engine.mods(G.run).xray;
+    const marked = G.run.markedDeck;
+    const n = el('div', 'card');
+    n.dataset.id = card.id;
+    if (!card.faceUp) {
+      n.classList.add('down');
+      if (xray || opts.marked || (marked && opts.topDown)) n.classList.add('peek');
+      if (!(xray || opts.marked || (marked && opts.topDown))) {
+        n.innerHTML = '<div class="back"><span>✦</span></div>';
+        return n;
+      }
+    }
+    n.classList.add(Engine.isRed(card) && !Engine.isBlack(card) ? 'red' : (suit.color === 'red' ? 'red' : 'black'));
+    if (card.enhancement && card.enhancement !== 'none') n.classList.add(ENHANCEMENTS[card.enhancement].cls);
+    if (card.finish && card.finish !== 'none') n.classList.add(FINISHES[card.finish].cls);
+    if (card.seal && card.seal !== 'none') n.classList.add(SEALS[card.seal].cls);
+
+    const r = RANK_NAMES[card.rank];
+    const s = card.enhancement === 'wild' ? '✿' : suit.sym;
+    n.innerHTML =
+      '<div class="face">' +
+        '<div class="corner tl"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
+        '<div class="mid">' + s + '</div>' +
+        '<div class="corner br"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
+        (card.enhancement && card.enhancement !== 'none' && ENHANCEMENTS[card.enhancement].glyph
+          ? '<div class="enh-badge">' + ENHANCEMENTS[card.enhancement].glyph + '</div>' : '') +
+        (card.seal && card.seal !== 'none' ? '<div class="seal-dot"></div>' : '') +
+        '<div class="shine"></div>' +
+      '</div>';
+    return n;
+  }
+
+  /* ============ FULL RENDER ============ */
+  function render() {
+    if (!G.run) return;
+    renderHud();
+    renderMantel();
+    renderBoard();
+    renderControls();
+  }
+
+  function renderHud() {
+    const run = G.run;
+    if (!fxBusy && G.round && Math.round(displayScore) !== G.round.score) displayScore = G.round.score;
+    const q = Engine.quotaFor(run);
+    const total = Game.anteTotal();
+    const pct = Math.max(0, Math.min(100, total / q * 100));
+    $('#ante-num').textContent = run.ante;
+    $('#round-num').textContent = run.round + '/' + TUNE.roundsPerAnte;
+    $('#quota-fill').style.width = pct + '%';
+    $('#quota-text').textContent = fmt(total) + ' / ' + fmt(q);
+    $('#quota-bar').classList.toggle('met', total >= q);
+    $('#money').textContent = '$' + run.money;
+    $('#round-score').textContent = fmt(Math.round(displayScore));
+  }
+
+  function renderMantel(target) {
+    const m = target || $('#mantel');
+    if (!m) return;
+    m.innerHTML = '';
+    const slots = Game.effectiveSlots();
+    const shown = Math.max(slots, G.run.mantel.length);
+    for (let i = 0; i < shown; i++) {
+      const inst = G.run.mantel[i];
+      if (!inst) {
+        const empty = el('div', 'mslot curio empty', '<span class="slot-mark">◇</span>');
+        empty.dataset.idx = i;
+        m.appendChild(empty);
+        continue;
+      }
+      const def = CURIO_BY_ID[inst.id];
+      const c = el('div', 'mslot curio r-' + def.rarity + (inst.finish && inst.finish !== 'none' ? ' ' + FINISHES[inst.finish].cls : ''));
+      c.dataset.idx = i;
+      c.draggable = false;
+      c.innerHTML =
+        '<div class="c-art">' + def.art + '</div>' +
+        '<div class="c-name">' + def.name + '</div>' +
+        (inst.counter != null && def.counterLabel
+          ? '<div class="c-counter">' + (def.counterLabel === 'X' ? 'X' + inst.counter : '+' + inst.counter) + '</div>' : '');
+      c.addEventListener('pointerenter', e => showTip(e.currentTarget, curioTip(inst, def, i)));
+      c.addEventListener('pointerleave', hideTip);
+      c.addEventListener('click', () => {
+        if (G.phase === 'shop') {
+          const v = Game.sellCurio(i);
+          if (v) { Sfx.money(); toast('Sold for $' + v); Overlays.refreshShop(); }
+        }
+      });
+      makeCurioDraggable(c, i);
+      m.appendChild(c);
+    }
+    const label = el('div', 'mantel-label', 'THE MANTEL <b>' + G.run.mantel.length + '/' + slots + '</b>');
+    m.appendChild(label);
+  }
+
+  function curioTip(inst, def, i) {
+    let s = '<div class="tip-title r-' + def.rarity + '">' + def.art + ' ' + def.name + '</div>';
+    if (inst.finish && inst.finish !== 'none') s += '<div class="tip-fin">' + FINISHES[inst.finish].name + ' — ' + FINISHES[inst.finish].text + '</div>';
+    s += '<div class="tip-text">' + def.text + '</div>';
+    s += '<div class="tip-foot">' + def.rarity.toUpperCase() +
+         (G.phase === 'shop' ? ' • click to sell for $' + (def.sellsFull ? (inst.paid || def.cost) : Math.max(1, Math.floor((inst.paid || def.cost) / 2))) : '') +
+         '</div>';
+    return s;
+  }
+
+  function renderControls() {
+    $('#btn-undo').innerHTML = 'UNDO <b>' + (G.board ? G.board.undos : 0) + '</b>';
+    $('#btn-undo').disabled = !G.board || G.board.undos <= 0 || !Game.G.undoStack.length;
+    const passes = Engine.mods(G.run).infinitePasses ? '∞' : (G.board ? G.board.passesLeft : 0);
+    $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
+    $('#deck-count').textContent = G.run.deck.length;
+    $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
+  }
+
+  function renderBoard() {
+    const b = G.board;
+    if (!b) return;
+
+    /* stock */
+    const stock = $('#stock');
+    stock.innerHTML = '';
+    if (b.stock.length) {
+      const top = el('div', 'card down');
+      top.innerHTML = '<div class="back"><span>✦</span></div>';
+      stock.appendChild(top);
+      stock.appendChild(el('div', 'pile-count', String(b.stock.length)));
+    } else {
+      stock.appendChild(el('div', 'pile-ghost', (b.passesLeft > 0 || Engine.mods(G.run).infinitePasses) ? '↻' : '∅'));
+    }
+
+    /* waste */
+    const waste = $('#waste');
+    waste.innerHTML = '';
+    const tail = b.waste.slice(-3);
+    tail.forEach((c, i) => {
+      const n = cardEl(c);
+      n.style.left = (i * 14) + 'px';
+      n.style.zIndex = i;
+      if (i === tail.length - 1) {
+        n.dataset.zone = 'waste';
+        attachDrag(n, { zone: 'waste' });
+      } else n.classList.add('under');
+      waste.appendChild(n);
+    });
+
+    /* foundations */
+    SUIT_KEYS.forEach(s => {
+      const f = $('#f-' + s);
+      f.innerHTML = '';
+      const pile = b.foundations[s];
+      if (!pile.length) {
+        f.appendChild(el('div', 'pile-ghost suit-' + SUITS[s].color, SUITS[s].sym));
+      } else {
+        const showFrom = Math.max(0, pile.length - 2);
+        pile.slice(showFrom).forEach((c, i) => {
+          const n = cardEl(c);
+          n.style.zIndex = i;
+          if (i === pile.length - showFrom - 1) attachDrag(n, { zone: 'foundation', suit: s });
+          f.appendChild(n);
+        });
+        f.appendChild(el('div', 'pile-count', String(pile.length)));
+      }
+    });
+
+    /* tableau */
+    const t = $('#tableau');
+    t.innerHTML = '';
+    t.style.setProperty('--cols', b.tableau.length);
+    b.tableau.forEach((pile, col) => {
+      const p = el('div', 'pile tab-pile');
+      p.dataset.zone = 'tableau';
+      p.dataset.col = col;
+      if (!pile.length) p.appendChild(el('div', 'pile-ghost', 'K'));
+      const avail = Math.max(260, t.clientHeight || 420) - 20;
+      const need = pile.reduce((a, c) => a + (c.faceUp ? 30 : 15), 0);
+      const squeeze = need > avail ? avail / need : 1;
+      let y = 0;
+      let lastDownIdx = -1;
+      pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
+      pile.forEach((c, i) => {
+        const n = cardEl(c, { topDown: i === lastDownIdx });
+        n.style.top = Math.round(y) + 'px';
+        n.style.zIndex = i;
+        n.dataset.col = col;
+        n.dataset.index = i;
+        y += (c.faceUp ? 30 : 15) * squeeze;
+        if (c.faceUp) attachDrag(n, { zone: 'tableau', col, index: i });
+        p.appendChild(n);
+      });
+      t.appendChild(p);
+    });
+
+    applySelectionClasses();
+  }
+
+  function fmt(n) {
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    return Math.round(n).toLocaleString('en-US');
+  }
+
+  /* ============ SELECTION + INPUT ============ */
+  function sameSrc(a, b) {
+    if (!a || !b) return false;
+    return a.zone === b.zone && a.col === b.col && a.index === b.index && a.suit === b.suit;
+  }
+
+  function applySelectionClasses() {
+    $$('.card.sel').forEach(n => n.classList.remove('sel'));
+    if (!selection) return;
+    const b = G.board;
+    if (selection.zone === 'tableau') {
+      const pile = $$('#tableau .tab-pile')[selection.col];
+      if (!pile) return;
+      Array.from(pile.children).forEach(n => {
+        if (n.dataset.index != null && +n.dataset.index >= selection.index) n.classList.add('sel');
+      });
+    } else if (selection.zone === 'waste') {
+      const n = $('#waste .card:last-of-type');
+      if (n) n.classList.add('sel');
+    } else if (selection.zone === 'foundation') {
+      const n = document.querySelector('#f-' + selection.suit + ' .card:last-of-type');
+      if (n) n.classList.add('sel');
+    }
+  }
+
+  function clearSelection() { selection = null; applySelectionClasses(); }
+
+  function doMove(src, dst) {
+    const ok = Game.tryMove(src, dst);
+    if (ok) {
+      Sfx.place();
+      clearSelection();
+      render();
+      drainFx();
+      checkStuck();
+    } else {
+      Sfx.error();
+      shake($('#table'));
+      render();
+      G.fx.length = 0;
+    }
+    return ok;
+  }
+
+  function autoTarget(src) {
+    const cards = src.zone === 'tableau'
+      ? G.board.tableau[src.col].slice(src.index)
+      : (src.zone === 'waste' ? G.board.waste.slice(-1) : G.board.foundations[src.suit].slice(-1));
+    if (!cards.length) return null;
+    if (cards.length === 1 && Engine.foundationTargetFor(G.board, cards[0])) return { zone: 'foundation' };
+    const m = Engine.mods(G.run);
+    for (let d = 0; d < G.board.tableau.length; d++) {
+      if (src.zone === 'tableau' && d === src.col) continue;
+      if (!G.board.tableau[d].length && src.zone === 'tableau' && src.index === 0) continue;
+      if (Engine.canPlaceOnColumn(G.board, d, cards[0], m)) return { zone: 'tableau', col: d };
+    }
+    return null;
+  }
+
+  /* --- pointer drag --- */
+  let drag = null;
+  function attachDrag(node, src) {
+    node.classList.add('grabbable');
+    node.addEventListener('pointerdown', e => {
+      if (G.phase !== 'play' || fxBusy) return;
+      if (e.button != null && e.button !== 0) return;
+      const cards = src.zone === 'tableau'
+        ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
+        : (src.zone === 'waste' ? G.board.waste.slice(-1) : G.board.foundations[src.suit].slice(-1));
+      if (!cards || !cards.length) { Sfx.error(); shake(node); return; }
+      drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, t: Date.now() };
+      node.setPointerCapture && node.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    node.addEventListener('pointermove', e => {
+      if (!drag || drag.node !== node) return;
+      const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+      if (!drag.moved && Math.hypot(dx, dy) > 6) {
+        drag.moved = true;
+        buildGhost(e);
+        document.body.classList.add('dragging-now');
+      }
+      if (drag.moved && drag.ghost) {
+        drag.ghost.style.transform = 'translate(' + (e.clientX - drag.ox) + 'px,' + (e.clientY - drag.oy) + 'px) rotate(' + Math.max(-8, Math.min(8, dx * 0.05)) + 'deg)';
+        highlightDrop(e.clientX, e.clientY);
+      }
+    });
+    const finish = e => {
+      if (!drag || drag.node !== node) return;
+      const d = drag; drag = null;
+      document.body.classList.remove('dragging-now');
+      clearDropHighlights();
+      if (d.ghost) d.ghost.remove();
+      $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
+      if (d.moved) {
+        const dst = dropTargetAt(e.clientX, e.clientY);
+        if (dst) doMove(d.src, dst);
+        else { render(); }
+      } else {
+        onTap(d.src, e);
+      }
+    };
+    node.addEventListener('pointerup', finish);
+    node.addEventListener('pointercancel', () => { if (drag) { document.body.classList.remove('dragging-now'); if (drag.ghost) drag.ghost.remove(); clearDropHighlights(); drag = null; render(); } });
+    node.addEventListener('dblclick', e => {
+      if (G.phase !== 'play') return;
+      e.preventDefault();
+      const t = autoTarget(src);
+      if (t) doMove(src, t); else { Sfx.error(); shake(node); }
+    });
+  }
+
+  function buildGhost(e) {
+    const layer = $('#draglayer');
+    const rect = drag.node.getBoundingClientRect();
+    drag.ox = e.clientX - rect.left;
+    drag.oy = e.clientY - rect.top;
+    const g = el('div', 'ghost-stack');
+    drag.cards.forEach((c, i) => {
+      const n = cardEl(c);
+      n.style.top = (i * 30) + 'px';
+      g.appendChild(n);
+    });
+    g.style.transform = 'translate(' + rect.left + 'px,' + rect.top + 'px)';
+    layer.appendChild(g);
+    drag.ghost = g;
+    /* fade the originals */
+    if (drag.src.zone === 'tableau') {
+      const pile = $$('#tableau .tab-pile')[drag.src.col];
+      Array.from(pile.children).forEach(n => { if (n.dataset.index != null && +n.dataset.index >= drag.src.index) n.classList.add('lifted'); });
+    } else drag.node.classList.add('lifted');
+  }
+
+  function dropTargetAt(x, y) {
+    const stack = document.elementsFromPoint(x, y);
+    for (const n of stack) {
+      const pile = n.closest && n.closest('[data-zone]');
+      if (!pile) continue;
+      const z = pile.dataset.zone;
+      if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
+      if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
+    }
+    return null;
+  }
+
+  function highlightDrop(x, y) {
+    clearDropHighlights();
+    const t = dropTargetAt(x, y);
+    if (!t || !drag) return;
+    const m = Engine.mods(G.run);
+    let ok = false, node = null;
+    if (t.zone === 'tableau') {
+      node = $$('#tableau .tab-pile')[t.col];
+      ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
+    } else {
+      node = $('#f-' + t.suit);
+      ok = drag.cards.length === 1 && Engine.canPlaceOnFoundation(G.board, drag.cards[0], t.suit);
+    }
+    if (node) node.classList.add(ok ? 'drop-ok' : 'drop-no');
+  }
+
+  function clearDropHighlights() {
+    $$('.drop-ok,.drop-no').forEach(n => n.classList.remove('drop-ok', 'drop-no'));
+  }
+
+  function onTap(src, e) {
+    if (selection && sameSrc(selection, src)) { clearSelection(); Sfx.click(); return; }
+    if (selection) {
+      const dst = src.zone === 'foundation' ? { zone: 'foundation', suit: src.suit } : { zone: 'tableau', col: src.col };
+      if (src.zone === 'waste') { selection = src; applySelectionClasses(); Sfx.click(); return; }
+      const held = selection;
+      clearSelection();
+      if (!doMove(held, dst)) { selection = src; applySelectionClasses(); }
+      return;
+    }
+    selection = src;
+    applySelectionClasses();
+    Sfx.click();
+  }
+
+  function bindPileTargets() {
+    document.addEventListener('click', e => {
+      if (G.phase !== 'play') return;
+      const pile = e.target.closest && e.target.closest('[data-zone]');
+      if (!pile || !selection) return;
+      if (e.target.classList && e.target.classList.contains('card')) return;
+      const z = pile.dataset.zone;
+      if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
+      else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
+    });
+  }
+
+  /* ============ SCORE FX ============ */
+  function drainFx() {
+    if (fxBusy) return;
+    const q = G.fx.splice(0, G.fx.length);
+    if (!q.length) { syncScore(); return; }
+    fxBusy = true;
+    runPackets(q, 0);
+  }
+
+  function runPackets(q, i) {
+    if (i >= q.length) {
+      fxBusy = false;
+      syncScore();
+      if (G.fx.length) drainFx();
+      else afterFx();
+      return;
+    }
+    const p = q[i];
+    const speed = q.length > 4 ? 0.35 : 1;
+    animatePacket(p, speed, () => runPackets(q, i + 1));
+  }
+
+  function animatePacket(p, speed, done) {
+    if (p.event === 'illegal') { done(); return; }
+    if (p.event === 'recycle') { Sfx.deal(); done(); return; }
+    if (p.event === 'curioFlash') { flashCurioById(p.curio); done(); return; }
+    if (p.event === 'replay') {
+      floatText(anchorEl(p.anchor), 'ALREADY PAID', 'fx-flash');
+      setTimeout(done, 160 * speed);
+      return;
+    }
+    if (p.event === 'shatter') {
+      Sfx.shatter();
+      const n = document.querySelector('[data-id="' + p.card.id + '"]');
+      if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
+      floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
+      setTimeout(done, 350 * speed);
+      return;
+    }
+
+    const box = $('#scorebox');
+    box.classList.add('live');
+    let chips = 0, mult = 1;
+    setScoreBox(0, 1);
+    if (p.label) bannerText(p.label);
+
+    const trigs = p.triggers.filter(t => t.kind !== 'flash' || true);
+    let ti = 0;
+    const step = () => {
+      if (ti >= trigs.length) {
+        setScoreBox(p.chips, p.mult);
+        setTimeout(() => {
+          slam(p);
+          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * speed);
+        }, 90 * speed);
+        return;
+      }
+      const t = trigs[ti++];
+      const src = resolveSrc(t.src, p);
+      if (t.kind === 'chips') { chips += t.amount; setScoreBox(chips, mult); floatText(src, '+' + t.amount, 'fx-chips'); Sfx.chip(ti); }
+      else if (t.kind === 'mult') { mult += t.amount; setScoreBox(chips, mult); floatText(src, '+' + t.amount + ' Mult', 'fx-mult'); Sfx.mult(ti); }
+      else if (t.kind === 'xmult') { mult *= t.amount; setScoreBox(chips, mult); floatText(src, 'X' + t.amount, 'fx-xmult'); Sfx.mult(ti + 6); }
+      else if (t.kind === 'money') { floatText(src, '+$' + t.amount, 'fx-money'); Sfx.money(); renderHud(); }
+      else if (t.kind === 'flash') { floatText(src, '!', 'fx-flash'); }
+      else if (t.kind === 'retrigger') { floatText(src, 'AGAIN!', 'fx-again'); }
+      if (src) { src.classList.add('trigger'); setTimeout(() => src.classList.remove('trigger'), 260); }
+      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * speed);
+    };
+    step();
+  }
+
+  function resolveSrc(src, p) {
+    if (!src) return $('#scorebox');
+    if (src.type === 'card') {
+      const n = src.id ? document.querySelector('[data-id="' + src.id + '"]') : null;
+      if (n) return n;
+      return anchorEl(p.anchor);
+    }
+    if (src.type === 'curio') return document.querySelector('.mslot[data-idx="' + src.index + '"]');
+    return $('#scorebox');
+  }
+
+  function anchorEl(a) {
+    if (!a) return $('#scorebox');
+    if (a.zone === 'foundation') return $('#f-' + a.suit);
+    if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
+    return $('#scorebox');
+  }
+
+  function setScoreBox(chips, mult) {
+    $('#sb-chips').textContent = fmt(Math.round(chips));
+    $('#sb-mult').textContent = (Math.round(mult * 100) / 100);
+    const heat = Math.min(1, (chips * mult) / 4000);
+    $('#scorebox').style.setProperty('--heat', heat.toFixed(2));
+  }
+
+  function slam(p) {
+    const box = $('#scorebox');
+    box.classList.add('slam');
+    setTimeout(() => box.classList.remove('slam'), 400);
+    const mag = p.total;
+    Sfx.score(Math.log10(Math.max(10, mag)) * 20);
+    const big = el('div', 'fx-total', '+' + fmt(mag));
+    positionAt(big, box, -10, -50);
+    $('#fxlayer').appendChild(big);
+    setTimeout(() => big.remove(), 1000);
+    if (mag > 1500) { screenShake(Math.min(14, mag / 900)); burst(box, 24, '#ffd166'); Sfx.big(); }
+    else if (mag > 400) burst(box, 10, '#7ee787');
+    animateScoreTo(G.round.score);
+  }
+
+  function animateScoreTo(target) {
+    const start = displayScore, t0 = performance.now(), dur = 420;
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / dur);
+      displayScore = start + (target - start) * (1 - Math.pow(1 - k, 3));
+      $('#round-score').textContent = fmt(Math.round(displayScore));
+      renderQuotaOnly();
+      if (k < 1) requestAnimationFrame(tick);
+      else { displayScore = target; }
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function renderQuotaOnly() {
+    const q = Engine.quotaFor(G.run);
+    const total = G.run.anteScore + Math.round(displayScore);
+    $('#quota-fill').style.width = Math.max(0, Math.min(100, total / q * 100)) + '%';
+    $('#quota-text').textContent = fmt(total) + ' / ' + fmt(q);
+    $('#quota-bar').classList.toggle('met', total >= q);
+  }
+
+  function syncScore() {
+    if (!G.round) return;
+    animateScoreTo(G.round.score);
+    renderHud();
+  }
+
+  function afterFx() {
+    render();
+    if (G.phase === 'play') checkStuck();
+  }
+
+  function checkStuck() {
+    /* the engine ends the round by itself when the board is cleared -- show the summary */
+    if (G.phase === 'roundEnd') { if (!Overlays.isOpen()) Overlays.roundEnd(); return; }
+    if (G.phase !== 'play') return;
+    if (!Engine.anyMoveAvailable(G, G.run)) {
+      G.round.stuck = true;
+      renderControls();
+      toast('No moves left — cash out!', 2600);
+    }
+  }
+
+  /* ============ little visual helpers ============ */
+  function positionAt(node, ref, dx, dy) {
+    const r = (ref || $('#scorebox')).getBoundingClientRect();
+    node.style.left = (r.left + r.width / 2 + (dx || 0)) + 'px';
+    node.style.top = (r.top + (dy || 0)) + 'px';
+  }
+
+  function floatText(ref, text, cls) {
+    const n = el('div', 'fx-float ' + (cls || ''), text);
+    positionAt(n, ref, (Math.random() * 30 - 15), -8);
+    $('#fxlayer').appendChild(n);
+    setTimeout(() => n.remove(), 900);
+  }
+
+  function bannerText(text) {
+    const n = el('div', 'fx-banner', text);
+    $('#fxlayer').appendChild(n);
+    setTimeout(() => n.remove(), 1100);
+  }
+
+  function burst(ref, count, color) {
+    const r = ref.getBoundingClientRect();
+    for (let i = 0; i < count; i++) {
+      const p = el('div', 'particle');
+      p.style.left = (r.left + r.width / 2) + 'px';
+      p.style.top = (r.top + r.height / 2) + 'px';
+      p.style.background = color || '#ffd166';
+      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 120;
+      p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+      p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+      p.style.animationDelay = (Math.random() * 0.08) + 's';
+      $('#fxlayer').appendChild(p);
+      setTimeout(() => p.remove(), 900);
+    }
+  }
+
+  function screenShake(power) {
+    const app = $('#app');
+    app.style.setProperty('--shake', (power || 6) + 'px');
+    app.classList.remove('shaking');
+    void app.offsetWidth;
+    app.classList.add('shaking');
+    setTimeout(() => app.classList.remove('shaking'), 400);
+  }
+
+  function shake(node) {
+    if (!node) return;
+    node.classList.remove('nope');
+    void node.offsetWidth;
+    node.classList.add('nope');
+    setTimeout(() => node.classList.remove('nope'), 400);
+  }
+
+  function flashCurioById(id) {
+    const i = G.run.mantel.findIndex(c => c.id === id);
+    const n = document.querySelector('.mslot[data-idx="' + i + '"]');
+    if (n) { n.classList.add('trigger'); setTimeout(() => n.classList.remove('trigger'), 300); }
+  }
+
+  let toastTimer = null;
+  function toast(msg, ms) {
+    const t = $('#toast');
+    t.innerHTML = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms || 1800);
+  }
+
+  /* tooltips */
+  function showTip(ref, html) {
+    const t = $('#tooltip');
+    t.innerHTML = html;
+    t.classList.add('show');
+    const r = ref.getBoundingClientRect();
+    const w = 250;
+    t.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+    t.style.top = (r.bottom + 8) + 'px';
+  }
+  function hideTip() { $('#tooltip').classList.remove('show'); }
+
+  /* curio drag-to-reorder */
+  function makeCurioDraggable(node, index) {
+    let start = null;
+    node.addEventListener('pointerdown', e => {
+      start = { x: e.clientX, index };
+      node.setPointerCapture && node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointerup', e => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      start = null;
+      if (Math.abs(dx) < 25) return;
+      const slotW = node.getBoundingClientRect().width + 8;
+      const shift = Math.round(dx / slotW);
+      const to = Math.max(0, Math.min(G.run.mantel.length - 1, index + shift));
+      if (to !== index) { Game.reorderCurio(index, to); Sfx.click(); render(); }
+    });
+  }
+
+  function resetDisplayScore() { displayScore = G.round ? G.round.score : 0; }
+
+  return {
+    render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
+    drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
+    showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
+    get busy() { return fxBusy; }
+  };
+})();
+
+/* ===== js/overlays.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  overlays.js
+   Round summary, the Curio Shop, deck viewer, run end, help.
+   ============================================================ */
+
+const Overlays = (() => {
+  const G = Game.G;
+  const $ = UI.$, $$ = UI.$$, el = UI.el;
+  const ov = () => $('#overlay');
+
+  function open(html, cls) {
+    const o = ov();
+    o.className = 'show ' + (cls || '');
+    o.innerHTML = html;
+    return o;
+  }
+  function close() { ov().className = ''; ov().innerHTML = ''; }
+  function isOpen() { return ov().classList.contains('show'); }
+
+  /* ---------------- round end ---------------- */
+  function roundEnd() {
+    const run = G.run, r = G.round, pay = G.payout;
+    const quota = Engine.quotaFor(run);
+    const total = run.anteScore;              // already includes this round
+    const met = total >= quota;
+    const last = run.round >= TUNE.roundsPerAnte;
+    const headline = r.won ? 'BOARD CLEARED!' : (r.stuck ? 'OUT OF MOVES' : 'ROUND BANKED');
+
+    const payLines = pay.lines.map(l =>
+      '<div class="pay-line"><span>' + l.label + '</span><b>+$' + l.amount + '</b></div>').join('');
+
+    open(
+      '<div class="panel round-panel">' +
+        '<div class="panel-flag ' + (r.won ? 'good' : '') + '">' + headline + '</div>' +
+        '<div class="big-score">' + UI.fmt(r.score) + '</div>' +
+        '<div class="sub">chips banked this round</div>' +
+        '<div class="quota-block ' + (met ? 'met' : '') + '">' +
+          '<div class="qb-row"><span>Ante ' + run.ante + ' progress</span><b>' + UI.fmt(total) + ' / ' + UI.fmt(quota) + '</b></div>' +
+          '<div class="qb-bar"><div style="width:' + Math.min(100, total / quota * 100) + '%"></div></div>' +
+          '<div class="qb-note">' + (met
+            ? 'QUOTA MET — the rest is gravy.'
+            : (last ? 'You needed ' + UI.fmt(quota - total) + ' more.' : 'Need ' + UI.fmt(quota - total) + ' more across ' + (TUNE.roundsPerAnte - run.round) + ' more round' + (TUNE.roundsPerAnte - run.round > 1 ? 's' : '') + '.')) +
+          '</div>' +
+        '</div>' +
+        '<div class="payout"><div class="pay-title">PAYOUT</div>' + payLines +
+          '<div class="pay-line total"><span>Total</span><b>+$' + pay.total + '</b></div></div>' +
+        (met && !last
+          ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + ((TUNE.roundsPerAnte - run.round) * TUNE.skipBonus) + '</button>'
+          : '') +
+        '<button class="btn big" id="ov-continue">' + (last && !met ? 'FACE THE MUSIC' : 'TO THE SHOP →') + '</button>' +
+        (met && !last ? '<div class="bank-note">Bank it to skip straight to Ante ' + (run.ante + 1) + ', or keep playing this ante for more cash and Curios.</div>' : '') +
+      '</div>', 'centered');
+
+    $('#ov-continue').onclick = () => {
+      Sfx.click();
+      Game.advance();
+      if (G.phase === 'shop') shop();
+      else if (G.phase === 'gameOver') gameOver();
+      else if (G.phase === 'victory') victory();
+    };
+    const bank = $('#ov-bank');
+    if (bank) bank.onclick = () => {
+      const gain = Game.bankAnte();
+      Sfx.money();
+      UI.toast('Ante banked — +$' + gain);
+      if (G.phase === 'shop') shop();
+      else if (G.phase === 'victory') victory();
+    };
+    if (r.won) Sfx.win();
+  }
+
+  /* ---------------- shop ---------------- */
+  function shop() {
+    const run = G.run;
+    open(
+      '<div class="shop">' +
+        '<div class="shop-head">' +
+          '<div class="shop-title">THE BACK ROOM</div>' +
+          (run.anteCleared ? '<div class="shop-flag">ANTE ' + (run.ante - 1) + ' CLEARED — welcome to Ante ' + run.ante + '</div>' : '') +
+          '<div class="shop-cash">$<b id="shop-money">' + run.money + '</b></div>' +
+        '</div>' +
+        '<div class="shop-hint">Your mantel — click a Curio to sell it, drag sideways to reorder. They trigger left to right.</div>' +
+        '<div class="mantel-inline" id="shop-mantel"></div>' +
+        '<div class="shop-row" id="shop-items"></div>' +
+        '<div class="shop-sub">HOUSE RULES <span>permanent, for the whole run</span></div>' +
+        '<div class="shop-row houses" id="shop-houses"></div>' +
+        '<div class="shop-foot">' +
+          '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
+          '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
+          '<button class="btn big" id="shop-next">NEXT ROUND →</button>' +
+        '</div>' +
+      '</div>', 'shop-open');
+
+    refreshShop();
+    $('#shop-reroll').onclick = () => {
+      if (Game.reroll()) { Sfx.money(); refreshShop(); }
+      else { Sfx.error(); UI.toast('Not enough cash.'); }
+    };
+    $('#shop-deck').onclick = () => deckView();
+    $('#shop-next').onclick = () => {
+      Sfx.click();
+      close();
+      Game.leaveShop();
+      UI.resetDisplayScore();
+      UI.render();
+      UI.toast('Ante ' + G.run.ante + ' • Round ' + G.run.round, 1400);
+    };
+  }
+
+  function refreshShop() {
+    if (!$('#shop-items')) return;
+    const run = G.run;
+    $('#shop-money').textContent = run.money;
+    const rr = $('#shop-reroll');
+    if (rr) rr.innerHTML = 'REROLL $<b>' + Game.rerollCost() + '</b>';
+
+    const items = $('#shop-items');
+    items.innerHTML = '';
+    run.shop.items.forEach((item, i) => items.appendChild(shopCard(item, i, 'item')));
+    const houses = $('#shop-houses');
+    houses.innerHTML = '';
+    run.shop.houses.forEach((item, i) => houses.appendChild(shopCard(item, i, 'house')));
+    UI.renderMantel($('#shop-mantel'));
+    UI.renderMantel($('#mantel'));
+  }
+
+  function shopCard(item, index, kind) {
+    const run = G.run;
+    let def, art, name, text, rarity = 'common';
+    if (item.type === 'curio') { def = CURIO_BY_ID[item.id]; rarity = def.rarity; }
+    else if (item.type === 'house') def = HOUSE_BY_ID[item.id];
+    else def = TINCTURE_BY_ID[item.id];
+    art = def.art; name = def.name; text = def.text;
+
+    const price = Game.priceOf(item.type === 'house' ? Object.assign({}, item, { cost: def.cost }) : item);
+    const n = el('div', 'shop-item ' + item.type + ' r-' + rarity +
+      (item.bought ? ' bought' : '') +
+      (item.finish && item.finish !== 'none' ? ' ' + FINISHES[item.finish].cls : '') +
+      (run.money < price ? ' broke' : ''));
+    n.innerHTML =
+      '<div class="si-art">' + art + '</div>' +
+      '<div class="si-name">' + name + '</div>' +
+      (item.finish && item.finish !== 'none' ? '<div class="si-fin">' + FINISHES[item.finish].name + '</div>' : '') +
+      '<div class="si-text">' + text + '</div>' +
+      '<div class="si-tag">' + (item.type === 'curio' ? rarity : (item.type === 'house' ? 'house rule' : 'tincture')) + '</div>' +
+      '<div class="si-price">' + (item.bought ? 'SOLD' : '$' + price) + '</div>';
+    if (!item.bought) {
+      n.onclick = () => {
+        const res = Game.buy(index, kind === 'house' ? 'house' : 'item');
+        if (!res.ok) { Sfx.error(); UI.toast(res.reason || 'Cannot buy that.'); UI.shake(n); return; }
+        if (res.kind === 'select') { deckView(res.def); return; }
+        Sfx.money();
+        UI.burst(n, 12, '#ffd166');
+        refreshShop();
+        UI.render();
+      };
+    }
+    return n;
+  }
+
+  /* ---------------- deck viewer / card picker ---------------- */
+  function deckView(pickDef) {
+    const run = G.run;
+    const bySuit = {};
+    SUIT_KEYS.forEach(s => { bySuit[s] = []; });
+    run.deck.forEach(c => { (bySuit[c.suit] = bySuit[c.suit] || []).push(c); });
+    SUIT_KEYS.forEach(s => bySuit[s].sort((a, b) => a.rank - b.rank));
+
+    const rows = SUIT_KEYS.map(s =>
+      '<div class="deck-row"><div class="deck-suit ' + SUITS[s].color + '">' + SUITS[s].sym + '</div>' +
+      '<div class="deck-cards" data-suit="' + s + '"></div></div>').join('');
+
+    open(
+      '<div class="panel deck-panel">' +
+        '<div class="panel-flag">' + (pickDef ? 'CHOOSE A CARD — ' + pickDef.name.toUpperCase() : 'YOUR DECK (' + run.deck.length + ')') + '</div>' +
+        (pickDef ? '<div class="sub">' + pickDef.text + '</div>' : '<div class="sub">Every mark you buy lives here for the rest of the run.</div>') +
+        '<div class="deck-grid">' + rows + '</div>' +
+        '<button class="btn ghost" id="deck-close">' + (pickDef ? 'CANCEL' : 'CLOSE') + '</button>' +
+      '</div>', 'centered wide');
+
+    SUIT_KEYS.forEach(s => {
+      const holder = $('.deck-cards[data-suit="' + s + '"]');
+      bySuit[s].forEach(card => {
+        const c = UI.cardEl(Object.assign({}, card, { faceUp: true }));
+        c.classList.add('mini');
+        if (pickDef) {
+          c.classList.add('pickable');
+          c.onclick = () => {
+            if (Game.applyPending(card.id)) {
+              Sfx.money();
+              close();
+              shop();
+              UI.render();
+              UI.toast(pickDef.name + ' applied!');
+            }
+          };
+        } else {
+          c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
+          c.addEventListener('pointerleave', UI.hideTip);
+        }
+        holder.appendChild(c);
+      });
+    });
+
+    $('#deck-close').onclick = () => {
+      Sfx.click();
+      if (pickDef) Game.cancelPending();
+      close();
+      if (G.phase === 'shop') shop();
+      else if (G.phase === 'play') UI.render();
+    };
+  }
+
+  function cardTip(card) {
+    let s = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' + SUITS[card.suit].sym + '</div>';
+    s += '<div class="tip-text">Base ' + rankChips(card.rank) + ' Chips</div>';
+    if (card.enhancement !== 'none') s += '<div class="tip-text hot">' + ENHANCEMENTS[card.enhancement].name + ' — ' + ENHANCEMENTS[card.enhancement].text + '</div>';
+    if (card.finish !== 'none') s += '<div class="tip-text hot">' + FINISHES[card.finish].name + ' — ' + FINISHES[card.finish].text + '</div>';
+    if (card.seal !== 'none') s += '<div class="tip-text hot">' + SEALS[card.seal].name + ' — ' + SEALS[card.seal].text + '</div>';
+    return s;
+  }
+
+  /* ---------------- run over ---------------- */
+  function gameOver() {
+    const run = G.run;
+    Sfx.lose();
+    open(
+      '<div class="panel over-panel">' +
+        '<div class="panel-flag bad">THE TABLE WINS</div>' +
+        '<div class="big-score bad">' + UI.fmt(run.anteScore) + '</div>' +
+        '<div class="sub">you needed ' + UI.fmt(Engine.quotaFor(run)) + ' by the end of Ante ' + run.ante + '</div>' +
+        '<div class="stats">' +
+          stat('Antes cleared', run.ante - 1) +
+          stat('Rounds played', run.stats.roundsPlayed) +
+          stat('Cards sent home', run.stats.cardsScored) +
+          stat('Suits finished', run.stats.suitsDone) +
+          stat('Best single score', UI.fmt(run.stats.best)) +
+          stat('Curios owned', run.mantel.length) +
+        '</div>' +
+        '<button class="btn big" id="ov-again">DEAL ME IN AGAIN</button>' +
+      '</div>', 'centered');
+    $('#ov-again').onclick = () => { Sfx.click(); close(); Game.clearSave(); Game.startRun(); UI.resetDisplayScore(); UI.render(); };
+  }
+
+  function victory() {
+    const run = G.run;
+    Sfx.win();
+    setTimeout(() => UI.screenShake(10), 200);
+    open(
+      '<div class="panel win-panel">' +
+        '<div class="panel-flag good">YOU BEAT THE HOUSE</div>' +
+        '<div class="logo small">ANTE ' + (run.finalAnte || TUNE.finalAnte) + ' CLEARED</div>' +
+        '<div class="sub">every quota met. the little objects on your mantel did their job.</div>' +
+        '<div class="stats">' +
+          stat('Rounds played', run.stats.roundsPlayed) +
+          stat('Cards sent home', run.stats.cardsScored) +
+          stat('Suits finished', run.stats.suitsDone) +
+          stat('Best single score', UI.fmt(run.stats.best)) +
+          stat('Cash on hand', '$' + run.money) +
+          stat('Curios owned', run.mantel.length) +
+        '</div>' +
+        '<div class="menu-btns">' +
+          '<button class="btn big" id="ov-endless">KEEP GOING (ENDLESS)</button>' +
+          '<button class="btn ghost" id="ov-again">NEW RUN</button>' +
+        '</div>' +
+      '</div>', 'centered');
+    $('#ov-endless').onclick = () => {
+      Sfx.click();
+      G.run.finalAnte = (G.run.finalAnte || TUNE.finalAnte) + 8;
+      Game.openShop(true);
+      shop();
+    };
+    $('#ov-again').onclick = () => { Sfx.click(); close(); Game.clearSave(); Game.startRun(); UI.resetDisplayScore(); UI.render(); };
+  }
+
+  function stat(k, v) { return '<div class="stat"><span>' + k + '</span><b>' + v + '</b></div>'; }
+
+  /* ---------------- menus ---------------- */
+  function help() {
+    open(
+      '<div class="panel help-panel">' +
+        '<div class="panel-flag">HOW TO PLAY</div>' +
+        '<div class="help-body">' +
+          '<p><b>It is Klondike.</b> Build the four foundations from Ace to King. Stack the tableau downward in alternating colours. Drag cards, or click one then click where it goes. Double-click sends a card home if it can go.</p>' +
+          '<p><b>Everything scores.</b> Sending a card to a foundation scores <span class="c">Chips</span> <span class="x">X</span> <span class="m">Mult</span>. Flipping a face-down card scores. Emptying a column scores. Finishing a suit scores a lot.</p>' +
+          '<p><b>Cascade.</b> Foundation plays in a row build a Cascade; each one adds Mult. Drawing from the stock breaks it. Sending several cards of the <i>same suit</i> in a row builds a Suit Run on top of that.</p>' +
+          '<p><b>The quota.</b> You get ' + TUNE.roundsPerAnte + ' rounds per Ante. Your scores add up across all ' + TUNE.roundsPerAnte + '. Beat the quota by the end of round ' + TUNE.roundsPerAnte + ' or the run is over. You get paid either way.</p>' +
+          '<p><b>The Mantel.</b> Curios sit above your table and bend the rules permanently. They fire left to right — order matters, so put your X Mult curios last.</p>' +
+          '<p><b>Tinctures</b> mark individual cards in your deck. Those marks last the whole run.</p>' +
+          '<p class="keys"><b>Keys:</b> Space = draw &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = close</p>' +
+        '</div>' +
+        '<button class="btn ghost" id="help-close">GOT IT</button>' +
+      '</div>', 'centered');
+    $('#help-close').onclick = () => { Sfx.click(); close(); };
+  }
+
+  function menu() {
+    open(
+      '<div class="panel menu-panel">' +
+        '<div class="panel-flag">PAUSED</div>' +
+        '<div class="menu-btns">' +
+          '<button class="btn" id="m-resume">RESUME</button>' +
+          '<button class="btn ghost" id="m-help">HOW TO PLAY</button>' +
+          '<button class="btn ghost" id="m-deck">VIEW DECK</button>' +
+          '<button class="btn danger" id="m-new">ABANDON RUN</button>' +
+        '</div>' +
+        '<div class="menu-foot">Ante ' + G.run.ante + ' · Round ' + G.run.round + ' · $' + G.run.money + '</div>' +
+      '</div>', 'centered');
+    $('#m-resume').onclick = () => { Sfx.click(); close(); };
+    $('#m-help').onclick = () => { Sfx.click(); help(); };
+    $('#m-deck').onclick = () => { Sfx.click(); deckView(); };
+    $('#m-new').onclick = () => {
+      if (!confirm('Abandon this run and start fresh?')) return;
+      Sfx.click(); close(); Game.clearSave(); Game.startRun(); UI.resetDisplayScore(); UI.render();
+    };
+  }
+
+  function title() {
+    open(
+      '<div class="panel title-panel">' +
+        '<div class="logo">PILE<span>DRIVER</span></div>' +
+        '<div class="tagline">a roguelike game of solitaire, greed and small strange objects</div>' +
+        '<div class="menu-btns">' +
+          '<button class="btn big" id="t-new">NEW RUN</button>' +
+          '<button class="btn ghost" id="t-cont" style="display:none">CONTINUE RUN</button>' +
+          '<button class="btn ghost" id="t-help">HOW TO PLAY</button>' +
+        '</div>' +
+      '</div>', 'centered title-screen');
+    return {
+      onNew: fn => { $('#t-new').onclick = fn; },
+      showContinue: fn => { const b = $('#t-cont'); b.style.display = ''; b.onclick = fn; },
+      onHelp: fn => { $('#t-help').onclick = fn; }
+    };
+  }
+
+  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title };
+})();
+
+/* ===== js/main.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  main.js   boot + input wiring
+   ============================================================ */
+(function () {
+  const G = Game.G;
+  const $ = UI.$;
+
+  function boot() {
+    const t = Overlays.title();
+    t.onNew(() => {
+      Sfx.click();
+      Game.clearSave();
+      Game.startRun();
+      Overlays.close();
+      UI.resetDisplayScore();
+      UI.render();
+      UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' in 3 rounds', 3000);
+    });
+    if (Game.load()) {
+      t.showContinue(() => {
+        Sfx.click();
+        Overlays.close();
+        UI.resetDisplayScore();
+        UI.render();
+        if (G.phase === 'shop') Overlays.shop();
+        else if (G.phase === 'roundEnd') Overlays.roundEnd();
+        else if (G.phase === 'gameOver') Overlays.gameOver();
+        else if (G.phase === 'victory') Overlays.victory();
+      });
+    }
+    t.onHelp(() => { Sfx.click(); Overlays.help(); });
+    wire();
+  }
+
+  function cashOut() {
+    if (G.phase !== 'play' || UI.busy) return;
+    Sfx.click();
+    Game.endRound(false);
+    Overlays.roundEnd();
+  }
+
+  function draw() {
+    if (G.phase !== 'play' || UI.busy) return;
+    if (Game.drawStock()) { Sfx.deal(); UI.clearSelection(); UI.render(); UI.drainFx(); UI.checkStuck(); }
+    else { Sfx.error(); UI.shake($('#stock')); }
+  }
+
+  function hint() {
+    if (G.phase !== 'play') return;
+    const h = Game.hint();
+    if (!h) { Sfx.error(); UI.toast('Nothing left. Cash out.'); return; }
+    Sfx.click();
+    if (h.src.zone === 'stock') { flashNode($('#stock')); return; }
+    const srcNode = h.src.zone === 'waste'
+      ? document.querySelector('#waste .card:last-of-type')
+      : (h.src.zone === 'tableau'
+        ? UI.$$('#tableau .tab-pile')[h.src.col].querySelector('[data-index="' + h.src.index + '"]')
+        : null);
+    flashNode(srcNode);
+    if (h.dst) {
+      const dstNode = h.dst.zone === 'foundation'
+        ? $('#f-' + (h.dst.suit || Engine.foundationTargetFor(G.board, cardOf(h.src))))
+        : UI.$$('#tableau .tab-pile')[h.dst.col];
+      flashNode(dstNode);
+    }
+  }
+
+  function cardOf(src) {
+    if (src.zone === 'waste') return G.board.waste[G.board.waste.length - 1];
+    if (src.zone === 'tableau') return G.board.tableau[src.col][src.index];
+    return null;
+  }
+
+  function flashNode(n) {
+    if (!n) return;
+    n.classList.add('hinted');
+    setTimeout(() => n.classList.remove('hinted'), 1400);
+  }
+
+  function auto() {
+    if (G.phase !== 'play' || UI.busy) return;
+    const n = Game.autoCollect();
+    if (n) { UI.render(); UI.drainFx(); }
+    else { Sfx.error(); UI.toast('Nothing can go home right now.'); }
+  }
+
+  function undo() {
+    if (G.phase !== 'play' || UI.busy) return;
+    if (Game.undo()) { Sfx.flip(); UI.clearSelection(); UI.resetDisplayScore(); UI.render(); }
+    else { Sfx.error(); UI.toast('No undos left.'); }
+  }
+
+  function wire() {
+    $('#stock').addEventListener('click', draw);
+    $('#btn-cash').onclick = cashOut;
+    $('#btn-hint').onclick = hint;
+    $('#btn-collect').onclick = auto;
+    $('#btn-undo').onclick = undo;
+    $('#btn-deck').onclick = () => { if (G.run) { Sfx.click(); Overlays.deckView(); } };
+    $('#btn-menu').onclick = () => { if (G.run) { Sfx.click(); Overlays.menu(); } };
+    $('#btn-help').onclick = () => { Sfx.click(); Overlays.help(); };
+    $('#btn-sound').onclick = e => {
+      const on = Sfx.toggle();
+      e.currentTarget.textContent = on ? '\u{1F50A}' : '\u{1F507}';
+      e.currentTarget.classList.toggle('off', !on);
+    };
+    UI.bindPileTargets();
+
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      const k = e.key.toLowerCase();
+      if (k === 'escape') { if (Overlays.isOpen() && G.phase === 'play') Overlays.close(); else if (G.phase === 'play') Overlays.menu(); return; }
+      if (Overlays.isOpen()) return;
+      if (k === ' ') { e.preventDefault(); draw(); }
+      else if (k === 'a') auto();
+      else if (k === 'u') undo();
+      else if (k === 'h') hint();
+      else if (k === 'd') { if (G.run) Overlays.deckView(); }
+      else if (k === 'c') cashOut();
+    });
+
+    let rt = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => { if (G.run && G.board) UI.renderBoard(); }, 120);
+    });
+
+    document.addEventListener('pointerdown', () => { Sfx.toggle(Sfx.isOn()); }, { once: true });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+
+</script>
+</body>
+</html>

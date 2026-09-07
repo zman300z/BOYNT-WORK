@@ -8,6 +8,10 @@ things that break the rules.
 
 **To play:** open `index.html` in any browser. No build step, no server, no dependencies.
 
+**Just want one file?** `piledriver-standalone.html` is the whole game — HTML, CSS and JS
+inlined into a single document. Download it, double-click it, done. It works offline and
+from a USB stick. Regenerate it after any source change with `python3 build.py`.
+
 ---
 
 ## The loop
