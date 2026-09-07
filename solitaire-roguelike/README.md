@@ -49,13 +49,29 @@ card, enhancement, finish, seal, combo, then each Curio on your mantel, left to 
 
 - **Cascade** — foundation plays back-to-back. Each adds Mult; drawing from the stock resets it.
 - **Suit Run** — consecutive plays of the *same* suit, stacked on top of the Cascade.
-- **Column Stack** — the big one. Sending a card home *off a column* cashes in the face-up run
-  you built underneath it: **+Chips equal to the ranks sitting in that run**, and **+2 Mult per
-  extra card**. A `RUN xN` badge under each column shows the live payout. Cashing off a
-  five-card run scores roughly 30x what the same card scores alone.
+- **Column Stack** — the big one, and it's a *cash-in*, not a passive bonus. The `RUN N` badge under
+  a column shows what that face-up run is worth. You collect it by sending the run's **bottom card**
+  to a foundation — the badge turns green and reads **CASH IN!** the moment that card can actually go.
+  You get **+Chips equal to every rank in the run** and **+2 Mult per extra card**, all on that one play.
+  Then the next card down is exposed with the run one shorter, so a long ladder like K-Q-J-10-9-8-7 pays
+  out *again on every card* as you dismantle it upward. Cashing off a five-card run scores roughly 30x
+  what the same card scores alone.
 
 A card only pays once per round, and a column pays its clear bonus once per round, so shuffling
 cards back and forth is a tactic for unblocking — never a score loop.
+
+### Twins
+
+A duplicate card — a second Ace of Spades, say — can never advance a foundation, since the pile only
+wants the *next* rank. Instead, drop it **on top of its twin**: any card whose rank its foundation has
+already passed can be played there for a full score (plus +3 Mult) without advancing the pile.
+Duplicates are free points, not dead weight.
+
+### The Dealer's Whim
+
+From Ante 2, every round is dealt under a random house rule, shown as a badge in the header. Gold Rush
+pays $1 a card; Butterfingers costs you a stock pass; Blood Moon doubles red suits and halves black;
+High Stakes flips a coin on every score. Fourteen of them, good, bad and unhinged.
 
 ## Money
 
@@ -78,6 +94,12 @@ They are deliberately kept distinct — colour-coded, badged, and separated:
 | **Card Mods** (green) | Permanently mark one card already in your deck: Gilded, Voltaic, Glass, Chameleon, Phantom, Rabbit's, Steel, Fuse, Bullion; Foil / Holographic / Polychrome finishes; Red / Gold / Blue seals; or the Shredder to burn a card out. | Nothing but cash — no seat, unlimited. |
 | **New Cards** (blue) | Adds a whole new card to the deck, shown as a real card face: Spare Ace, The Wanderer (Chameleon + Polychrome), Poltergeist, Skeleton King, Double Agent, Powder Keg, Bullion Bar, Glass Slipper, Lucky Seven, or a copy of any card you own. | Cash. It changes the piles themselves. |
 | **House Rules** (gold) | Permanent run rules: **Nimble Fingers** (deal 2 then 1 instead of 3), an 8th column, extra stock passes, a bigger mantel, cheaper shops, smaller quotas. | Cash. Forever. |
+| **The Counter** (green) | Always in stock, never sells out: extra deck flips, mantel seats, undos, tableau columns. Each purchase raises that item's own price for the rest of the run. | Cash, escalating. |
+| **The One-Armed Bandit** | Pull the lever and accept your fate. `777` a free Curio · `★★★` a Gilded Polychrome card · `$$$` +$35 · `♠♠♠` permanent +3 Mult · `♥♥♥` a seat and a pass · `☠☠☠` half your cash. Two of a kind returns $6. Each pull costs more; resets every shop. | Cash, and your dignity. |
+
+Hovering a Curio on your mantel in the shop shows a red **SELL $X** band — clicking sells it for that.
+Hovering any card in the deck viewer breaks down exactly what it's worth: base rank, every mark on it,
+and the chips × mult it scores on its own.
 
 ## Controls
 

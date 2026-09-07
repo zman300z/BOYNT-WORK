@@ -52,6 +52,10 @@ const Engine = (() => {
       luck: 1,
       quotaScale: 1,
       drawReduce: 0,
+      counterBought: {},
+      permaMult: 0,
+      whim: null,
+      banditPulls: 0,
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -70,16 +74,27 @@ const Engine = (() => {
       cascadeMult: 1, suitRunMult: 1, stockPasses: 0, undos: 0,
       xray: false, anyIntoEmpty: false, firstRetrigger: 0,
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
-      drawReduce: 0, wasteAll: false, stackMult: 1
+      drawReduce: 0,
+      counterBought: {},
+      permaMult: 0,
+      whim: null,
+      banditPulls: 0, wasteAll: false, stackMult: 1,
+      twinMult: 1, noRevealScore: false, banditLuck: false
+    };
+    const merge = src => {
+      if (!src) return;
+      for (const k in src) {
+        const v = src[k];
+        if (typeof v === 'number') m[k] = (k === 'stackMult' || k === 'twinMult' || k === 'cascadeMult' || k === 'suitRunMult')
+          ? m[k] * v : m[k] + v;
+        else m[k] = m[k] || v;
+      }
     };
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
-      if (!def || !def.mods) return;
-      for (const k in def.mods) {
-        const v = def.mods[k];
-        if (typeof v === 'number') m[k] += v; else m[k] = m[k] || v;
-      }
+      if (def) merge(def.mods);
     });
+    if (run.whim && WHIM_BY_ID[run.whim]) merge(WHIM_BY_ID[run.whim].mods);
     return m;
   }
 
@@ -127,6 +142,7 @@ const Engine = (() => {
     return {
       tableau,
       foundations: { S: [], H: [], D: [], C: [] },
+      twins: { S: [], H: [], D: [], C: [] },
       stock,
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
@@ -190,6 +206,24 @@ const Engine = (() => {
     return null;
   }
 
+  /* A duplicate card -- one whose rank the foundation has already passed --
+     can be laid on top of its twin. It scores in full but does not advance
+     the pile, so extra Aces and copied cards are never dead weight. */
+  function canTwin(board, card, suit) {
+    const f = board.foundations[suit];
+    if (!f.length) return false;
+    if (!suitsOf(card).includes(suit)) return false;
+    return card.rank <= f.length;
+  }
+  function twinTargetFor(board, card) {
+    for (const s of suitsOf(card)) if (canTwin(board, card, s)) return s;
+    return null;
+  }
+  /* either kind of foundation play */
+  function foundationAccepts(board, card, suit) {
+    return canPlaceOnFoundation(board, card, suit) || canTwin(board, card, suit);
+  }
+
   function canPlaceOnColumn(board, col, card, m) {
     const pile = board.tableau[col];
     if (!pile.length) return (card.rank === 13 || card.enhancement === 'phantom' || (m && m.anyIntoEmpty));
@@ -225,14 +259,14 @@ const Engine = (() => {
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {
-      if (foundationTargetFor(b, w.card)) return true;
+      if (foundationTargetFor(b, w.card) || twinTargetFor(b, w.card)) return true;
       for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, w.card, m)) return true;
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && foundationTargetFor(b, top)) return true;
+      if (top.faceUp && (foundationTargetFor(b, top) || twinTargetFor(b, top))) return true;
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp) continue;
         if (!isRunFrom(b, c, i, m)) continue;
@@ -257,6 +291,7 @@ const Engine = (() => {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
-    drawCount, runStart, runLength, runCards, playableWaste
+    drawCount, runStart, runLength, runCards, playableWaste,
+    canTwin, twinTargetFor, foundationAccepts
   };
 })();

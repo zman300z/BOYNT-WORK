@@ -100,6 +100,21 @@ const Overlays = (() => {
           '<div class="mantel-inline" id="shop-mantel"></div>' +
         '</div>' +
         '<div class="shop-body">' + shelves + '</div>' +
+        '<section class="shelf sh-counter">' +
+          '<div class="shelf-head"><h3>THE COUNTER</h3><span>always in stock · permanent · the price climbs every time you buy</span></div>' +
+          '<div class="counter-row" id="counter-row"></div>' +
+        '</section>' +
+        '<section class="shelf sh-bandit">' +
+          '<div class="shelf-head"><h3>THE ONE-ARMED BANDIT</h3><span>it owes you nothing</span></div>' +
+          '<div class="bandit" id="bandit">' +
+            '<div class="reels" id="reels"><div class="reel">?</div><div class="reel">?</div><div class="reel">?</div></div>' +
+            '<div class="bandit-side">' +
+              '<div class="bandit-result" id="bandit-result">Three of a kind pays. Everything else is a lesson.</div>' +
+              '<button class="btn lever-btn" id="bandit-pull">PULL THE LEVER $<b>' + Game.banditPrice() + '</b></button>' +
+              '<div class="bandit-odds">' + REEL_SYMBOLS.map(r => '<span class="' + r.cls + '">' + r.s + '</span>').join('') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
         '<div class="shop-foot">' +
           '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
           '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
@@ -113,6 +128,7 @@ const Overlays = (() => {
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
+    wireBandit();
     $('#shop-next').onclick = () => {
       Sfx.click();
       close();
@@ -137,6 +153,93 @@ const Overlays = (() => {
     });
     UI.renderMantel($('#shop-mantel'));
     UI.renderMantel($('#mantel'));
+    renderCounter();
+    const bp = $('#bandit-pull');
+    if (bp) bp.innerHTML = 'PULL THE LEVER $<b>' + Game.banditPrice() + '</b>';
+  }
+
+  function renderCounter() {
+    const row = $('#counter-row');
+    if (!row) return;
+    row.innerHTML = '';
+    COUNTER_ITEMS.forEach(def => {
+      const owned = G.run.counterBought[def.id] || 0;
+      const maxed = def.soldOut && def.soldOut(G.run);
+      const price = counterPrice(G.run, def.id);
+      const n = el('div', 'counter-item' + (maxed ? ' maxed' : '') + (G.run.money < price ? ' broke' : ''));
+      n.innerHTML =
+        '<div class="ci-art">' + icon(def.icon) + '</div>' +
+        '<div class="ci-body">' +
+          '<div class="ci-name">' + def.name + (owned ? ' <em>x' + owned + '</em>' : '') + '</div>' +
+          '<div class="ci-text">' + def.text + '</div>' +
+        '</div>' +
+        '<div class="ci-buy">' + (maxed ? '<span class="ci-max">MAXED</span>'
+          : '<span class="ci-price">$' + price + '</span><span class="ci-next">next $' + (price + def.step) + '</span>') + '</div>';
+      if (!maxed) {
+        n.onclick = () => {
+          const res = Game.buyCounter(def.id);
+          if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(n); return; }
+          Sfx.money();
+          UI.burst(n, 12, '#7ee787');
+          UI.toast(def.name + ' bought — next one costs $' + res.next);
+          refreshShop();
+          UI.render();
+        };
+      }
+      row.appendChild(n);
+    });
+  }
+
+  function wireBandit() {
+    const btn = $('#bandit-pull');
+    if (!btn) return;
+    btn.onclick = () => {
+      const res = Game.pullLever();
+      if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
+      spinAnimation(res);
+    };
+  }
+
+  function spinAnimation(res) {
+    const reels = Array.from(document.querySelectorAll('#reels .reel'));
+    const out = $('#bandit-result');
+    out.textContent = '...';
+    out.className = 'bandit-result';
+    $('#bandit-pull').disabled = true;
+    Sfx.click();
+
+    reels.forEach((r, i) => {
+      r.classList.add('spinning');
+      let ticks = 0;
+      const iv = setInterval(() => {
+        r.textContent = REEL_SYMBOLS[Math.floor(Math.random() * REEL_SYMBOLS.length)].s;
+        Sfx.chip(ticks % 6);
+        if (++ticks > 12 + i * 7) {
+          clearInterval(iv);
+          const sym = res.reels[i];
+          const meta = REEL_SYMBOLS.find(s => s.s === sym);
+          r.textContent = sym;
+          r.className = 'reel landed ' + meta.cls;
+          setTimeout(() => r.classList.remove('landed'), 400);
+          if (i === 2) finishSpin(res);
+        }
+      }, 55);
+    });
+  }
+
+  function finishSpin(res) {
+    const out = $('#bandit-result');
+    const r = res.result;
+    out.className = 'bandit-result ' + r.kind;
+    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '');
+    if (r.kind === 'jackpot') {
+      if (r.symbol === '☠') { Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d'); }
+      else { Sfx.win(); UI.screenShake(12); UI.confetti($('#bandit'), 70, 't4'); UI.flashScreen(0.3, '#ffd166'); }
+    } else if (r.kind === 'pair') { Sfx.money(); UI.burst($('#bandit'), 12, '#7ee787'); }
+    else Sfx.error();
+    $('#bandit-pull').disabled = false;
+    refreshShop();
+    UI.render();
   }
 
   function shopCard(item, index, shelf) {
@@ -231,6 +334,8 @@ const Overlays = (() => {
       bySuit[s].forEach(card => {
         const c = UI.cardEl(Object.assign({}, card, { faceUp: true }));
         c.classList.add('mini');
+        c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
+        c.addEventListener('pointerleave', UI.hideTip);
         if (pickDef) {
           c.classList.add('pickable');
           c.onclick = () => {
@@ -242,9 +347,6 @@ const Overlays = (() => {
               UI.toast(pickDef.name + ' applied!');
             }
           };
-        } else {
-          c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
-          c.addEventListener('pointerleave', UI.hideTip);
         }
         holder.appendChild(c);
       });
@@ -259,14 +361,57 @@ const Overlays = (() => {
     };
   }
 
+  /* full value breakdown for a card, used on the deck screen */
   function cardTip(card) {
-    let s = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' + SUITS[card.suit].sym + '</div>';
-    s += '<div class="tip-kind card-kind">CARD — lives in your deck</div>';
-    s += '<div class="tip-text">Base ' + rankChips(card.rank) + ' Chips</div>';
-    if (card.enhancement !== 'none') s += '<div class="tip-text hot">' + ENHANCEMENTS[card.enhancement].name + ' — ' + ENHANCEMENTS[card.enhancement].text + '</div>';
-    if (card.finish !== 'none') s += '<div class="tip-text hot">' + FINISHES[card.finish].name + ' — ' + FINISHES[card.finish].text + '</div>';
-    if (card.seal !== 'none') s += '<div class="tip-text hot">' + SEALS[card.seal].name + ' — ' + SEALS[card.seal].text + '</div>';
-    return s;
+    const base = rankChips(card.rank);
+    let chips = base, mult = 1, xmult = 1, cash = 0;
+    const rows = [];
+    rows.push(row('Base rank value', '+' + base + ' Chips'));
+
+    const e = ENHANCEMENTS[card.enhancement];
+    if (card.enhancement !== 'none') {
+      rows.push(row(e.name, e.text, 'hot'));
+      if (card.enhancement === 'gilded') chips += 50;
+      if (card.enhancement === 'voltaic') mult += 4;
+      if (card.enhancement === 'glass') xmult *= 2;
+      if (card.enhancement === 'phantom') mult += 2;
+      if (card.enhancement === 'bomb') chips += 30;
+      if (card.enhancement === 'bullion') cash += 4;
+      if (card.enhancement === 'steel') xmult *= 1.5;
+    }
+    const f = FINISHES[card.finish];
+    if (card.finish !== 'none') {
+      rows.push(row(f.name, f.text, 'fin'));
+      if (card.finish === 'foil') chips += 60;
+      if (card.finish === 'holo') mult += 12;
+      if (card.finish === 'poly') xmult *= 1.5;
+    }
+    const sl = SEALS[card.seal];
+    if (card.seal !== 'none') {
+      rows.push(row(sl.name, sl.text, 'seal'));
+      if (card.seal === 'blue') chips += 30;
+      if (card.seal === 'gold') cash += 4;
+    }
+
+    const totalMult = mult * xmult;
+    const alone = Math.round(chips * totalMult);
+    const retrig = card.seal === 'red' ? 2 : 1;
+
+    let out = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' +
+      (card.enhancement === 'wild' ? '✿ (every suit)' : SUITS[card.suit].sym) + '</div>';
+    out += '<div class="tip-kind card-kind">CARD — lives in your deck</div>';
+    out += '<div class="tip-rows">' + rows.join('') + '</div>';
+    out += '<div class="tip-total">' +
+      '<span>On its own</span><b>' + chips + ' X ' + (Math.round(totalMult * 100) / 100) + ' = ' +
+      UI.fmt(alone * retrig) + '</b></div>';
+    if (retrig > 1) out += '<div class="tip-foot">Red Seal: scored twice.</div>';
+    if (cash) out += '<div class="tip-cash">Pays $' + cash + ' when scored.</div>';
+    out += '<div class="tip-foot">Curios, Cascade and your Column Stack multiply this further.</div>';
+    return out;
+  }
+
+  function row(label, text, cls) {
+    return '<div class="tip-row ' + (cls || '') + '"><span>' + label + '</span><i>' + text + '</i></div>';
   }
 
   /* ---------------- run over ---------------- */
@@ -356,11 +501,33 @@ const Overlays = (() => {
           '<ul>' +
             '<li><b>Cascade</b> — foundation plays back to back. Each one adds Mult. Drawing from the stock resets it.</li>' +
             '<li><b>Suit Run</b> — consecutive cards of the same suit going home, stacked on top of the Cascade.</li>' +
-            '<li><b>Column Stack</b> — the big one. When you send a card home <i>off a column</i>, the face-up run ' +
-            'you built underneath it pays out: <b>+Chips equal to the ranks sitting in that run</b>, and ' +
-            '<b>+' + TUNE.stackMultPer + ' Mult for every extra card in it</b>. A column reading K-Q-J-10-9 is worth far more ' +
-            'than a lone King. Watch the <span class="rb-demo">RUN X5</span> badge on each column — that is your live payout.</li>' +
+            '<li><b>Column Stack</b> — the big one, and it is a <i>cash-in</i>, not a passive bonus. ' +
+            'The <span class="rb-demo">RUN 7</span> badge under a column shows what that face-up run is worth. ' +
+            'You collect it by sending the run\'s <b>bottom card</b> to a foundation — the badge turns green and says ' +
+            '<b>CASH IN!</b> the moment that card can actually go. You get <b>+Chips equal to every rank sitting in the run</b> ' +
+            'and <b>+' + TUNE.stackMultPer + ' Mult per extra card</b>, all on that one play. ' +
+            'Then the next card down is exposed with the run one shorter — so a long run like K-Q-J-10-9-8-7 pays out ' +
+            '<i>again on every single card</i> as you dismantle it upward, with the Cascade stacking on top. ' +
+            'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
+
+          '<h4>Duplicate cards and Twins</h4>' +
+          '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
+          'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
+          'in full (plus +' + TUNE.twinMultBonus + ' Mult) without advancing the pile. Duplicates are free points, not dead weight.</p>' +
+
+          '<h4>The Dealer\'s Whim</h4>' +
+          '<p>From Ante ' + TUNE.whimsFromAnte + ', every round is dealt under a random house rule — shown as a badge up in the header. ' +
+          'Some help (Gold Rush pays $1 a card), some hurt (Butterfingers costs you a stock pass), some are a coin flip. ' +
+          'Hover the badge to read it before you plan the round.</p>' +
+
+          '<h4>The Counter and the Bandit</h4>' +
+          '<p>The shop\'s <b>Counter</b> is always stocked with permanent upgrades — extra deck flips, mantel seats, undos, ' +
+          'even extra columns. They never run out, but each purchase raises that item\'s price for the rest of the run.</p>' +
+          '<p>The <b>One-Armed Bandit</b> takes your money and gives you chaos. Three of a kind pays: ' +
+          '<b>777</b> a free Curio, <b>★★★</b> a Gilded Polychrome card, <b>$$$</b> cash, <b>♠♠♠</b> permanent Mult, ' +
+          '<b>♥♥♥</b> a seat and a pass — and <b>☠☠☠</b> takes half your cash. Two of a kind returns a few dollars. ' +
+          'Each pull costs more than the last, and it resets every shop.</p>' +
 
           '<h4>How you make money</h4>' +
           '<p>The <b>CASH OUT</b> button always shows exactly what this round would pay you right now. It goes up when you:</p>' +
@@ -385,7 +552,9 @@ const Overlays = (() => {
 
           '<h4>Curios vs Card Mods vs New Cards</h4>' +
           '<ul>' +
-            '<li><b>Curios</b> are objects. Each one takes a seat on your Mantel — you only have 3 (up to 5). They fire left to right, so put +Mult before XMult.</li>' +
+            '<li><b>Curios</b> are objects. Each one takes a seat on your Mantel — you start with 3, and can buy up to 5. ' +
+            'They fire left to right, so put +Mult before XMult. In the shop, hovering a Curio on your mantel shows a red ' +
+            '<b>SELL $X</b> band — clicking it sells it for that much.</li>' +
             '<li><b>Card Mods</b> mark one card already in your deck. No seat, permanent, unlimited.</li>' +
             '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
           '</ul>' +

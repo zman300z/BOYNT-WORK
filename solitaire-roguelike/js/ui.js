@@ -78,6 +78,20 @@ const UI = (() => {
     $('#quota-text').textContent = fmt(total) + ' / ' + fmt(q);
     $('#quota-bar').classList.toggle('met', total >= q);
     $('#money').textContent = '$' + run.money;
+    const wb = $('#whim-badge');
+    if (wb) {
+      const w = run.whim && WHIM_BY_ID[run.whim];
+      wb.style.display = w ? '' : 'none';
+      if (w) {
+        wb.className = 'badge whim mood-' + w.mood;
+        wb.innerHTML = icon(w.icon, 'whim-ico') + '<span>' + w.name + '</span>';
+        wb.onpointerenter = e => showTip(e.currentTarget,
+          '<div class="tip-title">' + icon(w.icon, 'tip-ico') + ' ' + w.name + '</div>' +
+          '<div class="tip-kind whim-kind">THE DEALER\'S WHIM — this round only</div>' +
+          '<div class="tip-text">' + w.text + '</div>');
+        wb.onpointerleave = hideTip;
+      }
+    }
     $('#round-score').textContent = fmt(Math.round(displayScore));
   }
 
@@ -106,12 +120,21 @@ const UI = (() => {
           ? '<div class="c-counter">' + (def.counterLabel === 'X' ? 'X' + inst.counter : '+' + inst.counter) + '</div>' : '');
       c.addEventListener('pointerenter', e => showTip(e.currentTarget, curioTip(inst, def, i)));
       c.addEventListener('pointerleave', hideTip);
-      c.addEventListener('click', () => {
-        if (G.phase === 'shop') {
+      if (G.phase === 'shop') {
+        const value = def.sellsFull ? (inst.paid || def.cost) : Math.max(1, Math.floor((inst.paid || def.cost) / 2));
+        c.classList.add('sellable');
+        c.appendChild(el('div', 'sell-band', 'SELL $' + value));
+        c.addEventListener('click', () => {
           const v = Game.sellCurio(i);
-          if (v) { Sfx.money(); toast('Sold for $' + v); Overlays.refreshShop(); }
-        }
-      });
+          if (v) {
+            Sfx.money();
+            floatText(c, '+$' + v, 'fx-money big');
+            burst(c, 12, '#ffd166');
+            toast('Sold ' + def.name + ' for <b>$' + v + '</b>');
+            Overlays.refreshShop();
+          }
+        });
+      }
       makeCurioDraggable(c, i);
       m.appendChild(c);
     }
@@ -200,6 +223,14 @@ const UI = (() => {
         });
         f.appendChild(el('div', 'pile-count', String(pile.length)));
       }
+      const tw = (b.twins && b.twins[s]) || [];
+      if (tw.length) {
+        const t = cardEl(tw[tw.length - 1]);
+        t.classList.add('twin-card');
+        t.style.zIndex = 40;
+        f.appendChild(t);
+        f.appendChild(el('div', 'twin-count', 'TWIN x' + tw.length));
+      }
     });
 
     /* tableau */
@@ -232,9 +263,17 @@ const UI = (() => {
       if (runLen > 1) {
         const runCards = Engine.runCards(b, col, Engine.mods(G.run));
         const val = runCards.reduce((a, c) => a + rankChips(c.rank), 0);
-        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen),
-          '<span class="rb-n">RUN ' + runLen + '</span><span class="rb-v">+' + val + ' <i>chips</i> · +' +
-          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>');
+        /* the bonus is CASHED IN by sending the run's bottom card home, so say
+           loudly when that card can actually go */
+        const cashCard = pile[pile.length - 1];
+        const ready = !!(Engine.foundationTargetFor(b, cashCard) || Engine.twinTargetFor(b, cashCard));
+        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen) + (ready ? ' ready' : ''),
+          '<span class="rb-n">RUN ' + runLen + (ready ? ' — CASH IN!' : '') + '</span>' +
+          '<span class="rb-v">+' + val + ' <i>chips</i> · +' +
+          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>' +
+          '<span class="rb-how">' + (ready
+            ? 'send ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' home to collect'
+            : 'collect when ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' can go home') + '</span>');
         /* sit the badge clear of the last card, never on top of it */
         const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
         badge.style.top = Math.round(lastTop + ch + 6) + 'px';

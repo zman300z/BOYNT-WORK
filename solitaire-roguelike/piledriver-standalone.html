@@ -737,6 +737,107 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   .rb-n{ font-size:9px; }
 }
 
+/* ============================================================
+   twins, whims, the counter, the bandit
+   ============================================================ */
+.card.twin-card{
+  transform:translate(5px,6px) rotate(6deg);
+  box-shadow:0 0 0 2px var(--violet), 0 8px 16px rgba(0,0,0,.55);
+}
+.twin-count{
+  position:absolute; top:-9px; left:-6px; z-index:60;
+  font-family:var(--display); font-size:8px; letter-spacing:.06em;
+  background:var(--violet); color:#fff; padding:1px 5px; border-radius:6px; border:2px solid #1a1226;
+}
+
+.badge.whim{ display:flex; align-items:center; gap:5px; cursor:help; font-family:var(--display); font-size:10px; }
+.badge.whim .whim-ico{ width:15px; height:15px; }
+.badge.whim.mood-good{ border-color:var(--lime); color:var(--lime); background:rgba(126,231,135,.12); }
+.badge.whim.mood-bad{ border-color:var(--hot); color:var(--hot); background:rgba(255,77,109,.12); }
+.badge.whim.mood-mixed{ border-color:var(--gold); color:var(--gold); background:rgba(255,209,102,.12); }
+.tip-kind.whim-kind{ background:rgba(255,209,102,.16); color:#ffdf9c; }
+
+/* selling from the mantel */
+.mslot.sellable{ cursor:pointer; }
+.sell-band{
+  position:absolute; inset:auto 0 0 0; opacity:0; transition:opacity .12s;
+  background:linear-gradient(0deg,#c92a45,#ff6b81); color:#fff;
+  font-family:var(--display); font-size:9px; text-align:center; padding:3px 0;
+  border-radius:0 0 7px 7px; pointer-events:none;
+}
+.mslot.sellable:hover .sell-band{ opacity:1; }
+.mslot.sellable:hover{ box-shadow:0 0 0 2px var(--hot), 0 10px 20px rgba(0,0,0,.5) !important; }
+
+/* the counter */
+.sh-counter .shelf-head h3{ color:var(--lime); }
+.counter-row{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.counter-item{
+  display:flex; align-items:center; gap:10px; cursor:pointer;
+  background:linear-gradient(120deg,#15251c,#0f1714); border:2px solid #4f9e6d;
+  border-radius:11px; padding:8px 10px; transition:transform .1s, box-shadow .14s;
+}
+.counter-item:hover{ transform:translateX(3px); box-shadow:0 6px 18px rgba(0,0,0,.5); }
+.counter-item.maxed{ opacity:.45; filter:grayscale(1); pointer-events:none; }
+.counter-item.broke{ opacity:.6; }
+.ci-art{ width:26px; height:26px; flex:none; color:var(--lime); }
+.ci-body{ flex:1; min-width:0; }
+.ci-name{ font-family:var(--display); font-size:11.5px; }
+.ci-name em{ font-style:normal; color:var(--gold); font-size:10px; }
+.ci-text{ font-size:9.5px; opacity:.72; line-height:1.3; }
+.ci-buy{ text-align:right; flex:none; }
+.ci-price{ display:block; font-family:var(--display); font-size:15px; color:var(--gold); }
+.ci-next{ display:block; font-size:8px; opacity:.45; }
+.ci-max{ font-family:var(--display); font-size:11px; color:var(--hot); }
+
+/* the bandit */
+.sh-bandit .shelf-head h3{ color:var(--hot); }
+.bandit{
+  display:flex; gap:14px; align-items:center;
+  background:linear-gradient(150deg,#2b0f1c,#150c18); border:2px solid var(--hot);
+  border-radius:14px; padding:12px 14px; box-shadow:inset 0 0 40px rgba(255,77,109,.15);
+}
+.reels{ display:flex; gap:6px; }
+.reel{
+  width:56px; height:66px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--display); font-size:30px; color:#1a1a1a;
+  background:linear-gradient(180deg,#fdfaf0,#ded8c4); border:3px solid #0b0713;
+  box-shadow:inset 0 -6px 12px rgba(0,0,0,.2);
+}
+.reel.spinning{ animation:reelBlur .1s linear infinite; }
+@keyframes reelBlur{ 50%{ filter:blur(1.4px); transform:translateY(-2px) } }
+.reel.landed{ animation:reelLand .4s cubic-bezier(.2,1.8,.3,1); }
+@keyframes reelLand{ 0%{ transform:translateY(-14px) scale(1.1) } 100%{ transform:none } }
+.sy-seven{ color:#c92a45; } .sy-star{ color:#b8860b; } .sy-cash{ color:#2e7d4f; }
+.sy-spade{ color:#16181d; } .sy-heart{ color:#d92b4b; } .sy-skull{ color:#5a5a6a; }
+.bandit-side{ flex:1; min-width:0; }
+.bandit-result{ font-size:11px; line-height:1.45; opacity:.85; margin-bottom:8px; min-height:32px; }
+.bandit-result b{ font-family:var(--display); font-size:13px; }
+.bandit-result.jackpot{ color:var(--gold); opacity:1; text-shadow:0 0 16px rgba(255,209,102,.7); }
+.bandit-result.pair{ color:var(--lime); opacity:1; }
+.lever-btn{ background:linear-gradient(180deg,#ff6b81,#c92a45); color:#fff; box-shadow:0 4px 0 #7d1225; }
+.bandit-odds{ margin-top:7px; font-size:15px; letter-spacing:6px; opacity:.4; }
+
+/* richer card tooltips */
+.tip-rows{ margin:6px 0; }
+.tip-row{ display:flex; justify-content:space-between; gap:8px; font-size:10.5px; padding:2px 0; border-bottom:1px dotted rgba(255,255,255,.12); }
+.tip-row i{ font-style:normal; opacity:.7; text-align:right; }
+.tip-row.hot span{ color:var(--gold); } .tip-row.fin span{ color:#ff9ff3; } .tip-row.seal span{ color:var(--cool); }
+.tip-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); font-size:11px; }
+.tip-total b{ font-family:var(--display); color:var(--gold); font-size:13px; }
+.tip-cash{ color:var(--gold); font-size:10.5px; margin-top:4px; }
+#tooltip{ width:270px; }
+
+/* the run badge explains when it can be collected */
+.rb-how{ font-size:7.5px; letter-spacing:.04em; opacity:.6; }
+.run-badge.ready{
+  border-color:var(--lime) !important; color:var(--lime) !important;
+  box-shadow:0 0 0 2px rgba(126,231,135,.35), 0 0 26px rgba(126,231,135,.75) !important;
+  animation:readyPulse .7s infinite alternate;
+}
+.run-badge.ready .rb-how{ opacity:.95; color:var(--lime); }
+@keyframes readyPulse{ to{ transform:translateX(-50%) scale(1.05); filter:brightness(1.25) } }
+@media (max-width:760px){ .rb-how{ display:none; } }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -748,6 +849,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
     <div class="hud-group">
       <div class="badge ante">ANTE <b id="ante-num">1</b></div>
       <div class="badge round">ROUND <b id="round-num">1/3</b></div>
+      <div class="badge whim" id="whim-badge" style="display:none"></div>
     </div>
 
     <div class="hud-quota">
@@ -913,7 +1015,21 @@ const ICONS = {
   expand: '<path class="f" d="M9 7.5h6v9H9z"/><path d="M9 7.5h6v9H9z"/><path class="a" d="M5.5 5v14M18.5 5v14"/><path d="M3 12h2.5M18.5 12H21"/>',
   frame: '<rect class="f" x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="7" y="8" width="10" height="8" rx="1"/>',
   horseshoe: '<path class="f" d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/><path d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/>',
-  fingers: '<path class="f" d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11l1-6.6a1.7 1.7 0 0 1 3.4.4l-.3 5.7 1.4-4.6a1.7 1.7 0 0 1 3.3.8L17 17.4A5 5 0 0 1 12.2 21h-1a5 5 0 0 1-4.4-2.6L4.4 14a1.6 1.6 0 0 1 2.6-1.8z"/><path d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11"/>'
+  fingers: '<path class="f" d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11l1-6.6a1.7 1.7 0 0 1 3.4.4l-.3 5.7 1.4-4.6a1.7 1.7 0 0 1 3.3.8L17 17.4A5 5 0 0 1 12.2 21h-1a5 5 0 0 1-4.4-2.6L4.4 14a1.6 1.6 0 0 1 2.6-1.8z"/><path d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11"/>',
+  /* --- the counter / bandit / whims --- */
+  refresh: '<path d="M20 6.5v5h-5"/><path d="M4 17.5v-5h5"/><path class="a" d="M19.2 11.5A7.5 7.5 0 0 0 6.3 7.3M4.8 12.5a7.5 7.5 0 0 0 12.9 4.2"/>',
+  seat: '<path class="f" d="M6 12.5h12v4H6z"/><path d="M6 12.5h12v4H6z"/><path d="M7.5 12.5V6a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v6.5M8 16.5V20M16 16.5V20"/>',
+  undo2: '<path class="a" d="M5 11.5h9.5a4.5 4.5 0 0 1 0 9H10"/><path d="M8.5 7 4 11.5 8.5 16"/>',
+  lever: '<rect class="f" x="3.5" y="7" width="12" height="11" rx="1.6"/><rect x="3.5" y="7" width="12" height="11" rx="1.6"/><path d="M7 10.5v4M11.8 10.5v4"/><path d="M15.5 11h2.8V6.4"/><circle class="a" cx="18.3" cy="4.6" r="2"/>',
+  slot777: '<rect class="f" x="2.5" y="6" width="19" height="12" rx="2"/><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M9 6v12M15 6v12"/><path class="a" d="M4.8 9.5h2.4l-1.3 5M10.8 9.5h2.4l-1.3 5M16.8 9.5h2.4l-1.3 5"/>',
+  moon: '<path class="f" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  crown: '<path class="f" d="m3.5 8 3.8 3.2L12 5l4.7 6.2L20.5 8l-1.6 10h-13.8z"/><path d="m3.5 8 3.8 3.2L12 5l4.7 6.2L20.5 8l-1.6 10h-13.8z"/><path d="M6 20.5h12"/>',
+  fog: '<path class="a" d="M3.5 9h11M17 9h3.5M3.5 13h5M11 13h9.5M3.5 17h13M19 17h1.5"/>',
+  chicken: '<path class="f" d="M7 20c-2.2 0-3.5-1.5-3.5-3.6C3.5 12.6 6.4 9 10.4 9h1.2V8a3.5 3.5 0 1 1 5.2 3l2.7 1.6-2.7 1.1c-.4 3.6-3.4 6.3-7.3 6.3z"/><circle cx="15.6" cy="6.4" r="1"/><path class="a" d="M14.4 3.4c.7-1 1.6-1.4 2.6-1.1"/><path d="M9 20v2M13 19.6V22"/>',
+  gremlin: '<path class="f" d="M12 4c4 0 6.5 2.6 6.5 6.2 0 1.3-.4 2.3-.4 3.3 0 1.4 1.4 2 1.4 3.5 0 1.8-1.6 3-4 3h-7c-2.4 0-4-1.2-4-3 0-1.5 1.4-2.1 1.4-3.5 0-1-.4-2-.4-3.3C5.5 6.6 8 4 12 4z"/><path d="M5.5 8 3 5.5M18.5 8 21 5.5"/><circle cx="9.4" cy="11" r="1.3"/><circle cx="14.6" cy="11" r="1.3"/><path d="M9.6 15.4h4.8"/>',
+  chaos: '<circle class="f" cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="8.5"/><path class="a" d="m8 8 8 8M16 8l-8 8M12 3.5v17M3.5 12h17"/>',
+  bossman: '<circle cx="12" cy="7.4" r="3.4"/><path class="f" d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6z"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/><path class="a" d="m12 14 1.6 3-1.6 3.5-1.6-3.5z"/>',
+  twinflame: '<path class="f" d="M9 21c-2.5 0-4-1.8-4-4 0-3 3-4.4 3-7.5C8 6.6 10 4.5 12 3c-.6 2.6.5 4.4 1.9 5.8C15.6 10.5 17 12.3 17 15c0 3.4-2.5 6-5.5 6z"/><path class="a" d="M12 21c-1.4 0-2.4-1-2.4-2.4 0-1.7 1.9-2.4 1.9-4.4 1.5 1.2 2.9 2.4 2.9 4.4 0 1.4-1 2.4-2.4 2.4z"/>'
 };
 
 /* the icon renderer -- everything goes through this so the whole set stays uniform */
@@ -957,6 +1073,10 @@ const TUNE = {
   cascadeCashEvery: 5,      // $1 each time the Cascade hits a multiple of this
   stackCashAt: 5,           // cashing a card off a run this long pays $1
   stackCashBigAt: 8,        // ...and this long pays $2
+  twinMultBonus: 3,         // Mult bonus for dropping a duplicate onto its twin
+  banditBase: 5,            // first pull of the lever each shop
+  banditStep: 4,            // each extra pull
+  whimsFromAnte: 2,         // the table starts getting opinions at this ante
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -1193,6 +1313,49 @@ const CURIOS = [
     text: '+25 Chips for every card in your tallest column.',
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
+  { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
+    text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
+    hooks: { score: c => { if (c.chance(8)) { c.xMult(0); c.flash(); } else c.xMult(1.4); } } },
+
+  { id: 'gremlin', name: 'The Gremlin', icon: 'gremlin', rarity: 'uncommon', cost: 7,
+    text: 'At the start of every round, a random card in your deck becomes Glass. Chaos is a strategy.',
+    hooks: {
+      roundStart: (run) => {
+        const plain = run.deck.filter(c => c.enhancement === 'none');
+        if (plain.length) plain[Math.floor(Math.random() * plain.length)].enhancement = 'glass';
+      },
+      score: c => c.addMult(2)
+    } },
+
+  { id: 'chaos_engine', name: 'Chaos Engine', icon: 'chaos', rarity: 'rare', cost: 9,
+    text: 'Every score rolls one of: +150 Chips, +12 Mult, X1.6 Mult, or $2.',
+    hooks: {
+      score: c => {
+        const r = Math.floor(Math.random() * 4);
+        if (r === 0) c.addChips(150);
+        else if (r === 1) c.addMult(12);
+        else if (r === 2) c.xMult(1.6);
+        else c.money(2);
+        c.flash();
+      }
+    } },
+
+  { id: 'pit_boss', name: 'The Pit Boss', icon: 'bossman', rarity: 'uncommon', cost: 7,
+    text: '+35 Chips and +1 Mult for every Curio on your mantel, this one included.',
+    hooks: { score: c => { const n = c.run.mantel.length; c.addChips(35 * n); c.addMult(n); } } },
+
+  { id: 'twin_flame', name: 'Twin Flame', icon: 'twinflame', rarity: 'uncommon', cost: 8,
+    text: 'Twin plays (duplicates dropped onto their match) score X4 Mult.',
+    mods: { twinMult: 4 } },
+
+  { id: 'jackpot_magnet', name: 'Jackpot Magnet', icon: 'slot777', rarity: 'rare', cost: 9,
+    text: 'The Bandit costs $3 less to pull and its reels favour you heavily.',
+    mods: { banditLuck: true } },
+
+  { id: 'hot_streak', name: 'Hot Streak', icon: 'twinflame', rarity: 'rare', cost: 9,
+    text: '+6 Mult for every round you have already played this Ante.',
+    hooks: { score: c => c.addMult(6 * (c.run.round - 1)) } },
+
   /* ---------------- rares ---------------- */
   { id: 'the_collector', name: 'The Collector', icon: 'trophy', rarity: 'rare', cost: 9,
     text: '+400 Chips for every completed suit.',
@@ -1367,6 +1530,10 @@ const NEW_CARDS = [
     text: "A seventh 7, wearing a Rabbit's Foot and a Foil finish.",
     build: () => ({ rank: 7, suit: rndSuit(), enhancement: 'lucky', finish: 'foil' }) },
 
+  { id: 'n_mirror', name: 'Mirror Ace', icon: 'twincards', cost: 8, kind: 'add',
+    text: 'A duplicate Ace, Gilded and Foiled. Drop it onto its twin on the foundation for a free score.',
+    build: () => ({ rank: 1, suit: rndSuit(), enhancement: 'gilded', finish: 'foil' }) },
+
   { id: 'n_twin', name: 'The Understudy', icon: 'twincards', cost: 7, kind: 'duplicate',
     text: 'Choose any card in your deck. An exact copy joins it, marks and all.' }
 ];
@@ -1377,6 +1544,124 @@ function rndRank() { return 1 + Math.floor(Math.random() * 13); }
 const SHOP_BY_ID = {};
 CARD_MODS.forEach(t => { SHOP_BY_ID[t.id] = t; });
 NEW_CARDS.forEach(t => { SHOP_BY_ID[t.id] = t; });
+
+
+/* =========================================================
+   THE COUNTER -- always in stock, permanent, price climbs
+   ========================================================= */
+const COUNTER_ITEMS = [
+  { id: 'c_pass', name: 'Extra Deck Flip', icon: 'refresh', base: 8, step: 6,
+    text: '+1 pass through the stock, every round, for the rest of the run.',
+    apply: run => { run.bonusPasses++; } },
+
+  { id: 'c_seat', name: 'Extra Mantel Seat', icon: 'seat', base: 15, step: 12,
+    text: '+1 seat on your mantel. Room for one more strange object.',
+    soldOut: run => run.mantelSlots >= TUNE.maxMantelSlots,
+    apply: run => { run.mantelSlots = Math.min(TUNE.maxMantelSlots, run.mantelSlots + 1); } },
+
+  { id: 'c_undo', name: 'Extra Undo', icon: 'undo2', base: 6, step: 4,
+    text: '+1 Undo every round, forever.',
+    apply: run => { run.bonusUndos++; } },
+
+  { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
+    text: '+1 tableau column dealt every round. More room, more runs to build.',
+    soldOut: run => run.columns >= 10,
+    apply: run => { run.columns = Math.min(10, run.columns + 1); } }
+];
+const COUNTER_BY_ID = {};
+COUNTER_ITEMS.forEach(c => { COUNTER_BY_ID[c.id] = c; });
+
+function counterPrice(run, id) {
+  const def = COUNTER_BY_ID[id];
+  const owned = (run.counterBought && run.counterBought[id]) || 0;
+  return Math.max(1, Math.ceil((def.base + def.step * owned) * (1 - Math.min(0.75, run.discount))));
+}
+
+/* =========================================================
+   THE ONE-ARMED BANDIT -- pull the lever, accept your fate
+   ========================================================= */
+const REEL_SYMBOLS = [
+  { s: '7',  cls: 'sy-seven', w: 6 },
+  { s: '★',  cls: 'sy-star',  w: 12 },
+  { s: '$',  cls: 'sy-cash',  w: 14 },
+  { s: '♠',  cls: 'sy-spade', w: 16 },
+  { s: '♥',  cls: 'sy-heart', w: 16 },
+  { s: '☠',  cls: 'sy-skull', w: 10 }
+];
+
+/* what three-of-a-kind gets you. resolved in game.js */
+const BANDIT_PRIZES = {
+  '7': { name: 'JACKPOT', text: 'A free Curio, or $30 if your mantel is full.' },
+  '★': { name: 'STARSTRUCK', text: 'A random card in your deck turns Polychrome AND Gilded.' },
+  '$': { name: 'PAYDAY', text: '+$35, right now.' },
+  '♠': { name: 'THE EDGE', text: '+3 Mult on every score for the rest of the run.' },
+  '♥': { name: 'ROOM TO BREATHE', text: '+1 Mantel seat and +1 stock pass, permanently.' },
+  '☠': { name: 'THE HOUSE COLLECTS', text: 'You lose half your cash. Should have walked away.' }
+};
+
+/* =========================================================
+   THE DEALER'S WHIMS -- a random rule per round from Ante 2
+   ========================================================= */
+const WHIMS = [
+  { id: 'blood_moon', name: 'Blood Moon', icon: 'moon', mood: 'mixed',
+    text: 'Hearts and Diamonds get X2 Mult. Spades and Clubs get X0.6.',
+    hooks: { score: c => { if (!c.card) return; c.isRed(c.card) ? c.xMult(2) : c.xMult(0.6); } } },
+
+  { id: 'heavy_crown', name: 'Heavy Is The Crown', icon: 'crown', mood: 'mixed',
+    text: 'Kings and Queens give +150 Chips but X0.7 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank >= 12) { c.addChips(150); c.xMult(0.7); } } } },
+
+  { id: 'butterfingers', name: 'Butterfingers', icon: 'fingers', mood: 'bad',
+    text: 'One fewer pass through the stock this round.',
+    mods: { stockPasses: -1 } },
+
+  { id: 'thick_fog', name: 'Thick Fog', icon: 'fog', mood: 'bad',
+    text: 'Flipping a card scores nothing. Everything else is normal.',
+    mods: { noRevealScore: true } },
+
+  { id: 'gold_rush', name: 'Gold Rush', icon: 'coinstack', mood: 'good',
+    text: 'Every card you send home earns $1.',
+    hooks: { score: c => { if (c.event === 'foundation') c.money(1); } } },
+
+  { id: 'tight_deal', name: 'Tight Deal', icon: 'cardsfan', mood: 'bad',
+    text: 'The stock deals 4 cards at a time instead of 3.',
+    mods: { drawReduce: -1 } },
+
+  { id: 'long_con', name: 'The Long Con', icon: 'ladder', mood: 'good',
+    text: 'Column Stack bonuses count double.',
+    mods: { stackMult: 2 } },
+
+  { id: 'ace_high', name: 'Ace High', icon: 'sleeve', mood: 'good',
+    text: 'Aces give X4 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank === 1) c.xMult(4); } } },
+
+  { id: 'static_night', name: 'Static Night', icon: 'bolt', mood: 'good',
+    text: 'Every 4th score this round gets X2.5 Mult.',
+    hooks: { score: c => { if (c.round.scoreEvents % 4 === 0) { c.xMult(2.5); c.flash(); } } } },
+
+  { id: 'suit_tax', name: 'The Suit Tax', icon: 'tag', mood: 'bad',
+    text: '-1 Mult for every card sitting in the waste pile.',
+    hooks: { score: c => c.addMult(-c.wasteCount()) } },
+
+  { id: 'generous_table', name: 'Generous Table', icon: 'handshake', mood: 'good',
+    text: '+2 Undos and +$4 at the end of the round.',
+    mods: { undos: 2 },
+    hooks: { roundEnd: () => 4 } },
+
+  { id: 'the_grind', name: 'The Grind', icon: 'gear', mood: 'mixed',
+    text: '+2 Mult for every move you make, but the quota feels heavier: X0.8 Chips.',
+    hooks: { score: c => { c.addMult(c.round.moves * 2); c.chips *= 0.8; } } },
+
+  { id: 'twin_night', name: 'Hall Of Mirrors', icon: 'twinflame', mood: 'good',
+    text: 'Twin plays score X3 Mult.',
+    mods: { twinMult: 3 } },
+
+  { id: 'high_stakes', name: 'High Stakes', icon: 'dice', mood: 'mixed',
+    text: 'Every score is a coin flip: X2 Mult or X0.75 Mult.',
+    hooks: { score: c => c.xMult(Math.random() < 0.5 ? 2 : 0.75) } }
+];
+const WHIM_BY_ID = {};
+WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
 
 /* ===== js/engine.js ===== */
 /* ============================================================
@@ -1433,6 +1718,10 @@ const Engine = (() => {
       luck: 1,
       quotaScale: 1,
       drawReduce: 0,
+      counterBought: {},
+      permaMult: 0,
+      whim: null,
+      banditPulls: 0,
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -1451,16 +1740,27 @@ const Engine = (() => {
       cascadeMult: 1, suitRunMult: 1, stockPasses: 0, undos: 0,
       xray: false, anyIntoEmpty: false, firstRetrigger: 0,
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
-      drawReduce: 0, wasteAll: false, stackMult: 1
+      drawReduce: 0,
+      counterBought: {},
+      permaMult: 0,
+      whim: null,
+      banditPulls: 0, wasteAll: false, stackMult: 1,
+      twinMult: 1, noRevealScore: false, banditLuck: false
+    };
+    const merge = src => {
+      if (!src) return;
+      for (const k in src) {
+        const v = src[k];
+        if (typeof v === 'number') m[k] = (k === 'stackMult' || k === 'twinMult' || k === 'cascadeMult' || k === 'suitRunMult')
+          ? m[k] * v : m[k] + v;
+        else m[k] = m[k] || v;
+      }
     };
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
-      if (!def || !def.mods) return;
-      for (const k in def.mods) {
-        const v = def.mods[k];
-        if (typeof v === 'number') m[k] += v; else m[k] = m[k] || v;
-      }
+      if (def) merge(def.mods);
     });
+    if (run.whim && WHIM_BY_ID[run.whim]) merge(WHIM_BY_ID[run.whim].mods);
     return m;
   }
 
@@ -1508,6 +1808,7 @@ const Engine = (() => {
     return {
       tableau,
       foundations: { S: [], H: [], D: [], C: [] },
+      twins: { S: [], H: [], D: [], C: [] },
       stock,
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
@@ -1571,6 +1872,24 @@ const Engine = (() => {
     return null;
   }
 
+  /* A duplicate card -- one whose rank the foundation has already passed --
+     can be laid on top of its twin. It scores in full but does not advance
+     the pile, so extra Aces and copied cards are never dead weight. */
+  function canTwin(board, card, suit) {
+    const f = board.foundations[suit];
+    if (!f.length) return false;
+    if (!suitsOf(card).includes(suit)) return false;
+    return card.rank <= f.length;
+  }
+  function twinTargetFor(board, card) {
+    for (const s of suitsOf(card)) if (canTwin(board, card, s)) return s;
+    return null;
+  }
+  /* either kind of foundation play */
+  function foundationAccepts(board, card, suit) {
+    return canPlaceOnFoundation(board, card, suit) || canTwin(board, card, suit);
+  }
+
   function canPlaceOnColumn(board, col, card, m) {
     const pile = board.tableau[col];
     if (!pile.length) return (card.rank === 13 || card.enhancement === 'phantom' || (m && m.anyIntoEmpty));
@@ -1606,14 +1925,14 @@ const Engine = (() => {
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {
-      if (foundationTargetFor(b, w.card)) return true;
+      if (foundationTargetFor(b, w.card) || twinTargetFor(b, w.card)) return true;
       for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, w.card, m)) return true;
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && foundationTargetFor(b, top)) return true;
+      if (top.faceUp && (foundationTargetFor(b, top) || twinTargetFor(b, top))) return true;
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp) continue;
         if (!isRunFrom(b, c, i, m)) continue;
@@ -1638,7 +1957,8 @@ const Engine = (() => {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
-    drawCount, runStart, runLength, runCards, playableWaste
+    drawCount, runStart, runLength, runCards, playableWaste,
+    canTwin, twinTargetFor, foundationAccepts
   };
 })();
 
@@ -1765,6 +2085,23 @@ const Score = (() => {
     });
   }
 
+  /* the round's Whim scores alongside the Curios */
+  function whimPass(ctx) {
+    const w = ctx.run.whim && WHIM_BY_ID[ctx.run.whim];
+    if (!w || !w.hooks || !w.hooks.score) return;
+    ctx._src = { type: 'whim' };
+    w.hooks.score(ctx);
+    ctx._src = null;
+  }
+
+  /* permanent Mult bought or won during the run */
+  function permaPass(ctx) {
+    if (!ctx.run.permaMult) return;
+    ctx._src = { type: 'combo' };
+    ctx.addMult(ctx.run.permaMult);
+    ctx._src = null;
+  }
+
   /* combo layer: Cascade + Suit Run + the Column Stack you scored off */
   function comboPass(ctx) {
     const m = Engine.mods(ctx.run);
@@ -1775,6 +2112,11 @@ const Score = (() => {
     if (ctx.stack && ctx.stack.length > 1) {
       ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
       ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
+    }
+    /* dropping a duplicate onto its twin */
+    if (ctx.twin) {
+      ctx.addMult(TUNE.twinMultBonus);
+      if (m.twinMult !== 1) ctx.xMult(m.twinMult);
     }
     ctx._src = null;
   }
@@ -1787,12 +2129,13 @@ const Score = (() => {
     const ctx = makeCtx(G, ev);
     ctx.depth = ev.depth || 0;
     ctx.stack = ev.stack || null;
+    ctx.twin = !!ev.twin;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
 
     let base = { chips: 0, mult: 1 };
-    if (ev.event === 'reveal') base = { chips: TUNE.revealChips, mult: 1 };
+    if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
     ctx.chips = base.chips;
@@ -1805,6 +2148,8 @@ const Score = (() => {
     for (let t = 0; t < retriggers; t++) {
       cardPass(ctx);
       if (ev.event === 'foundation') comboPass(ctx);
+      permaPass(ctx);
+      whimPass(ctx);
       curioPass(ctx);
       if (t > 0) ctx.triggers.push({ kind: 'retrigger', src: { type: 'card', id: ev.card ? ev.card.id : null } });
     }
@@ -1871,6 +2216,12 @@ const Score = (() => {
       }
     });
 
+    const whim = run.whim && WHIM_BY_ID[run.whim];
+    if (whim && whim.hooks && whim.hooks.roundEnd) {
+      const a = whim.hooks.roundEnd(run) || 0;
+      if (a) { lines.push({ label: whim.name, amount: a }); total += a; }
+    }
+
     if (!m.noInterest) {
       const interest = Math.min(run.interestCap, Math.floor(run.money / TUNE.interestPer));
       if (interest > 0) { lines.push({ label: 'Interest ($1 per $' + TUNE.interestPer + ')', amount: interest }); total += interest; }
@@ -1912,6 +2263,8 @@ const Game = (() => {
   }
 
   function startRound() {
+    /* from Ante 2 the table starts having opinions */
+    G.run.whim = G.run.ante >= TUNE.whimsFromAnte ? WHIMS[Math.floor(Math.random() * WHIMS.length)].id : null;
     const s = Engine.newRound(G.run);
     G.board = s.board;
     G.round = s.round;
@@ -2042,8 +2395,13 @@ const Game = (() => {
     if (dst.zone === 'foundation') {
       if (cards.length !== 1) return illegal();
       const card = cards[0];
-      const suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit)
+      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit)
         ? dst.suit : Engine.foundationTargetFor(b, card);
+      let twin = false;
+      if (!suit) {
+        suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card);
+        twin = !!suit;
+      }
       if (!suit) return illegal();
       snapshot();
       let stack = null;
@@ -2053,7 +2411,12 @@ const Game = (() => {
       }
       removeFrom(src, 1);
       const depth = b.foundations[suit].length;
-      b.foundations[suit].push(card);
+      if (twin) {
+        if (!b.twins) b.twins = { S: [], H: [], D: [], C: [] };
+        b.twins[suit].push(card);
+      } else {
+        b.foundations[suit].push(card);
+      }
       G.round.moves++;
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
@@ -2084,7 +2447,8 @@ const Game = (() => {
         push({ event: 'replay', label: 'ALREADY PAID', card, chips: 0, mult: 0, total: 0, triggers: [], anchor });
       } else {
         card.scoredRound = true;
-        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor, stack });
+        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth: twin ? Math.max(0, depth - 1) : depth,
+                     anchor, stack, twin, label: twin ? 'TWIN!' : null });
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -2099,7 +2463,7 @@ const Game = (() => {
       }
 
       if (src.zone === 'tableau') settleColumn(src.col);
-      checkSuitComplete(suit, anchor);
+      if (!twin) checkSuitComplete(suit, anchor);
       afterMove();
       return true;
     }
@@ -2188,12 +2552,12 @@ const Game = (() => {
         const pile = b.tableau[c];
         if (!pile.length) continue;
         const top = pile[pile.length - 1];
-        if (top.faceUp && Engine.foundationTargetFor(b, top)) {
+        if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) {
           if (tryMove({ zone: 'tableau', col: c, index: pile.length - 1 }, { zone: 'foundation' })) { moved++; again = true; }
         }
       }
       const w = G.board.waste[G.board.waste.length - 1];
-      if (w && Engine.foundationTargetFor(G.board, w)) {
+      if (w && (Engine.foundationTargetFor(G.board, w) || Engine.twinTargetFor(G.board, w))) {
         if (tryMove({ zone: 'waste' }, { zone: 'foundation' })) { moved++; again = true; }
       }
       if (G.phase !== 'play') break;
@@ -2204,12 +2568,12 @@ const Game = (() => {
   function hint() {
     const b = G.board, m = Engine.mods(G.run);
     const w = b.waste[b.waste.length - 1];
-    if (w && Engine.foundationTargetFor(b, w)) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
+    if (w && (Engine.foundationTargetFor(b, w) || Engine.twinTargetFor(b, w))) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && Engine.foundationTargetFor(b, top)) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
+      if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
@@ -2340,7 +2704,7 @@ const Game = (() => {
 
   function openShop(anteCleared) {
     const r = rollShopItems();
-    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0 };
+    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0, pulls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -2461,6 +2825,104 @@ const Game = (() => {
     save();
   }
 
+  /* ---------------- the counter: permanent, escalating ---------------- */
+  function buyCounter(id) {
+    const def = COUNTER_BY_ID[id];
+    if (!def) return { ok: false, reason: 'No such upgrade.' };
+    if (def.soldOut && def.soldOut(G.run)) return { ok: false, reason: 'Maxed out already.' };
+    const price = counterPrice(G.run, id);
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash for that.' };
+    G.run.money -= price;
+    def.apply(G.run);
+    G.run.counterBought[id] = (G.run.counterBought[id] || 0) + 1;
+    save();
+    return { ok: true, price, next: counterPrice(G.run, id) };
+  }
+
+  /* ---------------- the one-armed bandit ---------------- */
+  function banditPrice() {
+    const m = Engine.mods(G.run);
+    const pulls = G.run.shop ? (G.run.shop.pulls || 0) : 0;
+    const raw = TUNE.banditBase + TUNE.banditStep * pulls - (m.banditLuck ? 3 : 0);
+    return Math.max(1, Math.ceil(raw * (1 - Math.min(0.75, G.run.discount))));
+  }
+
+  function spinReel(lucky) {
+    /* weighted pick; the Magnet curio tilts the reels toward the good stuff */
+    const pool = REEL_SYMBOLS.map(s => ({ s: s.s, w: lucky && s.s !== '☠' ? s.w * 2 : s.w }));
+    let total = 0;
+    pool.forEach(p => { total += p.w; });
+    let r = Math.random() * total;
+    for (const p of pool) { r -= p.w; if (r <= 0) return p.s; }
+    return pool[0].s;
+  }
+
+  function pullLever() {
+    const price = banditPrice();
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash to pull.' };
+    const m = Engine.mods(G.run);
+    G.run.money -= price;
+    G.run.shop.pulls = (G.run.shop.pulls || 0) + 1;
+    G.run.banditPulls = (G.run.banditPulls || 0) + 1;
+
+    const reels = [spinReel(m.banditLuck), spinReel(m.banditLuck), spinReel(m.banditLuck)];
+    const result = resolveSpin(reels);
+    save();
+    return { ok: true, reels, result, price };
+  }
+
+  function resolveSpin(reels) {
+    const [a, b2, c] = reels;
+    const three = a === b2 && b2 === c;
+    const two = !three && (a === b2 || b2 === c || a === c);
+
+    if (three) {
+      const prize = BANDIT_PRIZES[a];
+      const out = { kind: 'jackpot', symbol: a, name: prize.name, text: prize.text, lines: [] };
+      if (a === '7') {
+        const owned = new Set(G.run.mantel.map(x => x.id));
+        const pool = CURIOS.filter(x => !owned.has(x.id));
+        if (G.run.mantel.length < effectiveSlots() && pool.length) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          G.run.mantel.push({ id: pick.id, finish: 'none', counter: pick.counter != null ? pick.counter : 0, paid: pick.cost });
+          out.lines.push('A free ' + pick.name + ' appears on your mantel.');
+        } else {
+          G.run.money += 30;
+          out.lines.push('No room on the mantel — the machine pays $30 instead.');
+        }
+      } else if (a === '★') {
+        const pool = G.run.deck.filter(x => x.finish !== 'poly' || x.enhancement !== 'gilded');
+        if (pool.length) {
+          const card = pool[Math.floor(Math.random() * pool.length)];
+          card.finish = 'poly'; card.enhancement = 'gilded';
+          out.lines.push('Your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now Gilded and Polychrome.');
+        }
+      } else if (a === '$') {
+        G.run.money += 35;
+        out.lines.push('+$35.');
+      } else if (a === '♠') {
+        G.run.permaMult += 3;
+        out.lines.push('+3 Mult on every score, permanently (now +' + G.run.permaMult + ').');
+      } else if (a === '♥') {
+        G.run.mantelSlots = Math.min(TUNE.maxMantelSlots, G.run.mantelSlots + 1);
+        G.run.bonusPasses++;
+        out.lines.push('+1 Mantel seat and +1 stock pass, permanently.');
+      } else if (a === '☠') {
+        const lost = Math.floor(G.run.money / 2);
+        G.run.money -= lost;
+        out.lines.push('The house takes $' + lost + '.');
+      }
+      return out;
+    }
+
+    if (two) {
+      G.run.money += 6;
+      return { kind: 'pair', name: 'TWO OF A KIND', text: 'Small mercies.', lines: ['+$6.'] };
+    }
+    G.run.money += 1;
+    return { kind: 'none', name: 'NOTHING', text: 'The reels do not care about you.', lines: ['+$1 consolation.'] };
+  }
+
   function leaveShop() {
     G.run.shop = null;
     startRound();
@@ -2503,7 +2965,7 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte, payoutPreview, SHELVES
+    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever
   };
 })();
 
@@ -2666,6 +3128,20 @@ const UI = (() => {
     $('#quota-text').textContent = fmt(total) + ' / ' + fmt(q);
     $('#quota-bar').classList.toggle('met', total >= q);
     $('#money').textContent = '$' + run.money;
+    const wb = $('#whim-badge');
+    if (wb) {
+      const w = run.whim && WHIM_BY_ID[run.whim];
+      wb.style.display = w ? '' : 'none';
+      if (w) {
+        wb.className = 'badge whim mood-' + w.mood;
+        wb.innerHTML = icon(w.icon, 'whim-ico') + '<span>' + w.name + '</span>';
+        wb.onpointerenter = e => showTip(e.currentTarget,
+          '<div class="tip-title">' + icon(w.icon, 'tip-ico') + ' ' + w.name + '</div>' +
+          '<div class="tip-kind whim-kind">THE DEALER\'S WHIM — this round only</div>' +
+          '<div class="tip-text">' + w.text + '</div>');
+        wb.onpointerleave = hideTip;
+      }
+    }
     $('#round-score').textContent = fmt(Math.round(displayScore));
   }
 
@@ -2694,12 +3170,21 @@ const UI = (() => {
           ? '<div class="c-counter">' + (def.counterLabel === 'X' ? 'X' + inst.counter : '+' + inst.counter) + '</div>' : '');
       c.addEventListener('pointerenter', e => showTip(e.currentTarget, curioTip(inst, def, i)));
       c.addEventListener('pointerleave', hideTip);
-      c.addEventListener('click', () => {
-        if (G.phase === 'shop') {
+      if (G.phase === 'shop') {
+        const value = def.sellsFull ? (inst.paid || def.cost) : Math.max(1, Math.floor((inst.paid || def.cost) / 2));
+        c.classList.add('sellable');
+        c.appendChild(el('div', 'sell-band', 'SELL $' + value));
+        c.addEventListener('click', () => {
           const v = Game.sellCurio(i);
-          if (v) { Sfx.money(); toast('Sold for $' + v); Overlays.refreshShop(); }
-        }
-      });
+          if (v) {
+            Sfx.money();
+            floatText(c, '+$' + v, 'fx-money big');
+            burst(c, 12, '#ffd166');
+            toast('Sold ' + def.name + ' for <b>$' + v + '</b>');
+            Overlays.refreshShop();
+          }
+        });
+      }
       makeCurioDraggable(c, i);
       m.appendChild(c);
     }
@@ -2788,6 +3273,14 @@ const UI = (() => {
         });
         f.appendChild(el('div', 'pile-count', String(pile.length)));
       }
+      const tw = (b.twins && b.twins[s]) || [];
+      if (tw.length) {
+        const t = cardEl(tw[tw.length - 1]);
+        t.classList.add('twin-card');
+        t.style.zIndex = 40;
+        f.appendChild(t);
+        f.appendChild(el('div', 'twin-count', 'TWIN x' + tw.length));
+      }
     });
 
     /* tableau */
@@ -2820,9 +3313,17 @@ const UI = (() => {
       if (runLen > 1) {
         const runCards = Engine.runCards(b, col, Engine.mods(G.run));
         const val = runCards.reduce((a, c) => a + rankChips(c.rank), 0);
-        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen),
-          '<span class="rb-n">RUN ' + runLen + '</span><span class="rb-v">+' + val + ' <i>chips</i> · +' +
-          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>');
+        /* the bonus is CASHED IN by sending the run's bottom card home, so say
+           loudly when that card can actually go */
+        const cashCard = pile[pile.length - 1];
+        const ready = !!(Engine.foundationTargetFor(b, cashCard) || Engine.twinTargetFor(b, cashCard));
+        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen) + (ready ? ' ready' : ''),
+          '<span class="rb-n">RUN ' + runLen + (ready ? ' — CASH IN!' : '') + '</span>' +
+          '<span class="rb-v">+' + val + ' <i>chips</i> · +' +
+          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>' +
+          '<span class="rb-how">' + (ready
+            ? 'send ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' home to collect'
+            : 'collect when ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' can go home') + '</span>');
         /* sit the badge clear of the last card, never on top of it */
         const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
         badge.style.top = Math.round(lastTop + ch + 6) + 'px';
@@ -3536,6 +4037,21 @@ const Overlays = (() => {
           '<div class="mantel-inline" id="shop-mantel"></div>' +
         '</div>' +
         '<div class="shop-body">' + shelves + '</div>' +
+        '<section class="shelf sh-counter">' +
+          '<div class="shelf-head"><h3>THE COUNTER</h3><span>always in stock · permanent · the price climbs every time you buy</span></div>' +
+          '<div class="counter-row" id="counter-row"></div>' +
+        '</section>' +
+        '<section class="shelf sh-bandit">' +
+          '<div class="shelf-head"><h3>THE ONE-ARMED BANDIT</h3><span>it owes you nothing</span></div>' +
+          '<div class="bandit" id="bandit">' +
+            '<div class="reels" id="reels"><div class="reel">?</div><div class="reel">?</div><div class="reel">?</div></div>' +
+            '<div class="bandit-side">' +
+              '<div class="bandit-result" id="bandit-result">Three of a kind pays. Everything else is a lesson.</div>' +
+              '<button class="btn lever-btn" id="bandit-pull">PULL THE LEVER $<b>' + Game.banditPrice() + '</b></button>' +
+              '<div class="bandit-odds">' + REEL_SYMBOLS.map(r => '<span class="' + r.cls + '">' + r.s + '</span>').join('') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
         '<div class="shop-foot">' +
           '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
           '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
@@ -3549,6 +4065,7 @@ const Overlays = (() => {
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
+    wireBandit();
     $('#shop-next').onclick = () => {
       Sfx.click();
       close();
@@ -3573,6 +4090,93 @@ const Overlays = (() => {
     });
     UI.renderMantel($('#shop-mantel'));
     UI.renderMantel($('#mantel'));
+    renderCounter();
+    const bp = $('#bandit-pull');
+    if (bp) bp.innerHTML = 'PULL THE LEVER $<b>' + Game.banditPrice() + '</b>';
+  }
+
+  function renderCounter() {
+    const row = $('#counter-row');
+    if (!row) return;
+    row.innerHTML = '';
+    COUNTER_ITEMS.forEach(def => {
+      const owned = G.run.counterBought[def.id] || 0;
+      const maxed = def.soldOut && def.soldOut(G.run);
+      const price = counterPrice(G.run, def.id);
+      const n = el('div', 'counter-item' + (maxed ? ' maxed' : '') + (G.run.money < price ? ' broke' : ''));
+      n.innerHTML =
+        '<div class="ci-art">' + icon(def.icon) + '</div>' +
+        '<div class="ci-body">' +
+          '<div class="ci-name">' + def.name + (owned ? ' <em>x' + owned + '</em>' : '') + '</div>' +
+          '<div class="ci-text">' + def.text + '</div>' +
+        '</div>' +
+        '<div class="ci-buy">' + (maxed ? '<span class="ci-max">MAXED</span>'
+          : '<span class="ci-price">$' + price + '</span><span class="ci-next">next $' + (price + def.step) + '</span>') + '</div>';
+      if (!maxed) {
+        n.onclick = () => {
+          const res = Game.buyCounter(def.id);
+          if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(n); return; }
+          Sfx.money();
+          UI.burst(n, 12, '#7ee787');
+          UI.toast(def.name + ' bought — next one costs $' + res.next);
+          refreshShop();
+          UI.render();
+        };
+      }
+      row.appendChild(n);
+    });
+  }
+
+  function wireBandit() {
+    const btn = $('#bandit-pull');
+    if (!btn) return;
+    btn.onclick = () => {
+      const res = Game.pullLever();
+      if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
+      spinAnimation(res);
+    };
+  }
+
+  function spinAnimation(res) {
+    const reels = Array.from(document.querySelectorAll('#reels .reel'));
+    const out = $('#bandit-result');
+    out.textContent = '...';
+    out.className = 'bandit-result';
+    $('#bandit-pull').disabled = true;
+    Sfx.click();
+
+    reels.forEach((r, i) => {
+      r.classList.add('spinning');
+      let ticks = 0;
+      const iv = setInterval(() => {
+        r.textContent = REEL_SYMBOLS[Math.floor(Math.random() * REEL_SYMBOLS.length)].s;
+        Sfx.chip(ticks % 6);
+        if (++ticks > 12 + i * 7) {
+          clearInterval(iv);
+          const sym = res.reels[i];
+          const meta = REEL_SYMBOLS.find(s => s.s === sym);
+          r.textContent = sym;
+          r.className = 'reel landed ' + meta.cls;
+          setTimeout(() => r.classList.remove('landed'), 400);
+          if (i === 2) finishSpin(res);
+        }
+      }, 55);
+    });
+  }
+
+  function finishSpin(res) {
+    const out = $('#bandit-result');
+    const r = res.result;
+    out.className = 'bandit-result ' + r.kind;
+    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '');
+    if (r.kind === 'jackpot') {
+      if (r.symbol === '☠') { Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d'); }
+      else { Sfx.win(); UI.screenShake(12); UI.confetti($('#bandit'), 70, 't4'); UI.flashScreen(0.3, '#ffd166'); }
+    } else if (r.kind === 'pair') { Sfx.money(); UI.burst($('#bandit'), 12, '#7ee787'); }
+    else Sfx.error();
+    $('#bandit-pull').disabled = false;
+    refreshShop();
+    UI.render();
   }
 
   function shopCard(item, index, shelf) {
@@ -3667,6 +4271,8 @@ const Overlays = (() => {
       bySuit[s].forEach(card => {
         const c = UI.cardEl(Object.assign({}, card, { faceUp: true }));
         c.classList.add('mini');
+        c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
+        c.addEventListener('pointerleave', UI.hideTip);
         if (pickDef) {
           c.classList.add('pickable');
           c.onclick = () => {
@@ -3678,9 +4284,6 @@ const Overlays = (() => {
               UI.toast(pickDef.name + ' applied!');
             }
           };
-        } else {
-          c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
-          c.addEventListener('pointerleave', UI.hideTip);
         }
         holder.appendChild(c);
       });
@@ -3695,14 +4298,57 @@ const Overlays = (() => {
     };
   }
 
+  /* full value breakdown for a card, used on the deck screen */
   function cardTip(card) {
-    let s = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' + SUITS[card.suit].sym + '</div>';
-    s += '<div class="tip-kind card-kind">CARD — lives in your deck</div>';
-    s += '<div class="tip-text">Base ' + rankChips(card.rank) + ' Chips</div>';
-    if (card.enhancement !== 'none') s += '<div class="tip-text hot">' + ENHANCEMENTS[card.enhancement].name + ' — ' + ENHANCEMENTS[card.enhancement].text + '</div>';
-    if (card.finish !== 'none') s += '<div class="tip-text hot">' + FINISHES[card.finish].name + ' — ' + FINISHES[card.finish].text + '</div>';
-    if (card.seal !== 'none') s += '<div class="tip-text hot">' + SEALS[card.seal].name + ' — ' + SEALS[card.seal].text + '</div>';
-    return s;
+    const base = rankChips(card.rank);
+    let chips = base, mult = 1, xmult = 1, cash = 0;
+    const rows = [];
+    rows.push(row('Base rank value', '+' + base + ' Chips'));
+
+    const e = ENHANCEMENTS[card.enhancement];
+    if (card.enhancement !== 'none') {
+      rows.push(row(e.name, e.text, 'hot'));
+      if (card.enhancement === 'gilded') chips += 50;
+      if (card.enhancement === 'voltaic') mult += 4;
+      if (card.enhancement === 'glass') xmult *= 2;
+      if (card.enhancement === 'phantom') mult += 2;
+      if (card.enhancement === 'bomb') chips += 30;
+      if (card.enhancement === 'bullion') cash += 4;
+      if (card.enhancement === 'steel') xmult *= 1.5;
+    }
+    const f = FINISHES[card.finish];
+    if (card.finish !== 'none') {
+      rows.push(row(f.name, f.text, 'fin'));
+      if (card.finish === 'foil') chips += 60;
+      if (card.finish === 'holo') mult += 12;
+      if (card.finish === 'poly') xmult *= 1.5;
+    }
+    const sl = SEALS[card.seal];
+    if (card.seal !== 'none') {
+      rows.push(row(sl.name, sl.text, 'seal'));
+      if (card.seal === 'blue') chips += 30;
+      if (card.seal === 'gold') cash += 4;
+    }
+
+    const totalMult = mult * xmult;
+    const alone = Math.round(chips * totalMult);
+    const retrig = card.seal === 'red' ? 2 : 1;
+
+    let out = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' +
+      (card.enhancement === 'wild' ? '✿ (every suit)' : SUITS[card.suit].sym) + '</div>';
+    out += '<div class="tip-kind card-kind">CARD — lives in your deck</div>';
+    out += '<div class="tip-rows">' + rows.join('') + '</div>';
+    out += '<div class="tip-total">' +
+      '<span>On its own</span><b>' + chips + ' X ' + (Math.round(totalMult * 100) / 100) + ' = ' +
+      UI.fmt(alone * retrig) + '</b></div>';
+    if (retrig > 1) out += '<div class="tip-foot">Red Seal: scored twice.</div>';
+    if (cash) out += '<div class="tip-cash">Pays $' + cash + ' when scored.</div>';
+    out += '<div class="tip-foot">Curios, Cascade and your Column Stack multiply this further.</div>';
+    return out;
+  }
+
+  function row(label, text, cls) {
+    return '<div class="tip-row ' + (cls || '') + '"><span>' + label + '</span><i>' + text + '</i></div>';
   }
 
   /* ---------------- run over ---------------- */
@@ -3792,11 +4438,33 @@ const Overlays = (() => {
           '<ul>' +
             '<li><b>Cascade</b> — foundation plays back to back. Each one adds Mult. Drawing from the stock resets it.</li>' +
             '<li><b>Suit Run</b> — consecutive cards of the same suit going home, stacked on top of the Cascade.</li>' +
-            '<li><b>Column Stack</b> — the big one. When you send a card home <i>off a column</i>, the face-up run ' +
-            'you built underneath it pays out: <b>+Chips equal to the ranks sitting in that run</b>, and ' +
-            '<b>+' + TUNE.stackMultPer + ' Mult for every extra card in it</b>. A column reading K-Q-J-10-9 is worth far more ' +
-            'than a lone King. Watch the <span class="rb-demo">RUN X5</span> badge on each column — that is your live payout.</li>' +
+            '<li><b>Column Stack</b> — the big one, and it is a <i>cash-in</i>, not a passive bonus. ' +
+            'The <span class="rb-demo">RUN 7</span> badge under a column shows what that face-up run is worth. ' +
+            'You collect it by sending the run\'s <b>bottom card</b> to a foundation — the badge turns green and says ' +
+            '<b>CASH IN!</b> the moment that card can actually go. You get <b>+Chips equal to every rank sitting in the run</b> ' +
+            'and <b>+' + TUNE.stackMultPer + ' Mult per extra card</b>, all on that one play. ' +
+            'Then the next card down is exposed with the run one shorter — so a long run like K-Q-J-10-9-8-7 pays out ' +
+            '<i>again on every single card</i> as you dismantle it upward, with the Cascade stacking on top. ' +
+            'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
+
+          '<h4>Duplicate cards and Twins</h4>' +
+          '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
+          'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
+          'in full (plus +' + TUNE.twinMultBonus + ' Mult) without advancing the pile. Duplicates are free points, not dead weight.</p>' +
+
+          '<h4>The Dealer\'s Whim</h4>' +
+          '<p>From Ante ' + TUNE.whimsFromAnte + ', every round is dealt under a random house rule — shown as a badge up in the header. ' +
+          'Some help (Gold Rush pays $1 a card), some hurt (Butterfingers costs you a stock pass), some are a coin flip. ' +
+          'Hover the badge to read it before you plan the round.</p>' +
+
+          '<h4>The Counter and the Bandit</h4>' +
+          '<p>The shop\'s <b>Counter</b> is always stocked with permanent upgrades — extra deck flips, mantel seats, undos, ' +
+          'even extra columns. They never run out, but each purchase raises that item\'s price for the rest of the run.</p>' +
+          '<p>The <b>One-Armed Bandit</b> takes your money and gives you chaos. Three of a kind pays: ' +
+          '<b>777</b> a free Curio, <b>★★★</b> a Gilded Polychrome card, <b>$$$</b> cash, <b>♠♠♠</b> permanent Mult, ' +
+          '<b>♥♥♥</b> a seat and a pass — and <b>☠☠☠</b> takes half your cash. Two of a kind returns a few dollars. ' +
+          'Each pull costs more than the last, and it resets every shop.</p>' +
 
           '<h4>How you make money</h4>' +
           '<p>The <b>CASH OUT</b> button always shows exactly what this round would pay you right now. It goes up when you:</p>' +
@@ -3821,7 +4489,9 @@ const Overlays = (() => {
 
           '<h4>Curios vs Card Mods vs New Cards</h4>' +
           '<ul>' +
-            '<li><b>Curios</b> are objects. Each one takes a seat on your Mantel — you only have 3 (up to 5). They fire left to right, so put +Mult before XMult.</li>' +
+            '<li><b>Curios</b> are objects. Each one takes a seat on your Mantel — you start with 3, and can buy up to 5. ' +
+            'They fire left to right, so put +Mult before XMult. In the shop, hovering a Curio on your mantel shows a red ' +
+            '<b>SELL $X</b> band — clicking it sells it for that much.</li>' +
             '<li><b>Card Mods</b> mark one card already in your deck. No seat, permanent, unlimited.</li>' +
             '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
           '</ul>' +

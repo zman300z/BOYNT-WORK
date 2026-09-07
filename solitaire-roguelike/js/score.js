@@ -120,6 +120,23 @@ const Score = (() => {
     });
   }
 
+  /* the round's Whim scores alongside the Curios */
+  function whimPass(ctx) {
+    const w = ctx.run.whim && WHIM_BY_ID[ctx.run.whim];
+    if (!w || !w.hooks || !w.hooks.score) return;
+    ctx._src = { type: 'whim' };
+    w.hooks.score(ctx);
+    ctx._src = null;
+  }
+
+  /* permanent Mult bought or won during the run */
+  function permaPass(ctx) {
+    if (!ctx.run.permaMult) return;
+    ctx._src = { type: 'combo' };
+    ctx.addMult(ctx.run.permaMult);
+    ctx._src = null;
+  }
+
   /* combo layer: Cascade + Suit Run + the Column Stack you scored off */
   function comboPass(ctx) {
     const m = Engine.mods(ctx.run);
@@ -130,6 +147,11 @@ const Score = (() => {
     if (ctx.stack && ctx.stack.length > 1) {
       ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
       ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
+    }
+    /* dropping a duplicate onto its twin */
+    if (ctx.twin) {
+      ctx.addMult(TUNE.twinMultBonus);
+      if (m.twinMult !== 1) ctx.xMult(m.twinMult);
     }
     ctx._src = null;
   }
@@ -142,12 +164,13 @@ const Score = (() => {
     const ctx = makeCtx(G, ev);
     ctx.depth = ev.depth || 0;
     ctx.stack = ev.stack || null;
+    ctx.twin = !!ev.twin;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
 
     let base = { chips: 0, mult: 1 };
-    if (ev.event === 'reveal') base = { chips: TUNE.revealChips, mult: 1 };
+    if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
     ctx.chips = base.chips;
@@ -160,6 +183,8 @@ const Score = (() => {
     for (let t = 0; t < retriggers; t++) {
       cardPass(ctx);
       if (ev.event === 'foundation') comboPass(ctx);
+      permaPass(ctx);
+      whimPass(ctx);
       curioPass(ctx);
       if (t > 0) ctx.triggers.push({ kind: 'retrigger', src: { type: 'card', id: ev.card ? ev.card.id : null } });
     }
@@ -225,6 +250,12 @@ const Score = (() => {
         if (a) { lines.push({ label: def.name, amount: a }); total += a; }
       }
     });
+
+    const whim = run.whim && WHIM_BY_ID[run.whim];
+    if (whim && whim.hooks && whim.hooks.roundEnd) {
+      const a = whim.hooks.roundEnd(run) || 0;
+      if (a) { lines.push({ label: whim.name, amount: a }); total += a; }
+    }
 
     if (!m.noInterest) {
       const interest = Math.min(run.interestCap, Math.floor(run.money / TUNE.interestPer));

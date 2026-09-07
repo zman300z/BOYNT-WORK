@@ -31,6 +31,10 @@ const TUNE = {
   cascadeCashEvery: 5,      // $1 each time the Cascade hits a multiple of this
   stackCashAt: 5,           // cashing a card off a run this long pays $1
   stackCashBigAt: 8,        // ...and this long pays $2
+  twinMultBonus: 3,         // Mult bonus for dropping a duplicate onto its twin
+  banditBase: 5,            // first pull of the lever each shop
+  banditStep: 4,            // each extra pull
+  whimsFromAnte: 2,         // the table starts getting opinions at this ante
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -267,6 +271,49 @@ const CURIOS = [
     text: '+25 Chips for every card in your tallest column.',
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
+  { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
+    text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
+    hooks: { score: c => { if (c.chance(8)) { c.xMult(0); c.flash(); } else c.xMult(1.4); } } },
+
+  { id: 'gremlin', name: 'The Gremlin', icon: 'gremlin', rarity: 'uncommon', cost: 7,
+    text: 'At the start of every round, a random card in your deck becomes Glass. Chaos is a strategy.',
+    hooks: {
+      roundStart: (run) => {
+        const plain = run.deck.filter(c => c.enhancement === 'none');
+        if (plain.length) plain[Math.floor(Math.random() * plain.length)].enhancement = 'glass';
+      },
+      score: c => c.addMult(2)
+    } },
+
+  { id: 'chaos_engine', name: 'Chaos Engine', icon: 'chaos', rarity: 'rare', cost: 9,
+    text: 'Every score rolls one of: +150 Chips, +12 Mult, X1.6 Mult, or $2.',
+    hooks: {
+      score: c => {
+        const r = Math.floor(Math.random() * 4);
+        if (r === 0) c.addChips(150);
+        else if (r === 1) c.addMult(12);
+        else if (r === 2) c.xMult(1.6);
+        else c.money(2);
+        c.flash();
+      }
+    } },
+
+  { id: 'pit_boss', name: 'The Pit Boss', icon: 'bossman', rarity: 'uncommon', cost: 7,
+    text: '+35 Chips and +1 Mult for every Curio on your mantel, this one included.',
+    hooks: { score: c => { const n = c.run.mantel.length; c.addChips(35 * n); c.addMult(n); } } },
+
+  { id: 'twin_flame', name: 'Twin Flame', icon: 'twinflame', rarity: 'uncommon', cost: 8,
+    text: 'Twin plays (duplicates dropped onto their match) score X4 Mult.',
+    mods: { twinMult: 4 } },
+
+  { id: 'jackpot_magnet', name: 'Jackpot Magnet', icon: 'slot777', rarity: 'rare', cost: 9,
+    text: 'The Bandit costs $3 less to pull and its reels favour you heavily.',
+    mods: { banditLuck: true } },
+
+  { id: 'hot_streak', name: 'Hot Streak', icon: 'twinflame', rarity: 'rare', cost: 9,
+    text: '+6 Mult for every round you have already played this Ante.',
+    hooks: { score: c => c.addMult(6 * (c.run.round - 1)) } },
+
   /* ---------------- rares ---------------- */
   { id: 'the_collector', name: 'The Collector', icon: 'trophy', rarity: 'rare', cost: 9,
     text: '+400 Chips for every completed suit.',
@@ -441,6 +488,10 @@ const NEW_CARDS = [
     text: "A seventh 7, wearing a Rabbit's Foot and a Foil finish.",
     build: () => ({ rank: 7, suit: rndSuit(), enhancement: 'lucky', finish: 'foil' }) },
 
+  { id: 'n_mirror', name: 'Mirror Ace', icon: 'twincards', cost: 8, kind: 'add',
+    text: 'A duplicate Ace, Gilded and Foiled. Drop it onto its twin on the foundation for a free score.',
+    build: () => ({ rank: 1, suit: rndSuit(), enhancement: 'gilded', finish: 'foil' }) },
+
   { id: 'n_twin', name: 'The Understudy', icon: 'twincards', cost: 7, kind: 'duplicate',
     text: 'Choose any card in your deck. An exact copy joins it, marks and all.' }
 ];
@@ -451,3 +502,121 @@ function rndRank() { return 1 + Math.floor(Math.random() * 13); }
 const SHOP_BY_ID = {};
 CARD_MODS.forEach(t => { SHOP_BY_ID[t.id] = t; });
 NEW_CARDS.forEach(t => { SHOP_BY_ID[t.id] = t; });
+
+
+/* =========================================================
+   THE COUNTER -- always in stock, permanent, price climbs
+   ========================================================= */
+const COUNTER_ITEMS = [
+  { id: 'c_pass', name: 'Extra Deck Flip', icon: 'refresh', base: 8, step: 6,
+    text: '+1 pass through the stock, every round, for the rest of the run.',
+    apply: run => { run.bonusPasses++; } },
+
+  { id: 'c_seat', name: 'Extra Mantel Seat', icon: 'seat', base: 15, step: 12,
+    text: '+1 seat on your mantel. Room for one more strange object.',
+    soldOut: run => run.mantelSlots >= TUNE.maxMantelSlots,
+    apply: run => { run.mantelSlots = Math.min(TUNE.maxMantelSlots, run.mantelSlots + 1); } },
+
+  { id: 'c_undo', name: 'Extra Undo', icon: 'undo2', base: 6, step: 4,
+    text: '+1 Undo every round, forever.',
+    apply: run => { run.bonusUndos++; } },
+
+  { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
+    text: '+1 tableau column dealt every round. More room, more runs to build.',
+    soldOut: run => run.columns >= 10,
+    apply: run => { run.columns = Math.min(10, run.columns + 1); } }
+];
+const COUNTER_BY_ID = {};
+COUNTER_ITEMS.forEach(c => { COUNTER_BY_ID[c.id] = c; });
+
+function counterPrice(run, id) {
+  const def = COUNTER_BY_ID[id];
+  const owned = (run.counterBought && run.counterBought[id]) || 0;
+  return Math.max(1, Math.ceil((def.base + def.step * owned) * (1 - Math.min(0.75, run.discount))));
+}
+
+/* =========================================================
+   THE ONE-ARMED BANDIT -- pull the lever, accept your fate
+   ========================================================= */
+const REEL_SYMBOLS = [
+  { s: '7',  cls: 'sy-seven', w: 6 },
+  { s: '★',  cls: 'sy-star',  w: 12 },
+  { s: '$',  cls: 'sy-cash',  w: 14 },
+  { s: '♠',  cls: 'sy-spade', w: 16 },
+  { s: '♥',  cls: 'sy-heart', w: 16 },
+  { s: '☠',  cls: 'sy-skull', w: 10 }
+];
+
+/* what three-of-a-kind gets you. resolved in game.js */
+const BANDIT_PRIZES = {
+  '7': { name: 'JACKPOT', text: 'A free Curio, or $30 if your mantel is full.' },
+  '★': { name: 'STARSTRUCK', text: 'A random card in your deck turns Polychrome AND Gilded.' },
+  '$': { name: 'PAYDAY', text: '+$35, right now.' },
+  '♠': { name: 'THE EDGE', text: '+3 Mult on every score for the rest of the run.' },
+  '♥': { name: 'ROOM TO BREATHE', text: '+1 Mantel seat and +1 stock pass, permanently.' },
+  '☠': { name: 'THE HOUSE COLLECTS', text: 'You lose half your cash. Should have walked away.' }
+};
+
+/* =========================================================
+   THE DEALER'S WHIMS -- a random rule per round from Ante 2
+   ========================================================= */
+const WHIMS = [
+  { id: 'blood_moon', name: 'Blood Moon', icon: 'moon', mood: 'mixed',
+    text: 'Hearts and Diamonds get X2 Mult. Spades and Clubs get X0.6.',
+    hooks: { score: c => { if (!c.card) return; c.isRed(c.card) ? c.xMult(2) : c.xMult(0.6); } } },
+
+  { id: 'heavy_crown', name: 'Heavy Is The Crown', icon: 'crown', mood: 'mixed',
+    text: 'Kings and Queens give +150 Chips but X0.7 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank >= 12) { c.addChips(150); c.xMult(0.7); } } } },
+
+  { id: 'butterfingers', name: 'Butterfingers', icon: 'fingers', mood: 'bad',
+    text: 'One fewer pass through the stock this round.',
+    mods: { stockPasses: -1 } },
+
+  { id: 'thick_fog', name: 'Thick Fog', icon: 'fog', mood: 'bad',
+    text: 'Flipping a card scores nothing. Everything else is normal.',
+    mods: { noRevealScore: true } },
+
+  { id: 'gold_rush', name: 'Gold Rush', icon: 'coinstack', mood: 'good',
+    text: 'Every card you send home earns $1.',
+    hooks: { score: c => { if (c.event === 'foundation') c.money(1); } } },
+
+  { id: 'tight_deal', name: 'Tight Deal', icon: 'cardsfan', mood: 'bad',
+    text: 'The stock deals 4 cards at a time instead of 3.',
+    mods: { drawReduce: -1 } },
+
+  { id: 'long_con', name: 'The Long Con', icon: 'ladder', mood: 'good',
+    text: 'Column Stack bonuses count double.',
+    mods: { stackMult: 2 } },
+
+  { id: 'ace_high', name: 'Ace High', icon: 'sleeve', mood: 'good',
+    text: 'Aces give X4 Mult.',
+    hooks: { score: c => { if (c.card && c.card.rank === 1) c.xMult(4); } } },
+
+  { id: 'static_night', name: 'Static Night', icon: 'bolt', mood: 'good',
+    text: 'Every 4th score this round gets X2.5 Mult.',
+    hooks: { score: c => { if (c.round.scoreEvents % 4 === 0) { c.xMult(2.5); c.flash(); } } } },
+
+  { id: 'suit_tax', name: 'The Suit Tax', icon: 'tag', mood: 'bad',
+    text: '-1 Mult for every card sitting in the waste pile.',
+    hooks: { score: c => c.addMult(-c.wasteCount()) } },
+
+  { id: 'generous_table', name: 'Generous Table', icon: 'handshake', mood: 'good',
+    text: '+2 Undos and +$4 at the end of the round.',
+    mods: { undos: 2 },
+    hooks: { roundEnd: () => 4 } },
+
+  { id: 'the_grind', name: 'The Grind', icon: 'gear', mood: 'mixed',
+    text: '+2 Mult for every move you make, but the quota feels heavier: X0.8 Chips.',
+    hooks: { score: c => { c.addMult(c.round.moves * 2); c.chips *= 0.8; } } },
+
+  { id: 'twin_night', name: 'Hall Of Mirrors', icon: 'twinflame', mood: 'good',
+    text: 'Twin plays score X3 Mult.',
+    mods: { twinMult: 3 } },
+
+  { id: 'high_stakes', name: 'High Stakes', icon: 'dice', mood: 'mixed',
+    text: 'Every score is a coin flip: X2 Mult or X0.75 Mult.',
+    hooks: { score: c => c.xMult(Math.random() < 0.5 ? 2 : 0.75) } }
+];
+const WHIM_BY_ID = {};
+WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });

@@ -27,6 +27,8 @@ const Game = (() => {
   }
 
   function startRound() {
+    /* from Ante 2 the table starts having opinions */
+    G.run.whim = G.run.ante >= TUNE.whimsFromAnte ? WHIMS[Math.floor(Math.random() * WHIMS.length)].id : null;
     const s = Engine.newRound(G.run);
     G.board = s.board;
     G.round = s.round;
@@ -157,8 +159,13 @@ const Game = (() => {
     if (dst.zone === 'foundation') {
       if (cards.length !== 1) return illegal();
       const card = cards[0];
-      const suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit)
+      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit)
         ? dst.suit : Engine.foundationTargetFor(b, card);
+      let twin = false;
+      if (!suit) {
+        suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card);
+        twin = !!suit;
+      }
       if (!suit) return illegal();
       snapshot();
       let stack = null;
@@ -168,7 +175,12 @@ const Game = (() => {
       }
       removeFrom(src, 1);
       const depth = b.foundations[suit].length;
-      b.foundations[suit].push(card);
+      if (twin) {
+        if (!b.twins) b.twins = { S: [], H: [], D: [], C: [] };
+        b.twins[suit].push(card);
+      } else {
+        b.foundations[suit].push(card);
+      }
       G.round.moves++;
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
@@ -199,7 +211,8 @@ const Game = (() => {
         push({ event: 'replay', label: 'ALREADY PAID', card, chips: 0, mult: 0, total: 0, triggers: [], anchor });
       } else {
         card.scoredRound = true;
-        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor, stack });
+        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth: twin ? Math.max(0, depth - 1) : depth,
+                     anchor, stack, twin, label: twin ? 'TWIN!' : null });
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -214,7 +227,7 @@ const Game = (() => {
       }
 
       if (src.zone === 'tableau') settleColumn(src.col);
-      checkSuitComplete(suit, anchor);
+      if (!twin) checkSuitComplete(suit, anchor);
       afterMove();
       return true;
     }
@@ -303,12 +316,12 @@ const Game = (() => {
         const pile = b.tableau[c];
         if (!pile.length) continue;
         const top = pile[pile.length - 1];
-        if (top.faceUp && Engine.foundationTargetFor(b, top)) {
+        if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) {
           if (tryMove({ zone: 'tableau', col: c, index: pile.length - 1 }, { zone: 'foundation' })) { moved++; again = true; }
         }
       }
       const w = G.board.waste[G.board.waste.length - 1];
-      if (w && Engine.foundationTargetFor(G.board, w)) {
+      if (w && (Engine.foundationTargetFor(G.board, w) || Engine.twinTargetFor(G.board, w))) {
         if (tryMove({ zone: 'waste' }, { zone: 'foundation' })) { moved++; again = true; }
       }
       if (G.phase !== 'play') break;
@@ -319,12 +332,12 @@ const Game = (() => {
   function hint() {
     const b = G.board, m = Engine.mods(G.run);
     const w = b.waste[b.waste.length - 1];
-    if (w && Engine.foundationTargetFor(b, w)) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
+    if (w && (Engine.foundationTargetFor(b, w) || Engine.twinTargetFor(b, w))) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && Engine.foundationTargetFor(b, top)) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
+      if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
@@ -455,7 +468,7 @@ const Game = (() => {
 
   function openShop(anteCleared) {
     const r = rollShopItems();
-    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0 };
+    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0, pulls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -576,6 +589,104 @@ const Game = (() => {
     save();
   }
 
+  /* ---------------- the counter: permanent, escalating ---------------- */
+  function buyCounter(id) {
+    const def = COUNTER_BY_ID[id];
+    if (!def) return { ok: false, reason: 'No such upgrade.' };
+    if (def.soldOut && def.soldOut(G.run)) return { ok: false, reason: 'Maxed out already.' };
+    const price = counterPrice(G.run, id);
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash for that.' };
+    G.run.money -= price;
+    def.apply(G.run);
+    G.run.counterBought[id] = (G.run.counterBought[id] || 0) + 1;
+    save();
+    return { ok: true, price, next: counterPrice(G.run, id) };
+  }
+
+  /* ---------------- the one-armed bandit ---------------- */
+  function banditPrice() {
+    const m = Engine.mods(G.run);
+    const pulls = G.run.shop ? (G.run.shop.pulls || 0) : 0;
+    const raw = TUNE.banditBase + TUNE.banditStep * pulls - (m.banditLuck ? 3 : 0);
+    return Math.max(1, Math.ceil(raw * (1 - Math.min(0.75, G.run.discount))));
+  }
+
+  function spinReel(lucky) {
+    /* weighted pick; the Magnet curio tilts the reels toward the good stuff */
+    const pool = REEL_SYMBOLS.map(s => ({ s: s.s, w: lucky && s.s !== '☠' ? s.w * 2 : s.w }));
+    let total = 0;
+    pool.forEach(p => { total += p.w; });
+    let r = Math.random() * total;
+    for (const p of pool) { r -= p.w; if (r <= 0) return p.s; }
+    return pool[0].s;
+  }
+
+  function pullLever() {
+    const price = banditPrice();
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash to pull.' };
+    const m = Engine.mods(G.run);
+    G.run.money -= price;
+    G.run.shop.pulls = (G.run.shop.pulls || 0) + 1;
+    G.run.banditPulls = (G.run.banditPulls || 0) + 1;
+
+    const reels = [spinReel(m.banditLuck), spinReel(m.banditLuck), spinReel(m.banditLuck)];
+    const result = resolveSpin(reels);
+    save();
+    return { ok: true, reels, result, price };
+  }
+
+  function resolveSpin(reels) {
+    const [a, b2, c] = reels;
+    const three = a === b2 && b2 === c;
+    const two = !three && (a === b2 || b2 === c || a === c);
+
+    if (three) {
+      const prize = BANDIT_PRIZES[a];
+      const out = { kind: 'jackpot', symbol: a, name: prize.name, text: prize.text, lines: [] };
+      if (a === '7') {
+        const owned = new Set(G.run.mantel.map(x => x.id));
+        const pool = CURIOS.filter(x => !owned.has(x.id));
+        if (G.run.mantel.length < effectiveSlots() && pool.length) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          G.run.mantel.push({ id: pick.id, finish: 'none', counter: pick.counter != null ? pick.counter : 0, paid: pick.cost });
+          out.lines.push('A free ' + pick.name + ' appears on your mantel.');
+        } else {
+          G.run.money += 30;
+          out.lines.push('No room on the mantel — the machine pays $30 instead.');
+        }
+      } else if (a === '★') {
+        const pool = G.run.deck.filter(x => x.finish !== 'poly' || x.enhancement !== 'gilded');
+        if (pool.length) {
+          const card = pool[Math.floor(Math.random() * pool.length)];
+          card.finish = 'poly'; card.enhancement = 'gilded';
+          out.lines.push('Your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now Gilded and Polychrome.');
+        }
+      } else if (a === '$') {
+        G.run.money += 35;
+        out.lines.push('+$35.');
+      } else if (a === '♠') {
+        G.run.permaMult += 3;
+        out.lines.push('+3 Mult on every score, permanently (now +' + G.run.permaMult + ').');
+      } else if (a === '♥') {
+        G.run.mantelSlots = Math.min(TUNE.maxMantelSlots, G.run.mantelSlots + 1);
+        G.run.bonusPasses++;
+        out.lines.push('+1 Mantel seat and +1 stock pass, permanently.');
+      } else if (a === '☠') {
+        const lost = Math.floor(G.run.money / 2);
+        G.run.money -= lost;
+        out.lines.push('The house takes $' + lost + '.');
+      }
+      return out;
+    }
+
+    if (two) {
+      G.run.money += 6;
+      return { kind: 'pair', name: 'TWO OF A KIND', text: 'Small mercies.', lines: ['+$6.'] };
+    }
+    G.run.money += 1;
+    return { kind: 'none', name: 'NOTHING', text: 'The reels do not care about you.', lines: ['+$1 consolation.'] };
+  }
+
   function leaveShop() {
     G.run.shop = null;
     startRound();
@@ -618,6 +729,6 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte, payoutPreview, SHELVES
+    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever
   };
 })();

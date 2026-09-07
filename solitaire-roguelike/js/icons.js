@@ -88,7 +88,21 @@ const ICONS = {
   expand: '<path class="f" d="M9 7.5h6v9H9z"/><path d="M9 7.5h6v9H9z"/><path class="a" d="M5.5 5v14M18.5 5v14"/><path d="M3 12h2.5M18.5 12H21"/>',
   frame: '<rect class="f" x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="7" y="8" width="10" height="8" rx="1"/>',
   horseshoe: '<path class="f" d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/><path d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/>',
-  fingers: '<path class="f" d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11l1-6.6a1.7 1.7 0 0 1 3.4.4l-.3 5.7 1.4-4.6a1.7 1.7 0 0 1 3.3.8L17 17.4A5 5 0 0 1 12.2 21h-1a5 5 0 0 1-4.4-2.6L4.4 14a1.6 1.6 0 0 1 2.6-1.8z"/><path d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11"/>'
+  fingers: '<path class="f" d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11l1-6.6a1.7 1.7 0 0 1 3.4.4l-.3 5.7 1.4-4.6a1.7 1.7 0 0 1 3.3.8L17 17.4A5 5 0 0 1 12.2 21h-1a5 5 0 0 1-4.4-2.6L4.4 14a1.6 1.6 0 0 1 2.6-1.8z"/><path d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11"/>',
+  /* --- the counter / bandit / whims --- */
+  refresh: '<path d="M20 6.5v5h-5"/><path d="M4 17.5v-5h5"/><path class="a" d="M19.2 11.5A7.5 7.5 0 0 0 6.3 7.3M4.8 12.5a7.5 7.5 0 0 0 12.9 4.2"/>',
+  seat: '<path class="f" d="M6 12.5h12v4H6z"/><path d="M6 12.5h12v4H6z"/><path d="M7.5 12.5V6a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v6.5M8 16.5V20M16 16.5V20"/>',
+  undo2: '<path class="a" d="M5 11.5h9.5a4.5 4.5 0 0 1 0 9H10"/><path d="M8.5 7 4 11.5 8.5 16"/>',
+  lever: '<rect class="f" x="3.5" y="7" width="12" height="11" rx="1.6"/><rect x="3.5" y="7" width="12" height="11" rx="1.6"/><path d="M7 10.5v4M11.8 10.5v4"/><path d="M15.5 11h2.8V6.4"/><circle class="a" cx="18.3" cy="4.6" r="2"/>',
+  slot777: '<rect class="f" x="2.5" y="6" width="19" height="12" rx="2"/><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M9 6v12M15 6v12"/><path class="a" d="M4.8 9.5h2.4l-1.3 5M10.8 9.5h2.4l-1.3 5M16.8 9.5h2.4l-1.3 5"/>',
+  moon: '<path class="f" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  crown: '<path class="f" d="m3.5 8 3.8 3.2L12 5l4.7 6.2L20.5 8l-1.6 10h-13.8z"/><path d="m3.5 8 3.8 3.2L12 5l4.7 6.2L20.5 8l-1.6 10h-13.8z"/><path d="M6 20.5h12"/>',
+  fog: '<path class="a" d="M3.5 9h11M17 9h3.5M3.5 13h5M11 13h9.5M3.5 17h13M19 17h1.5"/>',
+  chicken: '<path class="f" d="M7 20c-2.2 0-3.5-1.5-3.5-3.6C3.5 12.6 6.4 9 10.4 9h1.2V8a3.5 3.5 0 1 1 5.2 3l2.7 1.6-2.7 1.1c-.4 3.6-3.4 6.3-7.3 6.3z"/><circle cx="15.6" cy="6.4" r="1"/><path class="a" d="M14.4 3.4c.7-1 1.6-1.4 2.6-1.1"/><path d="M9 20v2M13 19.6V22"/>',
+  gremlin: '<path class="f" d="M12 4c4 0 6.5 2.6 6.5 6.2 0 1.3-.4 2.3-.4 3.3 0 1.4 1.4 2 1.4 3.5 0 1.8-1.6 3-4 3h-7c-2.4 0-4-1.2-4-3 0-1.5 1.4-2.1 1.4-3.5 0-1-.4-2-.4-3.3C5.5 6.6 8 4 12 4z"/><path d="M5.5 8 3 5.5M18.5 8 21 5.5"/><circle cx="9.4" cy="11" r="1.3"/><circle cx="14.6" cy="11" r="1.3"/><path d="M9.6 15.4h4.8"/>',
+  chaos: '<circle class="f" cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="8.5"/><path class="a" d="m8 8 8 8M16 8l-8 8M12 3.5v17M3.5 12h17"/>',
+  bossman: '<circle cx="12" cy="7.4" r="3.4"/><path class="f" d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6z"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/><path class="a" d="m12 14 1.6 3-1.6 3.5-1.6-3.5z"/>',
+  twinflame: '<path class="f" d="M9 21c-2.5 0-4-1.8-4-4 0-3 3-4.4 3-7.5C8 6.6 10 4.5 12 3c-.6 2.6.5 4.4 1.9 5.8C15.6 10.5 17 12.3 17 15c0 3.4-2.5 6-5.5 6z"/><path class="a" d="M12 21c-1.4 0-2.4-1-2.4-2.4 0-1.7 1.9-2.4 1.9-4.4 1.5 1.2 2.9 2.4 2.9 4.4 0 1.4-1 2.4-2.4 2.4z"/>'
 };
 
 /* the icon renderer -- everything goes through this so the whole set stays uniform */
