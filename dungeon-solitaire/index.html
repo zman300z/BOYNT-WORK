@@ -13,6 +13,7 @@
     --cardW:70px; --cardH:98px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}   /* beats the display:flex rules below */
   html,body{height:100%}
   body{
     margin:0; background:
@@ -116,6 +117,27 @@
   .item .n{color:var(--gold); font-weight:700}
   .hint{color:var(--dim); font-size:12px; max-width:430px; text-align:right}
 
+  /* ---------- tutorial coach ---------- */
+  #coach{
+    flex:0 0 auto; display:flex; align-items:center; gap:18px; justify-content:center; flex-wrap:wrap;
+    padding:13px 18px; background:linear-gradient(#241a33,#1b1426);
+    border-top:1px solid var(--gold); box-shadow:0 -8px 26px var(--shadow); z-index:6;
+  }
+  #coach .ctext{max-width:760px; font-size:14.5px; line-height:1.6}
+  #coach .cnum{
+    display:inline-block; margin-right:10px; color:var(--gold);
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  }
+  #coach .note{display:block; margin-top:7px; color:var(--gold); font-size:13.5px}
+  #coach button{margin:0; white-space:nowrap; padding:10px 20px; font-size:14px}
+  @keyframes tutPulse{
+    0%,100%{box-shadow:0 0 0 2px var(--blue), 0 0 0 0 rgba(106,169,224,.5)}
+    50%    {box-shadow:0 0 0 2px var(--blue), 0 0 0 13px rgba(106,169,224,0)}
+  }
+  .card.tut-target{animation:tutPulse 1.5s ease-out infinite; z-index:70 !important}
+  .tut-ring{border-radius:9px; animation:tutPulse 1.5s ease-out infinite}
+  .stat .val.tut-ring{padding:1px 9px}
+
   /* ---------- overlays ---------- */
   .overlay{
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
@@ -182,6 +204,8 @@
     .modal h1{font-size:26px}
     .modal h2{font-size:21px}
     .offers{gap:10px}
+    #coach{padding:10px 12px; gap:10px}
+    #coach .ctext{font-size:13px; max-width:none}
   }
 </style>
 </head>
@@ -202,6 +226,8 @@
 <div id="strip"></div>
 
 <main><div id="boardWrap"><div id="board"></div></div></main>
+
+<div id="coach" hidden></div>
 
 <footer>
   <div class="pileBox">
@@ -297,6 +323,7 @@ const S = {
   tableau:[], stock:[], waste:[],
   combo:0, bestCombo:0, curses:[], jokerArmed:false,
   earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:false, busy:false,
+  tut:{on:false, step:0, note:""},
   shopOffers:[], layoutW:0, layoutH:0
 };
 
@@ -344,6 +371,24 @@ function makeLayout(peaks, height){
   return [...seen.values()];
 }
 
+/** Seat `cards` on `spots` and derive which card blocks which from geometry. */
+function layTableau(spots, cards){
+  const maxRow = Math.max(...spots.map(sp => sp.row));
+  S.tableau = spots.map((sp, i) => ({
+    id: i, row: sp.row, x: sp.x,
+    r: cards[i].r, s: cards[i].s,
+    cleared: false, node: null
+  }));
+  const at = new Map(S.tableau.map(c => [c.row + ":" + c.x, c]));
+  S.tableau.forEach(c => {
+    c.blockers = [c.x - 1, c.x + 1]
+      .map(x => at.get((c.row + 1) + ":" + x))
+      .filter(Boolean)
+      .map(b => b.id);
+    c.bottom = c.row === maxRow;
+  });
+}
+
 function floorPlan(depth){
   let plan;
   if (depth <= FLOORS.length){
@@ -373,31 +418,16 @@ function startFloor(){
   }
 
   const spots = makeLayout(plan.peaks, plan.h);
-  const maxRow = Math.max(...spots.map(s => s.row));
 
   let stockN = plan.stock + (has("loaded") ? 4 : 0);
   if (cursed("brittle")) stockN = Math.round(stockN * 0.8);
 
   const pool = dealPool(spots.length + stockN);
-  S.tableau = spots.map((sp, i) => ({
-    id: i, row: sp.row, x: sp.x,
-    r: pool[i].r, s: pool[i].s,
-    cleared: false, node: null
-  }));
+  layTableau(spots, pool.slice(0, spots.length));
   S.stock = pool.slice(spots.length);
   S.waste = [S.stock.pop()];
   S.combo = 0;
   S.jokerArmed = false;
-
-  // Blocking relationships, derived from geometry.
-  const at = new Map(S.tableau.map(c => [c.row + ":" + c.x, c]));
-  S.tableau.forEach(c => {
-    c.blockers = [c.x - 1, c.x + 1]
-      .map(x => at.get((c.row + 1) + ":" + x))
-      .filter(Boolean)
-      .map(b => b.id);
-    c.bottom = c.row === maxRow;
-  });
 
   if (has("pockets")) gain(15);
 
@@ -526,6 +556,10 @@ function refresh(){
   drawStrip();
   drawItems();
   drawHint(left);
+  $("#strip").hidden = S.tut.on;
+  $("#items").style.display = S.tut.on ? "none" : "flex";
+  $("#quitBtn").textContent = S.tut.on ? "Leave tutorial" : "Abandon Run";
+  if (S.tut.on) applyTutFocus();
 }
 
 function drawStrip(){
@@ -568,6 +602,7 @@ function drawItems(){
 function drawHint(left){
   const h = $("#hint");
   h.innerHTML = "";
+  if (S.tut.on) return;
   if (S.jokerArmed){ h.textContent = "Joker armed — pick any open card."; return; }
   if (!S.stock.length && !S.tableau.some(canPlay) && left > 0){
     h.innerHTML = "No moves and no stock left. Spend an item to keep going, or ";
@@ -594,6 +629,12 @@ function toast(msg){
 
 function onCardClick(c){
   if (!S.running || S.busy) return;
+  if (S.tut.on){
+    const st = tutStep();
+    if (st && st.advance === "play" && c.id !== st.target){ toast("Click the glowing card."); return; }
+    if (st && st.advance === "next"){ toast("Read the note below, then carry on."); return; }
+    if (st && st.advance === "draw"){ toast("Draw from the stock first."); return; }
+  }
   if (isHidden(c) || !canPlay(c)) return;
 
   const wasJoker = S.jokerArmed;
@@ -617,16 +658,22 @@ function onCardClick(c){
   setTimeout(() => cs.classList.remove("pop"), 150);
 
   refresh();
+  if (S.tut.on){ const st = tutStep(); if (st && st.advance === "play"){ tutAdvance(); } }
   checkFloorEnd();
 }
 
 function drawCard(){
   if (!S.running || S.busy || !S.stock.length) return;
+  if (S.tut.on){
+    const st = tutStep();
+    if (st && st.advance !== "draw" && st.advance !== "clear"){ toast("Not yet — finish the step below."); return; }
+  }
   S.waste.push(S.stock.pop());
   S.combo = has("momentum") ? Math.max(0, S.combo - 2) : 0;
   if (cursed("toll")) S.gold = Math.max(0, S.gold - 3);
   S.jokerArmed = false;
   refresh();
+  if (S.tut.on){ const st = tutStep(); if (st && st.advance === "draw"){ tutAdvance(); } }
   checkFloorEnd();
 }
 
@@ -654,9 +701,10 @@ function useItem(id){
 
 function checkFloorEnd(){
   const left = S.tableau.filter(c => !c.cleared).length;
-  if (left === 0){ floorCleared(); return; }
+  if (left === 0){ S.tut.on ? tutFinish() : floorCleared(); return; }
   if (S.stock.length) return;
   if (S.tableau.some(canPlay)) return;
+  if (S.tut.on){ tutStuck(); return; }
   // Stuck: an item can still save the floor.
   const openCard = S.tableau.some(c => !c.cleared && isOpen(c));
   if ((S.items.joker > 0 && openCard) || S.items.refill > 0) return;
@@ -869,10 +917,150 @@ function newRun(){
     depth:1, hp:3, maxHp:3, gold:0,
     relics:[], items:{joker:0, elixir:0, refill:0},
     combo:0, bestCombo:0, curses:[], jokerArmed:false,
-    earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:true, busy:false
+    earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:true, busy:false,
+    tut:{on:false, step:0, note:""}
   });
   hideModal();
   startFloor();
+}
+
+/* ------------------------------ tutorial ---------------------------------
+   A scripted 2-peak board. Every step is a real move on the real engine — the
+   deal is fixed so the prompts always match what is on screen, and the board
+   is solvable in a single chain after one draw:
+     7♦ · 6♣ 5♥ 4♠ 3♦ · [draw 8♦] · 9♠ 10♦ J♥ Q♠ K♦ A♠ K♥
+   Tableau order follows makeLayout(2,3): apex, row 1, row 2 per peak.        */
+
+const TUT_CARDS = [
+  {r:10,s:2}, {r:3,s:2}, {r:9,s:0}, {r:4,s:0}, {r:5,s:1}, {r:6,s:3},
+  {r:13,s:1}, {r:1,s:0}, {r:13,s:2}, {r:11,s:1}, {r:12,s:0}
+];
+/* Drawn from the end, so the 8♦ comes up first; the rest is a safety net. */
+const TUT_STOCK = [
+  {r:5,s:3},{r:9,s:2},{r:2,s:1},{r:6,s:0},{r:10,s:3},{r:3,s:0},{r:7,s:1},{r:8,s:0},{r:8,s:2}
+];
+const TUT_WASTE = {r:7,s:2};
+
+const TUT_STEPS = [
+  {focus:null, advance:"next", btn:"Show me the board",
+   text:"This is not Klondike. There are no columns to build up, no foundations, nothing to sort by suit. " +
+        "There is one board of overlapping cards, one <b>active card</b>, and you win the floor by clearing every card off the board."},
+  {focus:"open", advance:"next", btn:"Got it",
+   text:"The cards are dealt in overlapping peaks. A card can only be played when nothing lies across its lower edge — " +
+        "those are the bright ones, glowing now. Everything dimmed behind them is covered until you clear what sits on top of it."},
+  {focus:"waste", advance:"next", btn:"Got it",
+   text:"Down in the dock is the <b>active card</b>: the 7♦. A move takes any open card that is exactly one rank above or below it — " +
+        "a 6 or an 8. Suit and colour never matter. That single rule is the whole game."},
+  {focus:"card", target:5, advance:"play",
+   text:"The 6♣ is open, and it is one below the 7. Click it."},
+  {focus:"card", target:4, advance:"play",
+   text:"The card you played became the new active card — so now the 5♥ is one below it. Click that."},
+  {focus:"card", target:3, advance:"play",
+   text:"And the 4♠ after it. Because every played card becomes the active card, a run of consecutive ranks clears in one unbroken chain."},
+  {focus:"card", target:1, advance:"play",
+   text:"Clearing that pair uncovered the 3♦ sitting above them — that is how you dig into a peak. It is one below the 4, so take it."},
+  {focus:"combo", advance:"next", btn:"So what now?",
+   text:"Four cards without a draw: that is a <b>combo of 4</b>, and each card in an unbroken chain pays more gold than the one before it. " +
+        "Gold is what you spend between floors. Nothing left on the board is a 2 or a 4, so this chain is finished."},
+  {focus:"stock", advance:"draw",
+   text:"When you run out of moves, draw from the <b>stock</b>. It turns up a fresh active card — and knocks your combo back to zero. " +
+        "That is the price of a draw, and the reason long chains are worth hunting for. Click the stock pile."},
+  {focus:null, advance:"clear",
+   text:"An 8♦ — and the board opens up again. The 9♠ is playable, and there is a ladder behind it: 9, 10, J, Q, K, then A " +
+        "(kings wrap round to aces), then the last king. Clear the board and the floor is yours."}
+];
+
+function tutStep(){ return S.tut.on ? TUT_STEPS[S.tut.step] : null; }
+
+function startTutorial(){
+  hideModal();
+  Object.assign(S, {
+    depth:1, hp:3, maxHp:3, gold:0,
+    relics:[], items:{joker:0, elixir:0, refill:0},
+    combo:0, bestCombo:0, curses:[], jokerArmed:false,
+    earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:true, busy:false,
+    tut:{on:true, step:0, note:""}
+  });
+  layTableau(makeLayout(2, 3), TUT_CARDS);
+  S.stock = TUT_STOCK.slice();
+  S.waste = [Object.assign({}, TUT_WASTE)];
+  buildBoard();
+  showStep();
+}
+
+function showStep(){
+  const coach = $("#coach");
+  const st = tutStep();
+  if (!st){ coach.hidden = true; refresh(); fitBoard(); return; }
+  coach.hidden = false;
+  coach.innerHTML = '<div class="ctext"><span class="cnum">Step ' + (S.tut.step + 1) + " of " +
+    TUT_STEPS.length + "</span>" + st.text +
+    (S.tut.note ? '<span class="note">' + S.tut.note + "</span>" : "") + "</div>";
+  if (st.advance === "next"){
+    const b = el("button", "big");
+    b.textContent = st.btn || "Next";
+    b.addEventListener("click", tutAdvance);
+    coach.appendChild(b);
+  }
+  refresh();
+  fitBoard();
+}
+
+function tutAdvance(){
+  S.tut.note = "";
+  S.tut.step++;
+  if (S.tut.step >= TUT_STEPS.length){ S.tut.step = TUT_STEPS.length - 1; }
+  showStep();
+}
+
+/** Highlight whatever the current step is talking about. */
+function applyTutFocus(){
+  document.querySelectorAll(".tut-target").forEach(n => n.classList.remove("tut-target"));
+  document.querySelectorAll(".tut-ring").forEach(n => n.classList.remove("tut-ring"));
+  const st = tutStep();
+  if (!st) return;
+  if (st.focus === "card"){
+    const c = S.tableau[st.target];
+    if (c && !c.cleared && c.node) c.node.classList.add("tut-target");
+  }
+  if (st.focus === "open"){
+    S.tableau.filter(c => !c.cleared && isOpen(c) && c.node)
+             .forEach(c => c.node.classList.add("tut-target"));
+  }
+  if (st.focus === "stock") $("#stockSlot").classList.add("tut-ring");
+  if (st.focus === "waste") $("#wasteSlot").classList.add("tut-ring");
+  if (st.focus === "combo") $("#comboStat").classList.add("tut-ring");
+}
+
+/** The tutorial never costs a life — a dead end just gets more cards. */
+function tutStuck(){
+  for (let i = 0; i < 4; i++) S.stock.push(randomCard());
+  S.tut.note = "Out of moves with cards still standing — in a real run that costs a life and a " +
+               "quarter of your gold. Here, have four more cards and keep going.";
+  showStep();
+}
+
+function tutFinish(){
+  S.busy = true;
+  S.tut.on = false;
+  $("#coach").hidden = true;
+  refresh();
+  showModal(
+    "<h2>That is the whole game</h2>" +
+    '<p class="sub">One board, one active card, ranks one apart. Everything else is what the dungeon does to it.</p>' +
+    '<div class="rules">' +
+    "<p><b>Lives.</b> Empty the stock with cards still on the board and you lose one of three lives, plus a quarter of your purse.</p>" +
+    "<p><b>The Landing.</b> Between floors you spend gold on five slots of permanent <b>relics</b> — aces turn wild, " +
+    "same-rank matches become legal, cleared cards refund the stock — and a small satchel of one-shot <b>consumables</b>.</p>" +
+    "<p><b>Bosses.</b> Every fourth floor is cursed: fog hides covered cards, iron suits ban playing the same suit twice, " +
+    "tolls tax every draw.</p>" +
+    "<p><b>The descent.</b> Eight floors reach the surface. The stair keeps going after that, and the stock keeps shrinking.</p>" +
+    "</div>",
+    [
+      {label:"Start a real run", cls:"big", fn:newRun},
+      {label:"Back to the title", cls:"big alt", fn:() => { S.running = false; titleScreen(); }}
+    ]
+  );
 }
 
 /* ------------------------------ overlays --------------------------------- */
@@ -911,12 +1099,19 @@ const RULES_HTML =
 
 function titleScreen(){
   const best = loadBest();
+  const veteran = best.depth > 0;
   showModal(
     "<h1>Dungeon Solitaire</h1>" +
     '<p class="sub">A roguelike deckcrawl — eight floors, three lives, one deck at a time.</p>' +
+    '<p style="color:var(--dim)">Not the solitaire you know: no columns, no foundations. ' +
+    "One board of overlapping cards, cleared by matching ranks.</p>" +
     RULES_HTML +
-    (best.depth ? '<p class="best">Best run: ' + best.depth + " floors · score " + best.score + "</p>" : ""),
-    [{label:"Begin the descent", cls:"big", fn:newRun}]
+    (veteran ? '<p class="best">Best run: ' + best.depth + " floors · score " + best.score + "</p>" : ""),
+    veteran
+      ? [{label:"Begin the descent", cls:"big", fn:newRun},
+         {label:"Replay the tutorial", cls:"big alt", fn:startTutorial}]
+      : [{label:"Learn to play \u2014 2 minutes", cls:"big", fn:startTutorial},
+         {label:"Skip, I\u2019ll work it out", cls:"big alt", fn:newRun}]
   );
 }
 
@@ -925,10 +1120,26 @@ function titleScreen(){
 $("#stockSlot").addEventListener("click", drawCard);
 $("#helpBtn").addEventListener("click", () => {
   if (!S.running) return;
-  showModal("<h2>Rules</h2>" + RULES_HTML, [{label:"Back to the dungeon", cls:"big", fn:hideModal}]);
+  showModal("<h2>Rules</h2>" + RULES_HTML,
+    [{label:"Back to the dungeon", cls:"big", fn:hideModal}].concat(
+      S.tut.on ? [] : [{label:"Walk me through it", cls:"big alt", fn:() => {
+        showModal("<h2>Start the tutorial?</h2><p class='sub'>This abandons the run you are in.</p>", [
+          {label:"Start the tutorial", cls:"big", fn:startTutorial},
+          {label:"Never mind", cls:"big alt", fn:hideModal}
+        ]);
+      }}]));
 });
 $("#quitBtn").addEventListener("click", () => {
   if (!S.running) return;
+  if (S.tut.on){
+    showModal("<h2>Leave the tutorial?</h2><p class='sub'>You can start it again from the title screen.</p>", [
+      {label:"Back to the title", cls:"big", fn:() => {
+        S.tut.on = false; S.running = false; $("#coach").hidden = true; refresh(); titleScreen();
+      }},
+      {label:"Keep learning", cls:"big alt", fn:hideModal}
+    ]);
+    return;
+  }
   showModal("<h2>Abandon the run?</h2><p class='sub'>Your gold and relics go with the dungeon.</p>", [
     {label:"Abandon", cls:"big", fn:() => gameOver(false)},
     {label:"Keep playing", cls:"big alt", fn:hideModal}

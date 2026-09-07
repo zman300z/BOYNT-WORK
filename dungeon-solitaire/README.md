@@ -8,6 +8,24 @@ open dungeon-solitaire/index.html          # macOS
 xdg-open dungeon-solitaire/index.html      # Linux
 ```
 
+## Start here
+
+The title screen opens with **Learn to play** — a ten-step playable tutorial on
+a scripted two-peak board. It gates input to one card at a time, glows the card
+it is talking about, and walks you through the whole game: which cards are open,
+the rank rule, chaining a combo, what a draw costs, and how a floor ends. The
+deal is fixed and solvable in a single chain after one draw, so the last step
+hands you the board to finish yourself:
+
+```
+7♦ · 6♣ 5♥ 4♠ 3♦ · [draw 8♦] · 9♠ 10♦ J♥ Q♠ K♦ A♠ K♥
+```
+
+Nothing in the tutorial can cost you anything: a dead end deals four more cards
+and explains what it would have cost in a real run. Once you have a saved best
+run the title screen leads with **Begin the descent** instead, and the tutorial
+moves to a secondary button (it is also reachable mid-run from **Rules**).
+
 ## The loop
 
 Each floor is a TriPeaks board. Play any uncovered card that is one rank above
@@ -69,5 +87,7 @@ bottom rows meet, which is what makes new shapes cheap to add: append to
 
 Play-tested with Playwright against the pre-installed Chromium: an interaction
 suite (clicks, keyboard, joker arming, the stuck-with-items path, shop
-purchases, resize) plus bot simulations for per-floor clear rates and whole-run
+purchases, resize), a tutorial suite that plays all ten steps end to end —
+including refusing the wrong card, the dead-end path, and the seven-card ladder
+that finishes the board — plus bot simulations for per-floor clear rates and whole-run
 outcomes. The scripts live outside the repo; the numbers above are their output.
