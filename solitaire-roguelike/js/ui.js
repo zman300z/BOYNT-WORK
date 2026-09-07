@@ -17,6 +17,7 @@ const UI = (() => {
 
   let displayScore = 0;
   let fxBusy = false;
+  let rush = false;          // player acted mid-animation: burn through what's left
   let selection = null;      // {zone, col, index, suit}
   let hintCells = [];
 
@@ -99,7 +100,7 @@ const UI = (() => {
       c.dataset.idx = i;
       c.draggable = false;
       c.innerHTML =
-        '<div class="c-art">' + def.art + '</div>' +
+        '<div class="c-art">' + icon(def.icon) + '</div>' +
         '<div class="c-name">' + def.name + '</div>' +
         (inst.counter != null && def.counterLabel
           ? '<div class="c-counter">' + (def.counterLabel === 'X' ? 'X' + inst.counter : '+' + inst.counter) + '</div>' : '');
@@ -119,7 +120,8 @@ const UI = (() => {
   }
 
   function curioTip(inst, def, i) {
-    let s = '<div class="tip-title r-' + def.rarity + '">' + def.art + ' ' + def.name + '</div>';
+    let s = '<div class="tip-title r-' + def.rarity + '">' + icon(def.icon, 'tip-ico') + ' ' + def.name + '</div>';
+    s += '<div class="tip-kind curio-kind">CURIO — takes a mantel seat</div>';
     if (inst.finish && inst.finish !== 'none') s += '<div class="tip-fin">' + FINISHES[inst.finish].name + ' — ' + FINISHES[inst.finish].text + '</div>';
     s += '<div class="tip-text">' + def.text + '</div>';
     s += '<div class="tip-foot">' + def.rarity.toUpperCase() +
@@ -135,6 +137,12 @@ const UI = (() => {
     $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
     $('#deck-count').textContent = G.run.deck.length;
     $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
+    const pv = $('#cash-preview');
+    if (pv && G.phase === 'play') {
+      const p = Game.payoutPreview();
+      pv.textContent = '$' + p.total;
+      $('#btn-cash').dataset.breakdown = p.lines.map(l => l.label + '  +$' + l.amount).join('\n');
+    }
   }
 
   function renderBoard() {
@@ -156,17 +164,24 @@ const UI = (() => {
     /* waste */
     const waste = $('#waste');
     waste.innerHTML = '';
-    const tail = b.waste.slice(-3);
-    tail.forEach((c, i) => {
+    const mm = Engine.mods(G.run);
+    const show = Math.min(b.waste.length, 3);
+    const from = b.waste.length - show;
+    const playable = Engine.playableWaste(b, mm).map(w => w.index);
+    for (let k = 0; k < show; k++) {
+      const absIdx = from + k;
+      const c = b.waste[absIdx];
       const n = cardEl(c);
-      n.style.left = (i * 14) + 'px';
-      n.style.zIndex = i;
-      if (i === tail.length - 1) {
+      n.style.left = Math.round(k * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')) * 0.42)) + 'px';
+      n.style.zIndex = k;
+      if (playable.includes(absIdx)) {
         n.dataset.zone = 'waste';
-        attachDrag(n, { zone: 'waste' });
+        n.classList.add('playable');
+        attachDrag(n, { zone: 'waste', index: absIdx });
       } else n.classList.add('under');
       waste.appendChild(n);
-    });
+    }
+    if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
     /* foundations */
     SUIT_KEYS.forEach(s => {
@@ -199,11 +214,12 @@ const UI = (() => {
       const avail = Math.max(260, t.clientHeight || 420) - 20;
       const need = pile.reduce((a, c) => a + (c.faceUp ? 30 : 15), 0);
       const squeeze = need > avail ? avail / need : 1;
-      let y = 0;
+      let y = 0, lastTop = 0;
       let lastDownIdx = -1;
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
       pile.forEach((c, i) => {
         const n = cardEl(c, { topDown: i === lastDownIdx });
+        lastTop = y;
         n.style.top = Math.round(y) + 'px';
         n.style.zIndex = i;
         n.dataset.col = col;
@@ -212,10 +228,23 @@ const UI = (() => {
         if (c.faceUp) attachDrag(n, { zone: 'tableau', col, index: i });
         p.appendChild(n);
       });
+      const runLen = Engine.runLength(b, col, Engine.mods(G.run));
+      if (runLen > 1) {
+        const runCards = Engine.runCards(b, col, Engine.mods(G.run));
+        const val = runCards.reduce((a, c) => a + rankChips(c.rank), 0);
+        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen),
+          '<span class="rb-n">RUN ' + runLen + '</span><span class="rb-v">+' + val + ' <i>chips</i> · +' +
+          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>');
+        /* sit the badge clear of the last card, never on top of it */
+        const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
+        badge.style.top = Math.round(lastTop + ch + 6) + 'px';
+        p.appendChild(badge);
+      }
       t.appendChild(p);
     });
 
     applySelectionClasses();
+    renderCombo();
   }
 
   function fmt(n) {
@@ -288,7 +317,8 @@ const UI = (() => {
   function attachDrag(node, src) {
     node.classList.add('grabbable');
     node.addEventListener('pointerdown', e => {
-      if (G.phase !== 'play' || fxBusy) return;
+      if (G.phase !== 'play') return;
+      rushFx();
       if (e.button != null && e.button !== 0) return;
       const cards = src.zone === 'tableau'
         ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
@@ -429,22 +459,45 @@ const UI = (() => {
     if (i >= q.length) {
       fxBusy = false;
       syncScore();
-      if (G.fx.length) drainFx();
-      else afterFx();
+      if (G.fx.length) { drainFx(); }
+      else { rush = false; afterFx(); }
       return;
     }
-    const p = q[i];
-    const speed = q.length > 4 ? 0.35 : 1;
-    animatePacket(p, speed, () => runPackets(q, i + 1));
+    const base = q.length > 4 ? 0.35 : 1;
+    const speed = () => base * (rush ? 0.08 : 1);
+    animatePacket(q[i], speed, () => runPackets(q, i + 1));
   }
 
-  function animatePacket(p, speed, done) {
+  /* the player did something while the fireworks were still going -- don't
+     swallow their input, just finish the show immediately */
+  function rushFx() { if (fxBusy) rush = true; }
+
+  function animatePacket(p, spd, done) {
     if (p.event === 'illegal') { done(); return; }
-    if (p.event === 'recycle') { Sfx.deal(); done(); return; }
+    if (p.event === 'nudge') { floatText($('#table'), p.label, 'fx-flash'); done(); return; }
+    if (p.event === 'cash') {
+      const a = anchorEl(p.anchor);
+      floatText(a, '+$' + p.amount, 'fx-money big');
+      floatText(a, p.label, 'fx-cashlabel');
+      Sfx.money();
+      burst(a, 8, '#ffd166');
+      renderHud();
+      renderControls();
+      setTimeout(done, 220 * spd());
+      return;
+    }
+    if (p.event === 'recycle') { Sfx.deal(); flashScreen(0.10, '#4cc9f0'); done(); return; }
+    if (p.event === 'draw') {
+      Sfx.deal();
+      const w = $('#waste');
+      if (w) { w.classList.remove('dealt'); void w.offsetWidth; w.classList.add('dealt'); }
+      done();
+      return;
+    }
     if (p.event === 'curioFlash') { flashCurioById(p.curio); done(); return; }
     if (p.event === 'replay') {
       floatText(anchorEl(p.anchor), 'ALREADY PAID', 'fx-flash');
-      setTimeout(done, 160 * speed);
+      setTimeout(done, 160 * spd());
       return;
     }
     if (p.event === 'shatter') {
@@ -452,7 +505,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
-      setTimeout(done, 350 * speed);
+      setTimeout(done, 350 * spd());
       return;
     }
 
@@ -469,8 +522,8 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * speed);
-        }, 90 * speed);
+          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * spd());
+        }, 90 * spd());
         return;
       }
       const t = trigs[ti++];
@@ -481,8 +534,12 @@ const UI = (() => {
       else if (t.kind === 'money') { floatText(src, '+$' + t.amount, 'fx-money'); Sfx.money(); renderHud(); }
       else if (t.kind === 'flash') { floatText(src, '!', 'fx-flash'); }
       else if (t.kind === 'retrigger') { floatText(src, 'AGAIN!', 'fx-again'); }
-      if (src) { src.classList.add('trigger'); setTimeout(() => src.classList.remove('trigger'), 260); }
-      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * speed);
+      if (src) {
+        src.classList.add('trigger');
+        setTimeout(() => src.classList.remove('trigger'), 260);
+        if (t.kind === 'xmult' || t.kind === 'retrigger') spark(src);
+      }
+      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * spd());
     };
     step();
   }
@@ -506,25 +563,118 @@ const UI = (() => {
   }
 
   function setScoreBox(chips, mult) {
+    const total = Math.round(chips * mult);
     $('#sb-chips').textContent = fmt(Math.round(chips));
     $('#sb-mult').textContent = (Math.round(mult * 100) / 100);
-    const heat = Math.min(1, (chips * mult) / 4000);
-    $('#scorebox').style.setProperty('--heat', heat.toFixed(2));
+    $('#sb-total').textContent = fmt(total);
+    const heat = Math.min(1, total / 6000);
+    const box = $('#scorebox');
+    box.style.setProperty('--heat', heat.toFixed(2));
+    box.style.setProperty('--swell', (1 + Math.min(0.22, total / 60000)).toFixed(3));
+    const t = tierFor(total);
+    box.className = 'live' + (t ? ' ' + t.cls : '');
+    bumpEl($('#sb-total'));
+  }
+
+  function bumpEl(n) {
+    if (!n) return;
+    n.classList.remove('bump');
+    void n.offsetWidth;
+    n.classList.add('bump');
+  }
+
+  /* the persistent combo readout inside the score box */
+  function renderCombo() {
+    const m = $('#combo-meter');
+    if (!m || !G.round) return;
+    const bits = [];
+    if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
+    if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
+    m.innerHTML = bits.join('');
+    m.classList.toggle('active', bits.length > 0);
+    if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
   }
 
   function slam(p) {
     const box = $('#scorebox');
-    box.classList.add('slam');
-    setTimeout(() => box.classList.remove('slam'), 400);
     const mag = p.total;
+    const tier = tierFor(mag);
+    box.classList.add('slam');
+    setTimeout(() => box.classList.remove('slam'), 450);
+
     Sfx.score(Math.log10(Math.max(10, mag)) * 20);
-    const big = el('div', 'fx-total', '+' + fmt(mag));
-    positionAt(big, box, -10, -50);
+
+    const big = el('div', 'fx-total ' + (tier ? tier.cls : ''), '+' + fmt(mag));
+    positionAt(big, box, 0, -46);
     $('#fxlayer').appendChild(big);
-    setTimeout(() => big.remove(), 1000);
-    if (mag > 1500) { screenShake(Math.min(14, mag / 900)); burst(box, 24, '#ffd166'); Sfx.big(); }
-    else if (mag > 400) burst(box, 10, '#7ee787');
+    setTimeout(() => big.remove(), 1100);
+
+    shockwave(box, tier);
+    bumpEl($('#round-score'));
+
+    if (tier) {
+      tierBanner(tier);
+      screenShake(tier.shake);
+      confetti(box, tier.parts, tier.cls);
+      flashScreen(0.34 - SCORE_TIERS.indexOf(tier) * 0.05, tierColor(tier));
+      if (mag >= 8000) Sfx.big();
+      document.body.classList.add('hot');
+      clearTimeout(hotTimer);
+      hotTimer = setTimeout(() => document.body.classList.remove('hot'), 900);
+    } else {
+      burst(box, 8, '#7ee787');
+    }
     animateScoreTo(G.round.score);
+  }
+
+  let hotTimer = null;
+  function tierColor(t) {
+    return { t1: '#7ee787', t2: '#ffd166', t3: '#ff8f3f', t4: '#ff4d6d', t5: '#b07cff' }[t.cls] || '#ffd166';
+  }
+
+  function tierBanner(tier) {
+    const n = el('div', 'fx-tier ' + tier.cls, tier.name + (tier.cls === 't5' ? '!!!!' : tier.cls === 't4' ? '!!!' : tier.cls === 't3' ? '!!' : '!'));
+    $('#fxlayer').appendChild(n);
+    setTimeout(() => n.remove(), 1000);
+  }
+
+  function shockwave(ref, tier) {
+    const r = ref.getBoundingClientRect();
+    const w = el('div', 'shockwave' + (tier ? ' ' + tier.cls : ''));
+    w.style.left = (r.left + r.width / 2) + 'px';
+    w.style.top = (r.top + r.height / 2) + 'px';
+    $('#fxlayer').appendChild(w);
+    setTimeout(() => w.remove(), 700);
+  }
+
+  function flashScreen(alpha, color) {
+    const f = $('#flash');
+    if (!f) return;
+    f.style.background = color || '#fff';
+    f.style.opacity = Math.min(0.45, alpha);
+    f.classList.remove('go');
+    void f.offsetWidth;
+    f.classList.add('go');
+    setTimeout(() => { f.style.opacity = 0; }, 30);
+  }
+
+  /* confetti with a bit of gravity so it feels physical */
+  function confetti(ref, count, cls) {
+    const r = ref.getBoundingClientRect();
+    const colors = ['#ffd166', '#ff4d6d', '#4cc9f0', '#7ee787', '#b07cff', '#fff'];
+    for (let i = 0; i < count; i++) {
+      const p = el('div', 'confetti ' + (cls || ''));
+      p.style.left = (r.left + Math.random() * r.width) + 'px';
+      p.style.top = (r.top + r.height / 2) + 'px';
+      p.style.background = colors[i % colors.length];
+      p.style.setProperty('--dx', (Math.random() * 460 - 230) + 'px');
+      p.style.setProperty('--dy', (-120 - Math.random() * 220) + 'px');
+      p.style.setProperty('--rot', (Math.random() * 900 - 450) + 'deg');
+      p.style.setProperty('--dur', (0.9 + Math.random() * 0.7) + 's');
+      if (Math.random() < 0.4) p.style.borderRadius = '50%';
+      $('#fxlayer').appendChild(p);
+      setTimeout(() => p.remove(), 1800);
+    }
   }
 
   function animateScoreTo(target) {
@@ -606,6 +756,21 @@ const UI = (() => {
     }
   }
 
+  /* a couple of embers flying from a trigger toward the score box */
+  function spark(from) {
+    const a = from.getBoundingClientRect(), b = $('#scorebox').getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+      const p = el('div', 'ember');
+      p.style.left = (a.left + a.width / 2) + 'px';
+      p.style.top = (a.top + a.height / 2) + 'px';
+      p.style.setProperty('--tx', (b.left + b.width / 2 - a.left - a.width / 2) + 'px');
+      p.style.setProperty('--ty', (b.top + b.height / 2 - a.top - a.height / 2) + 'px');
+      p.style.animationDelay = (i * 0.04) + 's';
+      $('#fxlayer').appendChild(p);
+      setTimeout(() => p.remove(), 700);
+    }
+  }
+
   function screenShake(power) {
     const app = $('#app');
     app.style.setProperty('--shake', (power || 6) + 'px');
@@ -675,6 +840,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
+    renderCombo, flashScreen, confetti, rushFx,
     get busy() { return fxBusy; }
   };
 })();

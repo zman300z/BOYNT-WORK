@@ -43,9 +43,15 @@
       <div class="pile waste-pile" id="waste" data-zone="waste"></div>
 
       <div id="scorebox">
-        <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
-        <div class="sb-x">X</div>
-        <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+        <div id="combo-meter"></div>
+        <div class="sb-eq-row">
+          <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
+          <div class="sb-op">X</div>
+          <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+          <div class="sb-op eq">=</div>
+          <div class="sb-side total" data-cap="POINTS"><span id="sb-total">0</span></div>
+        </div>
+        <div class="sb-legend">Chips <b>X</b> Mult = the points added to your round score</div>
       </div>
 
       <div class="foundations">
@@ -69,18 +75,20 @@
       <button class="btn ghost" id="btn-collect">AUTO</button>
     </div>
     <div class="ctl-right">
-      <button class="btn cash-btn" id="btn-cash">CASH OUT</button>
+      <button class="btn cash-btn" id="btn-cash" title="Bank this round and collect">CASH OUT <b id="cash-preview">$0</b></button>
     </div>
   </footer>
 
 </div>
 
+<div id="flash"></div>
 <div id="fxlayer"></div>
 <div id="draglayer"></div>
 <div id="tooltip"></div>
 <div id="toast"></div>
 <div id="overlay"></div>
 
+<script src="js/icons.js"></script>
 <script src="js/data.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/score.js"></script>

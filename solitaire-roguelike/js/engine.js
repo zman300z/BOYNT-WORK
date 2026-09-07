@@ -51,6 +51,7 @@ const Engine = (() => {
       curioBonusMult: 0,
       luck: 1,
       quotaScale: 1,
+      drawReduce: 0,
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -68,7 +69,8 @@ const Engine = (() => {
     const m = {
       cascadeMult: 1, suitRunMult: 1, stockPasses: 0, undos: 0,
       xray: false, anyIntoEmpty: false, firstRetrigger: 0,
-      infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false
+      infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
+      drawReduce: 0, wasteAll: false, stackMult: 1
     };
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
@@ -79,6 +81,29 @@ const Engine = (() => {
       }
     });
     return m;
+  }
+
+  /* how many cards come off the stock per draw (House Rules and Curios can lower it) */
+  function drawCount(run) {
+    const m = mods(run);
+    return Math.max(1, TUNE.drawCount - (run.drawReduce || 0) - m.drawReduce);
+  }
+
+  /* the maximal face-up ordered run sitting at the bottom of a column */
+  function runStart(board, col, m) {
+    const pile = board.tableau[col];
+    let i = pile.length - 1;
+    if (i < 0 || !pile[i].faceUp) return -1;
+    while (i > 0 && pile[i - 1].faceUp && canStack(pile[i - 1], pile[i], m)) i--;
+    return i;
+  }
+  function runLength(board, col, m) {
+    const s = runStart(board, col, m);
+    return s < 0 ? 0 : board.tableau[col].length - s;
+  }
+  function runCards(board, col, m) {
+    const s = runStart(board, col, m);
+    return s < 0 ? [] : board.tableau[col].slice(s);
   }
 
   /* ---------------- the deal ---------------- */
@@ -126,6 +151,7 @@ const Engine = (() => {
         scoreEvents: 0,
         illegal: 0,
         money: 0,
+        paidClears: [],
         over: false,
         won: false
       }
@@ -183,15 +209,24 @@ const Engine = (() => {
     return true;
   }
 
+  /* which waste cards the player may grab */
+  function playableWaste(board, m) {
+    if (!board.waste.length) return [];
+    if (m && m.wasteAll) {
+      const n = Math.min(board.waste.length, 3);
+      return board.waste.slice(board.waste.length - n).map((c, k) => ({ card: c, index: board.waste.length - n + k }));
+    }
+    return [{ card: board.waste[board.waste.length - 1], index: board.waste.length - 1 }];
+  }
+
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
-    const wasteTop = b.waste[b.waste.length - 1];
-    if (wasteTop) {
-      if (foundationTargetFor(b, wasteTop)) return true;
-      for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, wasteTop, m)) return true;
+    for (const w of playableWaste(b, m)) {
+      if (foundationTargetFor(b, w.card)) return true;
+      for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, w.card, m)) return true;
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
@@ -221,6 +256,7 @@ const Engine = (() => {
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
-    canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId
+    canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
+    drawCount, runStart, runLength, runCards, playableWaste
   };
 })();

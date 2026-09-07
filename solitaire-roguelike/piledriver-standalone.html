@@ -256,26 +256,58 @@ body::before{
 
 /* ---------------- SCOREBOX ---------------- */
 #scorebox{
-  --heat:0;
-  flex:1; min-width:150px; height:var(--ch); margin:0 6px;
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  border-radius:12px; border:2px solid var(--line);
+  --heat:0; --swell:1;
+  flex:1; min-width:210px; height:var(--ch); margin:0 6px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  border-radius:12px; border:2px solid var(--line); position:relative;
   background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.25));
-  box-shadow:inset 0 0 30px rgba(255,77,109, calc(var(--heat) * .55));
-  transition:box-shadow .2s;
+  box-shadow:inset 0 0 30px rgba(255,77,109, calc(var(--heat) * .6));
+  transition:box-shadow .2s, border-color .2s;
 }
-.sb-side{ font-family:var(--display); font-size:clamp(18px,3vw,32px); padding:4px 14px; border-radius:10px; min-width:70px; text-align:center; }
+.sb-eq-row{ display:flex; align-items:center; gap:7px; transform:scale(var(--swell)); transition:transform .18s; }
+.sb-side{
+  position:relative; font-family:var(--display); font-size:clamp(15px,2.4vw,27px);
+  padding:3px 12px; border-radius:9px; min-width:62px; text-align:center;
+}
+.sb-side::after{
+  content:attr(data-cap); position:absolute; left:0; right:0; bottom:-13px;
+  font-family:var(--font); font-size:7.5px; letter-spacing:.22em; opacity:.5;
+}
 .sb-side.chips{ background:rgba(76,201,240,.16); color:var(--cool); border:2px solid rgba(76,201,240,.4); text-shadow:0 0 14px rgba(76,201,240,.7); }
 .sb-side.mult{ background:rgba(255,77,109,.16); color:var(--hot); border:2px solid rgba(255,77,109,.45); text-shadow:0 0 14px rgba(255,77,109,.7); }
-.sb-x{ font-family:var(--display); opacity:.6; font-size:16px; }
-.sb-side{ position:relative; }
-.sb-side::after{
-  content:attr(data-cap); position:absolute; left:0; right:0; bottom:-15px;
-  font-family:var(--font); font-size:8px; letter-spacing:.24em; opacity:.5; color:var(--paper);
-}
+.sb-side.total{ background:rgba(255,209,102,.16); color:var(--gold); border:2px solid rgba(255,209,102,.5); text-shadow:0 0 16px rgba(255,209,102,.75); min-width:78px; }
+.sb-op{ font-family:var(--display); opacity:.5; font-size:14px; }
+.sb-op.eq{ opacity:.8; color:var(--gold); }
+.sb-legend{ font-size:8.5px; letter-spacing:.1em; opacity:.42; margin-top:11px; }
+.sb-legend b{ color:var(--gold); }
+.bump{ animation:bump .22s ease; display:inline-block; }
+@keyframes bump{ 0%{ transform:scale(1) } 45%{ transform:scale(1.28) } 100%{ transform:scale(1) } }
+
 #scorebox.live{ border-color:var(--gold); }
-#scorebox.slam{ animation:slam .38s ease; }
-@keyframes slam{ 0%{ transform:scale(1) } 30%{ transform:scale(1.09) } 100%{ transform:scale(1) } }
+#scorebox.t1{ border-color:var(--lime); }
+#scorebox.t2{ border-color:var(--gold); box-shadow:inset 0 0 34px rgba(255,209,102,.4), 0 0 20px rgba(255,209,102,.25); }
+#scorebox.t3{ border-color:#ff8f3f; box-shadow:inset 0 0 40px rgba(255,143,63,.5), 0 0 28px rgba(255,143,63,.4); }
+#scorebox.t4{ border-color:var(--hot); box-shadow:inset 0 0 46px rgba(255,77,109,.6), 0 0 36px rgba(255,77,109,.5); }
+#scorebox.t5{ border-color:var(--violet); box-shadow:inset 0 0 52px rgba(176,124,255,.7), 0 0 46px rgba(176,124,255,.6); animation:t5pulse .5s infinite alternate; }
+@keyframes t5pulse{ to{ filter:brightness(1.25) } }
+#scorebox.slam{ animation:slam .42s cubic-bezier(.2,1.6,.3,1); }
+@keyframes slam{ 0%{ transform:scale(1) } 25%{ transform:scale(1.11) rotate(-.5deg) } 100%{ transform:scale(1) } }
+
+/* live combo readout */
+#combo-meter{
+  position:absolute; top:-11px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; opacity:0; transition:opacity .15s; pointer-events:none;
+}
+#combo-meter.active{ opacity:1; }
+#combo-meter.pop{ animation:comboPop .3s cubic-bezier(.2,1.7,.3,1); }
+@keyframes comboPop{ 0%{ transform:translateX(-50%) scale(.6) } 55%{ transform:translateX(-50%) scale(1.2) } 100%{ transform:translateX(-50%) scale(1) } }
+.cm{
+  font-family:var(--display); font-size:10px; padding:3px 9px; border-radius:9px;
+  border:2px solid; white-space:nowrap;
+}
+.cm b{ font-size:12px; }
+.cm.cascade{ background:#2a0e18; color:var(--hot); border-color:var(--hot); box-shadow:0 0 14px rgba(255,77,109,.6); }
+.cm.suitrun{ background:#0d2230; color:var(--cool); border-color:var(--cool); box-shadow:0 0 14px rgba(76,201,240,.6); }
 
 /* ---------------- CONTROLS ---------------- */
 #controls{
@@ -500,6 +532,211 @@ body.dragging-now{ cursor:grabbing; }
 }
 .mantel-inline .mantel-label{ margin-left:auto; }
 
+
+/* ============================================================
+   icons -- one family across mantel, shop and tooltips
+   ============================================================ */
+.ico{ width:100%; height:100%; display:block; }
+.ico .f{ fill:currentColor; opacity:.18; stroke:none; }
+.ico .a{ fill:currentColor; opacity:.55; stroke:none; }
+.tip-ico{ width:16px; height:16px; display:inline-block; vertical-align:-3px; }
+
+.mslot .c-art{ width:30px; height:30px; margin:0 auto; }
+#mantel .mslot.r-common .c-art{ color:#cdd8e0; }
+#mantel .mslot.r-uncommon .c-art{ color:var(--cool); }
+#mantel .mslot.r-rare .c-art{ color:var(--hot); }
+#mantel .mslot.r-legendary .c-art{ color:var(--violet); }
+
+/* ============================================================
+   draw-3 waste
+   ============================================================ */
+.waste-pile{ width:calc(var(--cw) * 1.9); }
+#waste .card.under{ filter:brightness(.62) saturate(.7); }
+#waste .card.playable{ box-shadow:0 0 0 2px rgba(255,209,102,.55), 0 6px 14px rgba(0,0,0,.5); }
+#waste.dealt .card{ animation:dealIn .26s cubic-bezier(.2,1.3,.3,1) backwards; }
+#waste.dealt .card:nth-child(2){ animation-delay:.05s; }
+#waste.dealt .card:nth-child(3){ animation-delay:.1s; }
+@keyframes dealIn{ from{ transform:translate(-90px,-6px) rotate(-12deg); opacity:0 } }
+
+/* ============================================================
+   column RUN badge -- your live Column Stack payout
+   ============================================================ */
+.run-badge{
+  position:absolute; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  padding:3px 8px; border-radius:9px; white-space:nowrap; pointer-events:none; z-index:800;
+  background:#0b0e14ee; border:2px solid var(--cool); color:var(--cool);
+  box-shadow:0 0 14px rgba(76,201,240,.45);
+}
+.rb-n{ font-family:var(--display); font-size:10px; letter-spacing:.04em; }
+.rb-v{ font-size:8px; opacity:.85; color:var(--paper); }
+.rb-v i{ font-style:normal; opacity:.5; }
+.run-badge.lvl3{ border-color:var(--lime); color:var(--lime); box-shadow:0 0 16px rgba(126,231,135,.5); }
+.run-badge.lvl4{ border-color:var(--gold); color:var(--gold); box-shadow:0 0 18px rgba(255,209,102,.55); }
+.run-badge.lvl5{ border-color:#ff8f3f; color:#ff8f3f; box-shadow:0 0 22px rgba(255,143,63,.65); }
+.run-badge.lvl6{ border-color:var(--hot); color:var(--hot); box-shadow:0 0 26px rgba(255,77,109,.8); animation:runPulse .8s infinite alternate; }
+@keyframes runPulse{ to{ transform:translateX(-50%) scale(1.06); filter:brightness(1.2) } }
+
+/* ============================================================
+   louder FX
+   ============================================================ */
+#flash{ position:fixed; inset:0; pointer-events:none; z-index:4999; opacity:0; mix-blend-mode:screen; }
+#flash.go{ transition:opacity .34s ease-out; }
+body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
+@keyframes scanRoll{ to{ background-position:0 6px } }
+
+.fx-tier{
+  position:fixed; left:50%; top:26%; transform:translate(-50%,-50%);
+  font-family:var(--display); letter-spacing:.06em; white-space:nowrap;
+  animation:tierIn .95s cubic-bezier(.2,1.4,.3,1) forwards; z-index:5100;
+}
+@keyframes tierIn{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(.3) rotate(-10deg) }
+  22%{ opacity:1; transform:translate(-50%,-50%) scale(1.25) rotate(3deg) }
+  40%{ transform:translate(-50%,-50%) scale(1) rotate(-1deg) }
+  100%{ opacity:0; transform:translate(-50%,-130%) scale(1.05) }
+}
+.fx-tier.t1{ font-size:26px; color:var(--lime); text-shadow:0 0 22px rgba(126,231,135,.9), 0 3px 0 #14512a; }
+.fx-tier.t2{ font-size:36px; color:var(--gold); text-shadow:0 0 28px rgba(255,209,102,.9), 0 4px 0 #6b4d12; }
+.fx-tier.t3{ font-size:48px; color:#ff8f3f; text-shadow:0 0 34px rgba(255,143,63,1), 0 5px 0 #7a3a10; }
+.fx-tier.t4{ font-size:60px; color:var(--hot); text-shadow:0 0 44px rgba(255,77,109,1), 0 6px 0 #6c1024; }
+.fx-tier.t5{ font-size:74px; color:#fff; text-shadow:0 0 20px #fff, 0 0 50px var(--violet), 0 0 90px var(--hot), 0 7px 0 #3c1c73; }
+
+.fx-total.t3{ font-size:56px; color:#ff8f3f; }
+.fx-total.t4{ font-size:66px; color:var(--hot); text-shadow:0 0 34px rgba(255,77,109,1), 0 4px 0 #6c1024; }
+.fx-total.t5{ font-size:80px; color:#fff; text-shadow:0 0 24px #fff, 0 0 60px var(--violet); }
+
+.shockwave{
+  position:fixed; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%;
+  border:3px solid var(--gold); animation:shock .6s ease-out forwards;
+}
+.shockwave.t3{ border-color:#ff8f3f } .shockwave.t4{ border-color:var(--hot) } .shockwave.t5{ border-color:var(--violet) }
+@keyframes shock{ 0%{ opacity:.9; transform:scale(.3) } 100%{ opacity:0; transform:scale(9) } }
+
+.confetti{
+  position:fixed; width:9px; height:13px; z-index:5050;
+  animation:conf var(--dur,1.2s) cubic-bezier(.15,.6,.5,1) forwards;
+}
+@keyframes conf{
+  0%{ opacity:1; transform:translate(0,0) rotate(0) }
+  70%{ opacity:1 }
+  100%{ opacity:0; transform:translate(var(--dx), calc(var(--dy) + 340px)) rotate(var(--rot)) }
+}
+.ember{
+  position:fixed; width:6px; height:6px; border-radius:50%; background:#fff;
+  box-shadow:0 0 10px var(--gold); z-index:5040; animation:ember .5s ease-in forwards;
+}
+@keyframes ember{ 0%{ opacity:1; transform:translate(0,0) scale(1) } 100%{ opacity:0; transform:translate(var(--tx),var(--ty)) scale(.2) } }
+
+.card.trigger{ animation:cardPop .3s cubic-bezier(.2,1.6,.3,1); z-index:950 !important;
+  box-shadow:0 0 0 3px #fff, 0 0 26px var(--gold), 0 12px 22px rgba(0,0,0,.6) !important; }
+.mslot.trigger{ animation:curioPop .32s cubic-bezier(.2,1.7,.3,1); z-index:60;
+  box-shadow:0 0 0 3px #fff, 0 0 28px currentColor !important; }
+
+/* ============================================================
+   shop shelves
+   ============================================================ */
+.mantel-wrap{ margin:12px 0 16px; }
+.mantel-cap{ font-family:var(--display); font-size:11px; letter-spacing:.1em; color:var(--violet); margin-bottom:5px; }
+.mantel-cap span{ font-family:var(--font); font-size:10px; letter-spacing:0; opacity:.45; margin-left:8px; }
+.shelf{ margin-bottom:16px; }
+.shelf-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:7px; border-bottom:1px solid var(--line); padding-bottom:5px; }
+.shelf-head h3{ font-family:var(--display); font-size:13px; letter-spacing:.08em; margin:0; }
+.shelf-head span{ font-size:10px; opacity:.5; }
+.sh-curio .shelf-head h3{ color:var(--violet); }
+.sh-mod   .shelf-head h3{ color:var(--lime); }
+.sh-card  .shelf-head h3{ color:var(--cool); }
+.sh-house .shelf-head h3{ color:var(--gold); }
+.shelf-row{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+
+.shop-item{ padding-bottom:34px; }
+.shop-item .si-art{ width:38px; height:38px; margin:0 auto 6px; }
+.shop-item.sh-curio{ border-color:var(--violet); background:linear-gradient(170deg,#241a3a,#151021); }
+.shop-item.sh-curio .si-art{ color:var(--violet); }
+.shop-item.sh-mod{ border-color:#4f9e6d; background:linear-gradient(170deg,#16281f,#101a15); }
+.shop-item.sh-mod .si-art{ color:var(--lime); }
+.shop-item.sh-card{ border-color:var(--cool); background:linear-gradient(170deg,#13263a,#0e1620); }
+.shop-item.sh-card .si-art{ color:var(--cool); }
+.shop-item.sh-house{ border-color:var(--gold); background:linear-gradient(170deg,#2a2313,#151021); }
+.shop-item.sh-house .si-art{ color:var(--gold); }
+.shop-item.r-legendary{ box-shadow:0 0 24px rgba(176,124,255,.45); }
+
+.si-badge{
+  margin-top:7px; font-size:8px; letter-spacing:.13em; text-transform:uppercase;
+  padding:3px 6px; border-radius:6px; display:inline-block;
+}
+.si-badge.seat{ background:rgba(176,124,255,.18); color:#d3b7ff; border:1px solid rgba(176,124,255,.45); }
+.si-badge.mark{ background:rgba(126,231,135,.14); color:#a9f0b2; border:1px solid rgba(126,231,135,.4); }
+.si-badge.add{  background:rgba(76,201,240,.15); color:#a7e4fb; border:1px solid rgba(76,201,240,.45); }
+.si-badge.rule{ background:rgba(255,209,102,.14); color:#ffdf9c; border:1px solid rgba(255,209,102,.4); }
+.si-preview{ display:flex; justify-content:center; gap:4px; margin-bottom:6px; }
+.si-preview .card{ position:relative; }
+.mini-pair{ display:flex; gap:3px; }
+.mini-pair .card{ position:relative; width:34px; height:48px; }
+.mini-pair .card .rk{ font-size:9px } .mini-pair .card .st{ font-size:7px } .mini-pair .card .mid{ font-size:15px }
+
+.tip-kind{ font-size:8px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:5px; padding:2px 5px; border-radius:5px; display:inline-block; }
+.tip-kind.curio-kind{ background:rgba(176,124,255,.18); color:#d3b7ff; }
+.tip-kind.card-kind{ background:rgba(76,201,240,.15); color:#a7e4fb; }
+
+/* help panel structure */
+.help-body h4{ font-family:var(--display); font-size:12px; letter-spacing:.08em; color:var(--gold); margin:16px 0 6px; }
+.help-body h4:first-child{ margin-top:0; }
+.help-body ul{ margin:0 0 10px; padding-left:18px; }
+.help-body li{ margin-bottom:4px; }
+.help-body .formula{
+  text-align:center; font-family:var(--display); font-size:20px; margin:10px 0;
+  padding:10px; background:rgba(0,0,0,.35); border-radius:10px; border:1px solid var(--line);
+}
+.help-body .formula .c{ color:var(--cool) } .help-body .formula .m{ color:var(--hot) } .help-body .formula .p{ color:var(--gold) }
+.rb-demo{ font-family:var(--display); font-size:10px; border:2px solid var(--cool); color:var(--cool); border-radius:7px; padding:1px 6px; }
+
+.cash-btn b{ color:#062210; background:rgba(255,255,255,.45); padding:1px 7px; border-radius:7px; margin-left:6px; }
+
+/* payout emphasis + mid-round cash pops */
+.pay-line.hero{ background:rgba(255,209,102,.12); margin:2px -6px; padding:5px 6px; border-radius:7px; }
+.pay-line.hero b{ font-size:16px; }
+.pay-line.earned{ color:var(--lime); border-bottom:1px dashed var(--line); padding-bottom:6px; margin-bottom:4px; }
+.pay-line.earned b{ color:var(--lime); }
+.fx-money.big{ font-size:26px; text-shadow:0 0 18px rgba(255,209,102,.9), 0 3px 0 #6b4d12; }
+.fx-cashlabel{ color:var(--gold); font-size:10px; letter-spacing:.14em; opacity:.85; }
+
+
+/* compact the shelves so all four categories fit without scrolling */
+.shop{ padding:16px 18px 14px; }
+.shop-title{ font-size:21px; }
+.shelf{ margin-bottom:11px; }
+.shelf-head{ margin-bottom:5px; padding-bottom:4px; }
+.shop-item{ padding:9px 10px 26px; }
+.shop-item .si-art{ width:28px; height:28px; margin:0 auto 4px; }
+.si-name{ font-size:12px; margin-bottom:3px; }
+.si-text{ font-size:10px; line-height:1.35; min-height:0; opacity:.8; }
+.si-badge{ margin-top:5px; padding:2px 5px; }
+.si-price{ font-size:13px; padding:1px 14px; }
+.si-preview{ margin-bottom:4px; }
+.si-preview .card.mini{ width:38px; height:53px; }
+.si-preview .card.mini .rk{ font-size:9px } .si-preview .card.mini .st{ font-size:7px } .si-preview .card.mini .mid{ font-size:16px }
+.mantel-wrap{ margin:8px 0 10px; }
+.mantel-inline{ min-height:74px; padding:7px 10px; }
+.shop-foot{ margin-top:10px; }
+@media (max-height:900px){
+  .si-text{ font-size:9.5px; }
+  .shelf{ margin-bottom:9px; }
+}
+
+/* two shelves abreast on wide screens so the whole shop fits on one screen */
+@media (min-width:1000px){
+  .shop-body{ display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+  .shop{ max-width:1080px; }
+}
+
+/* narrow screens: the run badge shrinks to just the number */
+@media (max-width:760px){
+  .run-badge{ padding:2px 5px; }
+  .rb-v{ display:none; }
+  .rb-n{ font-size:9px; }
+}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -539,9 +776,15 @@ body.dragging-now{ cursor:grabbing; }
       <div class="pile waste-pile" id="waste" data-zone="waste"></div>
 
       <div id="scorebox">
-        <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
-        <div class="sb-x">X</div>
-        <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+        <div id="combo-meter"></div>
+        <div class="sb-eq-row">
+          <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
+          <div class="sb-op">X</div>
+          <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+          <div class="sb-op eq">=</div>
+          <div class="sb-side total" data-cap="POINTS"><span id="sb-total">0</span></div>
+        </div>
+        <div class="sb-legend">Chips <b>X</b> Mult = the points added to your round score</div>
       </div>
 
       <div class="foundations">
@@ -565,12 +808,13 @@ body.dragging-now{ cursor:grabbing; }
       <button class="btn ghost" id="btn-collect">AUTO</button>
     </div>
     <div class="ctl-right">
-      <button class="btn cash-btn" id="btn-cash">CASH OUT</button>
+      <button class="btn cash-btn" id="btn-cash" title="Bank this round and collect">CASH OUT <b id="cash-preview">$0</b></button>
     </div>
   </footer>
 
 </div>
 
+<div id="flash"></div>
 <div id="fxlayer"></div>
 <div id="draglayer"></div>
 <div id="tooltip"></div>
@@ -578,11 +822,112 @@ body.dragging-now{ cursor:grabbing; }
 <div id="overlay"></div>
 
 <script>
+/* ===== js/icons.js ===== */
+/* ============================================================
+   PILE-DRIVER  ::  icons.js
+   One coherent line-art icon set. Every glyph lives on a 24x24
+   grid, 1.7 stroke, so Curios / mods / rules all read as a family.
+   <path class="f"> = soft filled mass, <path class="a"> = accent.
+   ============================================================ */
+
+const ICONS = {
+  /* --- generic --- */
+  unknown: '<circle cx="12" cy="12" r="8"/><path d="M12 16v.01M12 8a2.4 2.4 0 0 1 1.6 4.2c-.9.7-1.6 1-1.6 1.8"/>',
+
+  /* --- curios --- */
+  duck: '<path class="f" d="M4 15.5c0-2.5 2.3-4.3 5.2-4.3H13v1.3c0 2.8-2.4 5-5.3 5H6a2 2 0 0 1-2-2z"/><circle cx="16" cy="7.6" r="2.9"/><path d="M18.8 6.8h2.7l-2 1.9"/><path d="M13.2 10.6v1.9c0 2.8-2.4 5-5.3 5H6a2 2 0 0 1-2-2c0-2.5 2.3-4.3 5.2-4.3z"/>',
+  coin: '<circle cx="12" cy="12" r="8"/><circle class="f" cx="12" cy="12" r="5"/><path d="M12 8.5v7M10.3 10h2.6a1.6 1.6 0 0 1 0 3.2h-1.8a1.6 1.6 0 0 0 0 3.2h2.6"/>',
+  thumb: '<path class="f" d="M8 11h2.4l1.6-4.4A1.7 1.7 0 0 1 15.2 7l-.7 4h3.3a1.8 1.8 0 0 1 1.7 2.3l-1.3 4.4A2.4 2.4 0 0 1 15.9 19H8z"/><rect x="4" y="10.6" width="4" height="8.4" rx="1"/>',
+  scarf: '<path d="M7 4.5a5.2 5.2 0 0 1 10 0v3a5 5 0 0 1-10 0z"/><path class="f" d="M7 9.5c1.6 1.6 3.1 2.4 5 2.4s3.4-.8 5-2.4l1.6 3.6-3.2 1.3.9 5.1-4.3-2.8-4.3 2.8.9-5.1-3.2-1.3z"/>',
+  pick: '<path d="M3.5 20.5 12 12"/><path class="f" d="M4.5 6.2c4.6-2.6 10.2-2.4 15 .7-4.8-.6-8.4.4-11 3.2z"/><path d="M19.5 6.9c-4.8-3.1-10.4-3.3-15-.7 4.6.1 7.7 1.5 9.6 4.1"/>',
+  tomb: '<path class="f" d="M6 20V9a6 6 0 0 1 12 0v11z"/><path d="M6 20V9a6 6 0 0 1 12 0v11"/><path d="M12 7.5v6M9.5 10h5"/><path d="M3.5 20.5h17"/>',
+  jester: '<path class="f" d="M5 13c0-4.2 3.1-7.5 7-7.5s7 3.3 7 7.5z"/><path d="M5 13c0-4.2 3.1-7.5 7-7.5s7 3.3 7 7.5"/><circle cx="4.4" cy="5.4" r="1.7"/><circle cx="19.6" cy="5.4" r="1.7"/><path d="M5.4 6.8 8 9.4M18.6 6.8 16 9.4"/><path d="M3.5 13h17v2.4h-17z"/>',
+  sleeve: '<path class="f" d="M4 8.5 9 6l3 2 3-2 5 2.5-1.6 4-2.4-1v8H8v-8l-2.4 1z"/><path d="M4 8.5 9 6l3 2 3-2 5 2.5-1.6 4-2.4-1v8H8v-8l-2.4 1z"/><path class="a" d="M15.4 12.6h3.4v4.8h-3.4z" transform="rotate(18 17 15)"/>',
+  shovel: '<path d="M12 3.5v10"/><path d="M9.5 3.5h5"/><path class="f" d="M8 13.5h8v3.2a4 4 0 0 1-4 4 4 4 0 0 1-4-4z"/>',
+  heartbeat: '<path class="f" d="M12 20.2 4.8 13a4.4 4.4 0 0 1 6.2-6.2l1 1 1-1A4.4 4.4 0 0 1 19.2 13z"/><path d="M3.5 13h3l1.6-3 2.2 5.6 2-4.2 1.4 1.6h6.8"/>',
+  sandwich: '<path class="f" d="M3.5 8.5 12 4.5l8.5 4-8.5 4z"/><path d="M3.5 8.5 12 4.5l8.5 4-8.5 4z"/><path d="M4 12.4 12 16l8-3.6M4 15.9 12 19.5l8-3.6"/>',
+  gemhand: '<path class="f" d="m12 3.5 4.2 4.2L12 14 7.8 7.7z"/><path d="m12 3.5 4.2 4.2L12 14 7.8 7.7zM7.8 7.7h8.4"/><path d="M5 20.5c1.8-2.4 4.1-3.6 7-3.6s5.2 1.2 7 3.6"/>',
+  shoe: '<path class="f" d="M3.5 17.5V9h3.2l1.6 2.2 3.4 1.1 3.4 2.1h3.4a2 2 0 0 1 2 2v1.1a1.4 1.4 0 0 1-1.4 1.4H4.9a1.4 1.4 0 0 1-1.4-1.4z"/><path d="M3.5 14.4h4.4"/>',
+  sock: '<path class="f" d="M8 3.5h5v7.7l4.6 4.6a3.2 3.2 0 0 1-4.5 4.5l-6.4-6.4a3.4 3.4 0 0 1-1-2.4V3.5z"/><path d="M8 8.5h5"/>',
+  shades: '<path d="M2.5 8.5h19"/><path class="f" d="M3.5 8.5h7v3.6a3.5 3.5 0 0 1-7 0zM13.5 8.5h7v3.6a3.5 3.5 0 0 1-7 0z"/><path d="M10.5 10.2c1-.6 2-.6 3 0"/>',
+  ladder: '<path d="M7 3.5v17M17 3.5v17"/><path class="a" d="M7 7.5h10M7 11.5h10M7 15.5h10"/>',
+  metronome: '<path class="f" d="M9.2 4.5h5.6l3.2 15.5H6z"/><path d="M9.2 4.5h5.6l3.2 15.5H6z"/><path d="M12 17.5 16.5 7"/><circle cx="16.5" cy="7" r="1.4"/>',
+  crates: '<path class="f" d="M3.5 12.5h8v8h-8zM12.5 12.5h8v8h-8zM8 4h8v8H8z"/><path d="M3.5 12.5h8v8h-8zM12.5 12.5h8v8h-8zM8 4h8v8H8z"/><path d="M7.5 16.5h.01M16.5 16.5h.01M12 8h.01"/>',
+  vacuum: '<path class="f" d="M12 20.5a6 6 0 0 0 6-6V9h-4v5.5a2 2 0 0 1-4 0V9H6v5.5a6 6 0 0 0 6 6z"/><path d="M6 9V6.5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9"/><path d="M3.5 20.5h17"/>',
+  hourglass: '<path d="M6 3.5h12M6 20.5h12"/><path class="f" d="M7.5 3.5h9c0 4-4.5 6-4.5 8.5S16.5 16.5 16.5 20.5h-9c0-4 4.5-6 4.5-8.5S7.5 7.5 7.5 3.5z"/>',
+  notebook: '<path class="f" d="M6 3.5h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3.5h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3.5a2 2 0 0 0 0 4h2v-4M10 10h6M10 14h6"/>',
+  bomb: '<circle class="f" cx="11" cy="15" r="6"/><circle cx="11" cy="15" r="6"/><path d="M15 10.5 17.5 8"/><path d="M17.5 8c0-2 1-3.2 2.8-3.2"/><path class="a" d="m19.4 2.6.9 1.9 2 .5-1.9 1 .1 2-1.5-1.4-2 .6.8-1.9-1.1-1.7z"/>',
+  gear: '<circle class="f" cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="3.4"/><path d="M12 3v2.4M12 18.6V21M21 12h-2.4M5.4 12H3M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/>',
+  bubbles: '<circle class="f" cx="9" cy="14" r="5"/><circle cx="9" cy="14" r="5"/><circle cx="17" cy="8" r="3.4"/><circle cx="18.5" cy="16.5" r="2.2"/><path d="M7 12.2a2.4 2.4 0 0 1 2-1.6"/>',
+  coffee: '<path class="f" d="M4.5 9h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M4.5 9h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M16.5 10.5h1.9a2.6 2.6 0 0 1 0 5.2h-1.9"/><path d="M8 3.5c-.8 1.2-.8 2 0 3.2M12 3.5c-.8 1.2-.8 2 0 3.2"/>',
+  shell: '<path class="f" d="M20.5 12a8.5 8.5 0 1 1-17 0 8.5 8.5 0 0 1 17 0z"/><path d="M20.5 12a8.5 8.5 0 1 1-17 0 8.5 8.5 0 0 1 17 0z"/><path d="M12 3.5A8.5 8.5 0 0 0 12 20.5M20.5 12a5 5 0 0 0-10 0 3 3 0 0 0 6 0"/>',
+  clock: '<circle class="f" cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/>',
+  raincloud: '<path class="f" d="M7 13.5a4 4 0 0 1 .4-8A5.2 5.2 0 0 1 17.4 6a3.8 3.8 0 0 1-.4 7.5z"/><path d="M7 13.5a4 4 0 0 1 .4-8A5.2 5.2 0 0 1 17.4 6a3.8 3.8 0 0 1-.4 7.5z"/><path class="a" d="M8.5 16.5 7 20M12 16.5 10.5 20M15.5 16.5 14 20"/>',
+  bolt: '<path class="f" d="M13.4 2.5 5.5 13.5h5l-.9 8 7.9-11h-5z"/><path d="M13.4 2.5 5.5 13.5h5l-.9 8 7.9-11h-5z"/>',
+  anchor: '<circle cx="12" cy="5.4" r="2.4"/><path d="M12 7.8v12.7M7.5 10.5h9"/><path d="M4.5 14.5c0 3.6 3.4 6 7.5 6s7.5-2.4 7.5-6"/>',
+  waves: '<path class="a" d="M3 8.5c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0"/><path d="M3 13c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0M3 17.5c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0"/>',
+  trophy: '<path class="f" d="M7 3.5h10v5a5 5 0 0 1-10 0z"/><path d="M7 3.5h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.5v1.6A3.4 3.4 0 0 0 7.9 10.5M17 5.5h2.5v1.6a3.4 3.4 0 0 1-3.4 3.4"/><path d="M12 13.5v3.5M8.5 20.5h7"/>',
+  disco: '<circle class="f" cx="12" cy="13.5" r="7"/><circle cx="12" cy="13.5" r="7"/><path d="M12 6.5v14M5 13.5h14M7.2 8.6c3 2.2 6.6 2.2 9.6 0M7.2 18.4c3-2.2 6.6-2.2 9.6 0"/><path d="M12 6.5v-3"/>',
+  alarm: '<circle class="f" cx="12" cy="13.5" r="6.8"/><circle cx="12" cy="13.5" r="6.8"/><path d="M12 9.5v4.2l2.8 1.8"/><path d="M4.5 5.5 7.8 3M19.5 5.5 16.2 3"/>',
+  paw: '<circle class="f" cx="12" cy="15.5" r="4.4"/><circle class="f" cx="6.6" cy="10.4" r="2.2"/><circle class="f" cx="17.4" cy="10.4" r="2.2"/><circle class="f" cx="9.6" cy="6.4" r="2.1"/><circle class="f" cx="14.4" cy="6.4" r="2.1"/>',
+  lens: '<circle class="f" cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="7.5"/><path class="a" d="M8.6 8.6a4.8 4.8 0 0 1 6.8 6.8z"/>',
+  skull: '<path class="f" d="M5 11a7 7 0 0 1 14 0v3.2l-1.6 1.6v2.4h-1.9v2H8.5v-2H6.6v-2.4L5 14.2z"/><path d="M5 11a7 7 0 0 1 14 0v3.2l-1.6 1.6v2.4h-1.9v2H8.5v-2H6.6v-2.4L5 14.2z"/><circle cx="9.2" cy="11.4" r="1.7"/><circle cx="14.8" cy="11.4" r="1.7"/>',
+  shark: '<path class="f" d="M12 3.5c3.4 3.4 5.2 7.4 5.4 12H6.6c.2-4.6 2-8.6 5.4-12z"/><path d="M12 3.5c3.4 3.4 5.2 7.4 5.4 12H6.6c.2-4.6 2-8.6 5.4-12z"/><path d="M3 18.5c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0"/>',
+  candle: '<path class="f" d="M9 10h6v10.5H9z"/><path d="M9 10h6v10.5H9z"/><path class="a" d="M12 2.8c1.9 1.9 2.8 3.3 2.8 4.4a2.8 2.8 0 0 1-5.6 0c0-1.1.9-2.5 2.8-4.4z"/>',
+  rainbow: '<path class="a" d="M3.5 19.5a8.5 8.5 0 0 1 17 0"/><path d="M6.6 19.5a5.4 5.4 0 0 1 10.8 0M9.7 19.5a2.3 2.3 0 0 1 4.6 0"/>',
+  cardsfan: '<rect class="f" x="9" y="4.5" width="9" height="13" rx="1.4"/><rect x="9" y="4.5" width="9" height="13" rx="1.4"/><path d="M7.4 6.6 4.6 16.7a1.4 1.4 0 0 0 1 1.7l5.6 1.5"/><path d="M13.5 9.5v3.5M11.8 11.2h3.4"/>',
+  house: '<path class="f" d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M9.5 21v-6h5v6"/>',
+  infinity: '<path class="a" d="M8.2 8.2a5.4 5.4 0 1 0 0 7.6L15.8 8.2a5.4 5.4 0 1 1 0 7.6z"/>',
+  midas: '<path class="f" d="M7 12h2.4l1.4-4.6A1.7 1.7 0 0 1 14 8l-.6 4h3.1a1.8 1.8 0 0 1 1.7 2.3l-1.2 4.3A2.4 2.4 0 0 1 14.7 20H7z"/><path d="M7 12h2.4l1.4-4.6A1.7 1.7 0 0 1 14 8l-.6 4h3.1a1.8 1.8 0 0 1 1.7 2.3l-1.2 4.3A2.4 2.4 0 0 1 14.7 20H7z"/><rect x="3.5" y="11.6" width="3.5" height="8.4" rx="1"/><path class="a" d="m18.5 2.5.8 1.8 1.9.4-1.8 1 .1 1.9-1.4-1.3-1.9.6.8-1.8-1-1.6z"/>',
+  magnet: '<path class="f" d="M5 13V8a7 7 0 0 1 14 0v5h-4V8a3 3 0 0 0-6 0v5z"/><path d="M5 13V8a7 7 0 0 1 14 0v5h-4V8a3 3 0 0 0-6 0v5z"/><path class="a" d="M5 13h4v3.5H5zM15 13h4v3.5h-4z"/>',
+  dice: '<rect class="f" x="4" y="4" width="16" height="16" rx="3"/><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.6" cy="8.6" r="1.3"/><circle cx="15.4" cy="15.4" r="1.3"/><circle cx="12" cy="12" r="1.3"/>',
+
+  /* --- card mods --- */
+  sparkle: '<path class="a" d="m12 2.5 2.2 5.6 5.6 2.2-5.6 2.2L12 18.1 9.8 12.5 4.2 10.3l5.6-2.2z"/><path d="m19 16 .9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>',
+  glassgem: '<path class="f" d="m12 3 6 4.5-6 13.5L6 7.5z"/><path d="m12 3 6 4.5-6 13.5L6 7.5zM6 7.5h12M12 3v18"/>',
+  leaf: '<path class="f" d="M20 4c0 9-4.6 13.6-11.6 13.6A5.4 5.4 0 0 1 4 12.2C4 6.2 9.6 4 20 4z"/><path d="M20 4c0 9-4.6 13.6-11.6 13.6A5.4 5.4 0 0 1 4 12.2C4 6.2 9.6 4 20 4z"/><path d="M4 20c3.4-4.6 7-7.6 11-9"/>',
+  ghost: '<path class="f" d="M5 20.5V10a7 7 0 0 1 14 0v10.5l-2.3-1.8-2.3 1.8-2.4-1.8-2.4 1.8-2.3-1.8z"/><path d="M5 20.5V10a7 7 0 0 1 14 0v10.5l-2.3-1.8-2.3 1.8-2.4-1.8-2.4 1.8-2.3-1.8z"/><circle cx="9.4" cy="10" r="1.4"/><circle cx="14.6" cy="10" r="1.4"/>',
+  clover: '<path class="f" d="M12 20.5v-6M12 14.5a3.4 3.4 0 1 1 2.4-5.8A3.4 3.4 0 1 1 12 14.5a3.4 3.4 0 1 1-2.4-5.8A3.4 3.4 0 1 1 12 14.5z"/><path d="M12 20.5v-6"/>',
+  anvil: '<path class="f" d="M4 8h11.5c1.6 0 2 1.2 3.2 1.2H21c-.6 3-2.8 5-6.4 5.4l1 3.4h-8l1-3.4C5.4 14.2 4 11.8 4 8z"/><path d="M4 8h11.5c1.6 0 2 1.2 3.2 1.2H21c-.6 3-2.8 5-6.4 5.4l1 3.4h-8l1-3.4C5.4 14.2 4 11.8 4 8z"/><path d="M6.5 20.5h11"/>',
+  dynamite: '<rect class="f" x="4" y="9.5" width="12" height="10" rx="1.6"/><rect x="4" y="9.5" width="12" height="10" rx="1.6"/><path d="M8 9.5v10M12 9.5v10"/><path d="M16 12c1.6 0 2.6-1 2.6-2.6S17.6 6.5 17.6 5"/><path class="a" d="m18.6 2.4.8 1.8 1.9.4-1.8 1.1.1 1.9-1.4-1.4-1.9.6.8-1.8-1-1.6z"/>',
+  ingot: '<path class="f" d="M4.5 16.5 7 10h10l2.5 6.5z"/><path d="M4.5 16.5 7 10h10l2.5 6.5z"/><path d="M8.6 10 10 6h4l1.4 4"/>',
+  prism: '<path class="f" d="M12 4 21 19H3z"/><path d="M12 4 21 19H3z"/><path class="a" d="M8 19h8"/><path d="M12 4v15"/>',
+  stamp: '<path class="f" d="M5.5 15.5h13v2.6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/><path d="M5.5 15.5h13v2.6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/><path d="M8.5 15.5V11a3.5 3.5 0 0 1 7 0v4.5"/><circle class="a" cx="12" cy="9.5" r="2.6"/>',
+  twincards: '<rect class="f" x="9" y="6" width="9.5" height="13" rx="1.4"/><rect x="9" y="6" width="9.5" height="13" rx="1.4"/><rect x="5.5" y="4" width="9.5" height="13" rx="1.4"/>',
+  scissors: '<circle cx="6.4" cy="6.4" r="2.4"/><circle cx="6.4" cy="17.6" r="2.4"/><path d="M8.4 7.8 20 17.2M8.4 16.2 20 6.8"/>',
+
+  /* --- new cards --- */
+  newcard: '<rect class="f" x="6" y="3.5" width="12" height="17" rx="2"/><rect x="6" y="3.5" width="12" height="17" rx="2"/><path class="a" d="M12 8v8M8 12h8"/>',
+  wanderer: '<rect class="f" x="6" y="3.5" width="12" height="17" rx="2"/><rect x="6" y="3.5" width="12" height="17" rx="2"/><path class="a" d="M12 7.5a3.4 3.4 0 0 1 0 6.8 3.4 3.4 0 0 1 0-6.8z"/><path d="M9.5 17h5"/>',
+  keycard: '<rect class="f" x="6" y="3.5" width="12" height="17" rx="2"/><rect x="6" y="3.5" width="12" height="17" rx="2"/><circle cx="12" cy="10" r="2.2"/><path d="M12 12.2V17M10.4 14.4h1.6M10.4 16h1.6"/>',
+
+  /* --- house rules --- */
+  table: '<path class="f" d="M3 8.5h18v3H3z"/><path d="M3 8.5h18v3H3zM6 11.5V20M18 11.5V20"/>',
+  handshake: '<path class="f" d="m3.5 12 4-4 4.5 2 4.5-2 4 4-3.5 5-2.5-2-2.5 2-2.5-2z"/><path d="M3.5 12 8 7.5M20.5 12 16 7.5M8 16l2.5 2 2.5-2 2.5 2 3.5-5"/>',
+  rewind: '<path class="a" d="M4 10.5h9.5a5 5 0 0 1 0 10H9"/><path d="M8 6 4 10.5 8 15"/>',
+  purse: '<path class="f" d="M5 9h14l1.5 11H3.5z"/><path d="M5 9h14l1.5 11H3.5z"/><path d="M8.5 9V6.8a3.5 3.5 0 0 1 7 0V9"/>',
+  coinstack: '<ellipse class="f" cx="12" cy="7" rx="7" ry="2.8"/><ellipse cx="12" cy="7" rx="7" ry="2.8"/><path d="M5 7v4.4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V7"/><path d="M5 11.4v4.4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-4.4"/>',
+  tag: '<path class="f" d="M11.5 3.5H20a.5.5 0 0 1 .5.5v8.5L11 22 3 14z"/><path d="M11.5 3.5H20a.5.5 0 0 1 .5.5v8.5L11 22 3 14z"/><circle cx="16.5" cy="7.5" r="1.6"/>',
+  magnifier: '<circle class="f" cx="10.5" cy="10.5" r="6"/><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5"/>',
+  flag: '<path d="M6 3.5v17"/><path class="f" d="M6 4.5h11l-2.2 3.6L17 11.7H6z"/><path d="M6 4.5h11l-2.2 3.6L17 11.7H6z"/>',
+  expand: '<path class="f" d="M9 7.5h6v9H9z"/><path d="M9 7.5h6v9H9z"/><path class="a" d="M5.5 5v14M18.5 5v14"/><path d="M3 12h2.5M18.5 12H21"/>',
+  frame: '<rect class="f" x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><rect x="7" y="8" width="10" height="8" rx="1"/>',
+  horseshoe: '<path class="f" d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/><path d="M6.5 20.5V13a5.5 5.5 0 0 1 11 0v7.5h-3.4V13a2.1 2.1 0 0 0-4.2 0v7.5z"/>',
+  fingers: '<path class="f" d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11l1-6.6a1.7 1.7 0 0 1 3.4.4l-.3 5.7 1.4-4.6a1.7 1.7 0 0 1 3.3.8L17 17.4A5 5 0 0 1 12.2 21h-1a5 5 0 0 1-4.4-2.6L4.4 14a1.6 1.6 0 0 1 2.6-1.8z"/><path d="M6 12V6.4a1.7 1.7 0 0 1 3.4 0V11"/>'
+};
+
+/* the icon renderer -- everything goes through this so the whole set stays uniform */
+function icon(name, cls) {
+  const body = ICONS[name] || ICONS.unknown;
+  return '<svg class="ico ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+         'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+}
+
 /* ===== js/data.js ===== */
 /* ============================================================
    PILE-DRIVER  ::  data.js
-   All content: ranks, suits, enhancements, finishes, seals,
-   Curios (the joker-likes), House Rules (vouchers) and the shop pools.
+   All content: ranks, suits, card marks, Curios (mantel objects),
+   Card Mods, New Cards, House Rules.
    ============================================================ */
 
 const RANK_NAMES = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -596,16 +941,22 @@ const SUIT_KEYS = ['S', 'H', 'D', 'C'];
 
 /* ---------- tuning knobs (all the balance lives here) ---------- */
 const TUNE = {
-  baseQuota: 2500,
+  baseQuota: 2000,   // eased a touch: dealing 3 at a time is a real difficulty bump
   quotaGrowth: 2.2,
   roundsPerAnte: 3,
   finalAnte: 8,
   skipBonus: 5,
+  drawCount: 3,                 // classic Klondike: three at a time, top one playable
   baseMoney: 3,
   interestPer: 5,
   interestCap: 5,
   moneyPerEmptyColumn: 1,
   moneyPerSuitDone: 2,
+  commissionCap: 12,        // most you can earn from raw scoring in one round
+  commissionDivisor: 8,     // you earn $1 per (quota / 8) points scored
+  cascadeCashEvery: 5,      // $1 each time the Cascade hits a multiple of this
+  stackCashAt: 5,           // cashing a card off a run this long pays $1
+  stackCashBigAt: 8,        // ...and this long pays $2
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -614,6 +965,8 @@ const TUNE = {
   rerollStep: 2,
   // scoring
   chipsPerDepth: 6,
+  stackMultPer: 2,      // Mult per extra card in the column run you scored off
+  stackChipScale: 1,    // Chips per rank-point sitting in that run
   revealChips: 20,
   clearChips: 120,
   clearMult: 3,
@@ -627,8 +980,21 @@ function rankChips(rank) {
   return rank;
 }
 
+/* score tiers -- drive the banner, the shake and the confetti */
+const SCORE_TIERS = [
+  { at: 100000, name: 'OBSCENE',  cls: 't5', shake: 22, parts: 90 },
+  { at: 25000,  name: 'ABSURD',   cls: 't4', shake: 16, parts: 64 },
+  { at: 8000,   name: 'BLAZING',  cls: 't3', shake: 11, parts: 44 },
+  { at: 2000,   name: 'SPICY',    cls: 't2', shake: 7,  parts: 26 },
+  { at: 600,    name: 'NICE',     cls: 't1', shake: 4,  parts: 14 }
+];
+function tierFor(total) {
+  for (const t of SCORE_TIERS) if (total >= t.at) return t;
+  return null;
+}
+
 /* =========================================================
-   ENHANCEMENTS  -- printed onto the face of a card
+   CARD MARKS -- printed onto individual cards
    ========================================================= */
 const ENHANCEMENTS = {
   none:    { name: 'Plain',     cls: '', text: '' },
@@ -640,19 +1006,17 @@ const ENHANCEMENTS = {
   lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.' },
   steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.' },
   bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.' },
-  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$',      text: 'Earn $4 when scored.' }
+  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.' }
 };
 
-/* Finishes -- the shiny layer, works on cards AND curios */
 const FINISHES = {
   none: { name: '', cls: '', text: '' },
   foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.' },
   holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.' },
   poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.' },
-  neg:  { name: 'Negative',    cls: 'fin-neg',  text: '+1 Mantel slot (curios only).' }
+  neg:  { name: 'Negative',    cls: 'fin-neg',  text: '+1 Mantel seat (Curios only).' }
 };
 
-/* Seals -- stamped on the back corner */
 const SEALS = {
   none: { name: '', cls: '', text: '' },
   red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.' },
@@ -661,107 +1025,114 @@ const SEALS = {
 };
 
 /* =========================================================
-   CURIOS -- the trinkets that sit on your MANTEL
-   hooks:
-     score(ctx)      every scoring event  (ctx.event: foundation|reveal|clear|suit)
-     roundStart(run) once at deal
-     roundEnd(run)   returns extra $  (optional)
-     mods            static rule changes
+   CURIOS -- objects that take a seat on your MANTEL
    ========================================================= */
 const CURIOS = [
   /* ---------------- commons ---------------- */
-  { id: 'rubber_duck', name: 'Rubber Duck', art: '\u{1F986}', rarity: 'common', cost: 4,
+  { id: 'rubber_duck', name: 'Rubber Duck', icon: 'duck', rarity: 'common', cost: 4,
     text: '+4 Mult on every score.',
     hooks: { score: c => c.addMult(4) } },
 
-  { id: 'lucky_coin', name: 'Lucky Coin', art: '\u{1FA99}', rarity: 'common', cost: 4,
+  { id: 'lucky_coin', name: 'Lucky Coin', icon: 'coin', rarity: 'common', cost: 4,
     text: '+40 Chips on every score.',
     hooks: { score: c => c.addChips(40) } },
 
-  { id: 'greasy_thumb', name: 'Greasy Thumb', art: '\u{1F44D}', rarity: 'common', cost: 5,
+  { id: 'greasy_thumb', name: 'Greasy Thumb', icon: 'thumb', rarity: 'common', cost: 5,
     text: 'X1.25 Mult on every score.',
     hooks: { score: c => c.xMult(1.25) } },
 
-  { id: 'red_baron', name: 'Red Baron', art: '\u{1F9E3}', rarity: 'common', cost: 5,
+  { id: 'red_baron', name: 'Red Baron', icon: 'scarf', rarity: 'common', cost: 5,
     text: 'Red cards give +6 Mult.',
     hooks: { score: c => { if (c.card && c.isRed(c.card)) c.addMult(6); } } },
 
-  { id: 'coal_miner', name: 'Coal Miner', art: '⛏️', rarity: 'common', cost: 5,
+  { id: 'coal_miner', name: 'Coal Miner', icon: 'pick', rarity: 'common', cost: 5,
     text: '+8 Chips for each card still face-down.',
     hooks: { score: c => c.addChips(8 * c.faceDownCount()) } },
 
-  { id: 'undertaker', name: 'The Undertaker', art: '\u{1FAA6}', rarity: 'common', cost: 6,
+  { id: 'undertaker', name: 'The Undertaker', icon: 'tomb', rarity: 'common', cost: 6,
     text: '+45 Chips for each empty column.',
     hooks: { score: c => c.addChips(45 * c.emptyColumns()) } },
 
-  { id: 'court_jester', name: 'Court Jester', art: '\u{1F0CF}', rarity: 'common', cost: 5,
+  { id: 'court_jester', name: 'Court Jester', icon: 'jester', rarity: 'common', cost: 5,
     text: 'J, Q and K give +55 Chips.',
     hooks: { score: c => { if (c.card && c.card.rank >= 11) c.addChips(55); } } },
 
-  { id: 'ace_sleeve', name: 'Ace Up The Sleeve', art: '\u{1F454}', rarity: 'common', cost: 6,
+  { id: 'ace_sleeve', name: 'Ace Up The Sleeve', icon: 'sleeve', rarity: 'common', cost: 6,
     text: 'Aces give X3 Mult.',
     hooks: { score: c => { if (c.card && c.card.rank === 1) c.xMult(3); } } },
 
-  { id: 'shovel_knight', name: 'Shovel Cult', art: '\u{1F3F4}', rarity: 'common', cost: 5,
+  { id: 'shovel_knight', name: 'Shovel Cult', icon: 'shovel', rarity: 'common', cost: 5,
     text: 'Spades give +7 Mult.',
     hooks: { score: c => { if (c.hasSuit(c.card, 'S')) c.addMult(7); } } },
 
-  { id: 'heart_throb', name: 'Heart Throb', art: '\u{1F495}', rarity: 'common', cost: 5,
+  { id: 'heart_throb', name: 'Heart Throb', icon: 'heartbeat', rarity: 'common', cost: 5,
     text: 'Hearts give +1 Mult for every Heart already on the foundations.',
     hooks: { score: c => { if (c.hasSuit(c.card, 'H')) c.addMult(Math.max(1, c.foundationCount('H'))); } } },
 
-  { id: 'club_sandwich', name: 'Club Sandwich', art: '\u{1F96A}', rarity: 'common', cost: 5,
+  { id: 'club_sandwich', name: 'Club Sandwich', icon: 'sandwich', rarity: 'common', cost: 5,
     text: 'Clubs give +45 Chips.',
     hooks: { score: c => { if (c.hasSuit(c.card, 'C')) c.addChips(45); } } },
 
-  { id: 'diamond_hands', name: 'Diamond Hands', art: '\u{1F48E}', rarity: 'common', cost: 6,
+  { id: 'diamond_hands', name: 'Diamond Hands', icon: 'gemhand', rarity: 'common', cost: 6,
     text: 'Diamonds give +30 Chips and a 1 in 3 chance of $1.',
     hooks: { score: c => { if (c.hasSuit(c.card, 'D')) { c.addChips(30); if (c.chance(3)) c.money(1); } } } },
 
-  { id: 'even_steven', name: 'Even Steven', art: '\u{1F45F}', rarity: 'common', cost: 5,
+  { id: 'even_steven', name: 'Even Steven', icon: 'shoe', rarity: 'common', cost: 5,
     text: 'Even ranks give +5 Mult.',
     hooks: { score: c => { if (c.card && c.card.rank % 2 === 0) c.addMult(5); } } },
 
-  { id: 'odd_todd', name: 'Odd Todd', art: '\u{1F9E6}', rarity: 'common', cost: 5,
+  { id: 'odd_todd', name: 'Odd Todd', icon: 'sock', rarity: 'common', cost: 5,
     text: 'Odd ranks give +60 Chips.',
     hooks: { score: c => { if (c.card && c.card.rank % 2 === 1) c.addChips(60); } } },
 
-  { id: 'boynt_floaters', name: 'BOYNT Floaters', art: '\u{1F576}️', rarity: 'common', cost: 4,
+  { id: 'boynt_floaters', name: 'BOYNT Floaters', icon: 'shades', rarity: 'common', cost: 4,
     text: '+3 Mult. It floats. Sells for full price, forever.',
     sellsFull: true,
     hooks: { score: c => c.addMult(3) } },
 
   /* ---------------- uncommons ---------------- */
-  { id: 'the_ladder', name: 'The Ladder', art: '\u{1FA9C}', rarity: 'uncommon', cost: 7,
+  { id: 'the_ladder', name: 'The Ladder', icon: 'ladder', rarity: 'uncommon', cost: 7,
     text: 'Your Cascade bonus counts double.',
     mods: { cascadeMult: 2 } },
 
-  { id: 'metronome', name: 'Metronome', art: '\u{1F3BC}', rarity: 'uncommon', cost: 7,
+  { id: 'metronome', name: 'Metronome', icon: 'metronome', rarity: 'uncommon', cost: 7,
     text: 'Every 3rd card scored this round gets X3 Mult.',
     hooks: { score: c => { if (c.event === 'foundation' && c.round.scoredCards % 3 === 0) c.xMult(3); } } },
 
-  { id: 'hoarder', name: 'Hoarder', art: '\u{1F5C3}️', rarity: 'uncommon', cost: 7,
+  { id: 'hoarder', name: 'Hoarder', icon: 'crates', rarity: 'uncommon', cost: 7,
     text: '+3 Mult for every card in the waste pile.',
     hooks: { score: c => c.addMult(3 * c.wasteCount()) } },
 
-  { id: 'vacuum', name: 'Shop Vac', art: '\u{1F9F9}', rarity: 'uncommon', cost: 6,
+  { id: 'vacuum', name: 'Shop Vac', icon: 'vacuum', rarity: 'uncommon', cost: 6,
     text: 'Emptying a column earns $4.',
     hooks: { score: c => { if (c.event === 'clear') c.money(4); } } },
 
-  { id: 'time_turner', name: 'Time Turner', art: '⏳', rarity: 'uncommon', cost: 8,
+  { id: 'time_turner', name: 'Time Turner', icon: 'hourglass', rarity: 'uncommon', cost: 8,
     text: '+2 passes through the stock. +1 Undo per round.',
     mods: { stockPasses: 2, undos: 1 } },
 
-  { id: 'cheat_sheet', name: 'Cheat Sheet', art: '\u{1F5D2}️', rarity: 'uncommon', cost: 8,
+  { id: 'sleight', name: 'Sleight Of Hand', icon: 'fingers', rarity: 'uncommon', cost: 9,
+    text: 'Deal 2 cards from the stock instead of 3.',
+    mods: { drawReduce: 1 } },
+
+  { id: 'the_magnet', name: 'The Magnet', icon: 'magnet', rarity: 'rare', cost: 11,
+    text: 'You may play ANY of the face-up cards in the waste, not just the top one.',
+    mods: { wasteAll: true } },
+
+  { id: 'loaded_dice', name: 'Loaded Dice', icon: 'dice', rarity: 'uncommon', cost: 7,
+    text: '1 in 6 chance for X4 Mult on any score.',
+    hooks: { score: c => { if (c.chance(6)) { c.xMult(4); c.flash(); } } } },
+
+  { id: 'cheat_sheet', name: 'Cheat Sheet', icon: 'notebook', rarity: 'uncommon', cost: 8,
     text: 'You can see every face-down card. +1 Mult.',
     mods: { xray: true },
     hooks: { score: c => c.addMult(1) } },
 
-  { id: 'anarchist', name: 'The Anarchist', art: '\u{1F4A3}', rarity: 'uncommon', cost: 8,
+  { id: 'anarchist', name: 'The Anarchist', icon: 'bomb', rarity: 'uncommon', cost: 8,
     text: 'Any card may be moved into an empty column, not just Kings.',
     mods: { anyIntoEmpty: true } },
 
-  { id: 'perpetual', name: 'Perpetual Motion', art: '⚙️', rarity: 'uncommon', cost: 8,
+  { id: 'perpetual', name: 'Perpetual Motion', icon: 'gear', rarity: 'uncommon', cost: 8,
     text: 'Gains +1 Mult every time you flip a card face-up. Resets each Ante.',
     counter: 0, counterLabel: 'Mult',
     hooks: {
@@ -771,7 +1142,7 @@ const CURIOS = [
       }
     } },
 
-  { id: 'bubble_wrap', name: 'Bubble Wrap', art: '\u{1FAE7}', rarity: 'uncommon', cost: 8,
+  { id: 'bubble_wrap', name: 'Bubble Wrap', icon: 'bubbles', rarity: 'uncommon', cost: 8,
     text: 'X1.1 Mult, growing by X0.05 with every card scored. Resets each round.',
     counter: 1.1, counterLabel: 'X',
     hooks: {
@@ -782,27 +1153,27 @@ const CURIOS = [
       }
     } },
 
-  { id: 'espresso', name: 'Double Espresso', art: '☕', rarity: 'uncommon', cost: 7,
+  { id: 'espresso', name: 'Double Espresso', icon: 'coffee', rarity: 'uncommon', cost: 7,
     text: 'The first 3 cards scored each round get X2 Mult.',
     hooks: { score: c => { if (c.event === 'foundation' && c.round.scoredCards <= 3) c.xMult(2); } } },
 
-  { id: 'fibonacci', name: 'Fibonacci Fred', art: '\u{1F41A}', rarity: 'uncommon', cost: 8,
+  { id: 'fibonacci', name: 'Fibonacci Fred', icon: 'shell', rarity: 'uncommon', cost: 8,
     text: 'A, 2, 3, 5 and 8 give +10 Mult.',
     hooks: { score: c => { if (c.card && [1, 2, 3, 5, 8].includes(c.card.rank)) c.addMult(10); } } },
 
-  { id: 'grandfather', name: 'Grandfather Clock', art: '\u{1F570}️', rarity: 'uncommon', cost: 7,
+  { id: 'grandfather', name: 'Grandfather Clock', icon: 'clock', rarity: 'uncommon', cost: 7,
     text: 'Kings earn $2 and give +80 Chips.',
     hooks: { score: c => { if (c.card && c.card.rank === 13) { c.money(2); c.addChips(80); } } } },
 
-  { id: 'rain_cloud', name: 'Rain Cloud', art: '\u{1F327}️', rarity: 'uncommon', cost: 6,
+  { id: 'rain_cloud', name: 'Rain Cloud', icon: 'raincloud', rarity: 'uncommon', cost: 6,
     text: '1 in 3 chance for +150 Chips on any score.',
     hooks: { score: c => { if (c.chance(3)) { c.addChips(150); c.flash(); } } } },
 
-  { id: 'static_cling', name: 'Static Cling', art: '\u{1F9E6}', rarity: 'uncommon', cost: 6,
+  { id: 'static_cling', name: 'Static Cling', icon: 'bolt', rarity: 'uncommon', cost: 6,
     text: '+250 Chips. X0.5 Mult. A terrible, wonderful bargain.',
     hooks: { score: c => { c.addChips(250); c.xMult(0.5); } } },
 
-  { id: 'sunk_cost', name: 'Sunk Cost', art: '\u{1F6A2}', rarity: 'uncommon', cost: 7,
+  { id: 'sunk_cost', name: 'Sunk Cost', icon: 'anchor', rarity: 'uncommon', cost: 7,
     text: 'Gains +2 Mult every time you attempt an illegal move. Resets each round.',
     counter: 0, counterLabel: 'Mult',
     hooks: {
@@ -810,32 +1181,40 @@ const CURIOS = [
       score: c => c.addMult(c.self.counter || 0)
     } },
 
-  { id: 'the_deep_end', name: 'The Deep End', art: '\u{1F30A}', rarity: 'uncommon', cost: 7,
+  { id: 'the_deep_end', name: 'The Deep End', icon: 'waves', rarity: 'uncommon', cost: 7,
     text: '+4 Mult for every card on your SHORTEST foundation.',
     hooks: { score: c => c.addMult(4 * c.shortestFoundation()) } },
 
+  { id: 'bricklayer', name: 'The Bricklayer', icon: 'crates', rarity: 'uncommon', cost: 8,
+    text: 'Your Column Stack bonus gives +4 Mult per card instead of +2.',
+    mods: { stackMult: 2 } },
+
+  { id: 'skyscraper', name: 'Skyscraper', icon: 'expand', rarity: 'rare', cost: 10,
+    text: '+25 Chips for every card in your tallest column.',
+    hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
+
   /* ---------------- rares ---------------- */
-  { id: 'the_collector', name: 'The Collector', art: '\u{1F5FF}', rarity: 'rare', cost: 9,
+  { id: 'the_collector', name: 'The Collector', icon: 'trophy', rarity: 'rare', cost: 9,
     text: '+400 Chips for every completed suit.',
     hooks: { score: c => c.addChips(400 * c.completedSuits()) } },
 
-  { id: 'mirror_ball', name: 'Mirror Ball', art: '\u{1FAA9}', rarity: 'rare', cost: 9,
+  { id: 'mirror_ball', name: 'Mirror Ball', icon: 'disco', rarity: 'rare', cost: 9,
     text: 'The first card scored each round is scored 3 times.',
     mods: { firstRetrigger: 2 } },
 
-  { id: 'doomsday', name: 'Doomsday Clock', art: '⏰', rarity: 'rare', cost: 9,
+  { id: 'doomsday', name: 'Doomsday Clock', icon: 'alarm', rarity: 'rare', cost: 9,
     text: '+1 Mult for every move you have made this round.',
     hooks: { score: c => c.addMult(c.round.moves) } },
 
-  { id: 'copycat', name: 'Copycat', art: '\u{1F43E}', rarity: 'rare', cost: 10,
+  { id: 'copycat', name: 'Copycat', icon: 'paw', rarity: 'rare', cost: 10,
     text: 'Copies the Curio directly to its left.',
     mods: { copyLeft: true } },
 
-  { id: 'sunglasses_hut', name: 'Polarized Lens', art: '\u{1F60E}', rarity: 'rare', cost: 10,
+  { id: 'sunglasses_hut', name: 'Polarized Lens', icon: 'lens', rarity: 'rare', cost: 10,
     text: 'X1.5 Mult. Every 5th score is X3 instead.',
     hooks: { score: c => c.xMult(c.round.scoreEvents % 5 === 0 ? 3 : 1.5) } },
 
-  { id: 'gravedigger', name: 'Gravedigger', art: '\u{1F480}', rarity: 'rare', cost: 10,
+  { id: 'gravedigger', name: 'Gravedigger', icon: 'skull', rarity: 'rare', cost: 10,
     text: 'Clearing a column gives X2 Mult for the rest of the round.',
     counter: 1, counterLabel: 'X',
     hooks: {
@@ -846,26 +1225,26 @@ const CURIOS = [
       }
     } },
 
-  { id: 'loan_shark', name: 'Loan Shark', art: '\u{1F988}', rarity: 'rare', cost: 9,
+  { id: 'loan_shark', name: 'Loan Shark', icon: 'shark', rarity: 'rare', cost: 9,
     text: 'Earn $6 at the end of every round. Interest is capped at $0.',
     mods: { noInterest: true },
     hooks: { roundEnd: () => 6 } },
 
-  { id: 'the_ritual', name: 'The Ritual', art: '\u{1F56F}️', rarity: 'rare', cost: 11,
+  { id: 'the_ritual', name: 'The Ritual', icon: 'candle', rarity: 'rare', cost: 11,
     text: 'Every 8th score is X8 Mult.',
     hooks: { score: c => { if (c.round.scoreEvents % 8 === 0) { c.xMult(8); c.flash(); } } } },
 
-  { id: 'chromatic', name: 'Chromatic Scale', art: '\u{1F308}', rarity: 'rare', cost: 10,
+  { id: 'chromatic', name: 'Chromatic Scale', icon: 'rainbow', rarity: 'rare', cost: 10,
     text: 'Suit Runs give double Mult and +100 Chips each.',
     mods: { suitRunMult: 2 },
     hooks: { score: c => { if (c.round.suitRun > 1) c.addChips(100 * c.round.suitRun); } } },
 
   /* ---------------- legendaries ---------------- */
-  { id: 'the_dealer', name: 'The Dealer', art: '\u{1F0A0}', rarity: 'legendary', cost: 16,
-    text: 'X0.25 Mult for each card left in your stock... but X4 Mult when the stock is empty.',
+  { id: 'the_dealer', name: 'The Dealer', icon: 'cardsfan', rarity: 'legendary', cost: 16,
+    text: 'X0.05 Mult worse for each card left in your stock... but X4 Mult when the stock is empty.',
     hooks: { score: c => { const n = c.stockCount(); c.xMult(n === 0 ? 4 : Math.max(0.6, 2 - n * 0.05)); } } },
 
-  { id: 'house_always_wins', name: 'The House', art: '\u{1F3E0}', rarity: 'legendary', cost: 18,
+  { id: 'house_always_wins', name: 'The House', icon: 'house', rarity: 'legendary', cost: 18,
     text: 'X1 Mult, permanently increased by X0.25 every time you finish a suit.',
     counter: 1, counterLabel: 'X',
     hooks: {
@@ -875,12 +1254,12 @@ const CURIOS = [
       }
     } },
 
-  { id: 'infinity_pool', name: 'Infinity Pool', art: '♾️', rarity: 'legendary', cost: 18,
+  { id: 'infinity_pool', name: 'Infinity Pool', icon: 'infinity', rarity: 'legendary', cost: 18,
     text: 'The stock never runs out of passes, and Kings may be stacked onto Aces. +8 Mult.',
     mods: { infinitePasses: true, wrapAround: true },
     hooks: { score: c => c.addMult(8) } },
 
-  { id: 'midas_touch', name: 'Midas Touch', art: '\u{1F91A}', rarity: 'legendary', cost: 17,
+  { id: 'midas_touch', name: 'Midas Touch', icon: 'midas', rarity: 'legendary', cost: 17,
     text: 'Every card you place on a foundation earns $1. X1.5 Mult.',
     hooks: { score: c => { c.xMult(1.5); if (c.event === 'foundation') c.money(1); } } }
 ];
@@ -891,65 +1270,113 @@ CURIOS.forEach(c => { CURIO_BY_ID[c.id] = c; });
 const RARITY_WEIGHT = { common: 100, uncommon: 45, rare: 16, legendary: 3 };
 
 /* =========================================================
-   HOUSE RULES -- permanent, run-long upgrades
+   HOUSE RULES -- permanent, run-long, no mantel seat
    ========================================================= */
 const HOUSE_RULES = [
-  { id: 'bigger_table', name: 'Bigger Table', art: '\u{1FA91}', cost: 12, max: 2,
-    text: '+1 Mantel slot.', apply: run => { run.mantelSlots = Math.min(TUNE.maxMantelSlots, run.mantelSlots + 1); } },
-  { id: 'generous_dealer', name: 'Generous Dealer', art: '\u{1F91D}', cost: 8, max: 2,
+  { id: 'nimble_fingers', name: 'Nimble Fingers', icon: 'fingers', cost: 14, max: 2,
+    text: 'Deal one card fewer from the stock (3 -> 2 -> 1).', apply: run => { run.drawReduce++; } },
+  { id: 'bigger_table', name: 'Bigger Table', icon: 'table', cost: 12, max: 2,
+    text: '+1 Mantel seat.', apply: run => { run.mantelSlots = Math.min(TUNE.maxMantelSlots, run.mantelSlots + 1); } },
+  { id: 'generous_dealer', name: 'Generous Dealer', icon: 'handshake', cost: 8, max: 2,
     text: '+1 pass through the stock each round.', apply: run => { run.bonusPasses++; } },
-  { id: 'rewind_ribbon', name: 'Rewind Ribbon', art: '↩️', cost: 7, max: 2,
+  { id: 'rewind_ribbon', name: 'Rewind Ribbon', icon: 'rewind', cost: 7, max: 2,
     text: '+2 Undos each round.', apply: run => { run.bonusUndos += 2; } },
-  { id: 'deep_pockets', name: 'Deep Pockets', art: '\u{1F45B}', cost: 9, max: 2,
+  { id: 'deep_pockets', name: 'Deep Pockets', icon: 'purse', cost: 9, max: 2,
     text: '+$3 at the end of every round.', apply: run => { run.bonusMoney += 3; } },
-  { id: 'loose_change', name: 'Loose Change', art: '\u{1FA99}', cost: 10, max: 2,
+  { id: 'loose_change', name: 'Loose Change', icon: 'coinstack', cost: 10, max: 2,
     text: 'Interest cap raised by $3.', apply: run => { run.interestCap += 3; } },
-  { id: 'discount_club', name: 'Discount Club', art: '\u{1F3F7}️', cost: 10, max: 2,
+  { id: 'discount_club', name: 'Discount Club', icon: 'tag', cost: 10, max: 2,
     text: 'Everything in the shop is 25% cheaper.', apply: run => { run.discount += 0.25; } },
-  { id: 'marked_deck', name: 'Marked Deck', art: '\u{1F50D}', cost: 9, max: 1,
+  { id: 'marked_deck', name: 'Marked Deck', icon: 'magnifier', cost: 9, max: 1,
     text: 'The top face-down card of every column is revealed.', apply: run => { run.markedDeck = true; } },
-  { id: 'head_start', name: 'Head Start', art: '\u{1F3C1}', cost: 11, max: 2,
-    text: 'Every round begins with +500 banked Chips of score.', apply: run => { run.headStart += 500; } },
-  { id: 'wider_felt', name: 'Wider Felt', art: '\u{1F7E9}', cost: 14, max: 1,
+  { id: 'head_start', name: 'Head Start', icon: 'flag', cost: 11, max: 2,
+    text: 'Every round begins with +500 banked score.', apply: run => { run.headStart += 500; } },
+  { id: 'wider_felt', name: 'Wider Felt', icon: 'expand', cost: 14, max: 1,
     text: 'Deal an 8th tableau column.', apply: run => { run.columns = 8; } },
-  { id: 'gilded_frame', name: 'Gilded Frame', art: '\u{1F5BC}️', cost: 13, max: 2,
+  { id: 'gilded_frame', name: 'Gilded Frame', icon: 'frame', cost: 13, max: 2,
     text: 'All Curios give an extra +2 Mult.', apply: run => { run.curioBonusMult += 2; } },
-  { id: 'lucky_horseshoe', name: 'Lucky Horseshoe', art: '\u{1F40E}', cost: 10, max: 1,
+  { id: 'lucky_horseshoe', name: 'Lucky Horseshoe', icon: 'horseshoe', cost: 10, max: 1,
     text: 'All "1 in X" chances are twice as likely.', apply: run => { run.luck = 2; } },
-  { id: 'shorter_ladder', name: 'Shorter Ladder', art: '\u{1FA9C}', cost: 15, max: 1,
+  { id: 'shorter_ladder', name: 'Shorter Ladder', icon: 'ladder', cost: 15, max: 1,
     text: 'All future quotas are 15% smaller.', apply: run => { run.quotaScale *= 0.85; } }
 ];
 const HOUSE_BY_ID = {};
 HOUSE_RULES.forEach(h => { HOUSE_BY_ID[h.id] = h; });
 
 /* =========================================================
-   TINCTURES -- shop items that alter the deck itself
-   kind: 'enhance' | 'finish' | 'seal' | 'add' | 'remove' | 'duplicate'
+   CARD MODS -- permanently mark a card already in your deck
+   kind: 'enhance' | 'finish' | 'seal' | 'remove'
    ========================================================= */
-const TINCTURES = [
-  { id: 't_gilded',  name: 'Gold Leaf',       art: '✦', cost: 5, kind: 'enhance', value: 'gilded',  text: 'Make one card Gilded (+50 Chips).' },
-  { id: 't_voltaic', name: 'Neon Tube',       art: '⚡', cost: 5, kind: 'enhance', value: 'voltaic', text: 'Make one card Voltaic (+4 Mult).' },
-  { id: 't_glass',   name: 'Glassblower',     art: '◇', cost: 5, kind: 'enhance', value: 'glass',   text: 'Make one card Glass (X2 Mult, fragile).' },
-  { id: 't_wild',    name: 'Chameleon Dust',  art: '✿', cost: 6, kind: 'enhance', value: 'wild',    text: 'Make one card a Chameleon (every suit).' },
-  { id: 't_phantom', name: 'Ectoplasm',       art: '◌', cost: 6, kind: 'enhance', value: 'phantom', text: 'Make one card a Phantom (stacks anywhere).' },
-  { id: 't_lucky',   name: "Rabbit's Foot",   art: '♣', cost: 5, kind: 'enhance', value: 'lucky',   text: "Make one card Rabbit's (random big Mult / cash)." },
-  { id: 't_steel',   name: 'Anvil',           art: '⚒', cost: 5, kind: 'enhance', value: 'steel',   text: 'Make one card Steel (X1.5 off the tableau).' },
-  { id: 't_bomb',    name: 'Stick of TNT',    art: '✹', cost: 6, kind: 'enhance', value: 'bomb',    text: 'Make one card a Fuse (scores the card beneath).' },
-  { id: 't_bullion', name: 'Bullion Stamp',   art: '$',      cost: 5, kind: 'enhance', value: 'bullion', text: 'Make one card Bullion (earn $4).' },
-  { id: 't_foil',    name: 'Foil Press',      art: '\u{1F4C0}', cost: 6, kind: 'finish', value: 'foil', text: 'Give one card a Foil finish (+60 Chips).' },
-  { id: 't_holo',    name: 'Hologram Kit',    art: '\u{1F52E}', cost: 7, kind: 'finish', value: 'holo', text: 'Give one card a Holographic finish (+12 Mult).' },
-  { id: 't_poly',    name: 'Prism',           art: '\u{1F308}', cost: 8, kind: 'finish', value: 'poly', text: 'Give one card a Polychrome finish (X1.5 Mult).' },
-  { id: 't_red',     name: 'Red Wax Seal',    art: '\u{1F534}', cost: 6, kind: 'seal', value: 'red',  text: 'Stamp a Red Seal: the card scores twice.' },
-  { id: 't_gold',    name: 'Gold Wax Seal',   art: '\u{1F7E1}', cost: 5, kind: 'seal', value: 'gold', text: 'Stamp a Gold Seal: earn $4 when scored.' },
-  { id: 't_blue',    name: 'Blue Wax Seal',   art: '\u{1F535}', cost: 5, kind: 'seal', value: 'blue', text: 'Stamp a Blue Seal: +30 Chips.' },
-  { id: 't_dupe',    name: 'Twin Press',      art: '\u{1F46F}', cost: 7, kind: 'duplicate', text: 'Add an exact copy of any card in your deck.' },
-  { id: 't_shred',   name: 'The Shredder',    art: '✂️', cost: 6, kind: 'remove', text: 'Permanently remove one card from your deck.' },
-  { id: 't_ace',     name: 'Spare Ace',       art: '\u{1F0A1}', cost: 7, kind: 'add', build: () => ({ rank: 1, suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'gilded' }), text: 'Add a random Gilded Ace to the deck.' },
-  { id: 't_joker',   name: 'The Wanderer',    art: '\u{1F0CF}', cost: 9, kind: 'add', build: () => ({ rank: 1 + Math.floor(Math.random() * 13), suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'wild', finish: 'poly' }), text: 'Add a Polychrome Chameleon card of a random rank.' },
-  { id: 't_ghost',   name: 'Poltergeist',     art: '\u{1F47B}', cost: 8, kind: 'add', build: () => ({ rank: 1 + Math.floor(Math.random() * 13), suit: SUIT_KEYS[Math.floor(Math.random() * 4)], enhancement: 'phantom' }), text: 'Add a random Phantom card to the deck.' }
+const CARD_MODS = [
+  { id: 't_gilded',  name: 'Gold Leaf',      icon: 'sparkle',  cost: 5, kind: 'enhance', value: 'gilded',  text: 'Make one card Gilded: +50 Chips.' },
+  { id: 't_voltaic', name: 'Neon Tube',      icon: 'bolt',     cost: 5, kind: 'enhance', value: 'voltaic', text: 'Make one card Voltaic: +4 Mult.' },
+  { id: 't_glass',   name: 'Glassblower',    icon: 'glassgem', cost: 5, kind: 'enhance', value: 'glass',   text: 'Make one card Glass: X2 Mult, but fragile.' },
+  { id: 't_wild',    name: 'Chameleon Dust', icon: 'leaf',     cost: 6, kind: 'enhance', value: 'wild',    text: 'Make one card a Chameleon: counts as every suit.' },
+  { id: 't_phantom', name: 'Ectoplasm',      icon: 'ghost',    cost: 6, kind: 'enhance', value: 'phantom', text: 'Make one card a Phantom: stacks onto any rank.' },
+  { id: 't_lucky',   name: "Rabbit's Foot",  icon: 'clover',   cost: 5, kind: 'enhance', value: 'lucky',   text: "Make one card Rabbit's: random big Mult or cash." },
+  { id: 't_steel',   name: 'Anvil',          icon: 'anvil',    cost: 5, kind: 'enhance', value: 'steel',   text: 'Make one card Steel: X1.5 Mult off the tableau.' },
+  { id: 't_bomb',    name: 'Stick of TNT',   icon: 'dynamite', cost: 6, kind: 'enhance', value: 'bomb',    text: 'Make one card a Fuse: also scores the card beneath.' },
+  { id: 't_bullion', name: 'Bullion Stamp',  icon: 'ingot',    cost: 5, kind: 'enhance', value: 'bullion', text: 'Make one card Bullion: earn $4 when scored.' },
+  { id: 't_foil',    name: 'Foil Press',     icon: 'sparkle',  cost: 6, kind: 'finish',  value: 'foil',    text: 'Foil finish on one card: +60 Chips.' },
+  { id: 't_holo',    name: 'Hologram Kit',   icon: 'prism',    cost: 7, kind: 'finish',  value: 'holo',    text: 'Holographic finish on one card: +12 Mult.' },
+  { id: 't_poly',    name: 'Prism',          icon: 'rainbow',  cost: 8, kind: 'finish',  value: 'poly',    text: 'Polychrome finish on one card: X1.5 Mult.' },
+  { id: 't_red',     name: 'Red Wax Seal',   icon: 'stamp',    cost: 6, kind: 'seal',    value: 'red',     text: 'Red Seal: that card scores twice.' },
+  { id: 't_gold',    name: 'Gold Wax Seal',  icon: 'stamp',    cost: 5, kind: 'seal',    value: 'gold',    text: 'Gold Seal: earn $4 when that card scores.' },
+  { id: 't_blue',    name: 'Blue Wax Seal',  icon: 'stamp',    cost: 5, kind: 'seal',    value: 'blue',    text: 'Blue Seal: +30 Chips.' },
+  { id: 't_shred',   name: 'The Shredder',   icon: 'scissors', cost: 6, kind: 'remove',  text: 'Burn one card out of your deck forever. A thinner deck deals kinder.' }
 ];
-const TINCTURE_BY_ID = {};
-TINCTURES.forEach(t => { TINCTURE_BY_ID[t.id] = t; });
+
+/* =========================================================
+   NEW CARDS -- physically added to the deck
+   kind: 'add' (built fresh) | 'duplicate' (copy one you own)
+   ========================================================= */
+const NEW_CARDS = [
+  { id: 'n_ace', name: 'Spare Ace', icon: 'newcard', cost: 7, kind: 'add',
+    text: 'A second Ace, already Gilded. More Aces means more foundations opening early.',
+    build: () => ({ rank: 1, suit: rndSuit(), enhancement: 'gilded' }) },
+
+  { id: 'n_wanderer', name: 'The Wanderer', icon: 'wanderer', cost: 10, kind: 'add',
+    text: 'A Chameleon with a Polychrome finish. Stacks on any colour, homes to any suit.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'wild', finish: 'poly' }) },
+
+  { id: 'n_ghost', name: 'Poltergeist', icon: 'ghost', cost: 8, kind: 'add',
+    text: 'A Phantom card. It stacks onto absolutely any rank, so dead columns come back to life.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'phantom' }) },
+
+  { id: 'n_king', name: 'Skeleton King', icon: 'keycard', cost: 9, kind: 'add',
+    text: 'A Phantom King in Steel. Opens empty columns AND drops onto anything.',
+    build: () => ({ rank: 13, suit: rndSuit(), enhancement: 'phantom', finish: 'foil' }) },
+
+  { id: 'n_agent', name: 'Double Agent', icon: 'twincards', cost: 11, kind: 'add',
+    text: 'A Chameleon with a Red Seal — every suit, and it scores twice.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'wild', seal: 'red' }) },
+
+  { id: 'n_keg', name: 'Powder Keg', icon: 'dynamite', cost: 9, kind: 'add',
+    text: 'A Gilded Fuse. Sending it home detonates the card underneath for a second score.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'bomb', finish: 'foil' }) },
+
+  { id: 'n_bar', name: 'Bullion Bar', icon: 'ingot', cost: 8, kind: 'add',
+    text: 'Bullion with a Gold Seal. Worth $8 the moment it reaches a foundation.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'bullion', seal: 'gold' }) },
+
+  { id: 'n_slipper', name: 'Glass Slipper', icon: 'glassgem', cost: 8, kind: 'add',
+    text: 'Glass and Holographic: X2 Mult and +12 Mult, if it survives the round.',
+    build: () => ({ rank: rndRank(), suit: rndSuit(), enhancement: 'glass', finish: 'holo' }) },
+
+  { id: 'n_seven', name: 'Lucky Seven', icon: 'clover', cost: 7, kind: 'add',
+    text: "A seventh 7, wearing a Rabbit's Foot and a Foil finish.",
+    build: () => ({ rank: 7, suit: rndSuit(), enhancement: 'lucky', finish: 'foil' }) },
+
+  { id: 'n_twin', name: 'The Understudy', icon: 'twincards', cost: 7, kind: 'duplicate',
+    text: 'Choose any card in your deck. An exact copy joins it, marks and all.' }
+];
+
+function rndSuit() { return SUIT_KEYS[Math.floor(Math.random() * 4)]; }
+function rndRank() { return 1 + Math.floor(Math.random() * 13); }
+
+const SHOP_BY_ID = {};
+CARD_MODS.forEach(t => { SHOP_BY_ID[t.id] = t; });
+NEW_CARDS.forEach(t => { SHOP_BY_ID[t.id] = t; });
 
 /* ===== js/engine.js ===== */
 /* ============================================================
@@ -1005,6 +1432,7 @@ const Engine = (() => {
       curioBonusMult: 0,
       luck: 1,
       quotaScale: 1,
+      drawReduce: 0,
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -1022,7 +1450,8 @@ const Engine = (() => {
     const m = {
       cascadeMult: 1, suitRunMult: 1, stockPasses: 0, undos: 0,
       xray: false, anyIntoEmpty: false, firstRetrigger: 0,
-      infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false
+      infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
+      drawReduce: 0, wasteAll: false, stackMult: 1
     };
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
@@ -1033,6 +1462,29 @@ const Engine = (() => {
       }
     });
     return m;
+  }
+
+  /* how many cards come off the stock per draw (House Rules and Curios can lower it) */
+  function drawCount(run) {
+    const m = mods(run);
+    return Math.max(1, TUNE.drawCount - (run.drawReduce || 0) - m.drawReduce);
+  }
+
+  /* the maximal face-up ordered run sitting at the bottom of a column */
+  function runStart(board, col, m) {
+    const pile = board.tableau[col];
+    let i = pile.length - 1;
+    if (i < 0 || !pile[i].faceUp) return -1;
+    while (i > 0 && pile[i - 1].faceUp && canStack(pile[i - 1], pile[i], m)) i--;
+    return i;
+  }
+  function runLength(board, col, m) {
+    const s = runStart(board, col, m);
+    return s < 0 ? 0 : board.tableau[col].length - s;
+  }
+  function runCards(board, col, m) {
+    const s = runStart(board, col, m);
+    return s < 0 ? [] : board.tableau[col].slice(s);
   }
 
   /* ---------------- the deal ---------------- */
@@ -1080,6 +1532,7 @@ const Engine = (() => {
         scoreEvents: 0,
         illegal: 0,
         money: 0,
+        paidClears: [],
         over: false,
         won: false
       }
@@ -1137,15 +1590,24 @@ const Engine = (() => {
     return true;
   }
 
+  /* which waste cards the player may grab */
+  function playableWaste(board, m) {
+    if (!board.waste.length) return [];
+    if (m && m.wasteAll) {
+      const n = Math.min(board.waste.length, 3);
+      return board.waste.slice(board.waste.length - n).map((c, k) => ({ card: c, index: board.waste.length - n + k }));
+    }
+    return [{ card: board.waste[board.waste.length - 1], index: board.waste.length - 1 }];
+  }
+
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
-    const wasteTop = b.waste[b.waste.length - 1];
-    if (wasteTop) {
-      if (foundationTargetFor(b, wasteTop)) return true;
-      for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, wasteTop, m)) return true;
+    for (const w of playableWaste(b, m)) {
+      if (foundationTargetFor(b, w.card)) return true;
+      for (let c = 0; c < b.tableau.length; c++) if (canPlaceOnColumn(b, c, w.card, m)) return true;
     }
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
@@ -1175,7 +1637,8 @@ const Engine = (() => {
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
-    canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId
+    canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
+    drawCount, runStart, runLength, runCards, playableWaste
   };
 })();
 
@@ -1236,6 +1699,7 @@ const Score = (() => {
       foundationCount: s => board.foundations[s].length,
       completedSuits: () => SUIT_KEYS.filter(s => board.foundations[s].length >= 13).length,
       shortestFoundation: () => Math.min.apply(null, SUIT_KEYS.map(s => board.foundations[s].length)),
+      tallestColumn: () => board.tableau.reduce((a, p) => Math.max(a, p.length), 0),
       self: null
     };
     return ctx;
@@ -1301,12 +1765,17 @@ const Score = (() => {
     });
   }
 
-  /* combo layer: Cascade + Suit Run */
+  /* combo layer: Cascade + Suit Run + the Column Stack you scored off */
   function comboPass(ctx) {
     const m = Engine.mods(ctx.run);
     ctx._src = { type: 'combo' };
     if (ctx.round.cascade > 1) ctx.addMult(ctx.round.cascade * m.cascadeMult);
     if (ctx.round.suitRun > 1) ctx.addMult(ctx.round.suitRun * 2 * m.suitRunMult);
+    /* the longer and richer the face-up run you built, the bigger the cash-in */
+    if (ctx.stack && ctx.stack.length > 1) {
+      ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
+      ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
+    }
     ctx._src = null;
   }
 
@@ -1317,6 +1786,7 @@ const Score = (() => {
   function event(G, ev) {
     const ctx = makeCtx(G, ev);
     ctx.depth = ev.depth || 0;
+    ctx.stack = ev.stack || null;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
@@ -1363,7 +1833,7 @@ const Score = (() => {
     return null;
   }
 
-  /* end-of-round payout */
+  /* end-of-round payout. Called live during play for the CASH OUT preview too. */
   function payout(G) {
     const run = G.run, b = G.board;
     const m = Engine.mods(run);
@@ -1372,6 +1842,18 @@ const Score = (() => {
 
     const base = TUNE.baseMoney + run.bonusMoney;
     lines.push({ label: 'Round played', amount: base }); total += base;
+
+    /* the big one: you get paid for how hard you actually scored, measured
+       against this ante's quota so it stays meaningful at every ante */
+    const quota = Engine.quotaFor(run);
+    const commission = Math.min(TUNE.commissionCap, Math.floor(G.round.score / (quota / TUNE.commissionDivisor)));
+    if (commission > 0) {
+      lines.push({
+        label: 'Scoring commission (' + Math.round(G.round.score / quota * 100) + '% of quota)',
+        amount: commission, big: true
+      });
+      total += commission;
+    }
 
     const empties = b.tableau.filter(p => !p.length).length;
     if (empties) { const a = empties * TUNE.moneyPerEmptyColumn; lines.push({ label: empties + ' empty column' + (empties > 1 ? 's' : ''), amount: a }); total += a; }
@@ -1408,7 +1890,7 @@ const Score = (() => {
    ============================================================ */
 
 const Game = (() => {
-  const SAVE_KEY = 'piledriver.save.v1';
+  const SAVE_KEY = 'piledriver.save.v2';
 
   const G = {
     run: null, board: null, round: null,
@@ -1499,7 +1981,8 @@ const Game = (() => {
         top.faceUp = true;
         scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
       }
-    } else {
+    } else if (!G.round.paidClears.includes(col)) {
+      G.round.paidClears.push(col);
       scoreEvent({ event: 'clear', anchor: { zone: 'tableau', col } });
     }
   }
@@ -1531,11 +2014,17 @@ const Game = (() => {
       return true;
     }
     snapshot();
-    const c = b.stock.pop();
-    c.faceUp = true;
-    b.waste.push(c);
+    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
+    const turned = [];
+    for (let i = 0; i < n; i++) {
+      const c = b.stock.pop();
+      c.faceUp = true;
+      b.waste.push(c);
+      turned.push(c);
+    }
     breakCascade();
     G.round.moves++;
+    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
     save();
     return true;
   }
@@ -1557,6 +2046,11 @@ const Game = (() => {
         ? dst.suit : Engine.foundationTargetFor(b, card);
       if (!suit) return illegal();
       snapshot();
+      let stack = null;
+      if (src.zone === 'tableau') {
+        const runCards = Engine.runCards(b, src.col, m);
+        stack = { length: runCards.length, value: runCards.reduce((a, c) => a + rankChips(c.rank), 0) };
+      }
       removeFrom(src, 1);
       const depth = b.foundations[suit].length;
       b.foundations[suit].push(card);
@@ -1564,6 +2058,19 @@ const Game = (() => {
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
       G.round.cascade++;
+      if (G.round.cascade > 0 && G.round.cascade % TUNE.cascadeCashEvery === 0) {
+        G.run.money += 1;
+        G.round.money += 1;
+        push({ event: 'cash', label: 'CASCADE X' + G.round.cascade, amount: 1,
+               anchor: { zone: 'foundation', suit }, chips: 0, mult: 0, total: 0, triggers: [] });
+      }
+      if (stack && stack.length >= TUNE.stackCashAt) {
+        const amt = stack.length >= TUNE.stackCashBigAt ? 2 : 1;
+        G.run.money += amt;
+        G.round.money += amt;
+        push({ event: 'cash', label: 'RUN OF ' + stack.length, amount: amt,
+               anchor: { zone: 'tableau', col: src.col }, chips: 0, mult: 0, total: 0, triggers: [] });
+      }
       const cardSuits = Engine.suitsOf(card);
       if (G.round.lastSuit && cardSuits.includes(G.round.lastSuit)) G.round.suitRun++;
       else G.round.suitRun = 1;
@@ -1577,7 +2084,7 @@ const Game = (() => {
         push({ event: 'replay', label: 'ALREADY PAID', card, chips: 0, mult: 0, total: 0, triggers: [], anchor });
       } else {
         card.scoredRound = true;
-        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor });
+        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor, stack });
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -1600,6 +2107,12 @@ const Game = (() => {
     if (dst.zone === 'tableau') {
       const col = dst.col;
       if (src.zone === 'tableau' && src.col === col) return illegal();
+      /* shuffling a whole column into another empty column changes nothing and used to
+         re-trigger the cleared-column bonus, so it is not a legal move */
+      if (src.zone === 'tableau' && src.index === 0 && !b.tableau[col].length) {
+        push({ event: 'nudge', label: 'THAT CHANGES NOTHING', chips: 0, mult: 0, total: 0, triggers: [] });
+        return false;
+      }
       if (!Engine.canPlaceOnColumn(b, col, cards[0], m)) return illegal();
       snapshot();
       removeFrom(src, cards.length);
@@ -1624,8 +2137,10 @@ const Game = (() => {
   function grab(src, m) {
     const b = G.board;
     if (src.zone === 'waste') {
-      const c = b.waste[b.waste.length - 1];
-      return c ? [c] : null;
+      const allowed = Engine.playableWaste(b, m);
+      const idx = src.index != null ? src.index : b.waste.length - 1;
+      const hit = allowed.find(w => w.index === idx);
+      return hit ? [hit.card] : null;
     }
     if (src.zone === 'foundation') {
       const f = b.foundations[src.suit];
@@ -1643,7 +2158,7 @@ const Game = (() => {
 
   function removeFrom(src, n) {
     const b = G.board;
-    if (src.zone === 'waste') b.waste.splice(b.waste.length - n, n);
+    if (src.zone === 'waste') b.waste.splice(src.index != null ? src.index : b.waste.length - n, n);
     else if (src.zone === 'foundation') b.foundations[src.suit].splice(b.foundations[src.suit].length - n, n);
     else if (src.zone === 'tableau') b.tableau[src.col].splice(b.tableau[src.col].length - n, n);
   }
@@ -1763,6 +2278,13 @@ const Game = (() => {
   }
 
   /* ---------------- the shop ---------------- */
+  /* Four clearly separated shelves:
+       curios  -> take a seat on the mantel
+       mods    -> permanently mark a card you already own
+       cards   -> add a brand new card to the deck
+       houses  -> permanent run rules, no seat needed              */
+  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', house: 'houses' };
+
   function weightedCurio(exclude) {
     const pool = CURIOS.filter(c => !exclude.has(c.id));
     if (!pool.length) return null;
@@ -1783,37 +2305,42 @@ const Game = (() => {
   }
 
   function priceOf(item) {
-    let base = item.cost;
-    if (item.finish && item.finish !== 'none') base += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
-    const price = Math.max(1, Math.ceil(base * (1 - Math.min(0.75, G.run.discount))));
-    return price;
+    const base = item.type === 'house' ? HOUSE_BY_ID[item.id].cost
+               : item.type === 'curio' ? CURIO_BY_ID[item.id].cost
+               : SHOP_BY_ID[item.id].cost;
+    let p = base;
+    if (item.finish && item.finish !== 'none') p += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
+    return Math.max(1, Math.ceil(p * (1 - Math.min(0.75, G.run.discount))));
+  }
+
+  function pickN(pool, n, type) {
+    const copy = pool.slice();
+    Engine.shuffle(copy);
+    return copy.slice(0, n).map(d => ({ type, id: d.id, cost: d.cost }));
   }
 
   function rollShopItems() {
     const owned = new Set(G.run.mantel.map(c => c.id));
-    const items = [];
     const used = new Set();
-    for (let i = 0; i < 4; i++) {
-      if (Math.random() < 0.55) {
-        const c = weightedCurio(new Set([...owned, ...used]));
-        if (c) {
-          used.add(c.id);
-          items.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
-          continue;
-        }
-      }
-      const t = TINCTURES[Math.floor(Math.random() * TINCTURES.length)];
-      items.push({ type: 'tincture', id: t.id, cost: t.cost });
+    const curios = [];
+    for (let i = 0; i < 2; i++) {
+      const c = weightedCurio(new Set([...owned, ...used]));
+      if (!c) break;
+      used.add(c.id);
+      curios.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
     }
     const avail = HOUSE_RULES.filter(h => (G.run.houseRules[h.id] || 0) < h.max);
-    Engine.shuffle(avail);
-    const houses = avail.slice(0, 2).map(h => ({ type: 'house', id: h.id, cost: h.cost }));
-    return { items, houses };
+    return {
+      curios,
+      mods: pickN(CARD_MODS, 2, 'mod'),
+      cards: pickN(NEW_CARDS, 2, 'card'),
+      houses: pickN(avail, 2, 'house')
+    };
   }
 
   function openShop(anteCleared) {
-    const rolled = rollShopItems();
-    G.run.shop = { items: rolled.items, houses: rolled.houses, rerolls: 0, sold: [] };
+    const r = rollShopItems();
+    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -1827,9 +2354,11 @@ const Game = (() => {
     const cost = rerollCost();
     if (G.run.money < cost) return false;
     G.run.money -= cost;
-    const rolled = rollShopItems();
-    G.run.shop.items = rolled.items;
-    G.run.shop.rerolls++;
+    const r = rollShopItems();
+    const shop = G.run.shop;
+    /* keep anything already bought marked as sold so the shelf reads honestly */
+    ['curios', 'mods', 'cards', 'houses'].forEach(k => { shop[k] = r[k]; });
+    shop.rerolls++;
     save();
     return true;
   }
@@ -1838,17 +2367,16 @@ const Game = (() => {
     return G.run.mantelSlots + G.run.mantel.filter(c => c.finish === 'neg').length;
   }
 
-  function buy(index, kind) {
-    const shop = G.run.shop;
-    const list = kind === 'house' ? shop.houses : shop.items;
-    const item = list[index];
-    if (!item || item.bought) return { ok: false, reason: 'gone' };
-    const price = priceOf(kind === 'house' ? Object.assign({}, item, { cost: HOUSE_BY_ID[item.id].cost }) : item);
-    if (G.run.money < price) return { ok: false, reason: 'Not enough cash.' };
+  function buy(shelf, index) {
+    const list = G.run.shop[SHELVES[shelf]];
+    const item = list && list[index];
+    if (!item || item.bought) return { ok: false, reason: 'Already gone.' };
+    const price = priceOf(item);
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash for that.' };
 
     if (item.type === 'curio') {
       const slots = effectiveSlots() + (item.finish === 'neg' ? 1 : 0);
-      if (G.run.mantel.length >= slots) return { ok: false, reason: 'Your mantel is full. Sell something first.' };
+      if (G.run.mantel.length >= slots) return { ok: false, reason: 'Every mantel seat is taken. Sell a Curio first.' };
       const def = CURIO_BY_ID[item.id];
       G.run.money -= price;
       G.run.mantel.push({ id: item.id, finish: item.finish || 'none', counter: def.counter != null ? def.counter : 0, paid: price });
@@ -1856,38 +2384,38 @@ const Game = (() => {
       save();
       return { ok: true, kind: 'curio' };
     }
+
     if (item.type === 'house') {
-      const def = HOUSE_BY_ID[item.id];
       G.run.money -= price;
-      def.apply(G.run);
+      HOUSE_BY_ID[item.id].apply(G.run);
       G.run.houseRules[item.id] = (G.run.houseRules[item.id] || 0) + 1;
       item.bought = true;
       save();
       return { ok: true, kind: 'house' };
     }
-    if (item.type === 'tincture') {
-      const def = TINCTURE_BY_ID[item.id];
-      if (def.kind === 'add') {
-        G.run.money -= price;
-        const spec = def.build();
-        G.run.deck.push(Engine.newCard(spec.rank, spec.suit, {
-          enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
-        }));
-        item.bought = true;
-        save();
-        return { ok: true, kind: 'card' };
-      }
-      // needs a card chosen from the deck
-      G.pending = { itemIndex: index, def };
-      return { ok: true, kind: 'select', def, price };
+
+    const def = SHOP_BY_ID[item.id];
+    if (def.kind === 'add') {
+      G.run.money -= price;
+      const spec = def.build();
+      const card = Engine.newCard(spec.rank, spec.suit, {
+        enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
+      });
+      G.run.deck.push(card);
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'card', card };
     }
-    return { ok: false, reason: 'nope' };
+
+    /* everything left needs the player to point at a card in their deck */
+    G.pending = { shelf, index, def };
+    return { ok: true, kind: 'select', def, price };
   }
 
   function applyPending(cardId) {
     if (!G.pending) return false;
-    const { itemIndex, def } = G.pending;
-    const item = G.run.shop.items[itemIndex];
+    const { shelf, index, def } = G.pending;
+    const item = G.run.shop[SHELVES[shelf]][index];
     if (!item || item.bought) { G.pending = null; return false; }
     const price = priceOf(item);
     if (G.run.money < price) { G.pending = null; return false; }
@@ -1938,6 +2466,12 @@ const Game = (() => {
     startRound();
   }
 
+  /* what CASH OUT would pay right now -- drives the live button label */
+  function payoutPreview() {
+    if (!G.board || !G.round) return { lines: [], total: 0 };
+    return Score.payout(G);
+  }
+
   /* ---------------- persistence ---------------- */
   function save() {
     try {
@@ -1969,7 +2503,7 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte
+    bankAnte, clearAnte, payoutPreview, SHELVES
   };
 })();
 
@@ -2071,6 +2605,7 @@ const UI = (() => {
 
   let displayScore = 0;
   let fxBusy = false;
+  let rush = false;          // player acted mid-animation: burn through what's left
   let selection = null;      // {zone, col, index, suit}
   let hintCells = [];
 
@@ -2153,7 +2688,7 @@ const UI = (() => {
       c.dataset.idx = i;
       c.draggable = false;
       c.innerHTML =
-        '<div class="c-art">' + def.art + '</div>' +
+        '<div class="c-art">' + icon(def.icon) + '</div>' +
         '<div class="c-name">' + def.name + '</div>' +
         (inst.counter != null && def.counterLabel
           ? '<div class="c-counter">' + (def.counterLabel === 'X' ? 'X' + inst.counter : '+' + inst.counter) + '</div>' : '');
@@ -2173,7 +2708,8 @@ const UI = (() => {
   }
 
   function curioTip(inst, def, i) {
-    let s = '<div class="tip-title r-' + def.rarity + '">' + def.art + ' ' + def.name + '</div>';
+    let s = '<div class="tip-title r-' + def.rarity + '">' + icon(def.icon, 'tip-ico') + ' ' + def.name + '</div>';
+    s += '<div class="tip-kind curio-kind">CURIO — takes a mantel seat</div>';
     if (inst.finish && inst.finish !== 'none') s += '<div class="tip-fin">' + FINISHES[inst.finish].name + ' — ' + FINISHES[inst.finish].text + '</div>';
     s += '<div class="tip-text">' + def.text + '</div>';
     s += '<div class="tip-foot">' + def.rarity.toUpperCase() +
@@ -2189,6 +2725,12 @@ const UI = (() => {
     $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
     $('#deck-count').textContent = G.run.deck.length;
     $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
+    const pv = $('#cash-preview');
+    if (pv && G.phase === 'play') {
+      const p = Game.payoutPreview();
+      pv.textContent = '$' + p.total;
+      $('#btn-cash').dataset.breakdown = p.lines.map(l => l.label + '  +$' + l.amount).join('\n');
+    }
   }
 
   function renderBoard() {
@@ -2210,17 +2752,24 @@ const UI = (() => {
     /* waste */
     const waste = $('#waste');
     waste.innerHTML = '';
-    const tail = b.waste.slice(-3);
-    tail.forEach((c, i) => {
+    const mm = Engine.mods(G.run);
+    const show = Math.min(b.waste.length, 3);
+    const from = b.waste.length - show;
+    const playable = Engine.playableWaste(b, mm).map(w => w.index);
+    for (let k = 0; k < show; k++) {
+      const absIdx = from + k;
+      const c = b.waste[absIdx];
       const n = cardEl(c);
-      n.style.left = (i * 14) + 'px';
-      n.style.zIndex = i;
-      if (i === tail.length - 1) {
+      n.style.left = Math.round(k * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')) * 0.42)) + 'px';
+      n.style.zIndex = k;
+      if (playable.includes(absIdx)) {
         n.dataset.zone = 'waste';
-        attachDrag(n, { zone: 'waste' });
+        n.classList.add('playable');
+        attachDrag(n, { zone: 'waste', index: absIdx });
       } else n.classList.add('under');
       waste.appendChild(n);
-    });
+    }
+    if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
     /* foundations */
     SUIT_KEYS.forEach(s => {
@@ -2253,11 +2802,12 @@ const UI = (() => {
       const avail = Math.max(260, t.clientHeight || 420) - 20;
       const need = pile.reduce((a, c) => a + (c.faceUp ? 30 : 15), 0);
       const squeeze = need > avail ? avail / need : 1;
-      let y = 0;
+      let y = 0, lastTop = 0;
       let lastDownIdx = -1;
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
       pile.forEach((c, i) => {
         const n = cardEl(c, { topDown: i === lastDownIdx });
+        lastTop = y;
         n.style.top = Math.round(y) + 'px';
         n.style.zIndex = i;
         n.dataset.col = col;
@@ -2266,10 +2816,23 @@ const UI = (() => {
         if (c.faceUp) attachDrag(n, { zone: 'tableau', col, index: i });
         p.appendChild(n);
       });
+      const runLen = Engine.runLength(b, col, Engine.mods(G.run));
+      if (runLen > 1) {
+        const runCards = Engine.runCards(b, col, Engine.mods(G.run));
+        const val = runCards.reduce((a, c) => a + rankChips(c.rank), 0);
+        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen),
+          '<span class="rb-n">RUN ' + runLen + '</span><span class="rb-v">+' + val + ' <i>chips</i> · +' +
+          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>');
+        /* sit the badge clear of the last card, never on top of it */
+        const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
+        badge.style.top = Math.round(lastTop + ch + 6) + 'px';
+        p.appendChild(badge);
+      }
       t.appendChild(p);
     });
 
     applySelectionClasses();
+    renderCombo();
   }
 
   function fmt(n) {
@@ -2342,7 +2905,8 @@ const UI = (() => {
   function attachDrag(node, src) {
     node.classList.add('grabbable');
     node.addEventListener('pointerdown', e => {
-      if (G.phase !== 'play' || fxBusy) return;
+      if (G.phase !== 'play') return;
+      rushFx();
       if (e.button != null && e.button !== 0) return;
       const cards = src.zone === 'tableau'
         ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
@@ -2483,22 +3047,45 @@ const UI = (() => {
     if (i >= q.length) {
       fxBusy = false;
       syncScore();
-      if (G.fx.length) drainFx();
-      else afterFx();
+      if (G.fx.length) { drainFx(); }
+      else { rush = false; afterFx(); }
       return;
     }
-    const p = q[i];
-    const speed = q.length > 4 ? 0.35 : 1;
-    animatePacket(p, speed, () => runPackets(q, i + 1));
+    const base = q.length > 4 ? 0.35 : 1;
+    const speed = () => base * (rush ? 0.08 : 1);
+    animatePacket(q[i], speed, () => runPackets(q, i + 1));
   }
 
-  function animatePacket(p, speed, done) {
+  /* the player did something while the fireworks were still going -- don't
+     swallow their input, just finish the show immediately */
+  function rushFx() { if (fxBusy) rush = true; }
+
+  function animatePacket(p, spd, done) {
     if (p.event === 'illegal') { done(); return; }
-    if (p.event === 'recycle') { Sfx.deal(); done(); return; }
+    if (p.event === 'nudge') { floatText($('#table'), p.label, 'fx-flash'); done(); return; }
+    if (p.event === 'cash') {
+      const a = anchorEl(p.anchor);
+      floatText(a, '+$' + p.amount, 'fx-money big');
+      floatText(a, p.label, 'fx-cashlabel');
+      Sfx.money();
+      burst(a, 8, '#ffd166');
+      renderHud();
+      renderControls();
+      setTimeout(done, 220 * spd());
+      return;
+    }
+    if (p.event === 'recycle') { Sfx.deal(); flashScreen(0.10, '#4cc9f0'); done(); return; }
+    if (p.event === 'draw') {
+      Sfx.deal();
+      const w = $('#waste');
+      if (w) { w.classList.remove('dealt'); void w.offsetWidth; w.classList.add('dealt'); }
+      done();
+      return;
+    }
     if (p.event === 'curioFlash') { flashCurioById(p.curio); done(); return; }
     if (p.event === 'replay') {
       floatText(anchorEl(p.anchor), 'ALREADY PAID', 'fx-flash');
-      setTimeout(done, 160 * speed);
+      setTimeout(done, 160 * spd());
       return;
     }
     if (p.event === 'shatter') {
@@ -2506,7 +3093,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
-      setTimeout(done, 350 * speed);
+      setTimeout(done, 350 * spd());
       return;
     }
 
@@ -2523,8 +3110,8 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * speed);
-        }, 90 * speed);
+          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * spd());
+        }, 90 * spd());
         return;
       }
       const t = trigs[ti++];
@@ -2535,8 +3122,12 @@ const UI = (() => {
       else if (t.kind === 'money') { floatText(src, '+$' + t.amount, 'fx-money'); Sfx.money(); renderHud(); }
       else if (t.kind === 'flash') { floatText(src, '!', 'fx-flash'); }
       else if (t.kind === 'retrigger') { floatText(src, 'AGAIN!', 'fx-again'); }
-      if (src) { src.classList.add('trigger'); setTimeout(() => src.classList.remove('trigger'), 260); }
-      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * speed);
+      if (src) {
+        src.classList.add('trigger');
+        setTimeout(() => src.classList.remove('trigger'), 260);
+        if (t.kind === 'xmult' || t.kind === 'retrigger') spark(src);
+      }
+      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * spd());
     };
     step();
   }
@@ -2560,25 +3151,118 @@ const UI = (() => {
   }
 
   function setScoreBox(chips, mult) {
+    const total = Math.round(chips * mult);
     $('#sb-chips').textContent = fmt(Math.round(chips));
     $('#sb-mult').textContent = (Math.round(mult * 100) / 100);
-    const heat = Math.min(1, (chips * mult) / 4000);
-    $('#scorebox').style.setProperty('--heat', heat.toFixed(2));
+    $('#sb-total').textContent = fmt(total);
+    const heat = Math.min(1, total / 6000);
+    const box = $('#scorebox');
+    box.style.setProperty('--heat', heat.toFixed(2));
+    box.style.setProperty('--swell', (1 + Math.min(0.22, total / 60000)).toFixed(3));
+    const t = tierFor(total);
+    box.className = 'live' + (t ? ' ' + t.cls : '');
+    bumpEl($('#sb-total'));
+  }
+
+  function bumpEl(n) {
+    if (!n) return;
+    n.classList.remove('bump');
+    void n.offsetWidth;
+    n.classList.add('bump');
+  }
+
+  /* the persistent combo readout inside the score box */
+  function renderCombo() {
+    const m = $('#combo-meter');
+    if (!m || !G.round) return;
+    const bits = [];
+    if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
+    if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
+    m.innerHTML = bits.join('');
+    m.classList.toggle('active', bits.length > 0);
+    if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
   }
 
   function slam(p) {
     const box = $('#scorebox');
-    box.classList.add('slam');
-    setTimeout(() => box.classList.remove('slam'), 400);
     const mag = p.total;
+    const tier = tierFor(mag);
+    box.classList.add('slam');
+    setTimeout(() => box.classList.remove('slam'), 450);
+
     Sfx.score(Math.log10(Math.max(10, mag)) * 20);
-    const big = el('div', 'fx-total', '+' + fmt(mag));
-    positionAt(big, box, -10, -50);
+
+    const big = el('div', 'fx-total ' + (tier ? tier.cls : ''), '+' + fmt(mag));
+    positionAt(big, box, 0, -46);
     $('#fxlayer').appendChild(big);
-    setTimeout(() => big.remove(), 1000);
-    if (mag > 1500) { screenShake(Math.min(14, mag / 900)); burst(box, 24, '#ffd166'); Sfx.big(); }
-    else if (mag > 400) burst(box, 10, '#7ee787');
+    setTimeout(() => big.remove(), 1100);
+
+    shockwave(box, tier);
+    bumpEl($('#round-score'));
+
+    if (tier) {
+      tierBanner(tier);
+      screenShake(tier.shake);
+      confetti(box, tier.parts, tier.cls);
+      flashScreen(0.34 - SCORE_TIERS.indexOf(tier) * 0.05, tierColor(tier));
+      if (mag >= 8000) Sfx.big();
+      document.body.classList.add('hot');
+      clearTimeout(hotTimer);
+      hotTimer = setTimeout(() => document.body.classList.remove('hot'), 900);
+    } else {
+      burst(box, 8, '#7ee787');
+    }
     animateScoreTo(G.round.score);
+  }
+
+  let hotTimer = null;
+  function tierColor(t) {
+    return { t1: '#7ee787', t2: '#ffd166', t3: '#ff8f3f', t4: '#ff4d6d', t5: '#b07cff' }[t.cls] || '#ffd166';
+  }
+
+  function tierBanner(tier) {
+    const n = el('div', 'fx-tier ' + tier.cls, tier.name + (tier.cls === 't5' ? '!!!!' : tier.cls === 't4' ? '!!!' : tier.cls === 't3' ? '!!' : '!'));
+    $('#fxlayer').appendChild(n);
+    setTimeout(() => n.remove(), 1000);
+  }
+
+  function shockwave(ref, tier) {
+    const r = ref.getBoundingClientRect();
+    const w = el('div', 'shockwave' + (tier ? ' ' + tier.cls : ''));
+    w.style.left = (r.left + r.width / 2) + 'px';
+    w.style.top = (r.top + r.height / 2) + 'px';
+    $('#fxlayer').appendChild(w);
+    setTimeout(() => w.remove(), 700);
+  }
+
+  function flashScreen(alpha, color) {
+    const f = $('#flash');
+    if (!f) return;
+    f.style.background = color || '#fff';
+    f.style.opacity = Math.min(0.45, alpha);
+    f.classList.remove('go');
+    void f.offsetWidth;
+    f.classList.add('go');
+    setTimeout(() => { f.style.opacity = 0; }, 30);
+  }
+
+  /* confetti with a bit of gravity so it feels physical */
+  function confetti(ref, count, cls) {
+    const r = ref.getBoundingClientRect();
+    const colors = ['#ffd166', '#ff4d6d', '#4cc9f0', '#7ee787', '#b07cff', '#fff'];
+    for (let i = 0; i < count; i++) {
+      const p = el('div', 'confetti ' + (cls || ''));
+      p.style.left = (r.left + Math.random() * r.width) + 'px';
+      p.style.top = (r.top + r.height / 2) + 'px';
+      p.style.background = colors[i % colors.length];
+      p.style.setProperty('--dx', (Math.random() * 460 - 230) + 'px');
+      p.style.setProperty('--dy', (-120 - Math.random() * 220) + 'px');
+      p.style.setProperty('--rot', (Math.random() * 900 - 450) + 'deg');
+      p.style.setProperty('--dur', (0.9 + Math.random() * 0.7) + 's');
+      if (Math.random() < 0.4) p.style.borderRadius = '50%';
+      $('#fxlayer').appendChild(p);
+      setTimeout(() => p.remove(), 1800);
+    }
   }
 
   function animateScoreTo(target) {
@@ -2660,6 +3344,21 @@ const UI = (() => {
     }
   }
 
+  /* a couple of embers flying from a trigger toward the score box */
+  function spark(from) {
+    const a = from.getBoundingClientRect(), b = $('#scorebox').getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+      const p = el('div', 'ember');
+      p.style.left = (a.left + a.width / 2) + 'px';
+      p.style.top = (a.top + a.height / 2) + 'px';
+      p.style.setProperty('--tx', (b.left + b.width / 2 - a.left - a.width / 2) + 'px');
+      p.style.setProperty('--ty', (b.top + b.height / 2 - a.top - a.height / 2) + 'px');
+      p.style.animationDelay = (i * 0.04) + 's';
+      $('#fxlayer').appendChild(p);
+      setTimeout(() => p.remove(), 700);
+    }
+  }
+
   function screenShake(power) {
     const app = $('#app');
     app.style.setProperty('--shake', (power || 6) + 'px');
@@ -2729,6 +3428,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
+    renderCombo, flashScreen, confetti, rushFx,
     get busy() { return fxBusy; }
   };
 })();
@@ -2763,7 +3463,10 @@ const Overlays = (() => {
     const headline = r.won ? 'BOARD CLEARED!' : (r.stuck ? 'OUT OF MOVES' : 'ROUND BANKED');
 
     const payLines = pay.lines.map(l =>
-      '<div class="pay-line"><span>' + l.label + '</span><b>+$' + l.amount + '</b></div>').join('');
+      '<div class="pay-line' + (l.big ? ' hero' : '') + '"><span>' + l.label + '</span><b>+$' + l.amount + '</b></div>').join('');
+    const midRound = r.money > 0
+      ? '<div class="pay-line earned"><span>Earned during the round (already banked)</span><b>+$' + r.money + '</b></div>'
+      : '';
 
     open(
       '<div class="panel round-panel">' +
@@ -2778,7 +3481,7 @@ const Overlays = (() => {
             : (last ? 'You needed ' + UI.fmt(quota - total) + ' more.' : 'Need ' + UI.fmt(quota - total) + ' more across ' + (TUNE.roundsPerAnte - run.round) + ' more round' + (TUNE.roundsPerAnte - run.round > 1 ? 's' : '') + '.')) +
           '</div>' +
         '</div>' +
-        '<div class="payout"><div class="pay-title">PAYOUT</div>' + payLines +
+        '<div class="payout"><div class="pay-title">PAYOUT</div>' + midRound + payLines +
           '<div class="pay-line total"><span>Total</span><b>+$' + pay.total + '</b></div></div>' +
         (met && !last
           ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + ((TUNE.roundsPerAnte - run.round) * TUNE.skipBonus) + '</button>'
@@ -2806,8 +3509,21 @@ const Overlays = (() => {
   }
 
   /* ---------------- shop ---------------- */
+  const SHELF_META = {
+    curio: { title: 'CURIOS', sub: 'objects — each one takes a seat on your mantel', cls: 'sh-curio' },
+    mod:   { title: 'CARD MODS', sub: 'permanently mark a card already in your deck — no seat needed', cls: 'sh-mod' },
+    card:  { title: 'NEW CARDS', sub: 'adds a brand new card into your deck and the piles', cls: 'sh-card' },
+    house: { title: 'HOUSE RULES', sub: 'permanent rules for the rest of the run', cls: 'sh-house' }
+  };
+
   function shop() {
     const run = G.run;
+    const shelves = ['curio', 'mod', 'card', 'house'].map(k =>
+      '<section class="shelf ' + SHELF_META[k].cls + '">' +
+        '<div class="shelf-head"><h3>' + SHELF_META[k].title + '</h3><span>' + SHELF_META[k].sub + '</span></div>' +
+        '<div class="shelf-row" id="shelf-' + k + '"></div>' +
+      '</section>').join('');
+
     open(
       '<div class="shop">' +
         '<div class="shop-head">' +
@@ -2815,11 +3531,11 @@ const Overlays = (() => {
           (run.anteCleared ? '<div class="shop-flag">ANTE ' + (run.ante - 1) + ' CLEARED — welcome to Ante ' + run.ante + '</div>' : '') +
           '<div class="shop-cash">$<b id="shop-money">' + run.money + '</b></div>' +
         '</div>' +
-        '<div class="shop-hint">Your mantel — click a Curio to sell it, drag sideways to reorder. They trigger left to right.</div>' +
-        '<div class="mantel-inline" id="shop-mantel"></div>' +
-        '<div class="shop-row" id="shop-items"></div>' +
-        '<div class="shop-sub">HOUSE RULES <span>permanent, for the whole run</span></div>' +
-        '<div class="shop-row houses" id="shop-houses"></div>' +
+        '<div class="mantel-wrap">' +
+          '<div class="mantel-cap">YOUR MANTEL <span>click a Curio to sell it · drag sideways to reorder · they fire left to right</span></div>' +
+          '<div class="mantel-inline" id="shop-mantel"></div>' +
+        '</div>' +
+        '<div class="shop-body">' + shelves + '</div>' +
         '<div class="shop-foot">' +
           '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
           '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
@@ -2830,7 +3546,7 @@ const Overlays = (() => {
     refreshShop();
     $('#shop-reroll').onclick = () => {
       if (Game.reroll()) { Sfx.money(); refreshShop(); }
-      else { Sfx.error(); UI.toast('Not enough cash.'); }
+      else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
     $('#shop-next').onclick = () => {
@@ -2839,59 +3555,91 @@ const Overlays = (() => {
       Game.leaveShop();
       UI.resetDisplayScore();
       UI.render();
-      UI.toast('Ante ' + G.run.ante + ' • Round ' + G.run.round, 1400);
+      UI.toast('Ante ' + G.run.ante + ' · Round ' + G.run.round, 1400);
     };
   }
 
   function refreshShop() {
-    if (!$('#shop-items')) return;
+    if (!$('#shelf-curio')) return;
     const run = G.run;
     $('#shop-money').textContent = run.money;
     const rr = $('#shop-reroll');
     if (rr) rr.innerHTML = 'REROLL $<b>' + Game.rerollCost() + '</b>';
 
-    const items = $('#shop-items');
-    items.innerHTML = '';
-    run.shop.items.forEach((item, i) => items.appendChild(shopCard(item, i, 'item')));
-    const houses = $('#shop-houses');
-    houses.innerHTML = '';
-    run.shop.houses.forEach((item, i) => houses.appendChild(shopCard(item, i, 'house')));
+    ['curio', 'mod', 'card', 'house'].forEach(shelf => {
+      const row = $('#shelf-' + shelf);
+      row.innerHTML = '';
+      (run.shop[Game.SHELVES[shelf]] || []).forEach((item, i) => row.appendChild(shopCard(item, i, shelf)));
+    });
     UI.renderMantel($('#shop-mantel'));
     UI.renderMantel($('#mantel'));
   }
 
-  function shopCard(item, index, kind) {
+  function shopCard(item, index, shelf) {
     const run = G.run;
-    let def, art, name, text, rarity = 'common';
-    if (item.type === 'curio') { def = CURIO_BY_ID[item.id]; rarity = def.rarity; }
-    else if (item.type === 'house') def = HOUSE_BY_ID[item.id];
-    else def = TINCTURE_BY_ID[item.id];
-    art = def.art; name = def.name; text = def.text;
+    let def, rarity = '', badge = '', preview = '';
 
-    const price = Game.priceOf(item.type === 'house' ? Object.assign({}, item, { cost: def.cost }) : item);
-    const n = el('div', 'shop-item ' + item.type + ' r-' + rarity +
+    if (shelf === 'curio') {
+      def = CURIO_BY_ID[item.id];
+      rarity = def.rarity;
+      const seats = Game.effectiveSlots();
+      badge = '<div class="si-badge seat">TAKES A SEAT · ' + run.mantel.length + '/' + seats + ' used</div>';
+    } else if (shelf === 'house') {
+      def = HOUSE_BY_ID[item.id];
+      const owned = run.houseRules[item.id] || 0;
+      badge = '<div class="si-badge rule">PERMANENT' + (def.max > 1 ? ' · owned ' + owned + '/' + def.max : '') + '</div>';
+    } else {
+      def = SHOP_BY_ID[item.id];
+      if (shelf === 'mod') {
+        badge = '<div class="si-badge mark">MARKS 1 CARD YOU OWN</div>';
+      } else {
+        badge = '<div class="si-badge add">+1 CARD TO YOUR DECK</div>';
+        preview = '<div class="si-preview">' + previewCard(def) + '</div>';
+      }
+    }
+
+    const price = Game.priceOf(item);
+    const n = el('div', 'shop-item sh-' + shelf + (rarity ? ' r-' + rarity : '') +
       (item.bought ? ' bought' : '') +
       (item.finish && item.finish !== 'none' ? ' ' + FINISHES[item.finish].cls : '') +
       (run.money < price ? ' broke' : ''));
     n.innerHTML =
-      '<div class="si-art">' + art + '</div>' +
-      '<div class="si-name">' + name + '</div>' +
+      '<div class="si-art">' + icon(def.icon) + '</div>' +
+      preview +
+      '<div class="si-name">' + def.name + '</div>' +
       (item.finish && item.finish !== 'none' ? '<div class="si-fin">' + FINISHES[item.finish].name + '</div>' : '') +
-      '<div class="si-text">' + text + '</div>' +
-      '<div class="si-tag">' + (item.type === 'curio' ? rarity : (item.type === 'house' ? 'house rule' : 'tincture')) + '</div>' +
+      '<div class="si-text">' + def.text + '</div>' +
+      badge +
       '<div class="si-price">' + (item.bought ? 'SOLD' : '$' + price) + '</div>';
+
     if (!item.bought) {
       n.onclick = () => {
-        const res = Game.buy(index, kind === 'house' ? 'house' : 'item');
+        const res = Game.buy(shelf, index);
         if (!res.ok) { Sfx.error(); UI.toast(res.reason || 'Cannot buy that.'); UI.shake(n); return; }
         if (res.kind === 'select') { deckView(res.def); return; }
         Sfx.money();
-        UI.burst(n, 12, '#ffd166');
+        UI.burst(n, 14, '#ffd166');
+        if (res.kind === 'card') UI.toast('Added ' + RANK_NAMES[res.card.rank] + SUITS[res.card.suit].sym + ' to your deck');
         refreshShop();
         UI.render();
       };
     }
     return n;
+  }
+
+  /* a face-up sample of what a New Card slot puts in your deck */
+  function previewCard(def) {
+    if (def.kind === 'duplicate') {
+      return '<div class="mini-pair">' + UI.cardEl({ id: 'p1', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML +
+             UI.cardEl({ id: 'p2', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML + '</div>';
+    }
+    const spec = def.sample || def.build();
+    const c = UI.cardEl({
+      id: 'prev', rank: spec.rank, suit: spec.suit, faceUp: true,
+      enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
+    });
+    c.classList.add('mini');
+    return c.outerHTML;
   }
 
   /* ---------------- deck viewer / card picker ---------------- */
@@ -2949,6 +3697,7 @@ const Overlays = (() => {
 
   function cardTip(card) {
     let s = '<div class="tip-title">' + RANK_NAMES[card.rank] + ' ' + SUITS[card.suit].sym + '</div>';
+    s += '<div class="tip-kind card-kind">CARD — lives in your deck</div>';
     s += '<div class="tip-text">Base ' + rankChips(card.rank) + ' Chips</div>';
     if (card.enhancement !== 'none') s += '<div class="tip-text hot">' + ENHANCEMENTS[card.enhancement].name + ' — ' + ENHANCEMENTS[card.enhancement].text + '</div>';
     if (card.finish !== 'none') s += '<div class="tip-text hot">' + FINISHES[card.finish].name + ' — ' + FINISHES[card.finish].text + '</div>';
@@ -3017,16 +3766,70 @@ const Overlays = (() => {
       '<div class="panel help-panel">' +
         '<div class="panel-flag">HOW TO PLAY</div>' +
         '<div class="help-body">' +
-          '<p><b>It is Klondike.</b> Build the four foundations from Ace to King. Stack the tableau downward in alternating colours. Drag cards, or click one then click where it goes. Double-click sends a card home if it can go.</p>' +
-          '<p><b>Everything scores.</b> Sending a card to a foundation scores <span class="c">Chips</span> <span class="x">X</span> <span class="m">Mult</span>. Flipping a face-down card scores. Emptying a column scores. Finishing a suit scores a lot.</p>' +
-          '<p><b>Cascade.</b> Foundation plays in a row build a Cascade; each one adds Mult. Drawing from the stock breaks it. Sending several cards of the <i>same suit</i> in a row builds a Suit Run on top of that.</p>' +
-          '<p><b>The quota.</b> You get ' + TUNE.roundsPerAnte + ' rounds per Ante. Your scores add up across all ' + TUNE.roundsPerAnte + '. Beat the quota by the end of round ' + TUNE.roundsPerAnte + ' or the run is over. You get paid either way.</p>' +
-          '<p><b>The Mantel.</b> Curios sit above your table and bend the rules permanently. They fire left to right — order matters, so put your X Mult curios last.</p>' +
-          '<p><b>Tinctures</b> mark individual cards in your deck. Those marks last the whole run.</p>' +
-          '<p class="keys"><b>Keys:</b> Space = draw &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = close</p>' +
+
+          '<h4>The solitaire part</h4>' +
+          '<p>Klondike. Build the four foundations up from Ace to King, stack the tableau ' +
+          'downward in alternating colours. The stock deals <b>' + TUNE.drawCount + ' cards at a time</b> and only the ' +
+          '<b>top one is playable</b> — the two beneath it are buried until you use it. ' +
+          'Drag cards, or click one then click where it goes. Double-click sends a card home.</p>' +
+
+          '<h4>What are Chips and Mult?</h4>' +
+          '<p class="formula"><span class="c">CHIPS</span> <b>X</b> <span class="m">MULT</span> <b>=</b> <span class="p">POINTS</span></p>' +
+          '<p>Chips are the base value, Mult is the multiplier, and their <i>product</i> is what actually ' +
+          'gets added to your round score. Chips on their own do nothing — a thousand Chips at 1 Mult is a ' +
+          'thousand points, but the same thousand Chips at 20 Mult is twenty thousand. That is the whole game: ' +
+          'grow both, but grow Mult harder. Watch the readout on the table resolve it live.</p>' +
+
+          '<h4>What scores</h4>' +
+          '<ul>' +
+            '<li><b>A card reaching a foundation</b> — its rank in Chips, plus ' + TUNE.chipsPerDepth + ' for every card already on that pile. Kings are worth a fortune.</li>' +
+            '<li><b>Flipping a face-down card</b> — ' + TUNE.revealChips + ' Chips.</li>' +
+            '<li><b>Emptying a column</b> — ' + TUNE.clearChips + ' Chips X ' + TUNE.clearMult + ' (once per column, per round).</li>' +
+            '<li><b>Completing a suit</b> — ' + TUNE.suitDoneChips + ' Chips X ' + TUNE.suitDoneMult + '.</li>' +
+          '</ul>' +
+
+          '<h4>The three combos</h4>' +
+          '<ul>' +
+            '<li><b>Cascade</b> — foundation plays back to back. Each one adds Mult. Drawing from the stock resets it.</li>' +
+            '<li><b>Suit Run</b> — consecutive cards of the same suit going home, stacked on top of the Cascade.</li>' +
+            '<li><b>Column Stack</b> — the big one. When you send a card home <i>off a column</i>, the face-up run ' +
+            'you built underneath it pays out: <b>+Chips equal to the ranks sitting in that run</b>, and ' +
+            '<b>+' + TUNE.stackMultPer + ' Mult for every extra card in it</b>. A column reading K-Q-J-10-9 is worth far more ' +
+            'than a lone King. Watch the <span class="rb-demo">RUN X5</span> badge on each column — that is your live payout.</li>' +
+          '</ul>' +
+
+          '<h4>How you make money</h4>' +
+          '<p>The <b>CASH OUT</b> button always shows exactly what this round would pay you right now. It goes up when you:</p>' +
+          '<ul>' +
+            '<li>finish the round at all — <b>$' + TUNE.baseMoney + '</b> flat</li>' +
+            '<li><b>score hard</b> — a commission of $1 for every <i>quota/' + TUNE.commissionDivisor + '</i> points you put up, ' +
+            'to a maximum of $' + TUNE.commissionCap + '. Because it is measured against the quota it stays worth chasing at every Ante. ' +
+            'This is usually the biggest line on your payout.</li>' +
+            '<li><b>combo mid-round</b> — every Cascade X' + TUNE.cascadeCashEvery + ' pays <b>$1</b> on the spot, and cashing a card off a ' +
+            'run of ' + TUNE.stackCashAt + '+ pays <b>$1</b> (' + TUNE.stackCashBigAt + '+ pays <b>$2</b>). You will see the cash pop off the table.</li>' +
+            '<li>leave a column empty — <b>$' + TUNE.moneyPerEmptyColumn + '</b> each</li>' +
+            '<li>complete a suit — <b>$' + TUNE.moneyPerSuitDone + '</b> each</li>' +
+            '<li>clear the whole board — <b>$8</b> bonus</li>' +
+            '<li>hold savings — <b>$1 interest per $' + TUNE.interestPer + '</b> you have banked, up to $' + TUNE.interestCap + '. Spending everything every shop costs you.</li>' +
+          '</ul>' +
+          '<p>Cards and Curios pay out mid-round too — anything Gold-Sealed or Bullion, and Curios like ' +
+          'Midas Touch or Shop Vac. Those land the instant they trigger.</p>' +
+
+          '<h4>The quota</h4>' +
+          '<p>' + TUNE.roundsPerAnte + ' rounds per Ante, and your scores <b>add up across all ' + TUNE.roundsPerAnte + '</b>. Beat the quota by the end of ' +
+          'round ' + TUNE.roundsPerAnte + ' or the run ends. Beat it early and you can bank the Ante for cash instead.</p>' +
+
+          '<h4>Curios vs Card Mods vs New Cards</h4>' +
+          '<ul>' +
+            '<li><b>Curios</b> are objects. Each one takes a seat on your Mantel — you only have 3 (up to 5). They fire left to right, so put +Mult before XMult.</li>' +
+            '<li><b>Card Mods</b> mark one card already in your deck. No seat, permanent, unlimited.</li>' +
+            '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
+          '</ul>' +
+
+          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
         '</div>' +
         '<button class="btn ghost" id="help-close">GOT IT</button>' +
-      '</div>', 'centered');
+      '</div>', 'centered wide');
     $('#help-close').onclick = () => { Sfx.click(); close(); };
   }
 
@@ -3089,7 +3892,8 @@ const Overlays = (() => {
       Overlays.close();
       UI.resetDisplayScore();
       UI.render();
-      UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' in 3 rounds', 3000);
+      UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' across 3 rounds. Chips <b>X</b> Mult = points.', 4200);
+      setTimeout(() => { if (G.phase === 'play') UI.toast('Build long face-up runs, then cash them home — the <b>RUN</b> badge shows the bonus.', 4200); }, 4600);
     });
     if (Game.load()) {
       t.showContinue(() => {
@@ -3108,14 +3912,16 @@ const Overlays = (() => {
   }
 
   function cashOut() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     Sfx.click();
     Game.endRound(false);
     Overlays.roundEnd();
   }
 
   function draw() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     if (Game.drawStock()) { Sfx.deal(); UI.clearSelection(); UI.render(); UI.drainFx(); UI.checkStuck(); }
     else { Sfx.error(); UI.shake($('#stock')); }
   }
@@ -3153,14 +3959,16 @@ const Overlays = (() => {
   }
 
   function auto() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     const n = Game.autoCollect();
     if (n) { UI.render(); UI.drainFx(); }
     else { Sfx.error(); UI.toast('Nothing can go home right now.'); }
   }
 
   function undo() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     if (Game.undo()) { Sfx.flip(); UI.clearSelection(); UI.resetDisplayScore(); UI.render(); }
     else { Sfx.error(); UI.toast('No undos left.'); }
   }

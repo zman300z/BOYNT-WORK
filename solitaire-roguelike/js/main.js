@@ -14,7 +14,8 @@
       Overlays.close();
       UI.resetDisplayScore();
       UI.render();
-      UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' in 3 rounds', 3000);
+      UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' across 3 rounds. Chips <b>X</b> Mult = points.', 4200);
+      setTimeout(() => { if (G.phase === 'play') UI.toast('Build long face-up runs, then cash them home — the <b>RUN</b> badge shows the bonus.', 4200); }, 4600);
     });
     if (Game.load()) {
       t.showContinue(() => {
@@ -33,14 +34,16 @@
   }
 
   function cashOut() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     Sfx.click();
     Game.endRound(false);
     Overlays.roundEnd();
   }
 
   function draw() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     if (Game.drawStock()) { Sfx.deal(); UI.clearSelection(); UI.render(); UI.drainFx(); UI.checkStuck(); }
     else { Sfx.error(); UI.shake($('#stock')); }
   }
@@ -78,14 +81,16 @@
   }
 
   function auto() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     const n = Game.autoCollect();
     if (n) { UI.render(); UI.drainFx(); }
     else { Sfx.error(); UI.toast('Nothing can go home right now.'); }
   }
 
   function undo() {
-    if (G.phase !== 'play' || UI.busy) return;
+    if (G.phase !== 'play') return;
+    UI.rushFx();
     if (Game.undo()) { Sfx.flip(); UI.clearSelection(); UI.resetDisplayScore(); UI.render(); }
     else { Sfx.error(); UI.toast('No undos left.'); }
   }

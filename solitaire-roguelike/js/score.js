@@ -54,6 +54,7 @@ const Score = (() => {
       foundationCount: s => board.foundations[s].length,
       completedSuits: () => SUIT_KEYS.filter(s => board.foundations[s].length >= 13).length,
       shortestFoundation: () => Math.min.apply(null, SUIT_KEYS.map(s => board.foundations[s].length)),
+      tallestColumn: () => board.tableau.reduce((a, p) => Math.max(a, p.length), 0),
       self: null
     };
     return ctx;
@@ -119,12 +120,17 @@ const Score = (() => {
     });
   }
 
-  /* combo layer: Cascade + Suit Run */
+  /* combo layer: Cascade + Suit Run + the Column Stack you scored off */
   function comboPass(ctx) {
     const m = Engine.mods(ctx.run);
     ctx._src = { type: 'combo' };
     if (ctx.round.cascade > 1) ctx.addMult(ctx.round.cascade * m.cascadeMult);
     if (ctx.round.suitRun > 1) ctx.addMult(ctx.round.suitRun * 2 * m.suitRunMult);
+    /* the longer and richer the face-up run you built, the bigger the cash-in */
+    if (ctx.stack && ctx.stack.length > 1) {
+      ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
+      ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
+    }
     ctx._src = null;
   }
 
@@ -135,6 +141,7 @@ const Score = (() => {
   function event(G, ev) {
     const ctx = makeCtx(G, ev);
     ctx.depth = ev.depth || 0;
+    ctx.stack = ev.stack || null;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
@@ -181,7 +188,7 @@ const Score = (() => {
     return null;
   }
 
-  /* end-of-round payout */
+  /* end-of-round payout. Called live during play for the CASH OUT preview too. */
   function payout(G) {
     const run = G.run, b = G.board;
     const m = Engine.mods(run);
@@ -190,6 +197,18 @@ const Score = (() => {
 
     const base = TUNE.baseMoney + run.bonusMoney;
     lines.push({ label: 'Round played', amount: base }); total += base;
+
+    /* the big one: you get paid for how hard you actually scored, measured
+       against this ante's quota so it stays meaningful at every ante */
+    const quota = Engine.quotaFor(run);
+    const commission = Math.min(TUNE.commissionCap, Math.floor(G.round.score / (quota / TUNE.commissionDivisor)));
+    if (commission > 0) {
+      lines.push({
+        label: 'Scoring commission (' + Math.round(G.round.score / quota * 100) + '% of quota)',
+        amount: commission, big: true
+      });
+      total += commission;
+    }
 
     const empties = b.tableau.filter(p => !p.length).length;
     if (empties) { const a = empties * TUNE.moneyPerEmptyColumn; lines.push({ label: empties + ' empty column' + (empties > 1 ? 's' : ''), amount: a }); total += a; }

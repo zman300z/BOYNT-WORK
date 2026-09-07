@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Game = (() => {
-  const SAVE_KEY = 'piledriver.save.v1';
+  const SAVE_KEY = 'piledriver.save.v2';
 
   const G = {
     run: null, board: null, round: null,
@@ -96,7 +96,8 @@ const Game = (() => {
         top.faceUp = true;
         scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
       }
-    } else {
+    } else if (!G.round.paidClears.includes(col)) {
+      G.round.paidClears.push(col);
       scoreEvent({ event: 'clear', anchor: { zone: 'tableau', col } });
     }
   }
@@ -128,11 +129,17 @@ const Game = (() => {
       return true;
     }
     snapshot();
-    const c = b.stock.pop();
-    c.faceUp = true;
-    b.waste.push(c);
+    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
+    const turned = [];
+    for (let i = 0; i < n; i++) {
+      const c = b.stock.pop();
+      c.faceUp = true;
+      b.waste.push(c);
+      turned.push(c);
+    }
     breakCascade();
     G.round.moves++;
+    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
     save();
     return true;
   }
@@ -154,6 +161,11 @@ const Game = (() => {
         ? dst.suit : Engine.foundationTargetFor(b, card);
       if (!suit) return illegal();
       snapshot();
+      let stack = null;
+      if (src.zone === 'tableau') {
+        const runCards = Engine.runCards(b, src.col, m);
+        stack = { length: runCards.length, value: runCards.reduce((a, c) => a + rankChips(c.rank), 0) };
+      }
       removeFrom(src, 1);
       const depth = b.foundations[suit].length;
       b.foundations[suit].push(card);
@@ -161,6 +173,19 @@ const Game = (() => {
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
       G.round.cascade++;
+      if (G.round.cascade > 0 && G.round.cascade % TUNE.cascadeCashEvery === 0) {
+        G.run.money += 1;
+        G.round.money += 1;
+        push({ event: 'cash', label: 'CASCADE X' + G.round.cascade, amount: 1,
+               anchor: { zone: 'foundation', suit }, chips: 0, mult: 0, total: 0, triggers: [] });
+      }
+      if (stack && stack.length >= TUNE.stackCashAt) {
+        const amt = stack.length >= TUNE.stackCashBigAt ? 2 : 1;
+        G.run.money += amt;
+        G.round.money += amt;
+        push({ event: 'cash', label: 'RUN OF ' + stack.length, amount: amt,
+               anchor: { zone: 'tableau', col: src.col }, chips: 0, mult: 0, total: 0, triggers: [] });
+      }
       const cardSuits = Engine.suitsOf(card);
       if (G.round.lastSuit && cardSuits.includes(G.round.lastSuit)) G.round.suitRun++;
       else G.round.suitRun = 1;
@@ -174,7 +199,7 @@ const Game = (() => {
         push({ event: 'replay', label: 'ALREADY PAID', card, chips: 0, mult: 0, total: 0, triggers: [], anchor });
       } else {
         card.scoredRound = true;
-        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor });
+        scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth, anchor, stack });
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -197,6 +222,12 @@ const Game = (() => {
     if (dst.zone === 'tableau') {
       const col = dst.col;
       if (src.zone === 'tableau' && src.col === col) return illegal();
+      /* shuffling a whole column into another empty column changes nothing and used to
+         re-trigger the cleared-column bonus, so it is not a legal move */
+      if (src.zone === 'tableau' && src.index === 0 && !b.tableau[col].length) {
+        push({ event: 'nudge', label: 'THAT CHANGES NOTHING', chips: 0, mult: 0, total: 0, triggers: [] });
+        return false;
+      }
       if (!Engine.canPlaceOnColumn(b, col, cards[0], m)) return illegal();
       snapshot();
       removeFrom(src, cards.length);
@@ -221,8 +252,10 @@ const Game = (() => {
   function grab(src, m) {
     const b = G.board;
     if (src.zone === 'waste') {
-      const c = b.waste[b.waste.length - 1];
-      return c ? [c] : null;
+      const allowed = Engine.playableWaste(b, m);
+      const idx = src.index != null ? src.index : b.waste.length - 1;
+      const hit = allowed.find(w => w.index === idx);
+      return hit ? [hit.card] : null;
     }
     if (src.zone === 'foundation') {
       const f = b.foundations[src.suit];
@@ -240,7 +273,7 @@ const Game = (() => {
 
   function removeFrom(src, n) {
     const b = G.board;
-    if (src.zone === 'waste') b.waste.splice(b.waste.length - n, n);
+    if (src.zone === 'waste') b.waste.splice(src.index != null ? src.index : b.waste.length - n, n);
     else if (src.zone === 'foundation') b.foundations[src.suit].splice(b.foundations[src.suit].length - n, n);
     else if (src.zone === 'tableau') b.tableau[src.col].splice(b.tableau[src.col].length - n, n);
   }
@@ -360,6 +393,13 @@ const Game = (() => {
   }
 
   /* ---------------- the shop ---------------- */
+  /* Four clearly separated shelves:
+       curios  -> take a seat on the mantel
+       mods    -> permanently mark a card you already own
+       cards   -> add a brand new card to the deck
+       houses  -> permanent run rules, no seat needed              */
+  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', house: 'houses' };
+
   function weightedCurio(exclude) {
     const pool = CURIOS.filter(c => !exclude.has(c.id));
     if (!pool.length) return null;
@@ -380,37 +420,42 @@ const Game = (() => {
   }
 
   function priceOf(item) {
-    let base = item.cost;
-    if (item.finish && item.finish !== 'none') base += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
-    const price = Math.max(1, Math.ceil(base * (1 - Math.min(0.75, G.run.discount))));
-    return price;
+    const base = item.type === 'house' ? HOUSE_BY_ID[item.id].cost
+               : item.type === 'curio' ? CURIO_BY_ID[item.id].cost
+               : SHOP_BY_ID[item.id].cost;
+    let p = base;
+    if (item.finish && item.finish !== 'none') p += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
+    return Math.max(1, Math.ceil(p * (1 - Math.min(0.75, G.run.discount))));
+  }
+
+  function pickN(pool, n, type) {
+    const copy = pool.slice();
+    Engine.shuffle(copy);
+    return copy.slice(0, n).map(d => ({ type, id: d.id, cost: d.cost }));
   }
 
   function rollShopItems() {
     const owned = new Set(G.run.mantel.map(c => c.id));
-    const items = [];
     const used = new Set();
-    for (let i = 0; i < 4; i++) {
-      if (Math.random() < 0.55) {
-        const c = weightedCurio(new Set([...owned, ...used]));
-        if (c) {
-          used.add(c.id);
-          items.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
-          continue;
-        }
-      }
-      const t = TINCTURES[Math.floor(Math.random() * TINCTURES.length)];
-      items.push({ type: 'tincture', id: t.id, cost: t.cost });
+    const curios = [];
+    for (let i = 0; i < 2; i++) {
+      const c = weightedCurio(new Set([...owned, ...used]));
+      if (!c) break;
+      used.add(c.id);
+      curios.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
     }
     const avail = HOUSE_RULES.filter(h => (G.run.houseRules[h.id] || 0) < h.max);
-    Engine.shuffle(avail);
-    const houses = avail.slice(0, 2).map(h => ({ type: 'house', id: h.id, cost: h.cost }));
-    return { items, houses };
+    return {
+      curios,
+      mods: pickN(CARD_MODS, 2, 'mod'),
+      cards: pickN(NEW_CARDS, 2, 'card'),
+      houses: pickN(avail, 2, 'house')
+    };
   }
 
   function openShop(anteCleared) {
-    const rolled = rollShopItems();
-    G.run.shop = { items: rolled.items, houses: rolled.houses, rerolls: 0, sold: [] };
+    const r = rollShopItems();
+    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -424,9 +469,11 @@ const Game = (() => {
     const cost = rerollCost();
     if (G.run.money < cost) return false;
     G.run.money -= cost;
-    const rolled = rollShopItems();
-    G.run.shop.items = rolled.items;
-    G.run.shop.rerolls++;
+    const r = rollShopItems();
+    const shop = G.run.shop;
+    /* keep anything already bought marked as sold so the shelf reads honestly */
+    ['curios', 'mods', 'cards', 'houses'].forEach(k => { shop[k] = r[k]; });
+    shop.rerolls++;
     save();
     return true;
   }
@@ -435,17 +482,16 @@ const Game = (() => {
     return G.run.mantelSlots + G.run.mantel.filter(c => c.finish === 'neg').length;
   }
 
-  function buy(index, kind) {
-    const shop = G.run.shop;
-    const list = kind === 'house' ? shop.houses : shop.items;
-    const item = list[index];
-    if (!item || item.bought) return { ok: false, reason: 'gone' };
-    const price = priceOf(kind === 'house' ? Object.assign({}, item, { cost: HOUSE_BY_ID[item.id].cost }) : item);
-    if (G.run.money < price) return { ok: false, reason: 'Not enough cash.' };
+  function buy(shelf, index) {
+    const list = G.run.shop[SHELVES[shelf]];
+    const item = list && list[index];
+    if (!item || item.bought) return { ok: false, reason: 'Already gone.' };
+    const price = priceOf(item);
+    if (G.run.money < price) return { ok: false, reason: 'Not enough cash for that.' };
 
     if (item.type === 'curio') {
       const slots = effectiveSlots() + (item.finish === 'neg' ? 1 : 0);
-      if (G.run.mantel.length >= slots) return { ok: false, reason: 'Your mantel is full. Sell something first.' };
+      if (G.run.mantel.length >= slots) return { ok: false, reason: 'Every mantel seat is taken. Sell a Curio first.' };
       const def = CURIO_BY_ID[item.id];
       G.run.money -= price;
       G.run.mantel.push({ id: item.id, finish: item.finish || 'none', counter: def.counter != null ? def.counter : 0, paid: price });
@@ -453,38 +499,38 @@ const Game = (() => {
       save();
       return { ok: true, kind: 'curio' };
     }
+
     if (item.type === 'house') {
-      const def = HOUSE_BY_ID[item.id];
       G.run.money -= price;
-      def.apply(G.run);
+      HOUSE_BY_ID[item.id].apply(G.run);
       G.run.houseRules[item.id] = (G.run.houseRules[item.id] || 0) + 1;
       item.bought = true;
       save();
       return { ok: true, kind: 'house' };
     }
-    if (item.type === 'tincture') {
-      const def = TINCTURE_BY_ID[item.id];
-      if (def.kind === 'add') {
-        G.run.money -= price;
-        const spec = def.build();
-        G.run.deck.push(Engine.newCard(spec.rank, spec.suit, {
-          enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
-        }));
-        item.bought = true;
-        save();
-        return { ok: true, kind: 'card' };
-      }
-      // needs a card chosen from the deck
-      G.pending = { itemIndex: index, def };
-      return { ok: true, kind: 'select', def, price };
+
+    const def = SHOP_BY_ID[item.id];
+    if (def.kind === 'add') {
+      G.run.money -= price;
+      const spec = def.build();
+      const card = Engine.newCard(spec.rank, spec.suit, {
+        enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
+      });
+      G.run.deck.push(card);
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'card', card };
     }
-    return { ok: false, reason: 'nope' };
+
+    /* everything left needs the player to point at a card in their deck */
+    G.pending = { shelf, index, def };
+    return { ok: true, kind: 'select', def, price };
   }
 
   function applyPending(cardId) {
     if (!G.pending) return false;
-    const { itemIndex, def } = G.pending;
-    const item = G.run.shop.items[itemIndex];
+    const { shelf, index, def } = G.pending;
+    const item = G.run.shop[SHELVES[shelf]][index];
     if (!item || item.bought) { G.pending = null; return false; }
     const price = priceOf(item);
     if (G.run.money < price) { G.pending = null; return false; }
@@ -535,6 +581,12 @@ const Game = (() => {
     startRound();
   }
 
+  /* what CASH OUT would pay right now -- drives the live button label */
+  function payoutPreview() {
+    if (!G.board || !G.round) return { lines: [], total: 0 };
+    return Score.payout(G);
+  }
+
   /* ---------------- persistence ---------------- */
   function save() {
     try {
@@ -566,6 +618,6 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte
+    bankAnte, clearAnte, payoutPreview, SHELVES
   };
 })();
