@@ -53,6 +53,8 @@ const Engine = (() => {
       quotaScale: 1,
       drawReduce: 0,
       counterBought: {},
+      bonusFurnace: 0,
+      bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0,
@@ -76,10 +78,13 @@ const Engine = (() => {
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
       drawReduce: 0,
       counterBought: {},
+      bonusFurnace: 0,
+      bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
-      twinMult: 1, noRevealScore: false, banditLuck: false
+      twinMult: 1, noRevealScore: false, banditLuck: false,
+      reshuffles: 0, furnaceUses: 0, furnaceDouble: false
     };
     const merge = src => {
       if (!src) return;
@@ -146,7 +151,11 @@ const Engine = (() => {
       stock,
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
-      undos: TUNE.startingUndos + run.bonusUndos + m.undos
+      undos: TUNE.startingUndos + run.bonusUndos + m.undos,
+      furnace: [],
+      burnsLeft: TUNE.furnaceUses + (run.bonusFurnace || 0) + m.furnaceUses,
+      freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
+      paidReshuffles: 0
     };
   }
 

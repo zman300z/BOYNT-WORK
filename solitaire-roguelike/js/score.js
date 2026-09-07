@@ -66,13 +66,14 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (ctx.event !== 'burn') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;
       case 'voltaic': ctx.addMult(4); break;
       case 'glass':   ctx.xMult(2); break;
       case 'phantom': ctx.addMult(2); break;
+      case 'riffle':  ctx.addMult(2); break;
       case 'bomb':    ctx.addChips(30); break;
       case 'bullion': ctx.money(4); break;
       case 'steel':   if (ctx.fromZone === 'tableau') ctx.xMult(1.5); break;
@@ -173,6 +174,7 @@ const Score = (() => {
     if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
+    if (ev.event === 'burn')   base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 

@@ -226,6 +226,11 @@ const Game = (() => {
         }
       }
 
+      if (card.enhancement === 'riffle' && !replay) {
+        doReshuffle();
+        push({ event: 'cash', label: 'RIFFLE — STOCK RESHUFFLED', amount: 0,
+               anchor: { zone: 'stock' }, chips: 0, mult: 0, total: 0, triggers: [] });
+      }
       if (src.zone === 'tableau') settleColumn(src.col);
       if (!twin) checkSuitComplete(suit, anchor);
       afterMove();
@@ -303,6 +308,98 @@ const Game = (() => {
     } else {
       G.round.stuck = false;
     }
+  }
+
+  /* ---------------- the furnace ----------------
+     An exit for cards you will never place -- a fourth Queen, a duplicate that
+     the foundation has not reached yet. Burning clears it for this round only;
+     the card is back in the deck next round.                                  */
+  function canBurn(src) {
+    if (G.phase !== 'play' || !G.board.burnsLeft) return false;
+    const b = G.board;
+    if (src.zone === 'waste') {
+      const allowed = Engine.playableWaste(b, Engine.mods(G.run));
+      const idx = src.index != null ? src.index : b.waste.length - 1;
+      return allowed.some(w => w.index === idx);
+    }
+    if (src.zone === 'tableau') {
+      const pile = b.tableau[src.col];
+      return pile.length > 0 && src.index === pile.length - 1 && pile[src.index].faceUp;
+    }
+    return false;
+  }
+
+  function burn(src) {
+    if (!canBurn(src)) { illegal(); return false; }
+    const b = G.board;
+    const cards = grab(src, Engine.mods(G.run));
+    if (!cards || cards.length !== 1) { illegal(); return false; }
+    snapshot();
+    const card = cards[0];
+    removeFrom(src, 1);
+    b.furnace.push(card);
+    b.burnsLeft--;
+    G.round.moves++;
+    const m = Engine.mods(G.run);
+    const mult = m.furnaceDouble ? 2 : 1;
+    const chips = (rankChips(card.rank) * TUNE.furnaceChipsPerRank + TUNE.furnaceFlat) * mult;
+    G.run.money += mult;
+    G.round.money += mult;
+    scoreEvent({ event: 'burn', card, fromZone: src.zone, baseChips: chips,
+                 label: 'BURNED!', anchor: { zone: 'furnace' } });
+    push({ event: 'cash', label: 'FURNACE', amount: mult,
+           anchor: { zone: 'furnace' }, chips: 0, mult: 0, total: 0, triggers: [] });
+    if (src.zone === 'tableau') settleColumn(src.col);
+    afterMove();
+    return true;
+  }
+
+  /* ---------------- reshuffles ----------------
+     Puts the waste back under the stock and shuffles the lot, WITHOUT spending
+     a pass. Free ones come from Curios and the Counter; after those you can pay
+     in cash or, if you are broke, in score.                                    */
+  function reshuffleCost() {
+    const n = G.board ? G.board.paidReshuffles : 0;
+    return {
+      free: G.board ? G.board.freeReshuffles : 0,
+      cash: TUNE.reshuffleCash + TUNE.reshuffleCashStep * n,
+      points: TUNE.reshufflePoints + TUNE.reshufflePointsStep * n
+    };
+  }
+
+  function reshuffle(how) {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    const b = G.board;
+    if (!b.stock.length && !b.waste.length) return { ok: false, reason: 'Nothing to shuffle.' };
+    const cost = reshuffleCost();
+    if (how === 'free') {
+      if (b.freeReshuffles <= 0) return { ok: false, reason: 'No free reshuffles left.' };
+      b.freeReshuffles--;
+    } else if (how === 'cash') {
+      if (G.run.money < cost.cash) return { ok: false, reason: 'Not enough cash.' };
+      G.run.money -= cost.cash;
+      b.paidReshuffles++;
+    } else if (how === 'points') {
+      if (G.round.score < cost.points) return { ok: false, reason: 'Not enough score banked.' };
+      G.round.score -= cost.points;
+      b.paidReshuffles++;
+    } else return { ok: false, reason: 'nope' };
+
+    doReshuffle();
+    return { ok: true, how };
+  }
+
+  function doReshuffle() {
+    const b = G.board;
+    snapshot();
+    const all = b.stock.concat(b.waste);
+    all.forEach(c => { c.faceUp = false; });
+    b.stock = Engine.shuffle(all);
+    b.waste = [];
+    breakCascade();
+    G.round.moves++;
+    push({ event: 'reshuffle', label: 'RESHUFFLED', chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
   }
 
   /* auto-play every card that can go straight home */
@@ -444,7 +541,12 @@ const Game = (() => {
   function pickN(pool, n, type) {
     const copy = pool.slice();
     Engine.shuffle(copy);
-    return copy.slice(0, n).map(d => ({ type, id: d.id, cost: d.cost }));
+    return copy.slice(0, n).map(d => {
+      const item = { type, id: d.id, cost: d.cost };
+      /* roll the real card now, so what the shop shows is what you buy */
+      if (d.kind === 'add') item.spec = d.build();
+      return item;
+    });
   }
 
   function rollShopItems() {
@@ -525,7 +627,7 @@ const Game = (() => {
     const def = SHOP_BY_ID[item.id];
     if (def.kind === 'add') {
       G.run.money -= price;
-      const spec = def.build();
+      const spec = item.spec || def.build();
       const card = Engine.newCard(spec.rank, spec.suit, {
         enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
       });
@@ -729,6 +831,7 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever
+    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
+    canBurn, burn, reshuffle, reshuffleCost
   };
 })();

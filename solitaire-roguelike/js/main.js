@@ -96,7 +96,11 @@
   }
 
   function wire() {
-    $('#stock').addEventListener('click', draw);
+    const stockEl = $('#stock');
+    stockEl.addEventListener('pointerdown', () => stockEl.classList.add('pressed'));
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+      stockEl.addEventListener(ev, () => stockEl.classList.remove('pressed')));
+    stockEl.addEventListener('click', draw);
     $('#btn-cash').onclick = cashOut;
     $('#btn-hint').onclick = hint;
     $('#btn-collect').onclick = auto;
@@ -104,6 +108,11 @@
     $('#btn-deck').onclick = () => { if (G.run) { Sfx.click(); Overlays.deckView(); } };
     $('#btn-menu').onclick = () => { if (G.run) { Sfx.click(); Overlays.menu(); } };
     $('#btn-help').onclick = () => { Sfx.click(); Overlays.help(); };
+    $('#btn-music').onclick = e => {
+      const on = Sfx.music();
+      e.currentTarget.classList.toggle('off', !on);
+      UI.toast(on ? 'Music on' : 'Music off');
+    };
     $('#btn-sound').onclick = e => {
       const on = Sfx.toggle();
       e.currentTarget.textContent = on ? '\u{1F50A}' : '\u{1F507}';
@@ -122,6 +131,11 @@
       else if (k === 'h') hint();
       else if (k === 'd') { if (G.run) Overlays.deckView(); }
       else if (k === 'c') cashOut();
+      else if (k === 'r') {
+        const res = Game.reshuffle(Game.reshuffleCost().free > 0 ? 'free' : 'cash');
+        if (res.ok) { Sfx.deal(); UI.render(); UI.drainFx(); }
+        else { Sfx.error(); UI.toast(res.reason); }
+      }
     });
 
     let rt = null;
@@ -130,7 +144,16 @@
       rt = setTimeout(() => { if (G.run && G.board) UI.renderBoard(); }, 120);
     });
 
-    document.addEventListener('pointerdown', () => { Sfx.toggle(Sfx.isOn()); }, { once: true });
+    document.addEventListener('pointerdown', () => {
+      Sfx.toggle(Sfx.isOn());
+      if (!Sfx.musicOn()) { Sfx.music(true); $('#btn-music').classList.remove('off'); }
+    }, { once: true });
+
+    /* a tooltip must never outlive whatever it was describing */
+    document.addEventListener('pointerdown', e => {
+      if (!e.target.closest || !e.target.closest('[data-idx],.run-badge,.card,.badge')) UI.hideTip();
+    }, true);
+    window.addEventListener('blur', () => UI.hideTip());
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

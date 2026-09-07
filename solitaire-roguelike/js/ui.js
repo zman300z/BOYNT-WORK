@@ -60,6 +60,7 @@ const UI = (() => {
   /* ============ FULL RENDER ============ */
   function render() {
     if (!G.run) return;
+    hideTip();
     renderHud();
     renderMantel();
     renderBoard();
@@ -158,6 +159,7 @@ const UI = (() => {
     $('#btn-undo').disabled = !G.board || G.board.undos <= 0 || !Game.G.undoStack.length;
     const passes = Engine.mods(G.run).infinitePasses ? '∞' : (G.board ? G.board.passesLeft : 0);
     $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
+    renderReshuffle();
     $('#deck-count').textContent = G.run.deck.length;
     $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
     const pv = $('#cash-preview');
@@ -166,6 +168,29 @@ const UI = (() => {
       pv.textContent = '$' + p.total;
       $('#btn-cash').dataset.breakdown = p.lines.map(l => l.label + '  +$' + l.amount).join('\n');
     }
+  }
+
+  function renderReshuffle() {
+    const bar = $('#reshuffle-bar');
+    if (!bar || !G.board) return;
+    const c = Game.reshuffleCost();
+    bar.innerHTML = '<span class="rs-cap">RESHUFFLE</span>';
+    const add = (how, label, enabled) => {
+      const btn = el('button', 'rs-btn rs-' + how + (enabled ? '' : ' off'), label);
+      btn.onclick = () => {
+        const res = Game.reshuffle(how);
+        if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+        Sfx.deal();
+        flashScreen(0.12, '#4cc9f0');
+        clearSelection();
+        render();
+        drainFx();
+      };
+      bar.appendChild(btn);
+    };
+    if (c.free > 0) add('free', 'FREE x' + c.free, true);
+    add('cash', '$' + c.cash, G.run.money >= c.cash);
+    add('points', c.points + ' pts', G.round && G.round.score >= c.points);
   }
 
   function renderBoard() {
@@ -205,6 +230,21 @@ const UI = (() => {
       waste.appendChild(n);
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
+
+    /* furnace */
+    const fur = $('#furnace');
+    if (fur) {
+      Array.from(fur.querySelectorAll('.card')).forEach(n => n.remove());
+      const burned = b.furnace || [];
+      if (burned.length) {
+        const n = cardEl(burned[burned.length - 1]);
+        n.classList.add('burnt');
+        fur.appendChild(n);
+      }
+      fur.classList.toggle('spent', !b.burnsLeft);
+      const bl = $('#burns-left');
+      if (bl) bl.textContent = b.burnsLeft;
+    }
 
     /* foundations */
     SUIT_KEYS.forEach(s => {
@@ -261,22 +301,31 @@ const UI = (() => {
       });
       const runLen = Engine.runLength(b, col, Engine.mods(G.run));
       if (runLen > 1) {
-        const runCards = Engine.runCards(b, col, Engine.mods(G.run));
+        const mm = Engine.mods(G.run);
+        const runCards = Engine.runCards(b, col, mm);
         const val = runCards.reduce((a, c) => a + rankChips(c.rank), 0);
-        /* the bonus is CASHED IN by sending the run's bottom card home, so say
-           loudly when that card can actually go */
+        const bonusMult = (runLen - 1) * TUNE.stackMultPer * mm.stackMult;
         const cashCard = pile[pile.length - 1];
         const ready = !!(Engine.foundationTargetFor(b, cashCard) || Engine.twinTargetFor(b, cashCard));
-        const badge = el('div', 'run-badge lvl' + Math.min(6, runLen) + (ready ? ' ready' : ''),
-          '<span class="rb-n">RUN ' + runLen + (ready ? ' — CASH IN!' : '') + '</span>' +
-          '<span class="rb-v">+' + val + ' <i>chips</i> · +' +
-          ((runLen - 1) * TUNE.stackMultPer * Engine.mods(G.run).stackMult) + ' <i>mult</i></span>' +
-          '<span class="rb-how">' + (ready
-            ? 'send ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' home to collect'
-            : 'collect when ' + RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym + ' can go home') + '</span>');
-        /* sit the badge clear of the last card, never on top of it */
+        const badge = el('div', 'run-badge' + (ready ? ' ready' : ''),
+          '<span class="rb-n">RUN ' + runLen + '</span>' +
+          (ready ? '<span class="rb-go">CASH IN</span>' : ''));
         const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
-        badge.style.top = Math.round(lastTop + ch + 6) + 'px';
+        badge.style.top = Math.round(lastTop + ch + 5) + 'px';
+        const cardName = RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym;
+        badge.addEventListener('pointerenter', e => showTip(e.currentTarget,
+          '<div class="tip-title">Column Stack — run of ' + runLen + '</div>' +
+          '<div class="tip-kind combo-kind">CASH-IN BONUS</div>' +
+          '<div class="tip-rows">' +
+            '<div class="tip-row"><span>Ranks in this run</span><i>+' + val + ' Chips</i></div>' +
+            '<div class="tip-row"><span>' + (runLen - 1) + ' extra cards</span><i>+' + bonusMult + ' Mult</i></div>' +
+          '</div>' +
+          '<div class="tip-text">' + (ready
+            ? '<b class="ok">Ready.</b> Send the ' + cardName + ' to a foundation to collect all of it on that one play.'
+            : 'Collect it by sending the <b>' + cardName + '</b> home — it needs its foundation to be one rank below.') +
+          '</div>' +
+          '<div class="tip-foot">The run then shrinks by one and pays again on the next card.</div>'));
+        badge.addEventListener('pointerleave', hideTip);
         p.appendChild(badge);
       }
       t.appendChild(p);
@@ -320,6 +369,12 @@ const UI = (() => {
   function clearSelection() { selection = null; applySelectionClasses(); }
 
   function doMove(src, dst) {
+    if (dst.zone === 'furnace') {
+      const burned = Game.burn(src);
+      if (burned) { Sfx.shatter(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#furnace')); render(); G.fx.length = 0; }
+      return burned;
+    }
     const ok = Game.tryMove(src, dst);
     if (ok) {
       Sfx.place();
@@ -363,6 +418,7 @@ const UI = (() => {
         ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
         : (src.zone === 'waste' ? G.board.waste.slice(-1) : G.board.foundations[src.suit].slice(-1));
       if (!cards || !cards.length) { Sfx.error(); shake(node); return; }
+      node.classList.add('pressed');
       drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, t: Date.now() };
       node.setPointerCapture && node.setPointerCapture(e.pointerId);
       e.preventDefault();
@@ -383,6 +439,7 @@ const UI = (() => {
     const finish = e => {
       if (!drag || drag.node !== node) return;
       const d = drag; drag = null;
+      $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
       document.body.classList.remove('dragging-now');
       clearDropHighlights();
       if (d.ghost) d.ghost.remove();
@@ -396,7 +453,7 @@ const UI = (() => {
       }
     };
     node.addEventListener('pointerup', finish);
-    node.addEventListener('pointercancel', () => { if (drag) { document.body.classList.remove('dragging-now'); if (drag.ghost) drag.ghost.remove(); clearDropHighlights(); drag = null; render(); } });
+    node.addEventListener('pointercancel', () => { $$('.card.pressed').forEach(n => n.classList.remove('pressed')); if (drag) { document.body.classList.remove('dragging-now'); if (drag.ghost) drag.ghost.remove(); clearDropHighlights(); drag = null; render(); } });
     node.addEventListener('dblclick', e => {
       if (G.phase !== 'play') return;
       e.preventDefault();
@@ -434,6 +491,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
       if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
+      if (z === 'furnace') return { zone: 'furnace' };
     }
     return null;
   }
@@ -444,7 +502,10 @@ const UI = (() => {
     if (!t || !drag) return;
     const m = Engine.mods(G.run);
     let ok = false, node = null;
-    if (t.zone === 'tableau') {
+    if (t.zone === 'furnace') {
+      node = $('#furnace');
+      ok = drag.cards.length === 1 && Game.canBurn(drag.src);
+    } else if (t.zone === 'tableau') {
       node = $$('#tableau .tab-pile')[t.col];
       ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
     } else {
@@ -482,6 +543,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
       else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
+      else if (z === 'furnace') { const held = selection; clearSelection(); doMove(held, { zone: 'furnace' }); }
     });
   }
 
@@ -514,6 +576,14 @@ const UI = (() => {
   function animatePacket(p, spd, done) {
     if (p.event === 'illegal') { done(); return; }
     if (p.event === 'nudge') { floatText($('#table'), p.label, 'fx-flash'); done(); return; }
+    if (p.event === 'reshuffle') {
+      Sfx.deal();
+      const st = $('#stock');
+      if (st) { st.classList.remove('reshuffled'); void st.offsetWidth; st.classList.add('reshuffled'); }
+      floatText(st || $('#scorebox'), 'RESHUFFLED', 'fx-flash');
+      setTimeout(done, 200 * spd());
+      return;
+    }
     if (p.event === 'cash') {
       const a = anchorEl(p.anchor);
       floatText(a, '+$' + p.amount, 'fx-money big');
@@ -596,6 +666,8 @@ const UI = (() => {
 
   function anchorEl(a) {
     if (!a) return $('#scorebox');
+    if (a.zone === 'furnace') return $('#furnace') || $('#scorebox');
+    if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
     return $('#scorebox');
@@ -852,7 +924,7 @@ const UI = (() => {
     t.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
     t.style.top = (r.bottom + 8) + 'px';
   }
-  function hideTip() { $('#tooltip').classList.remove('show'); }
+  function hideTip() { const t = $('#tooltip'); if (t) t.classList.remove('show'); }
 
   /* curio drag-to-reorder */
   function makeCurioDraggable(node, index) {
@@ -879,7 +951,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
-    renderCombo, flashScreen, confetti, rushFx,
+    renderCombo, flashScreen, confetti, rushFx, renderReshuffle,
     get busy() { return fxBusy; }
   };
 })();

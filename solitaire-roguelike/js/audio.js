@@ -49,8 +49,87 @@ const Sfx = (() => {
     s.start();
   }
 
+  /* ---------------- background music ----------------
+     A short generated lounge loop: walking bass, off-beat chord stabs, a shaker
+     and a little melody that drifts. All synthesised, so the file stays
+     self-contained with no audio assets.                                      */
+  let musicOn = false, musicTimer = null, step = 0, musicGain = null;
+  const ROOT = 55;                                   // A1
+  const PROG = [0, 0, 5, 5, 3, 3, 7, 7];             // i i iv iv III III v v (per bar)
+  const MINOR = [0, 2, 3, 5, 7, 8, 10];
+  const semi = n => Math.pow(2, n / 12);
+
+  function tone(freq, dur, type, vol, when, slide) {
+    if (!ctx) return;
+    const t = when || ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(musicGain);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+
+  function shaker(when, vol) {
+    if (!ctx) return;
+    const len = Math.floor(ctx.sampleRate * 0.05);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s2 = ctx.createBufferSource(); s2.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 6000;
+    const g = ctx.createGain(); g.gain.value = vol;
+    s2.connect(f); f.connect(g); g.connect(musicGain);
+    s2.start(when || ctx.currentTime);
+  }
+
+  function tick() {
+    if (!musicOn || !ctx) return;
+    const bar = Math.floor(step / 8) % PROG.length;
+    const deg = PROG[bar];
+    const beat = step % 8;
+    const t = ctx.currentTime + 0.02;
+    const rootHz = ROOT * semi(MINOR[deg % 7] + (deg >= 7 ? 12 : 0));
+
+    if (beat % 2 === 0) tone(rootHz, 0.34, 'triangle', 0.16, t);          // bass
+    if (beat === 4) tone(rootHz * semi(7), 0.22, 'triangle', 0.09, t);
+    if (beat === 2 || beat === 6) {                                        // chord stab
+      [0, 3, 7, 10].forEach(iv => tone(rootHz * 2 * semi(iv), 0.2, 'sine', 0.05, t));
+    }
+    shaker(t, beat % 2 ? 0.03 : 0.05);
+    if (Math.random() < 0.35) {                                            // drifting melody
+      const note = MINOR[Math.floor(Math.random() * MINOR.length)];
+      tone(rootHz * 4 * semi(note), 0.26, 'sine', 0.045, t + 0.06);
+    }
+    step++;
+  }
+
   const api = {
     toggle(v) { on = v == null ? !on : v; return on; },
+    music(v) {
+      init();
+      if (!ctx) return false;
+      musicOn = v == null ? !musicOn : v;
+      if (musicOn) {
+        if (ctx.state === 'suspended') ctx.resume();
+        if (!musicGain) {
+          musicGain = ctx.createGain();
+          musicGain.gain.value = 0.5;
+          musicGain.connect(master);
+        }
+        musicGain.gain.setTargetAtTime(0.5, ctx.currentTime, 0.3);
+        if (!musicTimer) musicTimer = setInterval(tick, 250);   // 120bpm eighths
+      } else if (musicTimer) {
+        clearInterval(musicTimer);
+        musicTimer = null;
+        if (musicGain) musicGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.1);
+      }
+      return musicOn;
+    },
+    musicOn: () => musicOn,
     isOn: () => on,
     click: () => beep(420, 0.05, 'square', 0.15),
     flip:  () => { noise(0.06, 0.12); beep(700, 0.05, 'triangle', 0.12); },

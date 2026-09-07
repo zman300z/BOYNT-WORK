@@ -9,12 +9,13 @@ const Overlays = (() => {
   const ov = () => $('#overlay');
 
   function open(html, cls) {
+    UI.hideTip();
     const o = ov();
     o.className = 'show ' + (cls || '');
     o.innerHTML = html;
     return o;
   }
-  function close() { ov().className = ''; ov().innerHTML = ''; }
+  function close() { UI.hideTip(); ov().className = ''; ov().innerHTML = ''; }
   function isOpen() { return ov().classList.contains('show'); }
 
   /* ---------------- round end ---------------- */
@@ -261,7 +262,7 @@ const Overlays = (() => {
         badge = '<div class="si-badge mark">MARKS 1 CARD YOU OWN</div>';
       } else {
         badge = '<div class="si-badge add">+1 CARD TO YOUR DECK</div>';
-        preview = '<div class="si-preview">' + previewCard(def) + '</div>';
+        preview = '<div class="si-preview">' + previewCard(def, item.spec) + '</div>';
       }
     }
 
@@ -295,12 +296,12 @@ const Overlays = (() => {
   }
 
   /* a face-up sample of what a New Card slot puts in your deck */
-  function previewCard(def) {
+  function previewCard(def, spec) {
     if (def.kind === 'duplicate') {
       return '<div class="mini-pair">' + UI.cardEl({ id: 'p1', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML +
              UI.cardEl({ id: 'p2', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML + '</div>';
     }
-    const spec = def.sample || def.build();
+    spec = spec || def.build();
     const c = UI.cardEl({
       id: 'prev', rank: spec.rank, suit: spec.suit, faceUp: true,
       enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
@@ -511,6 +512,18 @@ const Overlays = (() => {
             'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
 
+          '<h4>Stuck cards: the Furnace and Twins</h4>' +
+          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it onto the ' +
+          '<b>FURNACE</b> beside the waste pile. It burns for <b>rank x ' + TUNE.furnaceChipsPerRank + ' Chips</b> plus $1, clears out of your way, ' +
+          'and comes back in the deck next round. You get <b>' + TUNE.furnaceUses + ' burns a round</b> (buy more at the Counter).</p>' +
+
+          '<h4>Reshuffling the stock</h4>' +
+          '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
+          'the fix when draw-3 has buried the card you need. The bar next to PASSES gives you three ways to pay: ' +
+          'a <b>free</b> one if a Curio or the Counter granted it, <b>$' + TUNE.reshuffleCash + '</b> cash, or ' +
+          '<b>' + TUNE.reshufflePoints + ' points</b> off your round score. Each paid reshuffle in a round costs more than the last. ' +
+          'A card stamped with a <b>Riffle</b> reshuffles for free whenever it scores. (Hotkey: R)</p>' +
+
           '<h4>Duplicate cards and Twins</h4>' +
           '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
           'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
@@ -559,7 +572,7 @@ const Overlays = (() => {
             '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
           '</ul>' +
 
-          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
+          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; R = reshuffle &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
         '</div>' +
         '<button class="btn ghost" id="help-close">GOT IT</button>' +
       '</div>', 'centered wide');

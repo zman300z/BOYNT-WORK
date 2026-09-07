@@ -31,7 +31,8 @@
       <div class="badge cash" id="money">$0</div>
       <button class="icon" id="btn-deck" title="View deck (D)">🂠<span id="deck-count">52</span></button>
       <button class="icon" id="btn-help" title="How to play">?</button>
-      <button class="icon" id="btn-sound" title="Sound">🔊</button>
+      <button class="icon" id="btn-sound" title="Sound effects">🔊</button>
+      <button class="icon" id="btn-music" title="Music">♪</button>
       <button class="icon" id="btn-menu" title="Menu (Esc)">☰</button>
     </div>
   </header>
@@ -42,6 +43,10 @@
     <div id="top-row">
       <div class="pile stock-pile" id="stock" data-zone="stock"></div>
       <div class="pile waste-pile" id="waste" data-zone="waste"></div>
+      <div class="pile furnace-pile" id="furnace" data-zone="furnace" title="Burn a card you will never place">
+        <div class="furnace-label">FURNACE</div>
+        <div class="furnace-uses"><b id="burns-left">3</b> left</div>
+      </div>
 
       <div id="scorebox">
         <div id="combo-meter"></div>
@@ -69,6 +74,7 @@
   <footer id="controls">
     <div class="ctl-left">
       <div class="chip" id="passes">PASSES <b>3</b></div>
+      <div class="reshuffle-bar" id="reshuffle-bar"></div>
     </div>
     <div class="ctl-mid">
       <button class="btn ghost" id="btn-undo">UNDO <b>3</b></button>

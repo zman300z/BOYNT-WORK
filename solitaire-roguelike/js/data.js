@@ -35,6 +35,13 @@ const TUNE = {
   banditBase: 5,            // first pull of the lever each shop
   banditStep: 4,            // each extra pull
   whimsFromAnte: 2,         // the table starts getting opinions at this ante
+  furnaceUses: 3,           // cards you can burn per round
+  furnaceChipsPerRank: 20,  // burn value = rank x this
+  furnaceFlat: 40,
+  reshuffleCash: 3,         // first paid reshuffle of a round
+  reshuffleCashStep: 3,
+  reshufflePoints: 250,     // ...or pay in score, which starts cheap
+  reshufflePointsStep: 250,
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -84,7 +91,8 @@ const ENHANCEMENTS = {
   lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.' },
   steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.' },
   bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.' },
-  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.' }
+  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.' },
+  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.' }
 };
 
 const FINISHES = {
@@ -271,6 +279,15 @@ const CURIOS = [
     text: '+25 Chips for every card in your tallest column.',
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
+  { id: 'croupier', name: 'The Croupier', icon: 'refresh', rarity: 'uncommon', cost: 8,
+    text: '+1 free stock reshuffle every round. +2 Mult.',
+    mods: { reshuffles: 1 },
+    hooks: { score: c => c.addMult(2) } },
+
+  { id: 'stoker', name: 'The Stoker', icon: 'candle', rarity: 'uncommon', cost: 7,
+    text: '+2 Furnace burns per round, and burning pays double.',
+    mods: { furnaceUses: 2, furnaceDouble: true } },
+
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
     hooks: { score: c => { if (c.chance(8)) { c.xMult(0); c.flash(); } else c.xMult(1.4); } } },
@@ -438,6 +455,7 @@ const CARD_MODS = [
   { id: 't_steel',   name: 'Anvil',          icon: 'anvil',    cost: 5, kind: 'enhance', value: 'steel',   text: 'Make one card Steel: X1.5 Mult off the tableau.' },
   { id: 't_bomb',    name: 'Stick of TNT',   icon: 'dynamite', cost: 6, kind: 'enhance', value: 'bomb',    text: 'Make one card a Fuse: also scores the card beneath.' },
   { id: 't_bullion', name: 'Bullion Stamp',  icon: 'ingot',    cost: 5, kind: 'enhance', value: 'bullion', text: 'Make one card Bullion: earn $4 when scored.' },
+  { id: 't_riffle',  name: 'Riffle Stamp',   icon: 'refresh',  cost: 7, kind: 'enhance', value: 'riffle',  text: 'Make one card a Riffle: scoring it reshuffles the stock, free.' },
   { id: 't_foil',    name: 'Foil Press',     icon: 'sparkle',  cost: 6, kind: 'finish',  value: 'foil',    text: 'Foil finish on one card: +60 Chips.' },
   { id: 't_holo',    name: 'Hologram Kit',   icon: 'prism',    cost: 7, kind: 'finish',  value: 'holo',    text: 'Holographic finish on one card: +12 Mult.' },
   { id: 't_poly',    name: 'Prism',          icon: 'rainbow',  cost: 8, kind: 'finish',  value: 'poly',    text: 'Polychrome finish on one card: X1.5 Mult.' },
@@ -497,7 +515,17 @@ const NEW_CARDS = [
 ];
 
 function rndSuit() { return SUIT_KEYS[Math.floor(Math.random() * 4)]; }
-function rndRank() { return 1 + Math.floor(Math.random() * 13); }
+
+/* New cards lean low on purpose. A spare Ace opens a foundation; a fourth Queen
+   just clogs your columns, so high ranks are rare. */
+const RANK_WEIGHTS = [0, 22, 18, 16, 14, 12, 11, 10, 8, 7, 6, 4, 3, 5];
+function rndRank() {
+  let total = 0;
+  for (let r = 1; r <= 13; r++) total += RANK_WEIGHTS[r];
+  let x = Math.random() * total;
+  for (let r = 1; r <= 13; r++) { x -= RANK_WEIGHTS[r]; if (x <= 0) return r; }
+  return 1;
+}
 
 const SHOP_BY_ID = {};
 CARD_MODS.forEach(t => { SHOP_BY_ID[t.id] = t; });
@@ -520,6 +548,14 @@ const COUNTER_ITEMS = [
   { id: 'c_undo', name: 'Extra Undo', icon: 'undo2', base: 6, step: 4,
     text: '+1 Undo every round, forever.',
     apply: run => { run.bonusUndos++; } },
+
+  { id: 'c_burn', name: 'Furnace Capacity', icon: 'candle', base: 7, step: 5,
+    text: '+1 card you can burn in the Furnace each round.',
+    apply: run => { run.bonusFurnace++; } },
+
+  { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
+    text: '+1 free stock reshuffle every round, forever.',
+    apply: run => { run.bonusReshuffles++; } },
 
   { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
     text: '+1 tableau column dealt every round. More room, more runs to build.',

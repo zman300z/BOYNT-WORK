@@ -60,12 +60,25 @@ card, enhancement, finish, seal, combo, then each Curio on your mantel, left to 
 A card only pays once per round, and a column pays its clear bonus once per round, so shuffling
 cards back and forth is a tactic for unblocking — never a score loop.
 
-### Twins
+### Stuck cards: Twins and the Furnace
 
-A duplicate card — a second Ace of Spades, say — can never advance a foundation, since the pile only
-wants the *next* rank. Instead, drop it **on top of its twin**: any card whose rank its foundation has
-already passed can be played there for a full score (plus +3 Mult) without advancing the pile.
-Duplicates are free points, not dead weight.
+A duplicate card can never advance a foundation, since the pile only wants the *next* rank. Two exits:
+
+- **Twins** — drop it on top of its match. Any card whose rank its foundation has already passed scores
+  in full there (plus +3 Mult) without advancing the pile.
+- **The Furnace** — the pile beside the waste. Drag any accessible card onto it and it burns for
+  **rank × 20 Chips** plus $1, clearing out of your way. Three burns a round (buy more at the Counter),
+  and the card is back in the deck next round. This is the escape hatch for a fourth Queen.
+
+New Cards are also weighted low on purpose — roughly 60% land between Ace and 5, only 8% are face cards —
+and the shop preview shows the *exact* card you'll receive, rolled when the shop was stocked.
+
+### Reshuffling
+
+A reshuffle throws the waste back in with the stock and shuffles it **without spending a pass** — the fix
+for draw-3 burying what you need. The bar next to PASSES offers three ways to pay: a **free** one granted
+by a Curio (The Croupier) or the Counter, **$3** cash, or **250 points** off your round score, each
+escalating within the round. A card stamped with a **Riffle** reshuffles free whenever it scores. Hotkey `R`.
 
 ### The Dealer's Whim
 
@@ -104,7 +117,8 @@ and the chips × mult it scores on its own.
 ## Controls
 
 Drag a card or a sequence, or click one and click where it goes. Double-click sends a
-card home. `Space` deal · `A` auto-collect · `U` undo · `H` hint · `D` deck · `Esc` menu.
+card home. `Space` deal · `R` reshuffle · `A` auto-collect · `U` undo · `H` hint · `D` deck · `Esc` menu.
+There's a generated lounge soundtrack — the ♪ button in the header mutes it, 🔊 mutes effects.
 Acting during a score animation fast-forwards it rather than being ignored.
 
 Progress saves to `localStorage` after every move.
