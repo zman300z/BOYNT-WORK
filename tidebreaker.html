@@ -167,6 +167,56 @@ button.ghost:disabled{opacity:.34;cursor:not-allowed;color:var(--mute);border-co
   opacity:.75;margin:22px 0 0}
 .wallet{font-family:var(--mono);font-size:12px;color:var(--amber);
   font-variant-numeric:tabular-nums;letter-spacing:.04em}
+/* ---------- ship systems readout ---------- */
+.syshead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.syslegend{display:flex;align-items:center;gap:7px;margin:0;font-family:var(--mono);
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);opacity:.8}
+.syslegend i{display:inline-block;width:15px;height:5px;margin-left:9px}
+.syslegend i:first-child{margin-left:0}
+.k-b{background:rgba(138,163,188,.34)}
+.k-g{background:var(--surf)}
+.k-l{background:var(--coral)}
+
+.sysgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 34px;align-items:start}
+.syscol{display:flex;flex-direction:column;gap:20px;min-width:0}
+@media(max-width:760px){.sysgrid{grid-template-columns:1fr}}
+.sysgroup{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sysh{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--cat);margin:0;padding-bottom:8px;
+  border-bottom:1px solid var(--hair2)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;min-width:0}
+.sname{font-size:12.5px;line-height:1.25;color:var(--mute);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow[title]{cursor:help}
+.sval{display:flex;align-items:baseline;gap:6px;white-space:nowrap;
+  font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--mute)}
+.sval b{color:var(--ink);font-weight:600}
+.was{opacity:.6}
+.arw{opacity:.45}
+.sbar{grid-column:1/-1;position:relative;display:block;height:5px;
+  background:rgba(255,255,255,.07);overflow:hidden}
+.sbar i{position:absolute;top:0;bottom:0;display:block}
+.sbar i.b{left:0;background:rgba(138,163,188,.34)}
+.sbar i.g{background:var(--surf);box-shadow:0 0 9px rgba(78,217,194,.55)}
+.sbar i.l{background:var(--coral)}
+.chipd{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.04em;
+  padding:2px 5px 1px;border-radius:2px;color:#061020;background:var(--surf)}
+.chipd.down{background:var(--coral);color:#2A0B0B}
+
+/* ---------- fit preview ---------- */
+.preview{margin-top:14px;padding:13px 16px 14px;min-height:92px;
+  background:rgba(5,13,26,.45);border:1px solid var(--hair2);border-radius:2px}
+.pvh{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--mute);margin:0 0 10px}
+.pvh b{color:var(--surf)}
+.pvhint{font-size:13px;line-height:1.5;color:var(--mute);margin:0;max-width:64ch;opacity:.85}
+.pvrows{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:6px 26px}
+.pvrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:baseline;min-width:0}
+.pvn{font-size:12.5px;color:var(--mute);min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.pvv{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
+  color:var(--mute);white-space:nowrap;display:flex;gap:6px;align-items:baseline}
+.pvv b{color:var(--ink);font-weight:600}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -1814,6 +1864,146 @@ const ICONS = {
   DRIVE:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 9c3-3 5 3 8 0s5 3 8 0M2 16c3-3 5 3 8 0s5 3 8 0"/></svg>',
   FIELD:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="6.4" opacity=".65"/><circle cx="12" cy="12" r="10.2" opacity=".35"/></svg>'
 };
+/* ---------- ship systems: one registry both readouts derive from ---------- */
+const nf   = v => Math.round(v).toLocaleString('en-US');
+const n1   = v => (Math.round(v*10)/10).toString();
+const pct  = v => (Math.round(v*10)/10) + '%';
+const mult = v => (Math.round(v*100)/100) + 'x';
+const px   = v => Math.round(v) + 'px';
+const per  = v => (Math.round(v*10)/10) + '/s';
+const sec  = v => (Math.round(v*100)/100) + 's';
+const rank = v => Math.round(v).toString();
+
+// calc(s, p) reads a stats block plus a carrier holding maxHp, so the same row
+// works on the live player, on the pristine hull, and on a hypothetical fit.
+const SYS = [
+  { cat:'ORD', rows:[
+    { label:'Effective DPS', ceil:900, f:nf, note:'crits averaged in',
+      calc:(s)=> s.dmg*s.nBullets*(1 + s.crit*(s.critMult-1))/s.rate },
+    { label:'Damage per flare', ceil:90,  f:n1,   calc:(s)=> s.dmg },
+    { label:'Flares per shot',  ceil:5,   f:rank, disc:true, calc:(s)=> s.nBullets },
+    { label:'Shots per second', ceil:12,  f:n1,   calc:(s)=> 1/s.rate },
+    { label:'Crit chance',      ceil:60,  f:pct,  calc:(s)=> s.crit*100 },
+    { label:'Crit damage',      ceil:3.5, f:mult, calc:(s)=> s.critMult },
+    { label:'Pierce count',     ceil:3,   f:rank, disc:true, calc:(s)=> s.pierce },
+    { label:'Flare velocity',   ceil:1800,f:nf,   calc:(s)=> s.bspeed },
+    { label:'Flare range',      ceil:2000,f:px,   calc:(s)=> s.bspeed*s.blife },
+    { label:'Spread arc',       ceil:60,  f:v=>(Math.round(v*10)/10)+'deg', inv:true,
+      note:'tighter is better', calc:(s)=> s.nBullets<2 ? 0 : s.spread*s.nBullets*180/Math.PI },
+    { label:'Homing rank',      ceil:3,   f:rank, disc:true, calc:(s)=> s.homing },
+    { label:'Bleed damage',     ceil:90,  f:per,  note:'4s per hit', calc:(s)=> s.dmg*0.28*s.bleed },
+    { label:'Depth charge rank',ceil:3,   f:rank, disc:true, note:'every 7th flare', calc:(s)=> s.boom }
+  ]},
+  { cat:'HULL', rows:[
+    { label:'Max hull',         ceil:400, f:nf,  calc:(s,p)=> p.maxHp },
+    { label:'Damage reduction', ceil:62,  f:pct, calc:(s)=> s.dr*100 },
+    { label:'Effective hull',   ceil:900, f:nf,  note:'hull after reduction',
+      calc:(s,p)=> p.maxHp/(1 - s.dr) },
+    { label:'Lifesteal',        ceil:14,  f:pct, calc:(s)=> s.lifesteal*100 },
+    { label:'Hull repair',      ceil:4.4, f:per, calc:(s)=> s.regen },
+    { label:'Contact spikes',   ceil:48,  f:nf,  calc:(s)=> s.thorns }
+  ]},
+  { cat:'DRIVE', rows:[
+    { label:'Top speed',      ceil:700,  f:nf,   calc:(s)=> s.speed },
+    { label:'Acceleration',   ceil:4200, f:nf,   calc:(s)=> s.accel },
+    { label:'Boost charges',  ceil:3,    f:rank, disc:true, calc:(s)=> s.dashMax },
+    { label:'Boost recharge', ceil:1.5,  f:sec,  inv:true, note:'lower is better',
+      calc:(s)=> s.dashCd },
+    { label:'Boost damage',   ceil:140,  f:nf,   calc:(s)=> s.dashDmg },
+    { label:'Riptide rank',   ceil:2,    f:rank, disc:true, calc:(s)=> s.riptide }
+  ]},
+  { cat:'FIELD', rows:[
+    { label:'Pickup radius', ceil:700, f:px,  calc:(s)=> s.magnet },
+    { label:'Slow on hit',   ceil:72,  f:pct, calc:(s)=> s.slowP*100 },
+    { label:'Field damage',  ceil:70,  f:per, calc:(s)=> s.aura ? 16 + s.aura*13 : 0 },
+    { label:'Field radius',  ceil:140, f:px,  calc:(s)=> s.aura ? 78 + s.aura*15 : 0 },
+    { label:'Drones',        ceil:3,   f:rank, disc:true, calc:(s)=> s.drones },
+    { label:'Drone DPS',     ceil:260, f:per, note:'auto-fire, crits averaged in',
+      calc:(s)=> s.drones * s.dmg*0.5*(1 + s.crit*(s.critMult-1))/0.62 },
+    { label:'Salvage value', ceil:3.4, f:mult, calc:(s)=> s.gold }
+  ]}
+];
+const SYS_COUNT = SYS.reduce((n,g) => n + g.rows.length, 0);
+
+let BASE_CTX = null;
+function baseCtx(){
+  if(!BASE_CTX) BASE_CTX = { s: baseStats(), p: { maxHp:100, hp:100, charges:1 } };
+  return BASE_CTX;
+}
+function liveCtx(){ return { s:P.st, p:P }; }
+// applies an upgrade to throwaway copies so nothing on the real ship moves
+function fitCtx(u){
+  const s = Object.assign({}, P.st);
+  const p = { maxHp:P.maxHp, hp:P.hp, charges:P.charges };
+  u.a(s, p);
+  return { s, p };
+}
+function readStat(r, c){ return r.calc(c.s, c.p); }
+function isBetter(r, from, to){ return r.inv ? to < from : to > from; }
+function deltaText(r, from, to){
+  const d = to - from;
+  if(r.disc) return (d > 0 ? '+' : '') + Math.round(d);
+  if(Math.abs(from) < 1e-6) return 'NEW';
+  const pc = (to/from - 1)*100;
+  const mag = Math.abs(pc) >= 10 ? Math.round(pc) : Math.round(pc*10)/10;
+  return (pc > 0 ? '+' : '') + mag + '%';
+}
+function barHtml(r, from, to){
+  const max = Math.max(r.ceil, from, to) || 1;
+  const lo = clamp(Math.min(from,to)/max, 0, 1);
+  const hi = clamp(Math.max(from,to)/max, 0, 1);
+  const changed = Math.abs(to-from) > 1e-6;
+  let h = '<span class="sbar"><i class="b" style="width:' + (lo*100).toFixed(1) + '%"></i>';
+  if(changed) h += '<i class="' + (isBetter(r,from,to) ? 'g' : 'l') + '" style="left:' +
+    (lo*100).toFixed(1) + '%;width:' + ((hi-lo)*100).toFixed(1) + '%"></i>';
+  return h + '</span>';
+}
+function systemsHtml(){
+  const base = baseCtx(), cur = liveCtx();
+  const group = g => {
+    const c = CAT[g.cat];
+    return '<section class="sysgroup" style="--cat:' + c.c + '">' +
+      '<h4 class="sysh">' + c.label + '</h4>' +
+      g.rows.map(r => {
+        const b = readStat(r, base), v = readStat(r, cur);
+        const changed = Math.abs(v-b) > 1e-6;
+        const ttl = r.note ? ' title="' + r.note + '"' : '';
+        return '<div class="srow"' + ttl + '>' +
+          '<span class="sname">' + r.label + '</span>' +
+          '<span class="sval">' +
+            (changed ? '<span class="was">' + r.f(b) + '</span><span class="arw">&rarr;</span>' : '') +
+            '<b>' + r.f(v) + '</b>' +
+            (changed ? '<span class="chipd ' + (isBetter(r,b,v)?'up':'down') + '">' +
+                        deltaText(r,b,v) + '</span>' : '') +
+          '</span>' + barHtml(r, b, v) + '</div>';
+      }).join('') + '</section>';
+  };
+  return '<div class="sysgrid">' + group(SYS[0]) +
+    '<div class="syscol">' + SYS.slice(1).map(group).join('') + '</div></div>';
+}
+function previewHtml(u){
+  const cur = liveCtx(), nxt = fitCtx(u);
+  const rows = [];
+  for(const g of SYS) for(const r of g.rows){
+    const a = readStat(r, cur), b = readStat(r, nxt);
+    if(Math.abs(b-a) < 1e-6) continue;
+    rows.push('<div class="pvrow" style="--cat:' + CAT[g.cat].c + '">' +
+      '<span class="pvn">' + r.label + '</span>' +
+      '<span class="pvv"><span class="was">' + r.f(a) + '</span>' +
+        '<span class="arw">&rarr;</span><b>' + r.f(b) + '</b></span>' +
+      '<span class="chipd ' + (isBetter(r,a,b)?'up':'down') + '">' + deltaText(r,a,b) + '</span>' +
+    '</div>');
+  }
+  return '<div class="pvh">Fitting <b>' + u.n + '</b> &middot; ' + CAT[u.cat].label +
+      ' &middot; rank ' + ((P.lv[u.id]||0)+1) + ' of ' + u.max + '</div>' +
+    (rows.length ? '<div class="pvrows">' + rows.join('') + '</div>'
+                 : '<p class="pvhint">No change to tracked systems.</p>');
+}
+function previewIdle(){
+  return '<div class="pvh">Effect preview</div>' +
+    '<p class="pvhint">Point at a card to see exactly which of the ' + SYS_COUNT +
+    ' ship systems it moves, and by how much. Full readout is on the pause screen.</p>';
+}
 function openPanel(html){
   elPanel.innerHTML = html;
   elOverlay.classList.add('on');
@@ -1869,6 +2059,7 @@ function showUpgrades(){
     '<p class="lede">You hauled <b>' + P.floaters + ' floaters</b> out of the water. ' +
       'Fit one piece of salvage to the skiff before the next swell.</p>' +
     '<div class="cards">' + currentCards.map(cardHtml).join('') + '</div>' +
+    '<div class="preview" id="preview">' + previewIdle() + '</div>' +
     '<div class="actions">' +
       '<button class="ghost" id="reroll"' + (P.floaters < reCost ? ' disabled' : '') + '>' +
         'Re-scan &middot; ' + reCost + ' fl</button>' +
@@ -1879,7 +2070,14 @@ function showUpgrades(){
     '<hr class="rule"><p class="eyebrow" style="margin-bottom:8px">Fitted</p>' +
     '<div class="loadout">' + loadoutChips() + '</div>'
   );
+  const pv = elPanel.querySelector('#preview');
+  const setPv = u => { if(pv) pv.innerHTML = u ? previewHtml(u) : previewIdle(); };
   elPanel.querySelectorAll('.card').forEach(btn => {
+    const up = currentCards[+btn.dataset.i];
+    btn.addEventListener('mouseenter', () => setPv(up));
+    btn.addEventListener('focus',      () => setPv(up));
+    btn.addEventListener('mouseleave', () => setPv(null));
+    btn.addEventListener('blur',       () => setPv(null));
     btn.addEventListener('click', () => {
       const u = currentCards[+btn.dataset.i];
       applyUpgrade(u);
@@ -1932,7 +2130,6 @@ function showTitle(){
   elPanel.querySelector('#go').addEventListener('click', startRun);
 }
 function showPause(){
-  const s = P.st;
   openPanel(
     '<p class="eyebrow">Engine idle</p><h2 class="title">Holding station</h2>' +
     '<div class="stats">' +
@@ -1940,9 +2137,14 @@ function showPause(){
       stat(String(waveN).padStart(2,'0'),'swell') +
       stat(P.kills,'contacts down') +
       stat(P.floaters,'floaters') +
-      stat(Math.round(s.dmg*s.nBullets/s.rate),'dps est') +
+      stat(Math.ceil(P.hp),'hull left') +
       stat(fmtTime(runTime),'time') +
     '</div>' +
+    '<hr class="rule">' +
+    '<div class="syshead"><p class="eyebrow" style="margin:0">Ship systems</p>' +
+      '<p class="syslegend"><i class="k-b"></i>as launched' +
+        '<i class="k-g"></i>gained<i class="k-l"></i>traded away</p></div>' +
+    systemsHtml() +
     '<hr class="rule"><p class="eyebrow" style="margin-bottom:8px">Fitted</p>' +
     '<div class="loadout">' + loadoutChips() + '</div>' +
     '<div class="actions"><button id="resume">Resume</button>' +
