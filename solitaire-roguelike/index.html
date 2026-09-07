@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>PILEDRIVER — a roguelike solitaire</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="hud">
+    <div class="hud-group">
+      <div class="badge ante">ANTE <b id="ante-num">1</b></div>
+      <div class="badge round">ROUND <b id="round-num">1/3</b></div>
+    </div>
+
+    <div class="hud-quota">
+      <div class="quota-cap">QUOTA — ante total</div>
+      <div id="quota-bar" class="quota-bar">
+        <div id="quota-fill" class="quota-fill"></div>
+        <span id="quota-text" class="quota-text">0 / 0</span>
+      </div>
+    </div>
+
+    <div class="hud-group right">
+      <div class="badge score">SCORE <b id="round-score">0</b></div>
+      <div class="badge cash" id="money">$0</div>
+      <button class="icon" id="btn-deck" title="View deck (D)">🂠<span id="deck-count">52</span></button>
+      <button class="icon" id="btn-help" title="How to play">?</button>
+      <button class="icon" id="btn-sound" title="Sound">🔊</button>
+      <button class="icon" id="btn-menu" title="Menu (Esc)">☰</button>
+    </div>
+  </header>
+
+  <div id="mantel"></div>
+
+  <main id="table">
+    <div id="top-row">
+      <div class="pile stock-pile" id="stock" data-zone="stock"></div>
+      <div class="pile waste-pile" id="waste" data-zone="waste"></div>
+
+      <div id="scorebox">
+        <div class="sb-side chips" data-cap="CHIPS"><span id="sb-chips">0</span></div>
+        <div class="sb-x">X</div>
+        <div class="sb-side mult" data-cap="MULT"><span id="sb-mult">1</span></div>
+      </div>
+
+      <div class="foundations">
+        <div class="pile foundation" id="f-S" data-zone="foundation" data-suit="S"></div>
+        <div class="pile foundation" id="f-H" data-zone="foundation" data-suit="H"></div>
+        <div class="pile foundation" id="f-D" data-zone="foundation" data-suit="D"></div>
+        <div class="pile foundation" id="f-C" data-zone="foundation" data-suit="C"></div>
+      </div>
+    </div>
+
+    <div id="tableau"></div>
+  </main>
+
+  <footer id="controls">
+    <div class="ctl-left">
+      <div class="chip" id="passes">PASSES <b>3</b></div>
+    </div>
+    <div class="ctl-mid">
+      <button class="btn ghost" id="btn-undo">UNDO <b>3</b></button>
+      <button class="btn ghost" id="btn-hint">HINT</button>
+      <button class="btn ghost" id="btn-collect">AUTO</button>
+    </div>
+    <div class="ctl-right">
+      <button class="btn cash-btn" id="btn-cash">CASH OUT</button>
+    </div>
+  </footer>
+
+</div>
+
+<div id="fxlayer"></div>
+<div id="draglayer"></div>
+<div id="tooltip"></div>
+<div id="toast"></div>
+<div id="overlay"></div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/score.js"></script>
+<script src="js/game.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/overlays.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
