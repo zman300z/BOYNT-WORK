@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Dungeon Solitaire — a roguelike deckcrawl</title>
+<style>
+  :root{
+    --bg:#0e0b12; --bg2:#161020; --panel:#1b1426; --panel2:#241a33;
+    --ink:#efe6d8; --dim:#a2937f;
+    --gold:#e8b44c; --red:#e2504a; --green:#63c07a; --blue:#6aa9e0;
+    --line:#3a2b4e; --shadow:rgba(0,0,0,.55);
+    --cardW:70px; --cardH:98px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0; background:
+      radial-gradient(1100px 700px at 50% -10%, #241a33 0%, transparent 60%),
+      radial-gradient(700px 500px at 10% 110%, #1a1226 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font:14px/1.45 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  button{font:inherit; color:inherit; cursor:pointer}
+
+  /* ---------- top bar ---------- */
+  header{
+    flex:0 0 auto; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:10px 16px; background:linear-gradient(#1e1630,#160f24);
+    border-bottom:1px solid var(--line); box-shadow:0 6px 22px var(--shadow); z-index:5;
+  }
+  .stat{display:flex; align-items:baseline; gap:7px; white-space:nowrap}
+  .stat .lbl{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim)}
+  .stat .val{font-size:19px; font-weight:700; font-variant-numeric:tabular-nums}
+  .gold .val{color:var(--gold)}
+  .hearts{letter-spacing:2px; font-size:17px; color:var(--red)}
+  .hearts .off{color:#4b3a55}
+  #comboStat{transition:transform .15s ease, color .15s ease}
+  #comboStat.pop{transform:scale(1.35); color:var(--gold)}
+  header .spacer{flex:1 1 auto}
+  .ghost{
+    background:transparent; border:1px solid var(--line); color:var(--dim);
+    padding:5px 11px; border-radius:7px; font-size:12px; letter-spacing:.06em;
+  }
+  .ghost:hover{border-color:var(--gold); color:var(--gold)}
+
+  /* ---------- curses / relics strip ---------- */
+  #strip{
+    flex:0 0 auto; display:flex; gap:7px; align-items:center; flex-wrap:wrap;
+    padding:7px 16px; min-height:34px; background:#130e1d; border-bottom:1px solid var(--line);
+    font-size:12px;
+  }
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:999px;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:help;
+  }
+  .chip.curse{border-color:#6b2733; background:#2a1220; color:#f0a0a0}
+  .chip .ico{font-size:13px}
+  .chip .nm{font-size:11px; letter-spacing:.05em}
+
+  /* ---------- board ---------- */
+  main{flex:1 1 auto; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center}
+  #boardWrap{position:relative; transform-origin:center center}
+  #board{position:relative}
+
+  .card{
+    position:absolute; width:var(--cardW); height:var(--cardH); border-radius:8px;
+    background:linear-gradient(#fffdf6,#ece2cf); color:#1a1420;
+    border:1px solid #b7a888; box-shadow:0 3px 8px var(--shadow);
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:5px 6px; user-select:none; transition:transform .16s ease, opacity .22s ease, box-shadow .16s ease, filter .16s ease;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+  }
+  .card .r{font-size:17px; font-weight:800; line-height:1}
+  .card .s{font-size:15px; line-height:1}
+  .card .mid{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; opacity:.9}
+  .card .bot{align-self:flex-end; transform:rotate(180deg); display:flex; flex-direction:column; align-items:center}
+  .card.red{color:#b3312f}
+  .card.blocked{filter:brightness(.82) saturate(.7); opacity:.9}
+  .card.playable{cursor:pointer; box-shadow:0 0 0 2px var(--gold), 0 6px 16px var(--shadow)}
+  .card.playable:hover{transform:translateY(-6px)}
+  .card.down{
+    background:
+      repeating-linear-gradient(45deg,#33224a 0 6px,#2a1c3e 6px 12px);
+    border-color:#4a3568; color:transparent;
+  }
+  .card.down .mid,.card.down .r,.card.down .s{visibility:hidden}
+  .card.gone{opacity:0; transform:scale(.6) translateY(-30px); pointer-events:none}
+  .card.wildable.playable{box-shadow:0 0 0 2px var(--blue), 0 6px 16px var(--shadow)}
+
+  /* ---------- dock ---------- */
+  footer{
+    flex:0 0 auto; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    padding:12px 16px; background:linear-gradient(#160f24,#1e1630);
+    border-top:1px solid var(--line); box-shadow:0 -6px 22px var(--shadow); z-index:5;
+  }
+  .pileBox{display:flex; flex-direction:column; align-items:center; gap:5px}
+  .pileBox .cap{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim)}
+  .slot{position:relative; width:var(--cardW); height:var(--cardH)}
+  .slot .card{position:absolute; left:0; top:0}
+  .slot.empty::after{
+    content:""; position:absolute; inset:0; border:1px dashed var(--line); border-radius:8px;
+  }
+  #stockSlot{cursor:pointer}
+  #stockSlot:hover .card.down{transform:translateY(-4px)}
+  #stockSlot.dead{cursor:not-allowed; opacity:.4}
+  .items{display:flex; gap:9px; flex-wrap:wrap}
+  .item{
+    display:flex; align-items:center; gap:7px; padding:7px 11px; border-radius:9px;
+    border:1px solid var(--line); background:var(--panel); font-size:12px;
+  }
+  .item:hover{border-color:var(--gold)}
+  .item.on{border-color:var(--blue); background:#1a2740; color:#bcd9f5}
+  .item .n{color:var(--gold); font-weight:700}
+  .hint{color:var(--dim); font-size:12px; max-width:430px; text-align:right}
+
+  /* ---------- overlays ---------- */
+  .overlay{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(8,5,12,.82); backdrop-filter:blur(3px); z-index:50; padding:20px; overflow:auto;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    width:min(760px,100%); background:linear-gradient(#1d1530,#150f22);
+    border:1px solid var(--line); border-radius:16px; padding:26px 28px;
+    box-shadow:0 24px 70px rgba(0,0,0,.7); text-align:center;
+  }
+  .modal h1{margin:0 0 4px; font-size:34px; letter-spacing:.03em}
+  .modal h2{margin:0 0 10px; font-size:25px; letter-spacing:.02em}
+  .modal .sub{color:var(--dim); margin:0 0 18px; font-size:14px}
+  .modal p{margin:8px 0}
+  .big{
+    background:linear-gradient(#e8b44c,#c9922f); color:#1a1204; border:0; font-weight:800;
+    padding:12px 26px; border-radius:10px; font-size:16px; letter-spacing:.04em; margin-top:8px;
+  }
+  .big:hover{filter:brightness(1.08)}
+  .big.alt{background:transparent; border:1px solid var(--line); color:var(--ink)}
+  .big.alt:hover{border-color:var(--gold); color:var(--gold)}
+  .row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+
+  .offers{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin:18px 0}
+  .offer{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 14px;
+    display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer; transition:.15s;
+  }
+  .offer:hover:not(.bought){border-color:var(--gold); transform:translateY(-3px)}
+  .offer.bought{opacity:.35; cursor:default}
+  .offer.cant{opacity:.5; cursor:not-allowed}
+  .offer .ttl{display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px}
+  .offer .ttl .ico{font-size:19px}
+  .offer .dsc{font-size:12.5px; color:var(--dim); flex:1 1 auto; line-height:1.5}
+  .offer .prc{color:var(--gold); font-weight:800; letter-spacing:.05em}
+  .offer .tag{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#7b6a90}
+
+  .rules{text-align:left; font-size:13.5px; color:#cfc2b0; line-height:1.65;
+    background:#120d1c; border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin:14px 0}
+  .rules b{color:var(--gold)}
+  .k{display:inline-block; border:1px solid var(--line); border-radius:5px; padding:0 6px; font-size:12px; color:var(--dim)}
+  .best{color:var(--dim); font-size:12.5px; margin-top:14px}
+
+  #toast{
+    position:fixed; left:50%; top:16%; transform:translateX(-50%);
+    background:#241a33; border:1px solid var(--gold); color:var(--gold);
+    padding:9px 18px; border-radius:999px; font-size:14px; opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease; z-index:80; box-shadow:0 8px 24px var(--shadow);
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(-8px)}
+
+  @media (max-width:720px){
+    :root{--cardW:56px; --cardH:78px}
+    header{gap:12px; padding:8px 11px}
+    .stat .val{font-size:16px}
+    .stat .lbl{font-size:9px}
+    footer{gap:12px; padding:9px 11px}
+    .hint{display:none}
+    /* items collapse to icon + count so the dock stays one row */
+    .item .label,.item .k{display:none}
+    .item{padding:9px 12px; font-size:14px}
+    .modal{padding:20px 16px}
+    .modal h1{font-size:26px}
+    .modal h2{font-size:21px}
+    .offers{gap:10px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="stat"><span class="lbl">Depth</span><span class="val" id="depthVal">1</span></div>
+  <div class="stat"><span class="lbl">Life</span><span class="val hearts" id="hpVal">♥♥♥</span></div>
+  <div class="stat gold"><span class="lbl">Gold</span><span class="val" id="goldVal">0</span></div>
+  <div class="stat"><span class="lbl">Stock</span><span class="val" id="stockVal">0</span></div>
+  <div class="stat"><span class="lbl">Combo</span><span class="val" id="comboStat">0</span></div>
+  <div class="stat"><span class="lbl">Left</span><span class="val" id="leftVal">0</span></div>
+  <div class="spacer"></div>
+  <button class="ghost" id="helpBtn">Rules</button>
+  <button class="ghost" id="quitBtn">Abandon Run</button>
+</header>
+
+<div id="strip"></div>
+
+<main><div id="boardWrap"><div id="board"></div></div></main>
+
+<footer>
+  <div class="pileBox">
+    <div class="slot" id="stockSlot"></div>
+    <div class="cap">Stock <span id="stockCap">0</span></div>
+  </div>
+  <div class="pileBox">
+    <div class="slot" id="wasteSlot"></div>
+    <div class="cap">Active</div>
+  </div>
+  <div class="items" id="items"></div>
+  <div class="spacer" style="flex:1"></div>
+  <div class="hint" id="hint"></div>
+</footer>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================================
+   DUNGEON SOLITAIRE — a roguelike deckcrawl built on TriPeaks solitaire.
+   No dependencies, no build step. All state lives in S.
+   ========================================================================= */
+"use strict";
+
+const SUITS = ["♠","♥","♦","♣"];      // spade heart diamond club
+const REDS  = new Set([1,2]);                              // indices of red suits
+const RANKS = ["","A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+
+/* ---------------------------- content tables ---------------------------- */
+
+const RELICS = [
+  {id:"loaded",   ico:"\u{1F3B2}", name:"Loaded Dice",     desc:"Every floor begins with 4 extra cards in the stock.",              price:55},
+  {id:"pick",     ico:"⛏",    name:"Miner's Pick",    desc:"Each card you clear pays 2 extra gold.",                           price:50},
+  {id:"charm",    ico:"\u{1F0CF}", name:"Gambler's Charm", desc:"Cards cleared at a combo of 5 or higher pay double gold.",         price:60},
+  {id:"twin",     ico:"⚔",    name:"Twin Blades",     desc:"You may also play a card of the SAME rank as the active card.",    price:80},
+  {id:"ace",      ico:"\u{1F0A1}", name:"Ace of Spades",   desc:"Aces are wild — playable on anything, and anything plays on them.", price:75},
+  {id:"coin",     ico:"\u{1FA99}", name:"Lucky Coin",      desc:"Each cleared card has a 15% chance to add a card back to the stock.", price:65},
+  {id:"mail",     ico:"\u{1F6E1}", name:"Chainmail",       desc:"The first floor you fail in a run costs no life.",                 price:60},
+  {id:"seal",     ico:"\u{1F4DC}", name:"Merchant's Seal", desc:"All shop prices are 30% cheaper.",                                 price:55},
+  {id:"pockets",  ico:"\u{1F45D}", name:"Deep Pockets",    desc:"Collect 15 gold at the start of every floor.",                     price:50},
+  {id:"foot",     ico:"\u{1F407}", name:"Rabbit's Foot",   desc:"Clearing a board pays 2 extra gold per unused stock card.",        price:60},
+  {id:"momentum", ico:"\u{1F300}", name:"Momentum",        desc:"Drawing lowers your combo by 2 instead of resetting it.",          price:70},
+  {id:"trophy",   ico:"\u{1F3C6}", name:"Warden's Trophy", desc:"+1 maximum life, and heal 1 life after every boss floor.",         price:85},
+  {id:"lantern",  ico:"\u{1F3EE}", name:"Lantern",         desc:"Face-down cards are always revealed to you.",                      price:45}
+];
+const RELIC = Object.fromEntries(RELICS.map(r => [r.id, r]));
+const RELIC_SLOTS = 5;   // a run is a build, not a collection
+
+const CONSUMABLES = [
+  {id:"joker",  ico:"\u{1F0CF}", name:"Joker",        desc:"Play any one unblocked card, ignoring rank. Keeps your combo going.", price:25},
+  {id:"elixir", ico:"\u{1F9EA}", name:"Elixir",       desc:"Restore 1 life (up to your maximum).",                                price:40},
+  {id:"refill", ico:"\u{1F4E6}", name:"Reserve Deck", desc:"Shuffle 3 fresh cards into your stock immediately.",                   price:35}
+];
+const CONS = Object.fromEntries(CONSUMABLES.map(c => [c.id, c]));
+const ITEM_CAP = 2;      // you can only carry so much rope
+
+const CURSES = [
+  {id:"iron",   ico:"⚒", name:"Iron Suits", desc:"You cannot play a card of the same suit as the active card."},
+  {id:"oneway", ico:"⇧", name:"One Way",    desc:"Kings and Aces no longer wrap around."},
+  {id:"fog",    ico:"\u{1F32B}", name:"Fog",     desc:"Covered cards stay face down until they are uncovered."},
+  {id:"toll",   ico:"\u{1FA99}", name:"Toll",    desc:"Every draw from the stock costs 3 gold."},
+  {id:"brittle",ico:"\u{1F480}", name:"Brittle", desc:"The stock for this floor is 20% smaller."},
+  {id:"chill",  ico:"❄", name:"Chill",      desc:"Combos pay no bonus — every cleared card is worth 1 gold."}
+];
+
+/* Floor progression. Counter-intuitively, WIDER boards are easier: the bottom
+   row is fully open, so more cards are reachable at once. Difficulty therefore
+   comes from the stock ratio and from curses, not from raw card count. The
+   stock numbers below were tuned against a bot playing several hundred floors. */
+const FLOORS = [
+  {peaks:3, h:4, stock:38},
+  {peaks:4, h:4, stock:42},
+  {peaks:3, h:4, stock:33},
+  {peaks:3, h:5, stock:38},   // boss
+  {peaks:3, h:4, stock:29},
+  {peaks:2, h:4, stock:26},   // cramped: few cards, but few of them open
+  {peaks:3, h:5, stock:34},
+  {peaks:4, h:4, stock:28}    // boss
+];
+/* Endless floors cycle these shapes. `base` is the stock size that makes a
+   shape roughly a 3-in-4 clear on its own; the depth multiplier squeezes it. */
+const DEEP_SHAPES = [
+  {peaks:3, h:5, base:38}, {peaks:4, h:4, base:30}, {peaks:3, h:4, base:33},
+  {peaks:4, h:5, base:42}, {peaks:2, h:4, base:30}
+];
+
+/* ------------------------------- state ---------------------------------- */
+
+const S = {
+  depth:1, hp:3, maxHp:3, gold:0,
+  relics:[], items:{joker:0, elixir:0, refill:0},
+  tableau:[], stock:[], waste:[],
+  combo:0, bestCombo:0, curses:[], jokerArmed:false,
+  earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:false, busy:false,
+  shopOffers:[], layoutW:0, layoutH:0
+};
+
+const $  = sel => document.querySelector(sel);
+const el = (tag, cls) => { const n = document.createElement(tag); if (cls) n.className = cls; return n; };
+const has = id => S.relics.includes(id);
+const cursed = id => S.curses.some(c => c.id === id);
+const rand = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rand(arr.length)];
+
+/* ------------------------------ cards ----------------------------------- */
+
+function freshDeck(){
+  const d = [];
+  for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) d.push({r, s});
+  return d;
+}
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+/** Draw `n` cards, reshuffling in more standard decks as needed. */
+function dealPool(n){
+  let pool = [];
+  while (pool.length < n) pool = pool.concat(shuffle(freshDeck()));
+  return pool.slice(0, n);
+}
+const randomCard = () => ({r: 1 + rand(13), s: rand(4)});
+
+/* ----------------------------- layout ----------------------------------- */
+/* Positions use half-card units on x: a card is 2 units wide, so a card at
+   (row r+1, x±1) overlaps — and therefore blocks — the card at (r, x).      */
+
+function makeLayout(peaks, height){
+  const seen = new Map();
+  for (let k = 0; k < peaks; k++){
+    const apex = (k * (height - 1) + (height - 1) / 2) * 2;
+    for (let r = 0; r < height; r++){
+      for (let i = 0; i <= r; i++){
+        const x = apex - r + 2 * i;
+        seen.set(r + ":" + x, {row:r, x});
+      }
+    }
+  }
+  return [...seen.values()];
+}
+
+function floorPlan(depth){
+  let plan;
+  if (depth <= FLOORS.length){
+    plan = Object.assign({}, FLOORS[depth - 1]);
+  } else {
+    const over = depth - FLOORS.length;
+    const shape = DEEP_SHAPES[over % DEEP_SHAPES.length];
+    const squeeze = Math.max(0.34, 1 - 0.05 * over);
+    const attrition = Math.max(0, over - 14);          // past this the dungeon simply takes cards away
+    plan = {peaks:shape.peaks, h:shape.h,
+            stock: Math.max(6, Math.round(shape.base * squeeze) - attrition)};
+  }
+  plan.boss = depth % 4 === 0;
+  return plan;
+}
+
+/* --------------------------- floor set-up -------------------------------- */
+
+function startFloor(){
+  const plan = floorPlan(S.depth);
+
+  S.curses = [];
+  if (plan.boss){
+    const n = 1 + Math.floor(S.depth / 8);
+    const bag = shuffle(CURSES.slice());
+    S.curses = bag.slice(0, Math.min(n, bag.length));
+  }
+
+  const spots = makeLayout(plan.peaks, plan.h);
+  const maxRow = Math.max(...spots.map(s => s.row));
+
+  let stockN = plan.stock + (has("loaded") ? 4 : 0);
+  if (cursed("brittle")) stockN = Math.round(stockN * 0.8);
+
+  const pool = dealPool(spots.length + stockN);
+  S.tableau = spots.map((sp, i) => ({
+    id: i, row: sp.row, x: sp.x,
+    r: pool[i].r, s: pool[i].s,
+    cleared: false, node: null
+  }));
+  S.stock = pool.slice(spots.length);
+  S.waste = [S.stock.pop()];
+  S.combo = 0;
+  S.jokerArmed = false;
+
+  // Blocking relationships, derived from geometry.
+  const at = new Map(S.tableau.map(c => [c.row + ":" + c.x, c]));
+  S.tableau.forEach(c => {
+    c.blockers = [c.x - 1, c.x + 1]
+      .map(x => at.get((c.row + 1) + ":" + x))
+      .filter(Boolean)
+      .map(b => b.id);
+    c.bottom = c.row === maxRow;
+  });
+
+  if (has("pockets")) gain(15);
+
+  buildBoard();
+  refresh();
+  if (plan.boss) toast("☠ Boss floor — " + S.curses.map(c => c.name).join(" + "));
+}
+
+/* --------------------------- rules of play ------------------------------- */
+
+const active = () => S.waste[S.waste.length - 1];
+const isOpen = c => !c.cleared && c.blockers.every(id => S.tableau[id].cleared);
+const isHidden = c => cursed("fog") && !has("lantern") && !isOpen(c);
+
+function ranksMatch(a, b){
+  const d = Math.abs(a.r - b.r);
+  if (d === 1) return true;
+  if (d === 12 && !cursed("oneway")) return true;          // K <-> A wrap
+  if (d === 0 && has("twin")) return true;
+  if (has("ace") && (a.r === 1 || b.r === 1)) return true;
+  return false;
+}
+
+function canPlay(c){
+  if (c.cleared || !isOpen(c)) return false;
+  const a = active();
+  if (!a) return false;
+  if (S.jokerArmed) return true;
+  if (cursed("iron") && a.s === c.s) return false;
+  return ranksMatch(a, c);
+}
+
+/* ----------------------------- rendering --------------------------------- */
+
+function cardFace(card, faceDown){
+  const n = el("div", "card" + (faceDown ? " down" : (REDS.has(card.s) ? " red" : "")));
+  const top = el("div");
+  const r = el("div", "r"); r.textContent = RANKS[card.r];
+  const s = el("div", "s"); s.textContent = SUITS[card.s];
+  top.appendChild(r); top.appendChild(s);
+  const mid = el("div", "mid"); mid.textContent = SUITS[card.s];
+  const bot = el("div", "bot");
+  const r2 = el("div", "r"); r2.textContent = RANKS[card.r];
+  const s2 = el("div", "s"); s2.textContent = SUITS[card.s];
+  bot.appendChild(r2); bot.appendChild(s2);
+  n.appendChild(top); n.appendChild(mid); n.appendChild(bot);
+  return n;
+}
+
+function buildBoard(){
+  const board = $("#board");
+  board.innerHTML = "";
+  const cs = getComputedStyle(document.documentElement);
+  const cw = parseFloat(cs.getPropertyValue("--cardW"));
+  const ch = parseFloat(cs.getPropertyValue("--cardH"));
+  const unit = cw / 2, rowH = ch * 0.42;
+
+  let maxX = 0, maxRow = 0;
+  S.tableau.forEach(c => {
+    const n = cardFace(c, false);
+    n.style.left = (c.x * unit) + "px";
+    n.style.top  = (c.row * rowH) + "px";
+    n.style.zIndex = String(c.row + 1);
+    n.addEventListener("click", () => onCardClick(c));
+    board.appendChild(n);
+    c.node = n;
+    maxX = Math.max(maxX, c.x); maxRow = Math.max(maxRow, c.row);
+  });
+
+  S.layoutW = (maxX + 2) * unit;
+  S.layoutH = maxRow * rowH + ch;
+  board.style.width  = S.layoutW + "px";
+  board.style.height = S.layoutH + "px";
+  fitBoard();
+}
+
+function fitBoard(){
+  const main = document.querySelector("main");
+  if (!S.layoutW) return;
+  const pad = 24;
+  const sx = (main.clientWidth  - pad) / S.layoutW;
+  const sy = (main.clientHeight - pad) / S.layoutH;
+  const scale = Math.max(0.35, Math.min(1.7, sx, sy));
+  $("#boardWrap").style.transform = "scale(" + scale + ")";
+}
+window.addEventListener("resize", fitBoard);
+
+function refresh(){
+  // header
+  $("#depthVal").textContent = S.depth;
+  $("#goldVal").textContent  = S.gold;
+  $("#stockVal").textContent = S.stock.length;
+  $("#stockCap").textContent = S.stock.length;
+  const left = S.tableau.filter(c => !c.cleared).length;
+  $("#leftVal").textContent = left;
+  $("#comboStat").textContent = S.combo;
+  let hearts = "";
+  for (let i = 0; i < S.maxHp; i++) hearts += i < S.hp ? "♥" : "♡";
+  $("#hpVal").innerHTML = hearts.split("").map((h, i) =>
+    i < S.hp ? h : '<span class="off">' + h + "</span>").join("");
+
+  // tableau
+  S.tableau.forEach(c => {
+    const n = c.node;
+    if (!n) return;
+    if (c.cleared){ n.classList.add("gone"); return; }
+    const hidden = isHidden(c);
+    n.classList.toggle("down", hidden);
+    n.classList.toggle("red", !hidden && REDS.has(c.s));
+    const playable = !hidden && canPlay(c);
+    n.classList.toggle("playable", playable);
+    n.classList.toggle("wildable", playable && S.jokerArmed);
+    n.classList.toggle("blocked", !isOpen(c));
+  });
+
+  // piles
+  const ss = $("#stockSlot");
+  ss.innerHTML = "";
+  ss.classList.toggle("empty", S.stock.length === 0);
+  ss.classList.toggle("dead", S.stock.length === 0);
+  if (S.stock.length) ss.appendChild(cardFace(S.stock[S.stock.length - 1], true));
+  const ws = $("#wasteSlot");
+  ws.innerHTML = "";
+  if (active()) ws.appendChild(cardFace(active(), false));
+
+  drawStrip();
+  drawItems();
+  drawHint(left);
+}
+
+function drawStrip(){
+  const strip = $("#strip");
+  strip.innerHTML = "";
+  S.curses.forEach(c => {
+    const n = el("span", "chip curse"); n.title = c.desc;
+    n.innerHTML = '<span class="ico">' + c.ico + '</span><span class="nm">' + c.name + "</span>";
+    strip.appendChild(n);
+  });
+  S.relics.forEach(id => {
+    const r = RELIC[id];
+    const n = el("span", "chip"); n.title = r.desc;
+    n.innerHTML = '<span class="ico">' + r.ico + '</span><span class="nm">' + r.name + "</span>";
+    strip.appendChild(n);
+  });
+  const slots = el("span", "chip");
+  slots.style.opacity = ".55";
+  slots.title = "A run carries at most " + RELIC_SLOTS + " relics.";
+  slots.innerHTML = '<span class="nm">relics ' + S.relics.length + "/" + RELIC_SLOTS + "</span>";
+  strip.appendChild(slots);
+}
+
+function drawItems(){
+  const box = $("#items");
+  box.innerHTML = "";
+  CONSUMABLES.forEach((c, i) => {
+    const n = el("button", "item" + (c.id === "joker" && S.jokerArmed ? " on" : ""));
+    n.innerHTML = '<span>' + c.ico + '</span><span class="label">' + c.name +
+      '</span><span class="n">×' + S.items[c.id] + "</span>" +
+      '<span class="k">' + (i + 1) + "</span>";
+    n.title = c.desc;
+    n.disabled = S.items[c.id] === 0 && !(c.id === "joker" && S.jokerArmed);
+    n.style.opacity = n.disabled ? .4 : 1;
+    n.addEventListener("click", () => useItem(c.id));
+    box.appendChild(n);
+  });
+}
+
+function drawHint(left){
+  const h = $("#hint");
+  h.innerHTML = "";
+  if (S.jokerArmed){ h.textContent = "Joker armed — pick any open card."; return; }
+  if (!S.stock.length && !S.tableau.some(canPlay) && left > 0){
+    h.innerHTML = "No moves and no stock left. Spend an item to keep going, or ";
+    const b = el("button", "ghost");
+    b.textContent = "give up the floor";
+    b.addEventListener("click", () => { if (S.running && !S.busy) floorFailed(); });
+    h.appendChild(b);
+    return;
+  }
+  h.innerHTML = '<span class="k">Space</span> draw · play cards one rank above or below the active card';
+}
+
+/* ------------------------------ actions ---------------------------------- */
+
+function gain(g){ S.gold += g; S.earned += g; }
+
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 1700);
+}
+
+function onCardClick(c){
+  if (!S.running || S.busy) return;
+  if (isHidden(c) || !canPlay(c)) return;
+
+  const wasJoker = S.jokerArmed;
+  if (wasJoker){ S.jokerArmed = false; S.items.joker--; }
+
+  c.cleared = true;
+  S.cleared++;
+  S.combo++;
+  S.bestCombo = Math.max(S.bestCombo, S.combo);
+  S.waste.push({r: c.r, s: c.s});
+
+  let g = cursed("chill") ? 1 : Math.min(S.combo, 8);
+  if (has("pick")) g += 2;
+  if (has("charm") && S.combo >= 5) g *= 2;
+  gain(g);
+
+  if (has("coin") && Math.random() < 0.15) S.stock.push(randomCard());
+
+  const cs = $("#comboStat");
+  cs.classList.add("pop");
+  setTimeout(() => cs.classList.remove("pop"), 150);
+
+  refresh();
+  checkFloorEnd();
+}
+
+function drawCard(){
+  if (!S.running || S.busy || !S.stock.length) return;
+  S.waste.push(S.stock.pop());
+  S.combo = has("momentum") ? Math.max(0, S.combo - 2) : 0;
+  if (cursed("toll")) S.gold = Math.max(0, S.gold - 3);
+  S.jokerArmed = false;
+  refresh();
+  checkFloorEnd();
+}
+
+function useItem(id){
+  if (!S.running || S.busy) return;
+  if (id === "joker"){
+    if (S.jokerArmed){ S.jokerArmed = false; refresh(); return; }
+    if (!S.items.joker) return;
+    if (!S.tableau.some(c => !c.cleared && isOpen(c))) { toast("No open card to use it on."); return; }
+    S.jokerArmed = true; refresh(); return;                 // consumed on the click that follows
+  }
+  if (id === "elixir"){
+    if (!S.items.elixir) return;
+    if (S.hp >= S.maxHp){ toast("Life is already full."); return; }
+    S.items.elixir--; S.hp++; toast("♥ Restored a life."); refresh(); return;
+  }
+  if (id === "refill"){
+    if (!S.items.refill) return;
+    S.items.refill--;
+    for (let i = 0; i < 3; i++) S.stock.push(randomCard());
+    toast("\u{1F4E6} +3 cards to the stock.");
+    refresh(); checkFloorEnd(); return;
+  }
+}
+
+function checkFloorEnd(){
+  const left = S.tableau.filter(c => !c.cleared).length;
+  if (left === 0){ floorCleared(); return; }
+  if (S.stock.length) return;
+  if (S.tableau.some(canPlay)) return;
+  // Stuck: an item can still save the floor.
+  const openCard = S.tableau.some(c => !c.cleared && isOpen(c));
+  if ((S.items.joker > 0 && openCard) || S.items.refill > 0) return;
+  floorFailed();
+}
+
+/* --------------------------- floor outcomes ------------------------------ */
+
+function floorCleared(){
+  S.busy = true;
+  S.floorsCleared++;
+  const unused = S.stock.length;
+  let bonus = 15 + 2 * unused + 4 * Math.min(S.depth, 10);
+  if (has("foot")) bonus += 2 * unused;
+  gain(bonus);
+  const boss = floorPlan(S.depth).boss;
+  if (boss && has("trophy") && S.hp < S.maxHp) S.hp++;
+  refresh();
+
+  const lines = [
+    "<p>Board swept clean. <b>+" + bonus + " gold</b> " +
+      "<span style='color:var(--dim)'>(" + unused + " stock unused, best combo " + S.bestCombo + ")</span></p>"
+  ];
+  if (boss && has("trophy")) lines.push("<p style='color:var(--green)'>\u{1F3C6} The Trophy mends a wound.</p>");
+
+  showModal(
+    "<h2>Floor " + S.depth + " cleared</h2>" +
+    '<p class="sub">' + flavour() + "</p>" + lines.join(""),
+    [{label:"Enter the shop", cls:"big", fn:openShop}]
+  );
+}
+
+function floorFailed(){
+  S.busy = true;
+  let mercy = false;
+  if (has("mail") && !S.usedMercy){ mercy = true; S.usedMercy = true; }
+  else S.hp--;
+  const lost = mercy ? 0 : Math.floor(S.gold * 0.25);   // the dungeon takes its cut
+  S.gold -= lost;
+  refresh();
+
+  if (S.hp <= 0){ gameOver(false); return; }
+
+  const left = S.tableau.filter(c => !c.cleared).length;
+  showModal(
+    "<h2>Floor " + S.depth + " defeated you</h2>" +
+    '<p class="sub">' + left + " cards left standing, and nothing to play.</p>" +
+    (mercy
+      ? "<p style='color:var(--green)'>\u{1F6E1} Chainmail absorbs the blow — no life lost.</p>"
+      : "<p style='color:var(--red)'>You lose a life (" + S.hp + " remaining)" +
+        (lost ? " and " + lost + " gold spills into the dark" : "") + ".</p>") +
+    "<p style='color:var(--dim)'>The floor stays behind you — the dungeon does not.</p>",
+    [{label:"Press on", cls:"big", fn:openShop}]
+  );
+}
+
+const FLAVOURS = [
+  "The rubble settles. Something deeper shifts its weight.",
+  "Coins glint in the dust where the cards fell.",
+  "A door you did not notice is now open.",
+  "The air below is colder, and it is moving.",
+  "Somewhere ahead, a dealer shuffles.",
+  "You mark the wall and keep descending."
+];
+const flavour = () => pick(FLAVOURS);
+
+/* -------------------------------- shop ----------------------------------- */
+
+function priceOf(item){
+  const base = item.kind === "relic"
+    ? item.price + S.depth * 6 + S.relics.length * 30   // each relic makes the next one dearer
+    : item.price + S.depth * 2 + (S.items[item.id] || 0) * 20;
+  return Math.max(10, Math.round((has("seal") ? base * 0.7 : base) / 5) * 5);
+}
+
+function rollOffers(){
+  const full = S.relics.length >= RELIC_SLOTS;
+  const relicPool = full ? [] : RELICS.filter(r => !has(r.id)).map(r => Object.assign({kind:"relic"}, r));
+  const consPool  = CONSUMABLES.filter(c => S.items[c.id] < ITEM_CAP).map(c => Object.assign({kind:"cons"}, c));
+  const bag = shuffle(relicPool).slice(0, 2).concat(shuffle(consPool).slice(0, 2));
+  S.shopOffers = shuffle(bag).slice(0, 3).map(o => Object.assign({}, o, {bought:false}));
+  if (!S.shopOffers.length) S.shopOffers = shuffle(CONSUMABLES.map(c => Object.assign({kind:"cons"}, c)))
+    .filter(c => S.items[c.id] < ITEM_CAP).slice(0, 3).map(o => Object.assign({}, o, {bought:false}));
+}
+
+function openShop(){
+  rollOffers();
+  renderShop();
+}
+
+function renderShop(){
+  const healCost = Math.max(10, Math.round(((has("seal") ? 0.7 : 1) * (30 + S.depth * 5)) / 5) * 5);
+  const rerollCost = has("seal") ? 7 : 10;
+
+  const cards = S.shopOffers.map((o, i) => {
+    const p = priceOf(o);
+    const cant = !o.bought && S.gold < p;
+    return '<div class="offer ' + (o.bought ? "bought" : (cant ? "cant" : "")) + '" data-i="' + i + '">' +
+      '<div class="tag">' + (o.kind === "relic" ? "Relic · permanent" : "Consumable") + "</div>" +
+      '<div class="ttl"><span class="ico">' + o.ico + "</span>" + o.name + "</div>" +
+      '<div class="dsc">' + o.desc + "</div>" +
+      '<div class="prc">' + (o.bought ? "SOLD" : p + " gold") + "</div>" +
+      "</div>";
+  }).join("");
+
+  showModal(
+    "<h2>The Landing</h2>" +
+    '<p class="sub">A quiet landing between floors · you carry <b style=\'color:var(--gold)\'>' + S.gold + " gold</b>" +
+      " · relic slots " + S.relics.length + "/" + RELIC_SLOTS +
+      (S.relics.length >= RELIC_SLOTS ? " (full)" : "") + "</p>" +
+    '<div class="offers">' + cards + "</div>",
+    [
+      {label:"Reroll (" + rerollCost + "g)", cls:"big alt", fn:() => {
+        if (S.gold < rerollCost){ toast("Not enough gold."); return; }
+        S.gold -= rerollCost; rollOffers(); renderShop();
+      }},
+      {label:"Heal 1 ♥ (" + healCost + "g)", cls:"big alt", fn:() => {
+        if (S.hp >= S.maxHp){ toast("Life is already full."); return; }
+        if (S.gold < healCost){ toast("Not enough gold."); return; }
+        S.gold -= healCost; S.hp++; renderShop(); refresh();
+      }},
+      {label:"Descend ↓", cls:"big", fn:nextFloor}
+    ],
+    () => {
+      document.querySelectorAll(".offer").forEach(node => {
+        node.addEventListener("click", () => buyOffer(+node.dataset.i));
+      });
+    }
+  );
+}
+
+function buyOffer(i){
+  const o = S.shopOffers[i];
+  if (!o || o.bought) return;
+  const p = priceOf(o);
+  if (S.gold < p){ toast("Not enough gold."); return; }
+  if (o.kind === "cons" && S.items[o.id] >= ITEM_CAP){ toast("You can only carry " + ITEM_CAP + "."); return; }
+  S.gold -= p;
+  o.bought = true;
+  if (o.kind === "relic"){
+    S.relics.push(o.id);
+    if (o.id === "trophy"){ S.maxHp++; S.hp++; }
+  } else {
+    S.items[o.id]++;
+  }
+  toast(o.ico + " " + o.name + " acquired.");
+  renderShop();
+  refresh();
+}
+
+/* ------------------------------ run flow --------------------------------- */
+
+function nextFloor(){
+  S.depth++;
+  S.busy = false;
+  hideModal();
+  if (S.depth === FLOORS.length + 1){
+    showModal(
+      "<h1>\u{1F3F0} You reach the surface</h1>" +
+      '<p class="sub">Eight floors, ' + S.cleared + " cards cleared, " + S.earned + " gold earned.</p>" +
+      "<p>The stair behind you keeps going down. It always did.</p>",
+      [
+        {label:"Descend deeper ↓", cls:"big", fn:() => { hideModal(); startFloor(); }},
+        {label:"End the run here", cls:"big alt", fn:() => gameOver(true)}
+      ]
+    );
+    return;
+  }
+  startFloor();
+}
+
+function scoreOf(){
+  return S.earned + 150 * S.floorsCleared + S.bestCombo * 10;
+}
+
+function loadBest(){
+  try { return JSON.parse(localStorage.getItem("dungeonSolitaireBest")) || {depth:0, score:0}; }
+  catch(e){ return {depth:0, score:0}; }
+}
+function saveBest(rec){
+  try { localStorage.setItem("dungeonSolitaireBest", JSON.stringify(rec)); } catch(e){}
+}
+
+function gameOver(escaped){
+  S.running = false;
+  S.busy = true;
+  const score = scoreOf();
+  const best = loadBest();
+  const record = score > best.score;
+  if (record) saveBest({depth:S.floorsCleared, score});
+
+  showModal(
+    "<h1>" + (escaped ? "Run banked" : "The dungeon keeps you") + "</h1>" +
+    '<p class="sub">' + (escaped
+      ? "You walked out with the gold and the story."
+      : "Your last life ran out on floor " + S.depth + ".") + "</p>" +
+    "<p>Floors cleared: <b>" + S.floorsCleared + "</b> · Cards cleared: <b>" + S.cleared +
+      "</b> · Best combo: <b>" + S.bestCombo + "</b></p>" +
+    "<p>Gold earned: <b style='color:var(--gold)'>" + S.earned + "</b> · Score: <b>" + score + "</b></p>" +
+    (record ? "<p style='color:var(--gold)'>✦ A new personal best.</p>"
+            : '<p class="best">Best so far: ' + best.depth + " floors · score " + best.score + "</p>") +
+    (S.relics.length ? '<p class="best">Relics carried: ' +
+        S.relics.map(id => RELIC[id].ico + " " + RELIC[id].name).join(" · ") + "</p>" : ""),
+    [{label:"New run", cls:"big", fn:newRun}]
+  );
+}
+
+function newRun(){
+  Object.assign(S, {
+    depth:1, hp:3, maxHp:3, gold:0,
+    relics:[], items:{joker:0, elixir:0, refill:0},
+    combo:0, bestCombo:0, curses:[], jokerArmed:false,
+    earned:0, cleared:0, floorsCleared:0, usedMercy:false, running:true, busy:false
+  });
+  hideModal();
+  startFloor();
+}
+
+/* ------------------------------ overlays --------------------------------- */
+
+function showModal(html, buttons, after){
+  const m = $("#modal");
+  m.innerHTML = html;
+  if (buttons && buttons.length){
+    const row = el("div", "row");
+    buttons.forEach(b => {
+      const btn = el("button", b.cls || "big");
+      btn.textContent = b.label;
+      btn.addEventListener("click", b.fn);
+      row.appendChild(btn);
+    });
+    m.appendChild(row);
+  }
+  $("#overlay").classList.add("show");
+  if (after) after();
+}
+function hideModal(){ $("#overlay").classList.remove("show"); }
+
+const RULES_HTML =
+  '<div class="rules">' +
+  "<p><b>The board.</b> Cards are dealt into peaks. A card is playable only when nothing overlaps it from below.</p>" +
+  "<p><b>The move.</b> Click any open card whose rank is exactly one above or below the <b>active card</b> in the dock. " +
+  "Kings wrap to Aces. Each card played in a row raises your <b>combo</b>, and gold scales with it.</p>" +
+  "<p><b>The cost.</b> Out of moves? Draw from the <b>stock</b> — it becomes the new active card and your combo resets. " +
+  "Empty the board to clear the floor; run the stock dry with cards still standing and you lose a <b>life</b> and a quarter of your purse.</p>" +
+  "<p><b>The run.</b> Between floors you spend gold on permanent <b>relics</b> (five slots per run) and one-shot <b>consumables</b>. " +
+  "Every fourth floor is a boss and carries a <b>curse</b>. Three lives, eight floors to the surface — " +
+  "and then as deep as you dare.</p>" +
+  '<p style="color:var(--dim)"><span class="k">Space</span> draw · <span class="k">1</span>' +
+  '<span class="k">2</span><span class="k">3</span> use item · <span class="k">Esc</span> close</p>' +
+  "</div>";
+
+function titleScreen(){
+  const best = loadBest();
+  showModal(
+    "<h1>Dungeon Solitaire</h1>" +
+    '<p class="sub">A roguelike deckcrawl — eight floors, three lives, one deck at a time.</p>' +
+    RULES_HTML +
+    (best.depth ? '<p class="best">Best run: ' + best.depth + " floors · score " + best.score + "</p>" : ""),
+    [{label:"Begin the descent", cls:"big", fn:newRun}]
+  );
+}
+
+/* ------------------------------- wiring ---------------------------------- */
+
+$("#stockSlot").addEventListener("click", drawCard);
+$("#helpBtn").addEventListener("click", () => {
+  if (!S.running) return;
+  showModal("<h2>Rules</h2>" + RULES_HTML, [{label:"Back to the dungeon", cls:"big", fn:hideModal}]);
+});
+$("#quitBtn").addEventListener("click", () => {
+  if (!S.running) return;
+  showModal("<h2>Abandon the run?</h2><p class='sub'>Your gold and relics go with the dungeon.</p>", [
+    {label:"Abandon", cls:"big", fn:() => gameOver(false)},
+    {label:"Keep playing", cls:"big alt", fn:hideModal}
+  ]);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && S.running && !S.busy){ hideModal(); return; }
+  if ($("#overlay").classList.contains("show")) return;
+  if (e.code === "Space" || e.key === "Enter"){ e.preventDefault(); drawCard(); }
+  if (e.key === "1") useItem("joker");
+  if (e.key === "2") useItem("elixir");
+  if (e.key === "3") useItem("refill");
+});
+
+titleScreen();
+refresh();
+</script>
+</body>
+</html>
