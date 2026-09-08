@@ -66,7 +66,7 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    if (ctx.event !== 'wish') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (ctx.event !== 'stash') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;
@@ -158,6 +158,12 @@ const Score = (() => {
       ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
       ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
     }
+    /* the payoff for holding a card back until the moment was right */
+    if (ctx.fromStash) {
+      ctx.addMult(TUNE.stashPlayMult);
+      const spm = Engine.mods(ctx.run).stashPlayMult;
+      if (spm) ctx.xMult(spm);
+    }
     /* dropping a duplicate onto its twin */
     if (ctx.twin) {
       ctx.addMult(TUNE.twinMultBonus);
@@ -175,6 +181,7 @@ const Score = (() => {
     ctx.depth = ev.depth || 0;
     ctx.stack = ev.stack || null;
     ctx.twin = !!ev.twin;
+    ctx.fromStash = !!ev.fromStash;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
@@ -183,7 +190,7 @@ const Score = (() => {
     if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
-    if (ev.event === 'wish')   base = { chips: ev.baseChips || 0, mult: 1 };
+    if (ev.event === 'stash')  base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 

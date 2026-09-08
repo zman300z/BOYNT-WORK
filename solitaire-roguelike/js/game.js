@@ -113,10 +113,12 @@ const Game = (() => {
       const top = pile[pile.length - 1];
       if (!top.faceUp) {
         top.faceUp = true;
+        G.round.reveals++;
         scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
       }
     } else if (!G.round.paidClears.includes(col)) {
       G.round.paidClears.push(col);
+      G.round.clears++;
       scoreEvent({ event: 'clear', anchor: { zone: 'tableau', col } });
     }
   }
@@ -209,6 +211,7 @@ const Game = (() => {
         push({ event: 'cash', label: 'CASCADE X' + G.round.cascade, amount: 1,
                anchor: { zone: 'foundation', suit }, chips: 0, mult: 0, total: 0, triggers: [] });
       }
+      if (stack && stack.length >= 4) G.round.bigCashes++;
       if (stack && stack.length >= TUNE.stackCashAt) {
         const amt = stack.length >= TUNE.stackCashBigAt ? 2 : 1;
         G.run.money += amt;
@@ -219,6 +222,7 @@ const Game = (() => {
       const cardSuits = Engine.suitsOf(card);
       if (G.round.lastSuit && cardSuits.includes(G.round.lastSuit)) G.round.suitRun++;
       else G.round.suitRun = 1;
+      G.round.bestSuitRun = Math.max(G.round.bestSuitRun || 0, G.round.suitRun);
       G.round.lastSuit = suit;
 
       const anchor = { zone: 'foundation', suit };
@@ -316,6 +320,7 @@ const Game = (() => {
   }
 
   function afterMove() {
+    checkDare();
     save();
     if (Engine.isWon(G)) {
       G.round.won = true;
@@ -329,83 +334,15 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- THE CUT ----------------
-     Call the colour of the next card off the stock. Right, and your Heat climbs,
-     multiplying every score for the rest of the round. Wrong, and the Heat is
-     gone and it costs you a pass through the stock. Bank the Heat any time to
-     convert it straight into score.                                            */
-  function peekCut() {
-    const b = G.board;
-    if (!b.stock.length) return null;
-    return b.stock[b.stock.length - 1];
-  }
+  /* ---------------- THE STASH ----------------
+     Hold cards back out of the deal and play them whenever they help. The Stash
+     survives rounds and antes, so a spare Ace or a Gilded King can be saved for
+     the exact moment your multipliers are highest.                             */
+  function stashCapacity() { return Engine.stashCapacity(G.run); }
 
-  function heatMult() {
-    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
-    return +(1 + per * G.round.heat).toFixed(2);
-  }
-
-  function callCut(colour) {
-    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
-    const b = G.board;
-    if (!b.stock.length) return { ok: false, reason: 'The stock is empty — nothing to call.' };
-    const card = b.stock[b.stock.length - 1];
-    const actual = Engine.isRed(card) && !Engine.isBlack(card) ? 'red'
-                 : (SUITS[card.suit].color === 'red' ? 'red' : 'black');
-    const correct = card.enhancement === 'wild' ? true : actual === colour;
-
-    snapshot();
-    G.round.cuts++;
-    let penalty = null;
-    if (correct) {
-      G.round.heat++;
-      G.round.cutsHit++;
-      bumpMomentum();
-    } else {
-      G.round.heat = 0;
-      if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
-      else { G.round.score = Math.max(0, G.round.score - TUNE.heatMissScore); penalty = 'score'; }
-    }
-
-    /* the call always turns the cards over */
-    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
-    const turned = [];
-    for (let i = 0; i < n; i++) {
-      const c = b.stock.pop();
-      c.faceUp = true;
-      b.waste.push(c);
-      turned.push(c);
-    }
-    breakCascade();
-    G.round.moves++;
-    push({ event: 'cut', correct, colour, card, heat: G.round.heat, penalty,
-           mult: heatMult(), chips: 0, total: 0, triggers: [] });
-    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
-    save();
-    afterMove();
-    return { ok: true, correct, card, heat: G.round.heat, penalty };
-  }
-
-  function bankHeat() {
-    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
-    const h = G.round.heat;
-    if (h <= 0) return { ok: false, reason: 'No Heat to bank.' };
-    snapshot();
-    const gain = h * h * TUNE.heatBankBase;
-    G.round.score += gain;
-    G.round.heat = 0;
-    push({ event: 'bank-heat', heat: h, gain, chips: 0, mult: 0, total: gain, triggers: [] });
-    save();
-    return { ok: true, gain, heat: h };
-  }
-
-  /* ---------------- the wishing well ----------------
-     An exit for cards you will never place -- a fourth Queen, a duplicate the
-     foundation has not reached. The card always pays Chips, then the well rolls
-     for something else: cash, a free reshuffle, a blessing, or it hands the card
-     back with a new mark printed on it. The card returns to the deck next round. */
-  function canWish(src) {
-    if (G.phase !== 'play' || !G.board.wishesLeft) return false;
+  function canStash(src) {
+    if (G.phase !== 'play') return false;
+    if ((G.run.stash || []).length >= stashCapacity()) return false;
     const b = G.board;
     if (src.zone === 'waste') {
       const allowed = Engine.playableWaste(b, Engine.mods(G.run));
@@ -419,51 +356,171 @@ const Game = (() => {
     return false;
   }
 
-  function makeWish(src) {
-    if (!canWish(src)) { illegal(); return false; }
-    const b = G.board;
+  function stash(src) {
+    if (!canStash(src)) { illegal(); return false; }
     const cards = grab(src, Engine.mods(G.run));
     if (!cards || cards.length !== 1) { illegal(); return false; }
     snapshot();
     const card = cards[0];
     removeFrom(src, 1);
-    b.well.push(card);
-    b.wishesLeft--;
-    bumpMomentum(TUNE.momentumPerMove * 0.7);
+    if (!G.run.stash) G.run.stash = [];
+    G.run.stash.push(Object.assign({}, card, { faceUp: true, scoredRound: false }));
     G.round.moves++;
+    bumpMomentum(TUNE.momentumPerMove * 0.5);
 
     const m = Engine.mods(G.run);
-    const mult = m.wellDouble ? 2 : 1;
-    const chips = (rankChips(card.rank) * TUNE.wellChipsPerRank + TUNE.wellFlat) * mult;
-    scoreEvent({ event: 'wish', card, fromZone: src.zone, baseChips: chips,
-                 label: 'INTO THE WELL', anchor: { zone: 'well' } });
-
-    /* roll the wish -- Wishbone rolls twice and keeps the rarer result */
-    let wish = rollWish();
-    for (let i = 0; i < (m.wishRerolls || 0); i++) {
-      const other = rollWish();
-      if (other.w < wish.w) wish = other;
-    }
-    const detail = wish.apply(G, card);
-    push({ event: 'wish-result', wish: { id: wish.id, name: wish.name, text: wish.text, cls: wish.cls },
-           detail, anchor: { zone: 'well' }, chips: 0, mult: 0, total: 0, triggers: [] });
-
+    if (m.stashCash) { G.run.money += m.stashCash; G.round.money += m.stashCash; }
+    scoreEvent({ event: 'stash', card, baseChips: rankChips(card.rank) * TUNE.stashChipsPerRank,
+                 label: 'POCKETED', anchor: { zone: 'stash' } });
     if (src.zone === 'tableau') settleColumn(src.col);
     afterMove();
     return true;
   }
 
+  /* play a held card back onto the board */
+  function stashPlay(index, dst) {
+    if (G.phase !== 'play') return false;
+    const card = (G.run.stash || [])[index];
+    if (!card) return false;
+    const b = G.board, m = Engine.mods(G.run);
+
+    if (dst.zone === 'foundation') {
+      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit) ? dst.suit : Engine.foundationTargetFor(b, card);
+      let twin = false;
+      if (!suit) { suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card); twin = !!suit; }
+      if (!suit) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      const depth = b.foundations[suit].length;
+      if (twin) b.twins[suit].push(card); else b.foundations[suit].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      G.round.scoredCards++;
+      G.round.cascade++;
+      bumpMomentum();
+      const anchor = { zone: 'foundation', suit };
+      card.scoredRound = true;
+      scoreEvent({ event: 'foundation', card, fromZone: 'stash', depth: twin ? Math.max(0, depth - 1) : depth,
+                   anchor, twin, fromStash: true, label: twin ? 'TWIN FROM THE STASH!' : 'FROM THE STASH!' });
+      G.round.blessing = 0;
+      if (!twin) checkSuitComplete(suit, anchor);
+      afterMove();
+      return true;
+    }
+
+    if (dst.zone === 'tableau') {
+      if (!Engine.canPlaceOnColumn(b, dst.col, card, m)) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      card.faceUp = true;
+      b.tableau[dst.col].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      breakCascade();
+      bumpMomentum(TUNE.momentumPerMove * 0.5);
+      push({ event: 'cash', label: 'OUT OF THE STASH', amount: 0,
+             anchor: { zone: 'tableau', col: dst.col }, chips: 0, mult: 0, total: 0, triggers: [] });
+      afterMove();
+      return true;
+    }
+    return illegal();
+  }
+
+  /* ---------------- THE DEALER'S DARE ----------------
+     Offered on demand, judged on how you play. There is nothing to memorise and
+     nothing to wait for -- the clock is your own moves.                        */
+  function dareMoveBudget(def) {
+    return def.moves + Engine.mods(G.run).dareMoves;
+  }
+
+  function takeDare() {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    if (G.round.dare) return { ok: false, reason: 'Finish the one you have.' };
+    const def = rollDare(G.round.lastDare);
+    G.round.dare = {
+      id: def.id,
+      snap: def.snap(G),
+      startMoves: G.round.moves,
+      budget: dareMoveBudget(def)
+    };
+    G.round.lastDare = def.id;
+    push({ event: 'dare-start', dare: def, budget: G.round.dare.budget,
+           chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
+    return { ok: true, dare: def };
+  }
+
+  function dareState() {
+    const d = G.round && G.round.dare;
+    if (!d) return null;
+    const def = DARE_BY_ID[d.id];
+    return {
+      def, progress: Math.max(0, def.read(G, d.snap)), target: def.target,
+      movesLeft: Math.max(0, d.budget - (G.round.moves - d.startMoves))
+    };
+  }
+
+  function checkDare() {
+    const st = dareState();
+    if (!st) return;
+    const d = G.round.dare, def = st.def;
+    if (st.progress >= st.target) {
+      G.round.dare = null;
+      G.run.daresDone = (G.run.daresDone || 0) + 1;
+      const detail = def.win(G, d.snap) || '';
+      const extra = [];
+      if (Engine.mods(G.run).dareBonus) { G.round.heat += 2; G.run.money += 5; extra.push('Daredevil: +2 Heat and $5'); }
+      push({ event: 'dare-end', won: true, dare: def, detail, extra,
+             chips: 0, mult: 0, total: 0, triggers: [] });
+      save();
+      return;
+    }
+    if (st.movesLeft <= 0) {
+      G.round.dare = null;
+      let detail;
+      if (def.lose) detail = def.lose(G, d.snap);
+      else if (G.board.passesLeft > 0) { G.board.passesLeft--; detail = 'lost a pass through the stock'; }
+      else { G.round.score = Math.max(0, G.round.score - 300); detail = 'no passes left — lost 300 points'; }
+      push({ event: 'dare-end', won: false, dare: def, detail, extra: [],
+             chips: 0, mult: 0, total: 0, triggers: [] });
+      save();
+    }
+  }
+
+  function heatMult() {
+    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
+    return +(1 + per * G.round.heat).toFixed(2);
+  }
+
   /* ---------------- reshuffles ----------------
-     Puts the waste back under the stock and shuffles the lot, WITHOUT spending
-     a pass. Free ones come from Curios and the Counter; after those you can pay
-     in cash or, if you are broke, in score.                                    */
+     Throws the waste back in with the stock and shuffles. It costs a PASS --
+     the same resource that limits how many times you can work the stock -- or
+     you can buy one straight out of your ANTE total if you are out of passes.  */
   function reshuffleCost() {
     const n = G.board ? G.board.paidReshuffles : 0;
     return {
       free: G.board ? G.board.freeReshuffles : 0,
-      cash: TUNE.reshuffleCash + TUNE.reshuffleCashStep * n,
+      passes: G.board ? G.board.passesLeft : 0,
       points: TUNE.reshufflePoints + TUNE.reshufflePointsStep * n
     };
+  }
+
+  /* score spent here comes off the ante bar: this round first, then banked rounds */
+  function spendAnteScore(n) {
+    let left = n;
+    const fromRound = Math.min(G.round.score, left);
+    G.round.score -= fromRound;
+    left -= fromRound;
+    if (left > 0) {
+      const fromAnte = Math.min(G.run.anteScore, left);
+      G.run.anteScore -= fromAnte;
+      left -= fromAnte;
+    }
+    return left === 0;
+  }
+
+  function anteTotalAvailable() {
+    return (G.round ? G.round.score : 0) + (G.run ? G.run.anteScore : 0);
   }
 
   function reshuffle(how) {
@@ -474,13 +531,12 @@ const Game = (() => {
     if (how === 'free') {
       if (b.freeReshuffles <= 0) return { ok: false, reason: 'No free reshuffles left.' };
       b.freeReshuffles--;
-    } else if (how === 'cash') {
-      if (G.run.money < cost.cash) return { ok: false, reason: 'Not enough cash.' };
-      G.run.money -= cost.cash;
-      b.paidReshuffles++;
+    } else if (how === 'pass') {
+      if (b.passesLeft <= 0) return { ok: false, reason: 'Out of passes — nothing left to spend.' };
+      b.passesLeft--;
     } else if (how === 'points') {
-      if (G.round.score < cost.points) return { ok: false, reason: 'Not enough score banked.' };
-      G.round.score -= cost.points;
+      if (anteTotalAvailable() < cost.points) return { ok: false, reason: 'Not enough banked score in the ante.' };
+      spendAnteScore(cost.points);
       b.paidReshuffles++;
     } else return { ok: false, reason: 'nope' };
 
@@ -580,49 +636,63 @@ const Game = (() => {
     }
     if (best) return best.hint;
 
-    /* 4. any other tableau move that grows a run */
+    /* 4. tableau moves that actually gain something. Sliding a run from one
+       column into an empty one when nothing is buried underneath changes
+       nothing, so it is never suggested. */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        const uncovers = i > 0 && !pile[i - 1].faceUp;
         for (let d = 0; d < b.tableau.length; d++) {
           if (d === c) continue;
-          if (!b.tableau[d].length && i === 0) continue;
-          if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
-            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
-                     cardId: pile[i].id, kind: 'build', label: 'Builds your column run' };
-          }
+          const intoEmpty = !b.tableau[d].length;
+          if (intoEmpty && !uncovers) continue;      // pure furniture-shuffling
+          if (!Engine.canPlaceOnColumn(b, d, pile[i], m)) continue;
+          if (!intoEmpty && !uncovers && i === 0) continue;  // merging two whole columns gains nothing either
+          return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                   cardId: pile[i].id, kind: 'build',
+                   label: uncovers ? 'Uncovers a face-down card' : 'Builds your column run' };
         }
       }
     }
 
-    /* 5. deal */
+    /* 5. a card held in the stash that can go somewhere useful */
+    for (let i = 0; i < (G.run.stash || []).length; i++) {
+      const c = G.run.stash[i];
+      if (Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c)) {
+        return { src: { zone: 'stash', index: i }, dst: { zone: 'foundation' },
+                 cardId: c.id, kind: 'stash', label: 'Play it out of your stash' };
+      }
+    }
+
+    /* 6. deal */
     if (b.stock.length) return { src: { zone: 'stock' }, kind: 'draw', label: 'Deal three more' };
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) {
       return { src: { zone: 'stock' }, kind: 'draw', label: 'Turn the waste back over' };
     }
 
-    /* 6. a reshuffle re-orders what draw-3 buried */
+    /* 7. a reshuffle re-orders what draw-3 buried */
     const rc = reshuffleCost();
-    if ((b.stock.length || b.waste.length) && (rc.free > 0 || G.run.money >= rc.cash || G.round.score >= rc.points)) {
+    if ((b.stock.length || b.waste.length) && (rc.free > 0 || rc.passes > 0 || anteTotalAvailable() >= rc.points)) {
       return { src: { zone: 'reshuffle' }, kind: 'reshuffle',
-               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock' };
+               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock (costs a pass)' };
     }
 
-    /* 7. nothing moves -- make a wish on a card you cannot place */
-    if (b.wishesLeft > 0) {
+    /* 8. nothing moves -- pocket a card you cannot place */
+    if ((G.run.stash || []).length < stashCapacity()) {
       for (let c = 0; c < b.tableau.length; c++) {
         const pile = b.tableau[c];
         if (!pile.length) continue;
         const top = pile[pile.length - 1];
         if (top.faceUp) {
-          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'well' },
-                   cardId: top.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'stash' },
+                   cardId: top.id, kind: 'stash', label: 'Nothing else moves — pocket it for later' };
         }
       }
       for (const w of waste) {
-        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'well' },
-                 cardId: w.card.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'stash' },
+                 cardId: w.card.id, kind: 'stash', label: 'Nothing else moves — pocket it for later' };
       }
     }
     return null;
@@ -827,7 +897,11 @@ const Game = (() => {
     if (def.kind === 'enhance') card.enhancement = def.value;
     else if (def.kind === 'finish') card.finish = def.value;
     else if (def.kind === 'seal') card.seal = def.value;
-    else if (def.kind === 'remove') G.run.deck.splice(idx, 1);
+    else if (def.kind === 'remove') {
+      G.run.deck.splice(idx, 1);
+      /* if that card was being held back, it goes with it */
+      if (G.run.stash) G.run.stash = G.run.stash.filter(c => c.id !== cardId);
+    }
     else if (def.kind === 'duplicate') {
       G.run.deck.push(Engine.newCard(card.rank, card.suit, {
         enhancement: card.enhancement, finish: card.finish, seal: card.seal
@@ -1003,7 +1077,9 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult,
+    reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
+    canStash, stash, stashPlay, stashCapacity,
+    takeDare, dareState, checkDare,
     bumpMomentum, decayMomentum
   };
 })();

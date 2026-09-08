@@ -180,8 +180,9 @@ const UI = (() => {
     if (!bar || !G.board) return;
     const c = Game.reshuffleCost();
     bar.innerHTML = '<span class="rs-cap">RESHUFFLE</span>';
-    const add = (how, label, enabled) => {
+    const add = (how, label, enabled, title) => {
       const btn = el('button', 'rs-btn rs-' + how + (enabled ? '' : ' off'), label);
+      if (title) btn.title = title;
       btn.onclick = () => {
         const res = Game.reshuffle(how);
         if (!res.ok) { Sfx.error(); toast(res.reason); return; }
@@ -193,52 +194,56 @@ const UI = (() => {
       };
       bar.appendChild(btn);
     };
-    if (c.free > 0) add('free', 'FREE x' + c.free, true);
-    add('cash', '$' + c.cash, G.run.money >= c.cash);
-    add('points', c.points + ' pts', G.round && G.round.score >= c.points);
+    if (c.free > 0) add('free', 'FREE x' + c.free, true, 'Granted by a Curio or the Counter');
+    add('pass', '1 PASS', c.passes > 0, 'Spends one of your passes through the stock');
+    add('points', fmt(c.points) + ' pts', Game.anteTotalAvailable() >= c.points,
+        'Taken straight off your ANTE total — this round first, then banked rounds');
   }
 
-  /* THE CUT -- the on-table gamble */
+  /* THE DEALER'S DARE -- a challenge judged on how you play */
   function renderCut() {
-    const bar = $('#cut-bar');
+    const bar = $('#dare-bar');
     if (!bar || !G.board || !G.round) return;
-    const m = Engine.mods(G.run);
+    const st = Game.dareState();
     const hot = G.round.heat > 0;
-    const peek = m.peekStock ? Game.peekCut() : null;
-    const peekColour = peek ? ((Engine.isRed(peek) && !Engine.isBlack(peek)) ||
-      SUITS[peek.suit].color === 'red' ? 'red' : 'black') : null;
 
     bar.innerHTML =
-      '<span class="cut-cap">THE CUT</span>' +
+      '<span class="cut-cap">DARE</span>' +
       '<span class="cut-heat' + (hot ? ' on' : '') + '" title="Heat multiplies every score">HEAT <b>X' +
         Game.heatMult() + '</b><i>' + G.round.heat + '</i></span>';
 
-    const canCall = G.board.stock.length > 0;
-    ['red', 'black'].forEach(col => {
-      const btn = el('button', 'cut-btn cut-' + col + (canCall ? '' : ' off') +
-        (peekColour === col ? ' peeked' : ''), col.toUpperCase());
+    if (!st) {
+      const btn = el('button', 'cut-btn dare-take', 'TAKE A DARE');
       btn.onclick = () => {
-        const res = Game.callCut(col);
+        const res = Game.takeDare();
         if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-        clearSelection();
         render();
         drainFx();
-        checkStuck();
       };
       bar.appendChild(btn);
-    });
-    const bank = el('button', 'cut-btn cut-bank' + (hot ? '' : ' off'),
-      'BANK' + (hot ? ' ' + fmt(G.round.heat * G.round.heat * TUNE.heatBankBase) : ''));
-    bank.onclick = () => {
-      const res = Game.bankHeat();
-      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-      render();
-      drainFx();
-    };
-    bar.appendChild(bank);
-    if (peek) {
-      bar.appendChild(el('span', 'cut-peek ' + peekColour, 'next: ' + peekColour.toUpperCase()));
+      bar.appendChild(el('span', 'cut-peek', 'a challenge, judged on how you play'));
+      return;
     }
+
+    const pct = Math.min(100, st.progress / st.target * 100);
+    const urgent = st.movesLeft <= 2;
+    const chip = el('div', 'dare-live' + (urgent ? ' urgent' : ''),
+      '<div class="dl-head">' + icon(st.def.icon, 'dl-ico') + '<b>' + st.def.name + '</b>' +
+        '<span class="dl-moves">' + st.movesLeft + ' moves</span></div>' +
+      '<div class="dl-goal">' + st.def.goal + ' — <b>' +
+        (st.def.scoreGoal ? UI.fmt(Math.min(st.progress, st.target)) : st.progress) + '/' +
+        (st.def.scoreGoal ? UI.fmt(st.target) : st.target) + '</b></div>' +
+      '<div class="dl-bar"><div style="width:' + pct + '%"></div></div>');
+    chip.addEventListener('pointerenter', e => showTip(e.currentTarget,
+      '<div class="tip-title">' + icon(st.def.icon, 'tip-ico') + ' ' + st.def.name + '</div>' +
+      '<div class="tip-kind whim-kind">ACTIVE DARE</div>' +
+      '<div class="tip-text">' + st.def.goal + ' within ' + st.def.moves + ' moves.</div>' +
+      '<div class="tip-rows">' +
+        '<div class="tip-row"><span>Land it</span><i>' + st.def.rewardText + '</i></div>' +
+        '<div class="tip-row"><span>Miss it</span><i>' + st.def.forfeitText + '</i></div>' +
+      '</div>'));
+    chip.addEventListener('pointerleave', hideTip);
+    bar.appendChild(chip);
   }
 
   function renderBoard() {
@@ -280,19 +285,28 @@ const UI = (() => {
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
-    /* the wishing well */
-    const wl = $('#well');
-    if (wl) {
-      Array.from(wl.querySelectorAll('.card')).forEach(n => n.remove());
-      const tossed = b.well || [];
-      if (tossed.length) {
-        const n = cardEl(tossed[tossed.length - 1]);
-        n.classList.add('sunk');
-        wl.appendChild(n);
+    /* the stash: cards held back, playable whenever */
+    const st = $('#stash');
+    if (st) {
+      st.innerHTML = '';
+      const held = G.run.stash || [];
+      const cap = Game.stashCapacity();
+      const label = el('div', 'stash-label', 'STASH <b>' + held.length + '/' + cap + '</b>');
+      st.appendChild(label);
+      const row = el('div', 'stash-row');
+      for (let i = 0; i < cap; i++) {
+        const c = held[i];
+        if (!c) { row.appendChild(el('div', 'stash-slot empty', '')); continue; }
+        const slot = el('div', 'stash-slot');
+        const n = cardEl(Object.assign({}, c, { faceUp: true }));
+        n.classList.add('stashed');
+        attachInspect(n, c);
+        attachStashDrag(n, i);
+        slot.appendChild(n);
+        row.appendChild(slot);
       }
-      wl.classList.toggle('spent', !b.wishesLeft);
-      const c = $('#wishes-left');
-      if (c) c.textContent = b.wishesLeft;
+      st.appendChild(row);
+      st.classList.toggle('full', held.length >= cap);
     }
 
     /* foundations */
@@ -422,11 +436,17 @@ const UI = (() => {
 
   let landedId = null;
   function doMove(src, dst) {
-    if (dst.zone === 'well') {
-      const wished = Game.makeWish(src);
-      if (wished) { Sfx.money(); clearSelection(); render(); drainFx(); checkStuck(); }
-      else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
-      return wished;
+    if (dst.zone === 'stash') {
+      const ok2 = Game.stash(src);
+      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
+      return ok2;
+    }
+    if (src.zone === 'stash') {
+      const ok2 = Game.stashPlay(src.index, dst);
+      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
+      return ok2;
     }
     const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
                  : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
@@ -504,6 +524,35 @@ const UI = (() => {
       e.preventDefault();
       clearTimeout(inspectTimer);
       showTip(node, Overlays.cardTip(card));
+    });
+  }
+
+  function attachStashDrag(node, index) {
+    node.classList.add('grabbable');
+    node.addEventListener('pointerdown', e => {
+      if (G.phase !== 'play') return;
+      rushFx();
+      if (e.button != null && e.button !== 0) return;
+      cancelDrag(true);
+      node.classList.add('pressed');
+      drag = { src: { zone: 'stash', index }, cards: [G.run.stash[index]],
+               x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, id: e.pointerId };
+      e.preventDefault();
+    });
+    node.addEventListener('dblclick', e => {
+      if (G.phase !== 'play') return;
+      e.preventDefault();
+      cancelDrag(true);
+      const card = G.run.stash[index];
+      if (Engine.foundationTargetFor(G.board, card) || Engine.twinTargetFor(G.board, card)) {
+        doMove({ zone: 'stash', index }, { zone: 'foundation' });
+      } else {
+        const m = Engine.mods(G.run);
+        for (let d = 0; d < G.board.tableau.length; d++) {
+          if (Engine.canPlaceOnColumn(G.board, d, card, m)) { doMove({ zone: 'stash', index }, { zone: 'tableau', col: d }); return; }
+        }
+        Sfx.error(); shake(node);
+      }
     });
   }
 
@@ -604,7 +653,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
       if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
-      if (z === 'well') return { zone: 'well' };
+      if (z === 'stash') return { zone: 'stash' };
     }
     return null;
   }
@@ -615,9 +664,9 @@ const UI = (() => {
     if (!t || !drag) return;
     const m = Engine.mods(G.run);
     let ok = false, node = null;
-    if (t.zone === 'well') {
-      node = $('#well');
-      ok = drag.cards.length === 1 && Game.canWish(drag.src);
+    if (t.zone === 'stash') {
+      node = $('#stash');
+      ok = drag.cards.length === 1 && drag.src.zone !== 'stash' && Game.canStash(drag.src);
     } else if (t.zone === 'tableau') {
       node = $$('#tableau .tab-pile')[t.col];
       ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
@@ -656,7 +705,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
       else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
-      else if (z === 'well') { const held = selection; clearSelection(); doMove(held, { zone: 'well' }); }
+      else if (z === 'stash') { const held = selection; clearSelection(); doMove(held, { zone: 'stash' }); }
     });
   }
 
@@ -707,37 +756,30 @@ const UI = (() => {
       setTimeout(done, 520 * spd());
       return;
     }
-    if (p.event === 'cut') {
-      const anchor = $('#cut-bar') || $('#scorebox');
-      const card = el('div', 'cut-flip ' + (p.correct ? 'hit' : 'miss'),
-        '<div class="cf-call">' + p.colour.toUpperCase() + '</div>' +
-        '<div class="cf-card ' + ((Engine.isRed(p.card) && !Engine.isBlack(p.card)) ? 'red' : 'black') + '">' +
-          RANK_NAMES[p.card.rank] + (p.card.enhancement === 'wild' ? '✿' : SUITS[p.card.suit].sym) + '</div>' +
-        '<div class="cf-verdict">' + (p.correct
-          ? 'HIT — HEAT X' + p.mult
-          : (p.penalty === 'pass' ? 'MISS — lost a pass' : 'MISS — lost ' + TUNE.heatMissScore + ' points')) + '</div>');
-      $('#fxlayer').appendChild(card);
-      if (p.correct) {
-        Sfx.big(); confetti(anchor, 18 + p.heat * 6, 't2'); flashScreen(0.14, '#ffd166');
-        if (p.heat >= 4) { screenShake(8); bannerText('HEAT X' + p.mult); }
-      } else {
-        Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
-      }
-      renderHud();
-      setTimeout(() => card.classList.add('out'), 780 * spd());
-      setTimeout(() => card.remove(), 1150 * spd());
-      setTimeout(done, 420 * spd());
+    if (p.event === 'dare-start') {
+      const d = p.dare;
+      bannerText('DARE TAKEN');
+      floatText($('#dare-bar') || $('#scorebox'), d.goal + ' in ' + p.budget, 'fx-flash');
+      Sfx.big();
+      flashScreen(0.14, '#b07cff');
+      setTimeout(done, 300 * spd());
       return;
     }
-    if (p.event === 'bank-heat') {
-      const box = $('#scorebox');
-      bannerText('HEAT BANKED — X' + p.heat);
-      Sfx.win();
-      confetti(box, 50, 't3');
-      screenShake(10);
-      flashScreen(0.24, '#7ee787');
+    if (p.event === 'dare-end') {
+      const d = p.dare;
+      const card = el('div', 'wish-card ' + (p.won ? 'great' : 'meh'),
+        '<div class="wc-name">' + (p.won ? 'DARE LANDED' : 'DARE BLOWN') + '</div>' +
+        '<div class="wc-text">' + d.name + ' — ' + d.goal + '</div>' +
+        '<div class="wc-detail">' + (p.detail || '') + '</div>' +
+        (p.extra && p.extra.length ? '<div class="wc-detail">' + p.extra.join('<br>') + '</div>' : ''));
+      $('#fxlayer').appendChild(card);
+      if (p.won) { Sfx.win(); screenShake(11); confetti($('#scorebox'), 55, 't3'); flashScreen(0.26, '#7ee787'); }
+      else { Sfx.lose(); screenShake(9); flashScreen(0.2, '#ff4d6d'); }
+      renderHud();
       animateScoreTo(G.round.score);
-      setTimeout(done, 420 * spd());
+      setTimeout(() => card.classList.add('out'), 950 * spd());
+      setTimeout(() => card.remove(), 1350 * spd());
+      setTimeout(done, 520 * spd());
       return;
     }
     if (p.event === 'reshuffle') {
@@ -832,7 +874,7 @@ const UI = (() => {
 
   function anchorEl(a) {
     if (!a) return $('#scorebox');
-    if (a.zone === 'well') return $('#well') || $('#scorebox');
+    if (a.zone === 'stash') return $('#stash') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');

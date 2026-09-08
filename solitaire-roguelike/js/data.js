@@ -35,22 +35,21 @@ const TUNE = {
   banditBase: 5,            // first pull of the lever each shop
   banditStep: 4,            // each extra pull
   whimsFromAnte: 2,         // the table starts getting opinions at this ante
-  wellUses: 3,              // wishes you can make per round
-  wellChipsPerRank: 18,     // a wish always pays rank x this...
-  wellFlat: 40,             // ...plus this, before the wish itself lands
-  reshuffleCash: 3,         // first paid reshuffle of a round
-  reshuffleCashStep: 3,
-  reshufflePoints: 250,     // ...or pay in score, which starts cheap
-  reshufflePointsStep: 250,
+  stashSlots: 3,            // cards you can hold back and play whenever you like
+  stashChipsPerRank: 10,    // tucking a card away pays a little
+  stashPlayMult: 4,         // ...and playing one back out pays a lot
+  reshufflePoints: 300,     // buying a reshuffle out of your ANTE total
+  reshufflePointsStep: 300,
   heatMultPer: 0.5,         // each Heat level adds this much X Mult
   heatBankBase: 250,        // banking Heat pays heat^2 x this
   heatMissScore: 200,       // a wrong call with no passes left costs this much score
   momentumPerMove: 26,      // TEMPO gained per scoring action
   momentumDecay: 15,        // ...lost per second of dithering
   momentumMaxMult: 0.9,     // full bar is worth X1.9
+  dareRewardGrowth: 0.25,   // each dare you land makes the next one richer
   startingMantelSlots: 3,
   maxMantelSlots: 5,
-  startingStockPasses: 3,
+  startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
   startingUndos: 3,
   rerollBase: 5,
   rerollStep: 2,
@@ -107,8 +106,8 @@ const ENHANCEMENTS = {
             long: 'When this goes home from a column it detonates: the card underneath is flipped face-up if needed and scored as a second full play, Curios and all, without leaving the tableau. Sitting a Fuse on top of a King is how you double-dip on your biggest card.' },
   bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.',
             long: 'Pays $4 into your pocket the moment it scores, on top of whatever points it makes. The money lands immediately, mid-round, so it can fund a reshuffle before the round is even over.' },
-  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.',
-            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot — without spending a pass and without costing you cash or score. The rescue button for when draw-3 has buried the card you need.' }
+  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock when scored, costing no pass. +2 Mult.',
+            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot, and unlike a manual reshuffle it does not cost you a pass. The rescue button for when draw-3 has buried the card you need.' }
 };
 
 const FINISHES = {
@@ -302,9 +301,9 @@ const CURIOS = [
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
   { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
-    text: 'The Cut shows you the colour of the next card before you call it.',
-    long: 'Turns the 50/50 into a certainty — as long as you actually look. Heat climbs as fast as you can click.',
-    mods: { peekStock: true } },
+    text: 'Every Dare gets 3 extra moves to complete.',
+    long: 'Dares are the fastest way to build Heat, and the move budget is what makes them scary. Three more moves turns most dares from a gamble into a plan.',
+    mods: { dareMoves: 3 } },
 
   { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
     text: 'Each level of Heat is worth X0.4 more Mult than usual.',
@@ -316,13 +315,28 @@ const CURIOS = [
     mods: { reshuffles: 1 },
     hooks: { score: c => c.addMult(2) } },
 
-  { id: 'well_witch', name: 'The Well Witch', icon: 'moon', rarity: 'uncommon', cost: 8,
-    text: '+2 wishes per round, and the Well pays double Chips.',
-    mods: { wellUses: 2, wellDouble: true } },
+  { id: 'pickpocket', name: 'Pickpocket', icon: 'fingers', rarity: 'uncommon', cost: 8,
+    text: '+1 Stash slot.',
+    long: 'The Stash holds cards back out of the deal so you can play them exactly when they help. One more slot is one more card you get to choose the moment for.',
+    mods: { stashSlots: 1 } },
 
-  { id: 'wishbone', name: 'Wishbone', icon: 'clover', rarity: 'rare', cost: 9,
-    text: 'Every wish rolls twice and you keep the better one.',
-    mods: { wishRerolls: 1 } },
+  { id: 'full_pockets', name: 'Full Pockets', icon: 'purse', rarity: 'uncommon', cost: 7,
+    text: '+6 Mult for every card sitting in your Stash.',
+    long: 'Rewards hoarding. A full Stash is +18 Mult on every single score, but those cards are out of play until you spend them.',
+    hooks: { score: c => c.addMult(6 * ((c.run.stash || []).length)) } },
+
+  { id: 'the_fence', name: 'The Fence', icon: 'tag', rarity: 'common', cost: 6,
+    text: 'Earn $3 whenever you tuck a card into the Stash.',
+    mods: { stashCash: 3 } },
+
+  { id: 'quick_draw', name: 'Quick Draw', icon: 'sleeve', rarity: 'rare', cost: 10,
+    text: 'Cards played out of the Stash score X3 Mult.',
+    long: 'Stash plays already carry a bonus. This turns the Stash into an artillery battery: hold a Gilded Ace until your Cascade and Tempo are high, then drop it.',
+    mods: { stashPlayMult: 3 } },
+
+  { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
+    text: 'Landing a Dare also gives +2 HEAT and $5.',
+    mods: { dareBonus: true } },
 
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
@@ -573,7 +587,7 @@ NEW_CARDS.forEach(t => { SHOP_BY_ID[t.id] = t; });
    ========================================================= */
 const COUNTER_ITEMS = [
   { id: 'c_pass', name: 'Extra Deck Flip', icon: 'refresh', base: 8, step: 6,
-    text: '+1 pass through the stock, every round, for the rest of the run.',
+    text: '+1 pass through the stock every round. Passes also pay for reshuffles.',
     apply: run => { run.bonusPasses++; } },
 
   { id: 'c_seat', name: 'Extra Mantel Seat', icon: 'seat', base: 15, step: 12,
@@ -585,12 +599,12 @@ const COUNTER_ITEMS = [
     text: '+1 Undo every round, forever.',
     apply: run => { run.bonusUndos++; } },
 
-  { id: 'c_wish', name: 'Deeper Well', icon: 'coin', base: 7, step: 5,
-    text: '+1 wish at the Wishing Well each round.',
-    apply: run => { run.bonusWishes++; } },
+  { id: 'c_stash', name: 'Bigger Pockets', icon: 'purse', base: 9, step: 7,
+    text: '+1 Stash slot, permanently. Hold another card back for the perfect moment.',
+    apply: run => { run.bonusStash++; } },
 
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
-    text: '+1 free stock reshuffle every round, forever.',
+    text: '+1 reshuffle each round that costs you no pass.',
     apply: run => { run.bonusReshuffles++; } },
 
   { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
@@ -695,54 +709,76 @@ WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
 
 
 /* =========================================================
-   THE WISHING WELL -- toss in a card you will never place.
-   It always pays chips, then the well decides what else you get.
+   THE DEALER'S DARE
+   A challenge you choose to take, resolved by how you PLAY rather than by
+   what the stock happens to hold -- so it cannot be memorised or waited out.
+   Each dare has a move budget, a reward and a forfeit.
    ========================================================= */
-const WISHES = [
-  { id: 'coins', w: 20, name: 'A HANDFUL OF COINS', cls: 'good',
-    text: 'The well spits your money back, with interest.',
-    apply: (G) => { G.run.money += 3; G.round.money += 3; return '+$3'; } },
+const DARES = [
+  { id: 'hot_streak', name: 'HOT STREAK', icon: 'twinflame', moves: 6,
+    goal: 'Send 3 cards home', target: 3,
+    rewardText: '+2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.scoredCards - s.scoredCards,
+    snap: G => ({ scoredCards: G.round.scoredCards }),
+    win: G => { G.round.heat += 2; return '+2 Heat — every score is worth more now'; } },
 
-  { id: 'polish', w: 16, name: 'IT COMES BACK CHANGED', cls: 'great',
-    text: 'The card surfaces with something new printed on it.',
-    apply: (G, card) => {
-      const marks = ['gilded', 'voltaic', 'lucky', 'steel', 'bullion', 'riffle'];
-      const pick = marks[Math.floor(Math.random() * marks.length)];
-      const inDeck = G.run.deck.find(c => c.id === card.id);
-      if (!inDeck) return 'but the deck has already forgotten it';
-      inDeck.enhancement = pick;
-      return 'your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now ' + ENHANCEMENTS[pick].name;
-    } },
+  { id: 'deep_cut', name: 'DEEP CUT', icon: 'ladder', moves: 8,
+    goal: 'Cash in a run of 4 or more', target: 1,
+    rewardText: 'X2 Mult for the round', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.bigCashes - s.bigCashes,
+    snap: G => ({ bigCashes: G.round.bigCashes }),
+    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 8; return '+8 Mult for the rest of the round'; } },
 
-  { id: 'churn', w: 14, name: 'THE WATERS CHURN', cls: 'good',
-    text: 'Something stirs down there and the stock rearranges itself.',
-    apply: (G) => { G.board.freeReshuffles++; return '+1 free reshuffle'; } },
+  { id: 'clean_sweep', name: 'CLEAN SWEEP', icon: 'vacuum', moves: 10,
+    goal: 'Empty a column', target: 1,
+    rewardText: '$10 and +2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.clears - s.clears,
+    snap: G => ({ clears: G.round.clears }),
+    win: G => { G.run.money += 10; G.round.money += 10; G.round.heat += 2; return '+$10 and +2 Heat'; } },
 
-  { id: 'echo', w: 14, name: 'AN ECHO ANSWERS', cls: 'great',
-    text: 'Every score for the rest of the round rings a little louder.',
-    apply: (G) => { G.round.wellMult = (G.round.wellMult || 0) + 3; return '+3 Mult on every score this round (now +' + G.round.wellMult + ')'; } },
+  { id: 'dig_deep', name: 'DIG DEEP', icon: 'pick', moves: 8,
+    goal: 'Flip 4 face-down cards', target: 4,
+    rewardText: '+6 Mult for the round', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.reveals - s.reveals,
+    snap: G => ({ reveals: G.round.reveals }),
+    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 6; return '+6 Mult for the rest of the round'; } },
 
-  { id: 'blessing', w: 12, name: 'A BLESSING', cls: 'great',
-    text: 'The next card you send home is touched by something.',
-    apply: (G) => { G.round.blessing = 3; return 'your next foundation play scores X3'; } },
+  { id: 'suit_up', name: 'SUIT UP', icon: 'rainbow', moves: 8,
+    goal: 'Build a Suit Run of 3', target: 3,
+    rewardText: 'a free reshuffle and +2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => Math.max(0, G.round.bestSuitRun - s.bestSuitRun),
+    snap: G => ({ bestSuitRun: Math.max(2, G.round.bestSuitRun) }),
+    win: G => { G.board.freeReshuffles++; G.round.heat += 2; return '+1 free reshuffle and +2 Heat'; } },
 
-  { id: 'downpour', w: 10, name: 'DOWNPOUR', cls: 'good',
-    text: 'The well fills back up.',
-    apply: (G) => { G.board.wishesLeft += 2; return '+2 wishes'; } },
+  { id: 'all_in', name: 'ALL IN', icon: 'dice', moves: 5,
+    goal: 'Score 2,500 points', target: 2500, scoreGoal: true,
+    rewardText: 'double everything you scored', forfeitText: 'lose half of it',
+    read: (G, s) => G.round.score - s.score,
+    snap: G => ({ score: G.round.score }),
+    win: (G, s) => { const made = G.round.score - s.score; G.round.score += made; return 'doubled — +' + made.toLocaleString('en-US') + ' points'; },
+    lose: (G, s) => { const made = Math.max(0, G.round.score - s.score); const lost = Math.floor(made / 2);
+                      G.round.score = Math.max(0, G.round.score - lost); return 'the table keeps ' + lost.toLocaleString('en-US') + ' points'; } },
 
-  { id: 'frog', w: 10, name: 'JUST A FROG', cls: 'meh',
-    text: 'It looks at you. You look at it. It keeps the card.',
-    apply: (G) => { G.run.money += 1; G.round.money += 1; return 'ribbit (+$1)' ; } },
+  { id: 'house_money', name: 'HOUSE MONEY', icon: 'coinstack', moves: 10,
+    goal: 'Earn $6 while the dare runs', target: 6,
+    rewardText: 'double the cash you made', forfeitText: 'costs $4',
+    read: (G, s) => G.round.money - s.money,
+    snap: G => ({ money: G.round.money }),
+    win: (G, s) => { const made = G.round.money - s.money; G.run.money += made; return 'doubled — +$' + made; },
+    lose: G => { const l = Math.min(4, G.run.money); G.run.money -= l; return '-$' + l; } },
 
-  { id: 'overflow', w: 4, name: 'THE WELL OVERFLOWS', cls: 'jackpot',
-    text: 'You should not have been able to do that.',
-    apply: (G) => { G.run.money += 12; G.round.wellMult = (G.round.wellMult || 0) + 6; return '+$12 and +6 Mult for the round'; } }
+  { id: 'stash_run', name: 'SLEIGHT OF HAND', icon: 'sleeve', moves: 9,
+    goal: 'Play 2 cards out of your Stash', target: 2,
+    rewardText: '+1 Stash slot for the run', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.stashPlays - s.stashPlays,
+    snap: G => ({ stashPlays: G.round.stashPlays }),
+    win: G => { G.run.bonusStash++; return '+1 Stash slot, permanently'; } }
 ];
+const DARE_BY_ID = {};
+DARES.forEach(d => { DARE_BY_ID[d.id] = d; });
 
-function rollWish() {
-  let total = 0;
-  WISHES.forEach(w => { total += w.w; });
-  let x = Math.random() * total;
-  for (const w of WISHES) { x -= w.w; if (x <= 0) return w; }
-  return WISHES[0];
+function rollDare(exclude) {
+  const pool = DARES.filter(d => d.id !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+

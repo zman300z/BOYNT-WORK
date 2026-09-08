@@ -53,7 +53,9 @@ const Engine = (() => {
       quotaScale: 1,
       drawReduce: 0,
       counterBought: {},
-      bonusWishes: 0,
+      bonusStash: 0,
+      stash: [],
+      daresDone: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
@@ -78,14 +80,16 @@ const Engine = (() => {
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
       drawReduce: 0,
       counterBought: {},
-      bonusWishes: 0,
+      bonusStash: 0,
+      stash: [],
+      daresDone: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0,
-      heatPer: 0, peekStock: false
+      reshuffles: 0, heatPer: 0,
+      stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareMoves: 0, dareBonus: false
     };
     const merge = src => {
       if (!src) return;
@@ -102,6 +106,10 @@ const Engine = (() => {
     });
     if (run.whim && WHIM_BY_ID[run.whim]) merge(WHIM_BY_ID[run.whim].mods);
     return m;
+  }
+
+  function stashCapacity(run) {
+    return TUNE.stashSlots + (run.bonusStash || 0) + mods(run).stashSlots;
   }
 
   /* how many cards come off the stock per draw (House Rules and Curios can lower it) */
@@ -129,7 +137,9 @@ const Engine = (() => {
 
   /* ---------------- the deal ---------------- */
   function deal(run) {
-    const deck = shuffle(run.deck.map(c => Object.assign({}, c, { faceUp: false })));
+    /* whatever is in the Stash is being held back, so it is not dealt */
+    const held = new Set((run.stash || []).map(c => c.id));
+    const deck = shuffle(run.deck.filter(c => !held.has(c.id)).map(c => Object.assign({}, c, { faceUp: false })));
     const cols = run.columns;
     const tableau = [];
     let i = 0;
@@ -153,8 +163,6 @@ const Engine = (() => {
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
       undos: TUNE.startingUndos + run.bonusUndos + m.undos,
-      well: [],
-      wishesLeft: TUNE.wellUses + (run.bonusWishes || 0) + m.wellUses,
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
@@ -182,6 +190,12 @@ const Engine = (() => {
         blessing: 0,
         heat: 0,
         momentum: 0,
+        reveals: 0,
+        clears: 0,
+        bigCashes: 0,
+        bestSuitRun: 0,
+        stashPlays: 0,
+        dare: null,
         cuts: 0,
         cutsHit: 0,
         over: false,
@@ -272,10 +286,14 @@ const Engine = (() => {
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
-    /* the Well and a reshuffle are real moves -- a board with either is not dead */
-    if (b.wishesLeft > 0 && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
-    if ((b.stock.length || b.waste.length) &&
-        (b.freeReshuffles > 0 || run.money >= TUNE.reshuffleCash + TUNE.reshuffleCashStep * (b.paidReshuffles || 0))) return true;
+    /* stashing, playing from the stash and reshuffling are all real moves */
+    const stashRoom = (run.stash || []).length < stashCapacity(run);
+    if (stashRoom && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
+    for (const c of (run.stash || [])) {
+      if (foundationTargetFor(b, c) || twinTargetFor(b, c)) return true;
+      for (let i = 0; i < b.tableau.length; i++) if (canPlaceOnColumn(b, i, c, m)) return true;
+    }
+    if ((b.stock.length || b.waste.length) && (b.freeReshuffles > 0 || b.passesLeft > 0)) return true;
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {
@@ -311,7 +329,7 @@ const Engine = (() => {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
-    drawCount, runStart, runLength, runCards, playableWaste,
+    drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,
     canTwin, twinTargetFor, foundationAccepts
   };
 })();

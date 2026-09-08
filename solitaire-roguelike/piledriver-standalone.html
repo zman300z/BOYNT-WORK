@@ -904,29 +904,16 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    the wishing well
    ============================================================ */
-.well-pile{
-  border:2px dashed rgba(76,201,240,.5) !important; cursor:pointer;
-  background:radial-gradient(circle at 50% 130%, rgba(76,201,240,.3), transparent 62%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  overflow:hidden;
-}
-.well-pile::after{
-  content:''; position:absolute; inset:auto -20% -30% -20%; height:60%;
-  background:radial-gradient(ellipse at 50% 0%, rgba(76,201,240,.35), transparent 70%);
-  animation:wellShimmer 3.5s ease-in-out infinite alternate; pointer-events:none;
-}
-@keyframes wellShimmer{ to{ transform:translateY(-4px) scale(1.06); opacity:.7 } }
-.well-pile:hover{ border-color:var(--cool) !important; box-shadow:0 0 24px rgba(76,201,240,.45); }
-.well-label{ position:relative; z-index:5; font-family:var(--display); font-size:8px; line-height:1.15;
-  letter-spacing:.1em; color:var(--cool); text-align:center; text-shadow:0 2px 4px #000; }
-.well-uses{ position:relative; z-index:5; font-size:8px; opacity:.75; text-shadow:0 2px 4px #000; }
-.well-uses b{ font-family:var(--display); font-size:13px; color:var(--cool); }
-.well-pile.spent{ opacity:.4; filter:grayscale(.6); }
-.well-pile .card.sunk{
-  position:absolute; inset:auto 0 -18% 0; margin:0 auto; z-index:1; opacity:.4;
-  filter:brightness(.6) saturate(.5); transform:scale(.86) rotate(-5deg);
-}
-.well-pile.drop-ok{ box-shadow:0 0 0 3px var(--cool), 0 0 30px rgba(76,201,240,.75) !important; }
+
+
+
+
+
+
+
+
+
+
 
 .wish-card{
   position:fixed; left:50%; top:34%; transform:translate(-50%,-50%);
@@ -1003,26 +990,17 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .cut-peek.red{ color:#ff8fa3; } .cut-peek.black{ color:#cfd6e4; }
 .cm.heat{ background:#2a1408; color:#ff8f3f; border-color:#ff8f3f; box-shadow:0 0 14px rgba(255,143,63,.6); }
 
-.cut-flip{
-  position:fixed; left:50%; top:40%; transform:translate(-50%,-50%);
-  width:230px; padding:14px; border-radius:14px; text-align:center; z-index:5200;
-  background:linear-gradient(165deg,#1b1020,#0c0a12); border:3px solid var(--gold);
-  box-shadow:0 0 40px rgba(255,209,102,.5), 0 20px 44px rgba(0,0,0,.7);
-  animation:cutIn .4s cubic-bezier(.2,1.6,.3,1);
-}
-.cut-flip.hit{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.6), 0 20px 44px rgba(0,0,0,.7); }
-.cut-flip.miss{ border-color:var(--hot); box-shadow:0 0 50px rgba(255,77,109,.6), 0 20px 44px rgba(0,0,0,.7); }
-.cut-flip.out{ animation:wishOut .4s ease forwards; }
-@keyframes cutIn{ 0%{ opacity:0; transform:translate(-50%,-40%) scale(.6) rotateY(80deg) } 100%{ opacity:1 } }
-.cf-call{ font-size:9px; letter-spacing:.2em; opacity:.5; }
-.cf-card{
-  font-family:var(--display); font-size:42px; line-height:1.15; margin:2px 0 4px;
-  background:var(--paper); border-radius:9px; border:2px solid #1a1a1a; padding:6px 0;
-}
-.cf-card.red{ color:#d92b4b; } .cf-card.black{ color:#16181d; }
-.cf-verdict{ font-family:var(--display); font-size:12px; }
-.cut-flip.hit .cf-verdict{ color:var(--lime); }
-.cut-flip.miss .cf-verdict{ color:var(--hot); }
+
+
+
+
+
+
+
+ .cf-card.black{ color:#16181d; }
+
+
+
 
 /* ============================================================
    the almanac
@@ -1102,6 +1080,61 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .quota-fill{ transition:width .22s cubic-bezier(.2,.9,.25,1); }
 @media (max-width:860px){ .tempo{ min-width:72px; } .tempo-cap{ font-size:7px; } }
 
+/* ============================================================
+   THE STASH -- cards held back, playable whenever
+   ============================================================ */
+.stash-pile{
+  position:relative; display:flex; flex-direction:column; gap:3px;
+  padding:5px 7px; border-radius:11px;
+  border:2px dashed rgba(176,124,255,.5);
+  background:linear-gradient(160deg, rgba(176,124,255,.14), rgba(0,0,0,.25));
+  min-height:var(--ch);
+}
+.stash-pile:hover{ border-color:var(--violet); box-shadow:0 0 22px rgba(176,124,255,.4); }
+.stash-pile.full{ border-style:solid; }
+.stash-label{ font-family:var(--display); font-size:8px; letter-spacing:.14em; color:var(--violet); text-align:center; }
+.stash-label b{ color:var(--paper); }
+.stash-row{ display:flex; gap:4px; align-items:flex-start; }
+.stash-slot{
+  position:relative; width:calc(var(--cw) * 0.62); height:calc(var(--ch) * 0.62);
+  border-radius:7px;
+}
+.stash-slot.empty{ border:2px dashed rgba(255,255,255,.13); }
+.stash-slot .card{
+  position:absolute; inset:0; width:100%; height:100%;
+  box-shadow:0 0 0 2px rgba(176,124,255,.55), 0 5px 12px rgba(0,0,0,.5);
+}
+.stash-slot .card .rk{ font-size:11px } .stash-slot .card .st{ font-size:8px } .stash-slot .card .mid{ font-size:19px }
+.stash-slot .card:hover{ transform:translateY(-5px) scale(1.06); z-index:20; }
+.stash-pile.drop-ok{ box-shadow:0 0 0 3px var(--violet), 0 0 30px rgba(176,124,255,.75) !important; }
+
+/* ============================================================
+   THE DARE
+   ============================================================ */
+.dare-take{ border-color:var(--violet) !important; color:#d3b7ff !important; }
+.dare-take:hover{ background:rgba(176,124,255,.28) !important; }
+.dare-live{
+  display:flex; flex-direction:column; gap:2px; min-width:190px; cursor:help;
+  padding:4px 9px; border-radius:9px;
+  background:rgba(176,124,255,.12); border:2px solid var(--violet);
+}
+.dl-head{ display:flex; align-items:center; gap:5px; font-family:var(--display); font-size:10px; color:#d3b7ff; }
+.dl-ico{ width:13px; height:13px; }
+.dl-moves{ margin-left:auto; font-size:9px; opacity:.75; }
+.dl-goal{ font-size:9px; opacity:.8; }
+.dl-goal b{ color:var(--gold); }
+.dl-bar{ height:4px; border-radius:3px; background:#0008; overflow:hidden; }
+.dl-bar div{ height:100%; background:linear-gradient(90deg,var(--violet),var(--lime)); transition:width .2s; }
+.dare-live.urgent{ border-color:var(--hot); background:rgba(255,77,109,.14); animation:heatGlow .6s infinite alternate; }
+.dare-live.urgent .dl-head{ color:#ff8fa3; }
+.rs-pass{ background:rgba(255,209,102,.14); border-color:rgba(255,209,102,.5); color:var(--gold); }
+.card.in-stash{ box-shadow:0 0 0 2px var(--violet), 0 0 14px rgba(176,124,255,.6); }
+.card.in-stash::after{
+  content:'STASH'; position:absolute; inset:auto 0 0 0; z-index:9;
+  background:var(--violet); color:#fff; font-family:var(--display); font-size:6px;
+  letter-spacing:.1em; text-align:center; padding:1px 0;
+}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -1148,10 +1181,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
     <div id="top-row">
       <div class="pile stock-pile" id="stock" data-zone="stock"></div>
       <div class="pile waste-pile" id="waste" data-zone="waste"></div>
-      <div class="pile well-pile" id="well" data-zone="well" title="Toss in a card you will never place and see what the well gives back">
-        <div class="well-label">WISHING<br>WELL</div>
-        <div class="well-uses"><b id="wishes-left">3</b> wishes</div>
-      </div>
+      <div class="stash-pile" id="stash" data-zone="stash" title="Hold cards back and play them whenever they help - they survive between rounds"></div>
 
       <div id="scorebox">
         <div id="combo-meter"></div>
@@ -1180,7 +1210,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
     <div class="ctl-left">
       <div class="chip" id="passes">PASSES <b>3</b></div>
       <div class="reshuffle-bar" id="reshuffle-bar"></div>
-      <div class="cut-bar" id="cut-bar"></div>
+      <div class="cut-bar" id="dare-bar"></div>
     </div>
     <div class="ctl-mid">
       <button class="btn ghost" id="btn-undo">UNDO <b>3</b></button>
@@ -1355,22 +1385,21 @@ const TUNE = {
   banditBase: 5,            // first pull of the lever each shop
   banditStep: 4,            // each extra pull
   whimsFromAnte: 2,         // the table starts getting opinions at this ante
-  wellUses: 3,              // wishes you can make per round
-  wellChipsPerRank: 18,     // a wish always pays rank x this...
-  wellFlat: 40,             // ...plus this, before the wish itself lands
-  reshuffleCash: 3,         // first paid reshuffle of a round
-  reshuffleCashStep: 3,
-  reshufflePoints: 250,     // ...or pay in score, which starts cheap
-  reshufflePointsStep: 250,
+  stashSlots: 3,            // cards you can hold back and play whenever you like
+  stashChipsPerRank: 10,    // tucking a card away pays a little
+  stashPlayMult: 4,         // ...and playing one back out pays a lot
+  reshufflePoints: 300,     // buying a reshuffle out of your ANTE total
+  reshufflePointsStep: 300,
   heatMultPer: 0.5,         // each Heat level adds this much X Mult
   heatBankBase: 250,        // banking Heat pays heat^2 x this
   heatMissScore: 200,       // a wrong call with no passes left costs this much score
   momentumPerMove: 26,      // TEMPO gained per scoring action
   momentumDecay: 15,        // ...lost per second of dithering
   momentumMaxMult: 0.9,     // full bar is worth X1.9
+  dareRewardGrowth: 0.25,   // each dare you land makes the next one richer
   startingMantelSlots: 3,
   maxMantelSlots: 5,
-  startingStockPasses: 3,
+  startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
   startingUndos: 3,
   rerollBase: 5,
   rerollStep: 2,
@@ -1427,8 +1456,8 @@ const ENHANCEMENTS = {
             long: 'When this goes home from a column it detonates: the card underneath is flipped face-up if needed and scored as a second full play, Curios and all, without leaving the tableau. Sitting a Fuse on top of a King is how you double-dip on your biggest card.' },
   bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.',
             long: 'Pays $4 into your pocket the moment it scores, on top of whatever points it makes. The money lands immediately, mid-round, so it can fund a reshuffle before the round is even over.' },
-  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.',
-            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot — without spending a pass and without costing you cash or score. The rescue button for when draw-3 has buried the card you need.' }
+  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock when scored, costing no pass. +2 Mult.',
+            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot, and unlike a manual reshuffle it does not cost you a pass. The rescue button for when draw-3 has buried the card you need.' }
 };
 
 const FINISHES = {
@@ -1622,9 +1651,9 @@ const CURIOS = [
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
   { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
-    text: 'The Cut shows you the colour of the next card before you call it.',
-    long: 'Turns the 50/50 into a certainty — as long as you actually look. Heat climbs as fast as you can click.',
-    mods: { peekStock: true } },
+    text: 'Every Dare gets 3 extra moves to complete.',
+    long: 'Dares are the fastest way to build Heat, and the move budget is what makes them scary. Three more moves turns most dares from a gamble into a plan.',
+    mods: { dareMoves: 3 } },
 
   { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
     text: 'Each level of Heat is worth X0.4 more Mult than usual.',
@@ -1636,13 +1665,28 @@ const CURIOS = [
     mods: { reshuffles: 1 },
     hooks: { score: c => c.addMult(2) } },
 
-  { id: 'well_witch', name: 'The Well Witch', icon: 'moon', rarity: 'uncommon', cost: 8,
-    text: '+2 wishes per round, and the Well pays double Chips.',
-    mods: { wellUses: 2, wellDouble: true } },
+  { id: 'pickpocket', name: 'Pickpocket', icon: 'fingers', rarity: 'uncommon', cost: 8,
+    text: '+1 Stash slot.',
+    long: 'The Stash holds cards back out of the deal so you can play them exactly when they help. One more slot is one more card you get to choose the moment for.',
+    mods: { stashSlots: 1 } },
 
-  { id: 'wishbone', name: 'Wishbone', icon: 'clover', rarity: 'rare', cost: 9,
-    text: 'Every wish rolls twice and you keep the better one.',
-    mods: { wishRerolls: 1 } },
+  { id: 'full_pockets', name: 'Full Pockets', icon: 'purse', rarity: 'uncommon', cost: 7,
+    text: '+6 Mult for every card sitting in your Stash.',
+    long: 'Rewards hoarding. A full Stash is +18 Mult on every single score, but those cards are out of play until you spend them.',
+    hooks: { score: c => c.addMult(6 * ((c.run.stash || []).length)) } },
+
+  { id: 'the_fence', name: 'The Fence', icon: 'tag', rarity: 'common', cost: 6,
+    text: 'Earn $3 whenever you tuck a card into the Stash.',
+    mods: { stashCash: 3 } },
+
+  { id: 'quick_draw', name: 'Quick Draw', icon: 'sleeve', rarity: 'rare', cost: 10,
+    text: 'Cards played out of the Stash score X3 Mult.',
+    long: 'Stash plays already carry a bonus. This turns the Stash into an artillery battery: hold a Gilded Ace until your Cascade and Tempo are high, then drop it.',
+    mods: { stashPlayMult: 3 } },
+
+  { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
+    text: 'Landing a Dare also gives +2 HEAT and $5.',
+    mods: { dareBonus: true } },
 
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
@@ -1893,7 +1937,7 @@ NEW_CARDS.forEach(t => { SHOP_BY_ID[t.id] = t; });
    ========================================================= */
 const COUNTER_ITEMS = [
   { id: 'c_pass', name: 'Extra Deck Flip', icon: 'refresh', base: 8, step: 6,
-    text: '+1 pass through the stock, every round, for the rest of the run.',
+    text: '+1 pass through the stock every round. Passes also pay for reshuffles.',
     apply: run => { run.bonusPasses++; } },
 
   { id: 'c_seat', name: 'Extra Mantel Seat', icon: 'seat', base: 15, step: 12,
@@ -1905,12 +1949,12 @@ const COUNTER_ITEMS = [
     text: '+1 Undo every round, forever.',
     apply: run => { run.bonusUndos++; } },
 
-  { id: 'c_wish', name: 'Deeper Well', icon: 'coin', base: 7, step: 5,
-    text: '+1 wish at the Wishing Well each round.',
-    apply: run => { run.bonusWishes++; } },
+  { id: 'c_stash', name: 'Bigger Pockets', icon: 'purse', base: 9, step: 7,
+    text: '+1 Stash slot, permanently. Hold another card back for the perfect moment.',
+    apply: run => { run.bonusStash++; } },
 
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
-    text: '+1 free stock reshuffle every round, forever.',
+    text: '+1 reshuffle each round that costs you no pass.',
     apply: run => { run.bonusReshuffles++; } },
 
   { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
@@ -2015,57 +2059,79 @@ WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
 
 
 /* =========================================================
-   THE WISHING WELL -- toss in a card you will never place.
-   It always pays chips, then the well decides what else you get.
+   THE DEALER'S DARE
+   A challenge you choose to take, resolved by how you PLAY rather than by
+   what the stock happens to hold -- so it cannot be memorised or waited out.
+   Each dare has a move budget, a reward and a forfeit.
    ========================================================= */
-const WISHES = [
-  { id: 'coins', w: 20, name: 'A HANDFUL OF COINS', cls: 'good',
-    text: 'The well spits your money back, with interest.',
-    apply: (G) => { G.run.money += 3; G.round.money += 3; return '+$3'; } },
+const DARES = [
+  { id: 'hot_streak', name: 'HOT STREAK', icon: 'twinflame', moves: 6,
+    goal: 'Send 3 cards home', target: 3,
+    rewardText: '+2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.scoredCards - s.scoredCards,
+    snap: G => ({ scoredCards: G.round.scoredCards }),
+    win: G => { G.round.heat += 2; return '+2 Heat — every score is worth more now'; } },
 
-  { id: 'polish', w: 16, name: 'IT COMES BACK CHANGED', cls: 'great',
-    text: 'The card surfaces with something new printed on it.',
-    apply: (G, card) => {
-      const marks = ['gilded', 'voltaic', 'lucky', 'steel', 'bullion', 'riffle'];
-      const pick = marks[Math.floor(Math.random() * marks.length)];
-      const inDeck = G.run.deck.find(c => c.id === card.id);
-      if (!inDeck) return 'but the deck has already forgotten it';
-      inDeck.enhancement = pick;
-      return 'your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now ' + ENHANCEMENTS[pick].name;
-    } },
+  { id: 'deep_cut', name: 'DEEP CUT', icon: 'ladder', moves: 8,
+    goal: 'Cash in a run of 4 or more', target: 1,
+    rewardText: 'X2 Mult for the round', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.bigCashes - s.bigCashes,
+    snap: G => ({ bigCashes: G.round.bigCashes }),
+    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 8; return '+8 Mult for the rest of the round'; } },
 
-  { id: 'churn', w: 14, name: 'THE WATERS CHURN', cls: 'good',
-    text: 'Something stirs down there and the stock rearranges itself.',
-    apply: (G) => { G.board.freeReshuffles++; return '+1 free reshuffle'; } },
+  { id: 'clean_sweep', name: 'CLEAN SWEEP', icon: 'vacuum', moves: 10,
+    goal: 'Empty a column', target: 1,
+    rewardText: '$10 and +2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.clears - s.clears,
+    snap: G => ({ clears: G.round.clears }),
+    win: G => { G.run.money += 10; G.round.money += 10; G.round.heat += 2; return '+$10 and +2 Heat'; } },
 
-  { id: 'echo', w: 14, name: 'AN ECHO ANSWERS', cls: 'great',
-    text: 'Every score for the rest of the round rings a little louder.',
-    apply: (G) => { G.round.wellMult = (G.round.wellMult || 0) + 3; return '+3 Mult on every score this round (now +' + G.round.wellMult + ')'; } },
+  { id: 'dig_deep', name: 'DIG DEEP', icon: 'pick', moves: 8,
+    goal: 'Flip 4 face-down cards', target: 4,
+    rewardText: '+6 Mult for the round', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.reveals - s.reveals,
+    snap: G => ({ reveals: G.round.reveals }),
+    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 6; return '+6 Mult for the rest of the round'; } },
 
-  { id: 'blessing', w: 12, name: 'A BLESSING', cls: 'great',
-    text: 'The next card you send home is touched by something.',
-    apply: (G) => { G.round.blessing = 3; return 'your next foundation play scores X3'; } },
+  { id: 'suit_up', name: 'SUIT UP', icon: 'rainbow', moves: 8,
+    goal: 'Build a Suit Run of 3', target: 3,
+    rewardText: 'a free reshuffle and +2 HEAT', forfeitText: 'costs a pass',
+    read: (G, s) => Math.max(0, G.round.bestSuitRun - s.bestSuitRun),
+    snap: G => ({ bestSuitRun: Math.max(2, G.round.bestSuitRun) }),
+    win: G => { G.board.freeReshuffles++; G.round.heat += 2; return '+1 free reshuffle and +2 Heat'; } },
 
-  { id: 'downpour', w: 10, name: 'DOWNPOUR', cls: 'good',
-    text: 'The well fills back up.',
-    apply: (G) => { G.board.wishesLeft += 2; return '+2 wishes'; } },
+  { id: 'all_in', name: 'ALL IN', icon: 'dice', moves: 5,
+    goal: 'Score 2,500 points', target: 2500, scoreGoal: true,
+    rewardText: 'double everything you scored', forfeitText: 'lose half of it',
+    read: (G, s) => G.round.score - s.score,
+    snap: G => ({ score: G.round.score }),
+    win: (G, s) => { const made = G.round.score - s.score; G.round.score += made; return 'doubled — +' + made.toLocaleString('en-US') + ' points'; },
+    lose: (G, s) => { const made = Math.max(0, G.round.score - s.score); const lost = Math.floor(made / 2);
+                      G.round.score = Math.max(0, G.round.score - lost); return 'the table keeps ' + lost.toLocaleString('en-US') + ' points'; } },
 
-  { id: 'frog', w: 10, name: 'JUST A FROG', cls: 'meh',
-    text: 'It looks at you. You look at it. It keeps the card.',
-    apply: (G) => { G.run.money += 1; G.round.money += 1; return 'ribbit (+$1)' ; } },
+  { id: 'house_money', name: 'HOUSE MONEY', icon: 'coinstack', moves: 10,
+    goal: 'Earn $6 while the dare runs', target: 6,
+    rewardText: 'double the cash you made', forfeitText: 'costs $4',
+    read: (G, s) => G.round.money - s.money,
+    snap: G => ({ money: G.round.money }),
+    win: (G, s) => { const made = G.round.money - s.money; G.run.money += made; return 'doubled — +$' + made; },
+    lose: G => { const l = Math.min(4, G.run.money); G.run.money -= l; return '-$' + l; } },
 
-  { id: 'overflow', w: 4, name: 'THE WELL OVERFLOWS', cls: 'jackpot',
-    text: 'You should not have been able to do that.',
-    apply: (G) => { G.run.money += 12; G.round.wellMult = (G.round.wellMult || 0) + 6; return '+$12 and +6 Mult for the round'; } }
+  { id: 'stash_run', name: 'SLEIGHT OF HAND', icon: 'sleeve', moves: 9,
+    goal: 'Play 2 cards out of your Stash', target: 2,
+    rewardText: '+1 Stash slot for the run', forfeitText: 'costs a pass',
+    read: (G, s) => G.round.stashPlays - s.stashPlays,
+    snap: G => ({ stashPlays: G.round.stashPlays }),
+    win: G => { G.run.bonusStash++; return '+1 Stash slot, permanently'; } }
 ];
+const DARE_BY_ID = {};
+DARES.forEach(d => { DARE_BY_ID[d.id] = d; });
 
-function rollWish() {
-  let total = 0;
-  WISHES.forEach(w => { total += w.w; });
-  let x = Math.random() * total;
-  for (const w of WISHES) { x -= w.w; if (x <= 0) return w; }
-  return WISHES[0];
+function rollDare(exclude) {
+  const pool = DARES.filter(d => d.id !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+
 
 /* ===== js/engine.js ===== */
 /* ============================================================
@@ -2123,7 +2189,9 @@ const Engine = (() => {
       quotaScale: 1,
       drawReduce: 0,
       counterBought: {},
-      bonusWishes: 0,
+      bonusStash: 0,
+      stash: [],
+      daresDone: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
@@ -2148,14 +2216,16 @@ const Engine = (() => {
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
       drawReduce: 0,
       counterBought: {},
-      bonusWishes: 0,
+      bonusStash: 0,
+      stash: [],
+      daresDone: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0,
-      heatPer: 0, peekStock: false
+      reshuffles: 0, heatPer: 0,
+      stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareMoves: 0, dareBonus: false
     };
     const merge = src => {
       if (!src) return;
@@ -2172,6 +2242,10 @@ const Engine = (() => {
     });
     if (run.whim && WHIM_BY_ID[run.whim]) merge(WHIM_BY_ID[run.whim].mods);
     return m;
+  }
+
+  function stashCapacity(run) {
+    return TUNE.stashSlots + (run.bonusStash || 0) + mods(run).stashSlots;
   }
 
   /* how many cards come off the stock per draw (House Rules and Curios can lower it) */
@@ -2199,7 +2273,9 @@ const Engine = (() => {
 
   /* ---------------- the deal ---------------- */
   function deal(run) {
-    const deck = shuffle(run.deck.map(c => Object.assign({}, c, { faceUp: false })));
+    /* whatever is in the Stash is being held back, so it is not dealt */
+    const held = new Set((run.stash || []).map(c => c.id));
+    const deck = shuffle(run.deck.filter(c => !held.has(c.id)).map(c => Object.assign({}, c, { faceUp: false })));
     const cols = run.columns;
     const tableau = [];
     let i = 0;
@@ -2223,8 +2299,6 @@ const Engine = (() => {
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
       undos: TUNE.startingUndos + run.bonusUndos + m.undos,
-      well: [],
-      wishesLeft: TUNE.wellUses + (run.bonusWishes || 0) + m.wellUses,
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
@@ -2252,6 +2326,12 @@ const Engine = (() => {
         blessing: 0,
         heat: 0,
         momentum: 0,
+        reveals: 0,
+        clears: 0,
+        bigCashes: 0,
+        bestSuitRun: 0,
+        stashPlays: 0,
+        dare: null,
         cuts: 0,
         cutsHit: 0,
         over: false,
@@ -2342,10 +2422,14 @@ const Engine = (() => {
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
-    /* the Well and a reshuffle are real moves -- a board with either is not dead */
-    if (b.wishesLeft > 0 && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
-    if ((b.stock.length || b.waste.length) &&
-        (b.freeReshuffles > 0 || run.money >= TUNE.reshuffleCash + TUNE.reshuffleCashStep * (b.paidReshuffles || 0))) return true;
+    /* stashing, playing from the stash and reshuffling are all real moves */
+    const stashRoom = (run.stash || []).length < stashCapacity(run);
+    if (stashRoom && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
+    for (const c of (run.stash || [])) {
+      if (foundationTargetFor(b, c) || twinTargetFor(b, c)) return true;
+      for (let i = 0; i < b.tableau.length; i++) if (canPlaceOnColumn(b, i, c, m)) return true;
+    }
+    if ((b.stock.length || b.waste.length) && (b.freeReshuffles > 0 || b.passesLeft > 0)) return true;
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {
@@ -2381,7 +2465,7 @@ const Engine = (() => {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
-    drawCount, runStart, runLength, runCards, playableWaste,
+    drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,
     canTwin, twinTargetFor, foundationAccepts
   };
 })();
@@ -2455,7 +2539,7 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    if (ctx.event !== 'wish') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (ctx.event !== 'stash') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;
@@ -2547,6 +2631,12 @@ const Score = (() => {
       ctx.addChips(Math.round(ctx.stack.value * TUNE.stackChipScale));
       ctx.addMult((ctx.stack.length - 1) * TUNE.stackMultPer * m.stackMult);
     }
+    /* the payoff for holding a card back until the moment was right */
+    if (ctx.fromStash) {
+      ctx.addMult(TUNE.stashPlayMult);
+      const spm = Engine.mods(ctx.run).stashPlayMult;
+      if (spm) ctx.xMult(spm);
+    }
     /* dropping a duplicate onto its twin */
     if (ctx.twin) {
       ctx.addMult(TUNE.twinMultBonus);
@@ -2564,6 +2654,7 @@ const Score = (() => {
     ctx.depth = ev.depth || 0;
     ctx.stack = ev.stack || null;
     ctx.twin = !!ev.twin;
+    ctx.fromStash = !!ev.fromStash;
     const m = Engine.mods(G.run);
 
     G.round.scoreEvents++;
@@ -2572,7 +2663,7 @@ const Score = (() => {
     if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
-    if (ev.event === 'wish')   base = { chips: ev.baseChips || 0, mult: 1 };
+    if (ev.event === 'stash')  base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 
@@ -2784,10 +2875,12 @@ const Game = (() => {
       const top = pile[pile.length - 1];
       if (!top.faceUp) {
         top.faceUp = true;
+        G.round.reveals++;
         scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
       }
     } else if (!G.round.paidClears.includes(col)) {
       G.round.paidClears.push(col);
+      G.round.clears++;
       scoreEvent({ event: 'clear', anchor: { zone: 'tableau', col } });
     }
   }
@@ -2880,6 +2973,7 @@ const Game = (() => {
         push({ event: 'cash', label: 'CASCADE X' + G.round.cascade, amount: 1,
                anchor: { zone: 'foundation', suit }, chips: 0, mult: 0, total: 0, triggers: [] });
       }
+      if (stack && stack.length >= 4) G.round.bigCashes++;
       if (stack && stack.length >= TUNE.stackCashAt) {
         const amt = stack.length >= TUNE.stackCashBigAt ? 2 : 1;
         G.run.money += amt;
@@ -2890,6 +2984,7 @@ const Game = (() => {
       const cardSuits = Engine.suitsOf(card);
       if (G.round.lastSuit && cardSuits.includes(G.round.lastSuit)) G.round.suitRun++;
       else G.round.suitRun = 1;
+      G.round.bestSuitRun = Math.max(G.round.bestSuitRun || 0, G.round.suitRun);
       G.round.lastSuit = suit;
 
       const anchor = { zone: 'foundation', suit };
@@ -2987,6 +3082,7 @@ const Game = (() => {
   }
 
   function afterMove() {
+    checkDare();
     save();
     if (Engine.isWon(G)) {
       G.round.won = true;
@@ -3000,83 +3096,15 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- THE CUT ----------------
-     Call the colour of the next card off the stock. Right, and your Heat climbs,
-     multiplying every score for the rest of the round. Wrong, and the Heat is
-     gone and it costs you a pass through the stock. Bank the Heat any time to
-     convert it straight into score.                                            */
-  function peekCut() {
-    const b = G.board;
-    if (!b.stock.length) return null;
-    return b.stock[b.stock.length - 1];
-  }
+  /* ---------------- THE STASH ----------------
+     Hold cards back out of the deal and play them whenever they help. The Stash
+     survives rounds and antes, so a spare Ace or a Gilded King can be saved for
+     the exact moment your multipliers are highest.                             */
+  function stashCapacity() { return Engine.stashCapacity(G.run); }
 
-  function heatMult() {
-    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
-    return +(1 + per * G.round.heat).toFixed(2);
-  }
-
-  function callCut(colour) {
-    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
-    const b = G.board;
-    if (!b.stock.length) return { ok: false, reason: 'The stock is empty — nothing to call.' };
-    const card = b.stock[b.stock.length - 1];
-    const actual = Engine.isRed(card) && !Engine.isBlack(card) ? 'red'
-                 : (SUITS[card.suit].color === 'red' ? 'red' : 'black');
-    const correct = card.enhancement === 'wild' ? true : actual === colour;
-
-    snapshot();
-    G.round.cuts++;
-    let penalty = null;
-    if (correct) {
-      G.round.heat++;
-      G.round.cutsHit++;
-      bumpMomentum();
-    } else {
-      G.round.heat = 0;
-      if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
-      else { G.round.score = Math.max(0, G.round.score - TUNE.heatMissScore); penalty = 'score'; }
-    }
-
-    /* the call always turns the cards over */
-    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
-    const turned = [];
-    for (let i = 0; i < n; i++) {
-      const c = b.stock.pop();
-      c.faceUp = true;
-      b.waste.push(c);
-      turned.push(c);
-    }
-    breakCascade();
-    G.round.moves++;
-    push({ event: 'cut', correct, colour, card, heat: G.round.heat, penalty,
-           mult: heatMult(), chips: 0, total: 0, triggers: [] });
-    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
-    save();
-    afterMove();
-    return { ok: true, correct, card, heat: G.round.heat, penalty };
-  }
-
-  function bankHeat() {
-    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
-    const h = G.round.heat;
-    if (h <= 0) return { ok: false, reason: 'No Heat to bank.' };
-    snapshot();
-    const gain = h * h * TUNE.heatBankBase;
-    G.round.score += gain;
-    G.round.heat = 0;
-    push({ event: 'bank-heat', heat: h, gain, chips: 0, mult: 0, total: gain, triggers: [] });
-    save();
-    return { ok: true, gain, heat: h };
-  }
-
-  /* ---------------- the wishing well ----------------
-     An exit for cards you will never place -- a fourth Queen, a duplicate the
-     foundation has not reached. The card always pays Chips, then the well rolls
-     for something else: cash, a free reshuffle, a blessing, or it hands the card
-     back with a new mark printed on it. The card returns to the deck next round. */
-  function canWish(src) {
-    if (G.phase !== 'play' || !G.board.wishesLeft) return false;
+  function canStash(src) {
+    if (G.phase !== 'play') return false;
+    if ((G.run.stash || []).length >= stashCapacity()) return false;
     const b = G.board;
     if (src.zone === 'waste') {
       const allowed = Engine.playableWaste(b, Engine.mods(G.run));
@@ -3090,51 +3118,171 @@ const Game = (() => {
     return false;
   }
 
-  function makeWish(src) {
-    if (!canWish(src)) { illegal(); return false; }
-    const b = G.board;
+  function stash(src) {
+    if (!canStash(src)) { illegal(); return false; }
     const cards = grab(src, Engine.mods(G.run));
     if (!cards || cards.length !== 1) { illegal(); return false; }
     snapshot();
     const card = cards[0];
     removeFrom(src, 1);
-    b.well.push(card);
-    b.wishesLeft--;
-    bumpMomentum(TUNE.momentumPerMove * 0.7);
+    if (!G.run.stash) G.run.stash = [];
+    G.run.stash.push(Object.assign({}, card, { faceUp: true, scoredRound: false }));
     G.round.moves++;
+    bumpMomentum(TUNE.momentumPerMove * 0.5);
 
     const m = Engine.mods(G.run);
-    const mult = m.wellDouble ? 2 : 1;
-    const chips = (rankChips(card.rank) * TUNE.wellChipsPerRank + TUNE.wellFlat) * mult;
-    scoreEvent({ event: 'wish', card, fromZone: src.zone, baseChips: chips,
-                 label: 'INTO THE WELL', anchor: { zone: 'well' } });
-
-    /* roll the wish -- Wishbone rolls twice and keeps the rarer result */
-    let wish = rollWish();
-    for (let i = 0; i < (m.wishRerolls || 0); i++) {
-      const other = rollWish();
-      if (other.w < wish.w) wish = other;
-    }
-    const detail = wish.apply(G, card);
-    push({ event: 'wish-result', wish: { id: wish.id, name: wish.name, text: wish.text, cls: wish.cls },
-           detail, anchor: { zone: 'well' }, chips: 0, mult: 0, total: 0, triggers: [] });
-
+    if (m.stashCash) { G.run.money += m.stashCash; G.round.money += m.stashCash; }
+    scoreEvent({ event: 'stash', card, baseChips: rankChips(card.rank) * TUNE.stashChipsPerRank,
+                 label: 'POCKETED', anchor: { zone: 'stash' } });
     if (src.zone === 'tableau') settleColumn(src.col);
     afterMove();
     return true;
   }
 
+  /* play a held card back onto the board */
+  function stashPlay(index, dst) {
+    if (G.phase !== 'play') return false;
+    const card = (G.run.stash || [])[index];
+    if (!card) return false;
+    const b = G.board, m = Engine.mods(G.run);
+
+    if (dst.zone === 'foundation') {
+      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit) ? dst.suit : Engine.foundationTargetFor(b, card);
+      let twin = false;
+      if (!suit) { suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card); twin = !!suit; }
+      if (!suit) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      const depth = b.foundations[suit].length;
+      if (twin) b.twins[suit].push(card); else b.foundations[suit].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      G.round.scoredCards++;
+      G.round.cascade++;
+      bumpMomentum();
+      const anchor = { zone: 'foundation', suit };
+      card.scoredRound = true;
+      scoreEvent({ event: 'foundation', card, fromZone: 'stash', depth: twin ? Math.max(0, depth - 1) : depth,
+                   anchor, twin, fromStash: true, label: twin ? 'TWIN FROM THE STASH!' : 'FROM THE STASH!' });
+      G.round.blessing = 0;
+      if (!twin) checkSuitComplete(suit, anchor);
+      afterMove();
+      return true;
+    }
+
+    if (dst.zone === 'tableau') {
+      if (!Engine.canPlaceOnColumn(b, dst.col, card, m)) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      card.faceUp = true;
+      b.tableau[dst.col].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      breakCascade();
+      bumpMomentum(TUNE.momentumPerMove * 0.5);
+      push({ event: 'cash', label: 'OUT OF THE STASH', amount: 0,
+             anchor: { zone: 'tableau', col: dst.col }, chips: 0, mult: 0, total: 0, triggers: [] });
+      afterMove();
+      return true;
+    }
+    return illegal();
+  }
+
+  /* ---------------- THE DEALER'S DARE ----------------
+     Offered on demand, judged on how you play. There is nothing to memorise and
+     nothing to wait for -- the clock is your own moves.                        */
+  function dareMoveBudget(def) {
+    return def.moves + Engine.mods(G.run).dareMoves;
+  }
+
+  function takeDare() {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    if (G.round.dare) return { ok: false, reason: 'Finish the one you have.' };
+    const def = rollDare(G.round.lastDare);
+    G.round.dare = {
+      id: def.id,
+      snap: def.snap(G),
+      startMoves: G.round.moves,
+      budget: dareMoveBudget(def)
+    };
+    G.round.lastDare = def.id;
+    push({ event: 'dare-start', dare: def, budget: G.round.dare.budget,
+           chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
+    return { ok: true, dare: def };
+  }
+
+  function dareState() {
+    const d = G.round && G.round.dare;
+    if (!d) return null;
+    const def = DARE_BY_ID[d.id];
+    return {
+      def, progress: Math.max(0, def.read(G, d.snap)), target: def.target,
+      movesLeft: Math.max(0, d.budget - (G.round.moves - d.startMoves))
+    };
+  }
+
+  function checkDare() {
+    const st = dareState();
+    if (!st) return;
+    const d = G.round.dare, def = st.def;
+    if (st.progress >= st.target) {
+      G.round.dare = null;
+      G.run.daresDone = (G.run.daresDone || 0) + 1;
+      const detail = def.win(G, d.snap) || '';
+      const extra = [];
+      if (Engine.mods(G.run).dareBonus) { G.round.heat += 2; G.run.money += 5; extra.push('Daredevil: +2 Heat and $5'); }
+      push({ event: 'dare-end', won: true, dare: def, detail, extra,
+             chips: 0, mult: 0, total: 0, triggers: [] });
+      save();
+      return;
+    }
+    if (st.movesLeft <= 0) {
+      G.round.dare = null;
+      let detail;
+      if (def.lose) detail = def.lose(G, d.snap);
+      else if (G.board.passesLeft > 0) { G.board.passesLeft--; detail = 'lost a pass through the stock'; }
+      else { G.round.score = Math.max(0, G.round.score - 300); detail = 'no passes left — lost 300 points'; }
+      push({ event: 'dare-end', won: false, dare: def, detail, extra: [],
+             chips: 0, mult: 0, total: 0, triggers: [] });
+      save();
+    }
+  }
+
+  function heatMult() {
+    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
+    return +(1 + per * G.round.heat).toFixed(2);
+  }
+
   /* ---------------- reshuffles ----------------
-     Puts the waste back under the stock and shuffles the lot, WITHOUT spending
-     a pass. Free ones come from Curios and the Counter; after those you can pay
-     in cash or, if you are broke, in score.                                    */
+     Throws the waste back in with the stock and shuffles. It costs a PASS --
+     the same resource that limits how many times you can work the stock -- or
+     you can buy one straight out of your ANTE total if you are out of passes.  */
   function reshuffleCost() {
     const n = G.board ? G.board.paidReshuffles : 0;
     return {
       free: G.board ? G.board.freeReshuffles : 0,
-      cash: TUNE.reshuffleCash + TUNE.reshuffleCashStep * n,
+      passes: G.board ? G.board.passesLeft : 0,
       points: TUNE.reshufflePoints + TUNE.reshufflePointsStep * n
     };
+  }
+
+  /* score spent here comes off the ante bar: this round first, then banked rounds */
+  function spendAnteScore(n) {
+    let left = n;
+    const fromRound = Math.min(G.round.score, left);
+    G.round.score -= fromRound;
+    left -= fromRound;
+    if (left > 0) {
+      const fromAnte = Math.min(G.run.anteScore, left);
+      G.run.anteScore -= fromAnte;
+      left -= fromAnte;
+    }
+    return left === 0;
+  }
+
+  function anteTotalAvailable() {
+    return (G.round ? G.round.score : 0) + (G.run ? G.run.anteScore : 0);
   }
 
   function reshuffle(how) {
@@ -3145,13 +3293,12 @@ const Game = (() => {
     if (how === 'free') {
       if (b.freeReshuffles <= 0) return { ok: false, reason: 'No free reshuffles left.' };
       b.freeReshuffles--;
-    } else if (how === 'cash') {
-      if (G.run.money < cost.cash) return { ok: false, reason: 'Not enough cash.' };
-      G.run.money -= cost.cash;
-      b.paidReshuffles++;
+    } else if (how === 'pass') {
+      if (b.passesLeft <= 0) return { ok: false, reason: 'Out of passes — nothing left to spend.' };
+      b.passesLeft--;
     } else if (how === 'points') {
-      if (G.round.score < cost.points) return { ok: false, reason: 'Not enough score banked.' };
-      G.round.score -= cost.points;
+      if (anteTotalAvailable() < cost.points) return { ok: false, reason: 'Not enough banked score in the ante.' };
+      spendAnteScore(cost.points);
       b.paidReshuffles++;
     } else return { ok: false, reason: 'nope' };
 
@@ -3251,49 +3398,63 @@ const Game = (() => {
     }
     if (best) return best.hint;
 
-    /* 4. any other tableau move that grows a run */
+    /* 4. tableau moves that actually gain something. Sliding a run from one
+       column into an empty one when nothing is buried underneath changes
+       nothing, so it is never suggested. */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        const uncovers = i > 0 && !pile[i - 1].faceUp;
         for (let d = 0; d < b.tableau.length; d++) {
           if (d === c) continue;
-          if (!b.tableau[d].length && i === 0) continue;
-          if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
-            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
-                     cardId: pile[i].id, kind: 'build', label: 'Builds your column run' };
-          }
+          const intoEmpty = !b.tableau[d].length;
+          if (intoEmpty && !uncovers) continue;      // pure furniture-shuffling
+          if (!Engine.canPlaceOnColumn(b, d, pile[i], m)) continue;
+          if (!intoEmpty && !uncovers && i === 0) continue;  // merging two whole columns gains nothing either
+          return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                   cardId: pile[i].id, kind: 'build',
+                   label: uncovers ? 'Uncovers a face-down card' : 'Builds your column run' };
         }
       }
     }
 
-    /* 5. deal */
+    /* 5. a card held in the stash that can go somewhere useful */
+    for (let i = 0; i < (G.run.stash || []).length; i++) {
+      const c = G.run.stash[i];
+      if (Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c)) {
+        return { src: { zone: 'stash', index: i }, dst: { zone: 'foundation' },
+                 cardId: c.id, kind: 'stash', label: 'Play it out of your stash' };
+      }
+    }
+
+    /* 6. deal */
     if (b.stock.length) return { src: { zone: 'stock' }, kind: 'draw', label: 'Deal three more' };
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) {
       return { src: { zone: 'stock' }, kind: 'draw', label: 'Turn the waste back over' };
     }
 
-    /* 6. a reshuffle re-orders what draw-3 buried */
+    /* 7. a reshuffle re-orders what draw-3 buried */
     const rc = reshuffleCost();
-    if ((b.stock.length || b.waste.length) && (rc.free > 0 || G.run.money >= rc.cash || G.round.score >= rc.points)) {
+    if ((b.stock.length || b.waste.length) && (rc.free > 0 || rc.passes > 0 || anteTotalAvailable() >= rc.points)) {
       return { src: { zone: 'reshuffle' }, kind: 'reshuffle',
-               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock' };
+               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock (costs a pass)' };
     }
 
-    /* 7. nothing moves -- make a wish on a card you cannot place */
-    if (b.wishesLeft > 0) {
+    /* 8. nothing moves -- pocket a card you cannot place */
+    if ((G.run.stash || []).length < stashCapacity()) {
       for (let c = 0; c < b.tableau.length; c++) {
         const pile = b.tableau[c];
         if (!pile.length) continue;
         const top = pile[pile.length - 1];
         if (top.faceUp) {
-          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'well' },
-                   cardId: top.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'stash' },
+                   cardId: top.id, kind: 'stash', label: 'Nothing else moves — pocket it for later' };
         }
       }
       for (const w of waste) {
-        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'well' },
-                 cardId: w.card.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'stash' },
+                 cardId: w.card.id, kind: 'stash', label: 'Nothing else moves — pocket it for later' };
       }
     }
     return null;
@@ -3498,7 +3659,11 @@ const Game = (() => {
     if (def.kind === 'enhance') card.enhancement = def.value;
     else if (def.kind === 'finish') card.finish = def.value;
     else if (def.kind === 'seal') card.seal = def.value;
-    else if (def.kind === 'remove') G.run.deck.splice(idx, 1);
+    else if (def.kind === 'remove') {
+      G.run.deck.splice(idx, 1);
+      /* if that card was being held back, it goes with it */
+      if (G.run.stash) G.run.stash = G.run.stash.filter(c => c.id !== cardId);
+    }
     else if (def.kind === 'duplicate') {
       G.run.deck.push(Engine.newCard(card.rank, card.suit, {
         enhancement: card.enhancement, finish: card.finish, seal: card.seal
@@ -3674,7 +3839,9 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult,
+    reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
+    canStash, stash, stashPlay, stashCapacity,
+    takeDare, dareState, checkDare,
     bumpMomentum, decayMomentum
   };
 })();
@@ -4080,8 +4247,9 @@ const UI = (() => {
     if (!bar || !G.board) return;
     const c = Game.reshuffleCost();
     bar.innerHTML = '<span class="rs-cap">RESHUFFLE</span>';
-    const add = (how, label, enabled) => {
+    const add = (how, label, enabled, title) => {
       const btn = el('button', 'rs-btn rs-' + how + (enabled ? '' : ' off'), label);
+      if (title) btn.title = title;
       btn.onclick = () => {
         const res = Game.reshuffle(how);
         if (!res.ok) { Sfx.error(); toast(res.reason); return; }
@@ -4093,52 +4261,56 @@ const UI = (() => {
       };
       bar.appendChild(btn);
     };
-    if (c.free > 0) add('free', 'FREE x' + c.free, true);
-    add('cash', '$' + c.cash, G.run.money >= c.cash);
-    add('points', c.points + ' pts', G.round && G.round.score >= c.points);
+    if (c.free > 0) add('free', 'FREE x' + c.free, true, 'Granted by a Curio or the Counter');
+    add('pass', '1 PASS', c.passes > 0, 'Spends one of your passes through the stock');
+    add('points', fmt(c.points) + ' pts', Game.anteTotalAvailable() >= c.points,
+        'Taken straight off your ANTE total — this round first, then banked rounds');
   }
 
-  /* THE CUT -- the on-table gamble */
+  /* THE DEALER'S DARE -- a challenge judged on how you play */
   function renderCut() {
-    const bar = $('#cut-bar');
+    const bar = $('#dare-bar');
     if (!bar || !G.board || !G.round) return;
-    const m = Engine.mods(G.run);
+    const st = Game.dareState();
     const hot = G.round.heat > 0;
-    const peek = m.peekStock ? Game.peekCut() : null;
-    const peekColour = peek ? ((Engine.isRed(peek) && !Engine.isBlack(peek)) ||
-      SUITS[peek.suit].color === 'red' ? 'red' : 'black') : null;
 
     bar.innerHTML =
-      '<span class="cut-cap">THE CUT</span>' +
+      '<span class="cut-cap">DARE</span>' +
       '<span class="cut-heat' + (hot ? ' on' : '') + '" title="Heat multiplies every score">HEAT <b>X' +
         Game.heatMult() + '</b><i>' + G.round.heat + '</i></span>';
 
-    const canCall = G.board.stock.length > 0;
-    ['red', 'black'].forEach(col => {
-      const btn = el('button', 'cut-btn cut-' + col + (canCall ? '' : ' off') +
-        (peekColour === col ? ' peeked' : ''), col.toUpperCase());
+    if (!st) {
+      const btn = el('button', 'cut-btn dare-take', 'TAKE A DARE');
       btn.onclick = () => {
-        const res = Game.callCut(col);
+        const res = Game.takeDare();
         if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-        clearSelection();
         render();
         drainFx();
-        checkStuck();
       };
       bar.appendChild(btn);
-    });
-    const bank = el('button', 'cut-btn cut-bank' + (hot ? '' : ' off'),
-      'BANK' + (hot ? ' ' + fmt(G.round.heat * G.round.heat * TUNE.heatBankBase) : ''));
-    bank.onclick = () => {
-      const res = Game.bankHeat();
-      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-      render();
-      drainFx();
-    };
-    bar.appendChild(bank);
-    if (peek) {
-      bar.appendChild(el('span', 'cut-peek ' + peekColour, 'next: ' + peekColour.toUpperCase()));
+      bar.appendChild(el('span', 'cut-peek', 'a challenge, judged on how you play'));
+      return;
     }
+
+    const pct = Math.min(100, st.progress / st.target * 100);
+    const urgent = st.movesLeft <= 2;
+    const chip = el('div', 'dare-live' + (urgent ? ' urgent' : ''),
+      '<div class="dl-head">' + icon(st.def.icon, 'dl-ico') + '<b>' + st.def.name + '</b>' +
+        '<span class="dl-moves">' + st.movesLeft + ' moves</span></div>' +
+      '<div class="dl-goal">' + st.def.goal + ' — <b>' +
+        (st.def.scoreGoal ? UI.fmt(Math.min(st.progress, st.target)) : st.progress) + '/' +
+        (st.def.scoreGoal ? UI.fmt(st.target) : st.target) + '</b></div>' +
+      '<div class="dl-bar"><div style="width:' + pct + '%"></div></div>');
+    chip.addEventListener('pointerenter', e => showTip(e.currentTarget,
+      '<div class="tip-title">' + icon(st.def.icon, 'tip-ico') + ' ' + st.def.name + '</div>' +
+      '<div class="tip-kind whim-kind">ACTIVE DARE</div>' +
+      '<div class="tip-text">' + st.def.goal + ' within ' + st.def.moves + ' moves.</div>' +
+      '<div class="tip-rows">' +
+        '<div class="tip-row"><span>Land it</span><i>' + st.def.rewardText + '</i></div>' +
+        '<div class="tip-row"><span>Miss it</span><i>' + st.def.forfeitText + '</i></div>' +
+      '</div>'));
+    chip.addEventListener('pointerleave', hideTip);
+    bar.appendChild(chip);
   }
 
   function renderBoard() {
@@ -4180,19 +4352,28 @@ const UI = (() => {
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
-    /* the wishing well */
-    const wl = $('#well');
-    if (wl) {
-      Array.from(wl.querySelectorAll('.card')).forEach(n => n.remove());
-      const tossed = b.well || [];
-      if (tossed.length) {
-        const n = cardEl(tossed[tossed.length - 1]);
-        n.classList.add('sunk');
-        wl.appendChild(n);
+    /* the stash: cards held back, playable whenever */
+    const st = $('#stash');
+    if (st) {
+      st.innerHTML = '';
+      const held = G.run.stash || [];
+      const cap = Game.stashCapacity();
+      const label = el('div', 'stash-label', 'STASH <b>' + held.length + '/' + cap + '</b>');
+      st.appendChild(label);
+      const row = el('div', 'stash-row');
+      for (let i = 0; i < cap; i++) {
+        const c = held[i];
+        if (!c) { row.appendChild(el('div', 'stash-slot empty', '')); continue; }
+        const slot = el('div', 'stash-slot');
+        const n = cardEl(Object.assign({}, c, { faceUp: true }));
+        n.classList.add('stashed');
+        attachInspect(n, c);
+        attachStashDrag(n, i);
+        slot.appendChild(n);
+        row.appendChild(slot);
       }
-      wl.classList.toggle('spent', !b.wishesLeft);
-      const c = $('#wishes-left');
-      if (c) c.textContent = b.wishesLeft;
+      st.appendChild(row);
+      st.classList.toggle('full', held.length >= cap);
     }
 
     /* foundations */
@@ -4322,11 +4503,17 @@ const UI = (() => {
 
   let landedId = null;
   function doMove(src, dst) {
-    if (dst.zone === 'well') {
-      const wished = Game.makeWish(src);
-      if (wished) { Sfx.money(); clearSelection(); render(); drainFx(); checkStuck(); }
-      else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
-      return wished;
+    if (dst.zone === 'stash') {
+      const ok2 = Game.stash(src);
+      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
+      return ok2;
+    }
+    if (src.zone === 'stash') {
+      const ok2 = Game.stashPlay(src.index, dst);
+      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
+      return ok2;
     }
     const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
                  : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
@@ -4404,6 +4591,35 @@ const UI = (() => {
       e.preventDefault();
       clearTimeout(inspectTimer);
       showTip(node, Overlays.cardTip(card));
+    });
+  }
+
+  function attachStashDrag(node, index) {
+    node.classList.add('grabbable');
+    node.addEventListener('pointerdown', e => {
+      if (G.phase !== 'play') return;
+      rushFx();
+      if (e.button != null && e.button !== 0) return;
+      cancelDrag(true);
+      node.classList.add('pressed');
+      drag = { src: { zone: 'stash', index }, cards: [G.run.stash[index]],
+               x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, id: e.pointerId };
+      e.preventDefault();
+    });
+    node.addEventListener('dblclick', e => {
+      if (G.phase !== 'play') return;
+      e.preventDefault();
+      cancelDrag(true);
+      const card = G.run.stash[index];
+      if (Engine.foundationTargetFor(G.board, card) || Engine.twinTargetFor(G.board, card)) {
+        doMove({ zone: 'stash', index }, { zone: 'foundation' });
+      } else {
+        const m = Engine.mods(G.run);
+        for (let d = 0; d < G.board.tableau.length; d++) {
+          if (Engine.canPlaceOnColumn(G.board, d, card, m)) { doMove({ zone: 'stash', index }, { zone: 'tableau', col: d }); return; }
+        }
+        Sfx.error(); shake(node);
+      }
     });
   }
 
@@ -4504,7 +4720,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
       if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
-      if (z === 'well') return { zone: 'well' };
+      if (z === 'stash') return { zone: 'stash' };
     }
     return null;
   }
@@ -4515,9 +4731,9 @@ const UI = (() => {
     if (!t || !drag) return;
     const m = Engine.mods(G.run);
     let ok = false, node = null;
-    if (t.zone === 'well') {
-      node = $('#well');
-      ok = drag.cards.length === 1 && Game.canWish(drag.src);
+    if (t.zone === 'stash') {
+      node = $('#stash');
+      ok = drag.cards.length === 1 && drag.src.zone !== 'stash' && Game.canStash(drag.src);
     } else if (t.zone === 'tableau') {
       node = $$('#tableau .tab-pile')[t.col];
       ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
@@ -4556,7 +4772,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
       else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
-      else if (z === 'well') { const held = selection; clearSelection(); doMove(held, { zone: 'well' }); }
+      else if (z === 'stash') { const held = selection; clearSelection(); doMove(held, { zone: 'stash' }); }
     });
   }
 
@@ -4607,37 +4823,30 @@ const UI = (() => {
       setTimeout(done, 520 * spd());
       return;
     }
-    if (p.event === 'cut') {
-      const anchor = $('#cut-bar') || $('#scorebox');
-      const card = el('div', 'cut-flip ' + (p.correct ? 'hit' : 'miss'),
-        '<div class="cf-call">' + p.colour.toUpperCase() + '</div>' +
-        '<div class="cf-card ' + ((Engine.isRed(p.card) && !Engine.isBlack(p.card)) ? 'red' : 'black') + '">' +
-          RANK_NAMES[p.card.rank] + (p.card.enhancement === 'wild' ? '✿' : SUITS[p.card.suit].sym) + '</div>' +
-        '<div class="cf-verdict">' + (p.correct
-          ? 'HIT — HEAT X' + p.mult
-          : (p.penalty === 'pass' ? 'MISS — lost a pass' : 'MISS — lost ' + TUNE.heatMissScore + ' points')) + '</div>');
-      $('#fxlayer').appendChild(card);
-      if (p.correct) {
-        Sfx.big(); confetti(anchor, 18 + p.heat * 6, 't2'); flashScreen(0.14, '#ffd166');
-        if (p.heat >= 4) { screenShake(8); bannerText('HEAT X' + p.mult); }
-      } else {
-        Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
-      }
-      renderHud();
-      setTimeout(() => card.classList.add('out'), 780 * spd());
-      setTimeout(() => card.remove(), 1150 * spd());
-      setTimeout(done, 420 * spd());
+    if (p.event === 'dare-start') {
+      const d = p.dare;
+      bannerText('DARE TAKEN');
+      floatText($('#dare-bar') || $('#scorebox'), d.goal + ' in ' + p.budget, 'fx-flash');
+      Sfx.big();
+      flashScreen(0.14, '#b07cff');
+      setTimeout(done, 300 * spd());
       return;
     }
-    if (p.event === 'bank-heat') {
-      const box = $('#scorebox');
-      bannerText('HEAT BANKED — X' + p.heat);
-      Sfx.win();
-      confetti(box, 50, 't3');
-      screenShake(10);
-      flashScreen(0.24, '#7ee787');
+    if (p.event === 'dare-end') {
+      const d = p.dare;
+      const card = el('div', 'wish-card ' + (p.won ? 'great' : 'meh'),
+        '<div class="wc-name">' + (p.won ? 'DARE LANDED' : 'DARE BLOWN') + '</div>' +
+        '<div class="wc-text">' + d.name + ' — ' + d.goal + '</div>' +
+        '<div class="wc-detail">' + (p.detail || '') + '</div>' +
+        (p.extra && p.extra.length ? '<div class="wc-detail">' + p.extra.join('<br>') + '</div>' : ''));
+      $('#fxlayer').appendChild(card);
+      if (p.won) { Sfx.win(); screenShake(11); confetti($('#scorebox'), 55, 't3'); flashScreen(0.26, '#7ee787'); }
+      else { Sfx.lose(); screenShake(9); flashScreen(0.2, '#ff4d6d'); }
+      renderHud();
       animateScoreTo(G.round.score);
-      setTimeout(done, 420 * spd());
+      setTimeout(() => card.classList.add('out'), 950 * spd());
+      setTimeout(() => card.remove(), 1350 * spd());
+      setTimeout(done, 520 * spd());
       return;
     }
     if (p.event === 'reshuffle') {
@@ -4732,7 +4941,7 @@ const UI = (() => {
 
   function anchorEl(a) {
     if (!a) return $('#scorebox');
-    if (a.zone === 'well') return $('#well') || $('#scorebox');
+    if (a.zone === 'stash') return $('#stash') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
@@ -5427,6 +5636,7 @@ const Overlays = (() => {
       bySuit[s].forEach(card => {
         const c = UI.cardEl(Object.assign({}, card, { faceUp: true }));
         c.classList.add('mini');
+        if ((run.stash || []).some(x => x.id === card.id)) c.classList.add('in-stash');
         c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
         c.addEventListener('pointerleave', UI.hideTip);
         if (pickDef) {
@@ -5577,7 +5787,7 @@ const Overlays = (() => {
     { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
     { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
-    { id: 'wishes',  name: 'THE WELL',   sub: 'what the Wishing Well can give you' },
+    { id: 'dares',   name: 'DARES',      sub: 'challenges you can take mid-round' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -5659,10 +5869,10 @@ const Overlays = (() => {
       });
     } else if (almanacTab === 'whims') {
       WHIMS.forEach(w => { html += almEntry(w.icon, w.name, w.mood, w.text, '', 'mood-' + w.mood); });
-    } else if (almanacTab === 'wishes') {
-      const total = WISHES.reduce((a, w) => a + w.w, 0);
-      WISHES.forEach(w => {
-        html += almEntry('coin', w.name, Math.round(w.w / total * 100) + '% chance', w.text, '', w.cls);
+    } else if (almanacTab === 'dares') {
+      DARES.forEach(d => {
+        html += almEntry(d.icon, d.name, d.moves + ' moves',
+          d.goal + '.', 'Land it: ' + d.rewardText + '. Miss it: ' + d.forfeitText + '.');
       });
     } else if (almanacTab === 'bandit') {
       Object.keys(BANDIT_PRIZES).forEach(sym => {
@@ -5728,26 +5938,27 @@ const Overlays = (() => {
           'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
           'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
 
-          '<h4>The Cut — the gamble on the table</h4>' +
-          '<p>Down by PASSES there is a <b>RED</b> / <b>BLACK</b> call. Guess the colour of the next card ' +
-          'off the stock and the cards turn over as normal — but the call has stakes:</p>' +
+          '<h4>The Dealer\'s Dare</h4>' +
+          '<p><b>TAKE A DARE</b> and the table sets you a challenge with a move budget — send 3 cards home in 6 moves, ' +
+          'cash a run of 4, empty a column, flip 4 face-down cards, score 2,500 in 5 moves. Nothing is hidden and ' +
+          'nothing is random: it is judged purely on how you play, so there is nothing to memorise or wait out.</p>' +
           '<ul>' +
-            '<li><b>Right</b> — your <b>HEAT</b> climbs a level. Heat multiplies <i>every</i> score for the rest of ' +
-            'the round: X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four. It shows up in the combo readout.</li>' +
-            '<li><b>Wrong</b> — the Heat is gone and it costs you a pass through the stock. With no passes left it costs ' +
-            TUNE.heatMissScore + ' points instead.</li>' +
-            '<li><b>BANK</b> — cash the streak in for score instead of pressing on: <b>Heat squared x ' + TUNE.heatBankBase + '</b>. ' +
-            'Four levels is ' + (16 * TUNE.heatBankBase) + ' points, but you give up the multiplier.</li>' +
+            '<li><b>Land it</b> — usually <b>HEAT</b>, which multiplies <i>every</i> score for the rest of the round ' +
+            '(X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four), plus cash, Mult or a reshuffle depending on the dare.</li>' +
+            '<li><b>Miss it</b> — usually a pass through the stock. ALL IN takes half of what you scored during it.</li>' +
           '</ul>' +
-          '<p>You never have to call — the normal deal is always there. The Card Counter Curio shows you the colour ' +
-          'in advance, and Hot Hand makes every level of Heat worth more.</p>' +
+          '<p>You can take another the moment one resolves, so a hot streak is a chain of dares. Hot Hand makes each ' +
+          'level of Heat worth more, The Card Counter buys you 3 extra moves on every dare, and The Daredevil pays ' +
+          'a bonus every time you land one.</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
-          '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
-          'the fix when draw-3 has buried the card you need. The bar next to PASSES gives you three ways to pay: ' +
-          'a <b>free</b> one if a Curio or the Counter granted it, <b>$' + TUNE.reshuffleCash + '</b> cash, or ' +
-          '<b>' + TUNE.reshufflePoints + ' points</b> off your round score. Each paid reshuffle in a round costs more than the last. ' +
-          'A card stamped with a <b>Riffle</b> reshuffles for free whenever it scores. (Hotkey: R)</p>' +
+          '<p>A reshuffle throws the waste back in with the stock and shuffles the lot — the fix when draw-3 has ' +
+          'buried the card you need. You start each round with <b>' + TUNE.startingStockPasses + ' passes</b>, and a reshuffle ' +
+          '<b>spends one</b>, so passes are the real currency of the round: work the stock, or re-order it. ' +
+          'Out of passes, you can still buy one for <b>' + TUNE.reshufflePoints + ' points taken straight off your ANTE total</b> — ' +
+          'this round first, then your banked rounds — which is a genuine sacrifice of quota progress. ' +
+          'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
+          'whenever it scores. (Hotkey: R)</p>' +
 
           '<h4>Duplicate cards and Twins</h4>' +
           '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
@@ -5932,8 +6143,8 @@ const Overlays = (() => {
         if (suit) dstNode = $('#f-' + suit);
       } else if (h.dst.zone === 'tableau') {
         dstNode = UI.$$('#tableau .tab-pile')[h.dst.col];
-      } else if (h.dst.zone === 'well') {
-        dstNode = $('#well');
+      } else if (h.dst.zone === 'stash') {
+        dstNode = $('#stash');
       }
     }
 
@@ -6006,7 +6217,8 @@ const Overlays = (() => {
       else if (k === 'k') Overlays.almanac();
       else if (k === 'c') cashOut();
       else if (k === 'r') {
-        const res = Game.reshuffle(Game.reshuffleCost().free > 0 ? 'free' : 'cash');
+        const c = Game.reshuffleCost();
+        const res = Game.reshuffle(c.free > 0 ? 'free' : (c.passes > 0 ? 'pass' : 'points'));
         if (res.ok) { Sfx.deal(); UI.render(); UI.drainFx(); }
         else { Sfx.error(); UI.toast(res.reason); }
       }

@@ -337,6 +337,7 @@ const Overlays = (() => {
       bySuit[s].forEach(card => {
         const c = UI.cardEl(Object.assign({}, card, { faceUp: true }));
         c.classList.add('mini');
+        if ((run.stash || []).some(x => x.id === card.id)) c.classList.add('in-stash');
         c.addEventListener('pointerenter', e => UI.showTip(e.currentTarget, cardTip(card)));
         c.addEventListener('pointerleave', UI.hideTip);
         if (pickDef) {
@@ -487,7 +488,7 @@ const Overlays = (() => {
     { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
     { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
-    { id: 'wishes',  name: 'THE WELL',   sub: 'what the Wishing Well can give you' },
+    { id: 'dares',   name: 'DARES',      sub: 'challenges you can take mid-round' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -569,10 +570,10 @@ const Overlays = (() => {
       });
     } else if (almanacTab === 'whims') {
       WHIMS.forEach(w => { html += almEntry(w.icon, w.name, w.mood, w.text, '', 'mood-' + w.mood); });
-    } else if (almanacTab === 'wishes') {
-      const total = WISHES.reduce((a, w) => a + w.w, 0);
-      WISHES.forEach(w => {
-        html += almEntry('coin', w.name, Math.round(w.w / total * 100) + '% chance', w.text, '', w.cls);
+    } else if (almanacTab === 'dares') {
+      DARES.forEach(d => {
+        html += almEntry(d.icon, d.name, d.moves + ' moves',
+          d.goal + '.', 'Land it: ' + d.rewardText + '. Miss it: ' + d.forfeitText + '.');
       });
     } else if (almanacTab === 'bandit') {
       Object.keys(BANDIT_PRIZES).forEach(sym => {
@@ -638,26 +639,27 @@ const Overlays = (() => {
           'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
           'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
 
-          '<h4>The Cut — the gamble on the table</h4>' +
-          '<p>Down by PASSES there is a <b>RED</b> / <b>BLACK</b> call. Guess the colour of the next card ' +
-          'off the stock and the cards turn over as normal — but the call has stakes:</p>' +
+          '<h4>The Dealer\'s Dare</h4>' +
+          '<p><b>TAKE A DARE</b> and the table sets you a challenge with a move budget — send 3 cards home in 6 moves, ' +
+          'cash a run of 4, empty a column, flip 4 face-down cards, score 2,500 in 5 moves. Nothing is hidden and ' +
+          'nothing is random: it is judged purely on how you play, so there is nothing to memorise or wait out.</p>' +
           '<ul>' +
-            '<li><b>Right</b> — your <b>HEAT</b> climbs a level. Heat multiplies <i>every</i> score for the rest of ' +
-            'the round: X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four. It shows up in the combo readout.</li>' +
-            '<li><b>Wrong</b> — the Heat is gone and it costs you a pass through the stock. With no passes left it costs ' +
-            TUNE.heatMissScore + ' points instead.</li>' +
-            '<li><b>BANK</b> — cash the streak in for score instead of pressing on: <b>Heat squared x ' + TUNE.heatBankBase + '</b>. ' +
-            'Four levels is ' + (16 * TUNE.heatBankBase) + ' points, but you give up the multiplier.</li>' +
+            '<li><b>Land it</b> — usually <b>HEAT</b>, which multiplies <i>every</i> score for the rest of the round ' +
+            '(X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four), plus cash, Mult or a reshuffle depending on the dare.</li>' +
+            '<li><b>Miss it</b> — usually a pass through the stock. ALL IN takes half of what you scored during it.</li>' +
           '</ul>' +
-          '<p>You never have to call — the normal deal is always there. The Card Counter Curio shows you the colour ' +
-          'in advance, and Hot Hand makes every level of Heat worth more.</p>' +
+          '<p>You can take another the moment one resolves, so a hot streak is a chain of dares. Hot Hand makes each ' +
+          'level of Heat worth more, The Card Counter buys you 3 extra moves on every dare, and The Daredevil pays ' +
+          'a bonus every time you land one.</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
-          '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
-          'the fix when draw-3 has buried the card you need. The bar next to PASSES gives you three ways to pay: ' +
-          'a <b>free</b> one if a Curio or the Counter granted it, <b>$' + TUNE.reshuffleCash + '</b> cash, or ' +
-          '<b>' + TUNE.reshufflePoints + ' points</b> off your round score. Each paid reshuffle in a round costs more than the last. ' +
-          'A card stamped with a <b>Riffle</b> reshuffles for free whenever it scores. (Hotkey: R)</p>' +
+          '<p>A reshuffle throws the waste back in with the stock and shuffles the lot — the fix when draw-3 has ' +
+          'buried the card you need. You start each round with <b>' + TUNE.startingStockPasses + ' passes</b>, and a reshuffle ' +
+          '<b>spends one</b>, so passes are the real currency of the round: work the stock, or re-order it. ' +
+          'Out of passes, you can still buy one for <b>' + TUNE.reshufflePoints + ' points taken straight off your ANTE total</b> — ' +
+          'this round first, then your banked rounds — which is a genuine sacrifice of quota progress. ' +
+          'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
+          'whenever it scores. (Hotkey: R)</p>' +
 
           '<h4>Duplicate cards and Twins</h4>' +
           '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +

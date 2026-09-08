@@ -76,8 +76,8 @@
         if (suit) dstNode = $('#f-' + suit);
       } else if (h.dst.zone === 'tableau') {
         dstNode = UI.$$('#tableau .tab-pile')[h.dst.col];
-      } else if (h.dst.zone === 'well') {
-        dstNode = $('#well');
+      } else if (h.dst.zone === 'stash') {
+        dstNode = $('#stash');
       }
     }
 
@@ -150,7 +150,8 @@
       else if (k === 'k') Overlays.almanac();
       else if (k === 'c') cashOut();
       else if (k === 'r') {
-        const res = Game.reshuffle(Game.reshuffleCost().free > 0 ? 'free' : 'cash');
+        const c = Game.reshuffleCost();
+        const res = Game.reshuffle(c.free > 0 ? 'free' : (c.passes > 0 ? 'pass' : 'points'));
         if (res.ok) { Sfx.deal(); UI.render(); UI.drainFx(); }
         else { Sfx.error(); UI.toast(res.reason); }
       }

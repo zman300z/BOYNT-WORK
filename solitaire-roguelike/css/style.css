@@ -896,29 +896,16 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    the wishing well
    ============================================================ */
-.well-pile{
-  border:2px dashed rgba(76,201,240,.5) !important; cursor:pointer;
-  background:radial-gradient(circle at 50% 130%, rgba(76,201,240,.3), transparent 62%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  overflow:hidden;
-}
-.well-pile::after{
-  content:''; position:absolute; inset:auto -20% -30% -20%; height:60%;
-  background:radial-gradient(ellipse at 50% 0%, rgba(76,201,240,.35), transparent 70%);
-  animation:wellShimmer 3.5s ease-in-out infinite alternate; pointer-events:none;
-}
-@keyframes wellShimmer{ to{ transform:translateY(-4px) scale(1.06); opacity:.7 } }
-.well-pile:hover{ border-color:var(--cool) !important; box-shadow:0 0 24px rgba(76,201,240,.45); }
-.well-label{ position:relative; z-index:5; font-family:var(--display); font-size:8px; line-height:1.15;
-  letter-spacing:.1em; color:var(--cool); text-align:center; text-shadow:0 2px 4px #000; }
-.well-uses{ position:relative; z-index:5; font-size:8px; opacity:.75; text-shadow:0 2px 4px #000; }
-.well-uses b{ font-family:var(--display); font-size:13px; color:var(--cool); }
-.well-pile.spent{ opacity:.4; filter:grayscale(.6); }
-.well-pile .card.sunk{
-  position:absolute; inset:auto 0 -18% 0; margin:0 auto; z-index:1; opacity:.4;
-  filter:brightness(.6) saturate(.5); transform:scale(.86) rotate(-5deg);
-}
-.well-pile.drop-ok{ box-shadow:0 0 0 3px var(--cool), 0 0 30px rgba(76,201,240,.75) !important; }
+
+
+
+
+
+
+
+
+
+
 
 .wish-card{
   position:fixed; left:50%; top:34%; transform:translate(-50%,-50%);
@@ -995,26 +982,17 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .cut-peek.red{ color:#ff8fa3; } .cut-peek.black{ color:#cfd6e4; }
 .cm.heat{ background:#2a1408; color:#ff8f3f; border-color:#ff8f3f; box-shadow:0 0 14px rgba(255,143,63,.6); }
 
-.cut-flip{
-  position:fixed; left:50%; top:40%; transform:translate(-50%,-50%);
-  width:230px; padding:14px; border-radius:14px; text-align:center; z-index:5200;
-  background:linear-gradient(165deg,#1b1020,#0c0a12); border:3px solid var(--gold);
-  box-shadow:0 0 40px rgba(255,209,102,.5), 0 20px 44px rgba(0,0,0,.7);
-  animation:cutIn .4s cubic-bezier(.2,1.6,.3,1);
-}
-.cut-flip.hit{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.6), 0 20px 44px rgba(0,0,0,.7); }
-.cut-flip.miss{ border-color:var(--hot); box-shadow:0 0 50px rgba(255,77,109,.6), 0 20px 44px rgba(0,0,0,.7); }
-.cut-flip.out{ animation:wishOut .4s ease forwards; }
-@keyframes cutIn{ 0%{ opacity:0; transform:translate(-50%,-40%) scale(.6) rotateY(80deg) } 100%{ opacity:1 } }
-.cf-call{ font-size:9px; letter-spacing:.2em; opacity:.5; }
-.cf-card{
-  font-family:var(--display); font-size:42px; line-height:1.15; margin:2px 0 4px;
-  background:var(--paper); border-radius:9px; border:2px solid #1a1a1a; padding:6px 0;
-}
-.cf-card.red{ color:#d92b4b; } .cf-card.black{ color:#16181d; }
-.cf-verdict{ font-family:var(--display); font-size:12px; }
-.cut-flip.hit .cf-verdict{ color:var(--lime); }
-.cut-flip.miss .cf-verdict{ color:var(--hot); }
+
+
+
+
+
+
+
+ .cf-card.black{ color:#16181d; }
+
+
+
 
 /* ============================================================
    the almanac
@@ -1093,3 +1071,58 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .card{ transition:transform .07s ease, box-shadow .1s ease, filter .1s; }
 .quota-fill{ transition:width .22s cubic-bezier(.2,.9,.25,1); }
 @media (max-width:860px){ .tempo{ min-width:72px; } .tempo-cap{ font-size:7px; } }
+
+/* ============================================================
+   THE STASH -- cards held back, playable whenever
+   ============================================================ */
+.stash-pile{
+  position:relative; display:flex; flex-direction:column; gap:3px;
+  padding:5px 7px; border-radius:11px;
+  border:2px dashed rgba(176,124,255,.5);
+  background:linear-gradient(160deg, rgba(176,124,255,.14), rgba(0,0,0,.25));
+  min-height:var(--ch);
+}
+.stash-pile:hover{ border-color:var(--violet); box-shadow:0 0 22px rgba(176,124,255,.4); }
+.stash-pile.full{ border-style:solid; }
+.stash-label{ font-family:var(--display); font-size:8px; letter-spacing:.14em; color:var(--violet); text-align:center; }
+.stash-label b{ color:var(--paper); }
+.stash-row{ display:flex; gap:4px; align-items:flex-start; }
+.stash-slot{
+  position:relative; width:calc(var(--cw) * 0.62); height:calc(var(--ch) * 0.62);
+  border-radius:7px;
+}
+.stash-slot.empty{ border:2px dashed rgba(255,255,255,.13); }
+.stash-slot .card{
+  position:absolute; inset:0; width:100%; height:100%;
+  box-shadow:0 0 0 2px rgba(176,124,255,.55), 0 5px 12px rgba(0,0,0,.5);
+}
+.stash-slot .card .rk{ font-size:11px } .stash-slot .card .st{ font-size:8px } .stash-slot .card .mid{ font-size:19px }
+.stash-slot .card:hover{ transform:translateY(-5px) scale(1.06); z-index:20; }
+.stash-pile.drop-ok{ box-shadow:0 0 0 3px var(--violet), 0 0 30px rgba(176,124,255,.75) !important; }
+
+/* ============================================================
+   THE DARE
+   ============================================================ */
+.dare-take{ border-color:var(--violet) !important; color:#d3b7ff !important; }
+.dare-take:hover{ background:rgba(176,124,255,.28) !important; }
+.dare-live{
+  display:flex; flex-direction:column; gap:2px; min-width:190px; cursor:help;
+  padding:4px 9px; border-radius:9px;
+  background:rgba(176,124,255,.12); border:2px solid var(--violet);
+}
+.dl-head{ display:flex; align-items:center; gap:5px; font-family:var(--display); font-size:10px; color:#d3b7ff; }
+.dl-ico{ width:13px; height:13px; }
+.dl-moves{ margin-left:auto; font-size:9px; opacity:.75; }
+.dl-goal{ font-size:9px; opacity:.8; }
+.dl-goal b{ color:var(--gold); }
+.dl-bar{ height:4px; border-radius:3px; background:#0008; overflow:hidden; }
+.dl-bar div{ height:100%; background:linear-gradient(90deg,var(--violet),var(--lime)); transition:width .2s; }
+.dare-live.urgent{ border-color:var(--hot); background:rgba(255,77,109,.14); animation:heatGlow .6s infinite alternate; }
+.dare-live.urgent .dl-head{ color:#ff8fa3; }
+.rs-pass{ background:rgba(255,209,102,.14); border-color:rgba(255,209,102,.5); color:var(--gold); }
+.card.in-stash{ box-shadow:0 0 0 2px var(--violet), 0 0 14px rgba(176,124,255,.6); }
+.card.in-stash::after{
+  content:'STASH'; position:absolute; inset:auto 0 0 0; z-index:9;
+  background:var(--violet); color:#fff; font-family:var(--display); font-size:6px;
+  letter-spacing:.1em; text-align:center; padding:1px 0;
+}
