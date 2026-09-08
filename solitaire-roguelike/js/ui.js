@@ -42,6 +42,24 @@ const UI = (() => {
     if (card.finish && card.finish !== 'none') n.classList.add(FINISHES[card.finish].cls);
     if (card.seal && card.seal !== 'none') n.classList.add(SEALS[card.seal].cls);
 
+    if (card.oddity) {
+      const od = ODDITIES[card.oddity] || { name: '???', icon: 'unknown', tint: '' };
+      n.classList.remove('red', 'black');
+      n.classList.add('oddity', od.tint);
+      /* the name sits in the top strip so a stacked Oddity is still identifiable
+         when only its first 30px is showing */
+      n.innerHTML =
+        '<div class="face odd-face">' +
+          '<div class="odd-head">' + icon(od.icon, 'odd-mini') + '<span>' + od.name + '</span></div>' +
+          '<div class="odd-art">' + icon(od.icon) + '</div>' +
+          '<div class="odd-foot">ODDITY</div>' +
+          (card.oddCount ? '<div class="odd-count">x' + card.oddCount + '</div>' : '') +
+          (card.seal && card.seal !== 'none' ? '<div class="seal-dot"></div>' : '') +
+          '<div class="shine"></div>' +
+        '</div>';
+      return n;
+    }
+
     const r = RANK_NAMES[card.rank];
     const s = card.enhancement === 'wild' ? '✿' : suit.sym;
     n.innerHTML =
@@ -200,50 +218,48 @@ const UI = (() => {
         'Taken straight off your ANTE total — this round first, then banked rounds');
   }
 
-  /* THE DEALER'S DARE -- a challenge judged on how you play */
+  /* THE SIDE POT -- the corner gamble. Every score feeds it; you decide
+     whether to bank it or flip a freshly shuffled card to double it. */
   function renderCut() {
-    const bar = $('#dare-bar');
-    if (!bar || !G.board || !G.round) return;
-    const st = Game.dareState();
-    const hot = G.round.heat > 0;
+    const box = $('#sidepot');
+    if (!box || !G.round) return;
+    const pot = Math.round(G.round.pot || 0);
+    const streak = G.round.potStreak || 0;
+    const canFlip = pot >= TUNE.potMinFlip;
+    const heat = G.round.heat || 0;
 
-    bar.innerHTML =
-      '<span class="cut-cap">DARE</span>' +
-      '<span class="cut-heat' + (hot ? ' on' : '') + '" title="Heat multiplies every score">HEAT <b>X' +
-        Game.heatMult() + '</b><i>' + G.round.heat + '</i></span>';
+    box.className = 'sidepot' + (pot > 0 ? ' live' : '') + (canFlip ? ' ready' : '') + (streak >= 3 ? ' blazing' : '');
+    box.innerHTML =
+      '<div class="sp-cap">SIDE POT' + (streak ? '<span class="sp-streak">' + streak + ' straight</span>' : '') + '</div>' +
+      '<div class="sp-amount">' + fmt(pot) + '</div>' +
+      '<div class="sp-sub">' + (heat ? 'HEAT X' + Game.heatMult() + ' · ' : '') +
+        (canFlip ? 'flip doubles it to ' + fmt(pot * 2) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
 
-    if (!st) {
-      const btn = el('button', 'cut-btn dare-take', 'TAKE A DARE');
-      btn.onclick = () => {
-        const res = Game.takeDare();
-        if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-        render();
-        drainFx();
-      };
-      bar.appendChild(btn);
-      bar.appendChild(el('span', 'cut-peek', 'a challenge, judged on how you play'));
-      return;
-    }
-
-    const pct = Math.min(100, st.progress / st.target * 100);
-    const urgent = st.movesLeft <= 2;
-    const chip = el('div', 'dare-live' + (urgent ? ' urgent' : ''),
-      '<div class="dl-head">' + icon(st.def.icon, 'dl-ico') + '<b>' + st.def.name + '</b>' +
-        '<span class="dl-moves">' + st.movesLeft + ' moves</span></div>' +
-      '<div class="dl-goal">' + st.def.goal + ' — <b>' +
-        (st.def.scoreGoal ? UI.fmt(Math.min(st.progress, st.target)) : st.progress) + '/' +
-        (st.def.scoreGoal ? UI.fmt(st.target) : st.target) + '</b></div>' +
-      '<div class="dl-bar"><div style="width:' + pct + '%"></div></div>');
-    chip.addEventListener('pointerenter', e => showTip(e.currentTarget,
-      '<div class="tip-title">' + icon(st.def.icon, 'tip-ico') + ' ' + st.def.name + '</div>' +
-      '<div class="tip-kind whim-kind">ACTIVE DARE</div>' +
-      '<div class="tip-text">' + st.def.goal + ' within ' + st.def.moves + ' moves.</div>' +
-      '<div class="tip-rows">' +
-        '<div class="tip-row"><span>Land it</span><i>' + st.def.rewardText + '</i></div>' +
-        '<div class="tip-row"><span>Miss it</span><i>' + st.def.forfeitText + '</i></div>' +
-      '</div>'));
-    chip.addEventListener('pointerleave', hideTip);
-    bar.appendChild(chip);
+    const row = el('div', 'sp-btns');
+    const cash = el('button', 'sp-btn sp-cash' + (pot > 0 ? '' : ' off'), 'CASH IT');
+    cash.onclick = () => {
+      const res = Game.cashPot();
+      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+      render(); drainFx();
+    };
+    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'DOUBLE OR NOTHING');
+    flip.onclick = () => {
+      const res = Game.pushPot();
+      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+      render(); drainFx();
+    };
+    row.appendChild(cash);
+    row.appendChild(flip);
+    box.appendChild(row);
+    box.addEventListener('pointerenter', e => showTip(e.currentTarget,
+      '<div class="tip-title">The Side Pot</div>' +
+      '<div class="tip-kind whim-kind">THE CORNER GAMBLE</div>' +
+      '<div class="tip-text">Every score drops ' + Math.round((TUNE.potShare + Engine.mods(G.run).potShare) * 100) +
+      '% of itself into the pot. <b>CASH IT</b> adds the pot straight to your score.</div>' +
+      '<div class="tip-text"><b>DOUBLE OR NOTHING</b> flips a card from a freshly shuffled deck — there is no order ' +
+      'to learn. Red doubles the pot and raises your HEAT (which multiplies every score). Black takes the pot ' +
+      'and a pass with it.</div>'));
+    box.addEventListener('pointerleave', hideTip);
   }
 
   function renderBoard() {
@@ -328,14 +344,17 @@ const UI = (() => {
         });
         f.appendChild(el('div', 'pile-count', String(pile.length)));
       }
+      /* twins fan out BEHIND the pile so the real top card stays readable */
       const tw = (b.twins && b.twins[s]) || [];
-      if (tw.length) {
-        const t = cardEl(tw[tw.length - 1]);
+      tw.slice(-3).forEach((c, i) => {
+        const t = cardEl(c);
         t.classList.add('twin-card');
-        t.style.zIndex = 40;
-        f.appendChild(t);
-        f.appendChild(el('div', 'twin-count', 'TWIN x' + tw.length));
-      }
+        t.style.setProperty('--tw', (i + 1));
+        t.style.zIndex = -10 + i;
+        attachInspect(t, c);
+        f.insertBefore(t, f.firstChild);
+      });
+      if (tw.length) f.appendChild(el('div', 'twin-count', 'TWIN x' + tw.length));
     });
 
     /* tableau */
@@ -366,6 +385,16 @@ const UI = (() => {
         p.appendChild(n);
       });
       const runLen = Engine.runLength(b, col, Engine.mods(G.run));
+      if (runLen === 1 && pile.length) {
+        const only = pile[pile.length - 1];
+        if (only.faceUp && (Engine.foundationTargetFor(b, only) || Engine.twinTargetFor(b, only))) {
+          const badge = el('div', 'run-badge ready solo',
+            '<span class="rb-go">SEND IT HOME</span>');
+          const ch2 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
+          badge.style.top = Math.round(lastTop + ch2 + 5) + 'px';
+          p.appendChild(badge);
+        }
+      }
       if (runLen > 1) {
         const mm = Engine.mods(G.run);
         const runCards = Engine.runCards(b, col, mm);
@@ -756,30 +785,38 @@ const UI = (() => {
       setTimeout(done, 520 * spd());
       return;
     }
-    if (p.event === 'dare-start') {
-      const d = p.dare;
-      bannerText('DARE TAKEN');
-      floatText($('#dare-bar') || $('#scorebox'), d.goal + ' in ' + p.budget, 'fx-flash');
-      Sfx.big();
-      flashScreen(0.14, '#b07cff');
-      setTimeout(done, 300 * spd());
+    if (p.event === 'pot-cash') {
+      bannerText('POT CASHED');
+      Sfx.win();
+      confetti($('#sidepot') || $('#scorebox'), 40, 't3');
+      flashScreen(0.2, '#7ee787');
+      screenShake(7);
+      animateScoreTo(G.round.score);
+      floatText($('#sidepot') || $('#scorebox'), '+' + fmt(p.amount), 'fx-total');
+      setTimeout(done, 420 * spd());
       return;
     }
-    if (p.event === 'dare-end') {
-      const d = p.dare;
-      const card = el('div', 'wish-card ' + (p.won ? 'great' : 'meh'),
-        '<div class="wc-name">' + (p.won ? 'DARE LANDED' : 'DARE BLOWN') + '</div>' +
-        '<div class="wc-text">' + d.name + ' — ' + d.goal + '</div>' +
-        '<div class="wc-detail">' + (p.detail || '') + '</div>' +
-        (p.extra && p.extra.length ? '<div class="wc-detail">' + p.extra.join('<br>') + '</div>' : ''));
+    if (p.event === 'pot-flip') {
+      const c = p.card;
+      const card = el('div', 'cut-flip ' + (p.win ? 'hit' : 'miss'),
+        '<div class="cf-call">DOUBLE OR NOTHING</div>' +
+        '<div class="cf-card ' + (SUITS[c.suit].color === 'red' ? 'red' : 'black') + '">' +
+          RANK_NAMES[c.rank] + SUITS[c.suit].sym + '</div>' +
+        '<div class="cf-verdict">' + (p.win
+          ? 'RED — POT IS NOW ' + fmt(p.pot) + (p.guaranteed ? ' (counted)' : '')
+          : 'BLACK — lost ' + fmt(p.lost) + (p.penalty === 'pass' ? ' and a pass' : '')) + '</div>');
       $('#fxlayer').appendChild(card);
-      if (p.won) { Sfx.win(); screenShake(11); confetti($('#scorebox'), 55, 't3'); flashScreen(0.26, '#7ee787'); }
-      else { Sfx.lose(); screenShake(9); flashScreen(0.2, '#ff4d6d'); }
+      if (p.win) {
+        Sfx.win(); screenShake(9 + p.streak * 2); confetti($('#sidepot'), 30 + p.streak * 12, 't3');
+        flashScreen(0.24, '#ffd166');
+        if (p.streak >= 3) bannerText(p.streak + ' STRAIGHT');
+      } else {
+        Sfx.lose(); screenShake(13); flashScreen(0.3, '#ff4d6d');
+      }
       renderHud();
-      animateScoreTo(G.round.score);
-      setTimeout(() => card.classList.add('out'), 950 * spd());
-      setTimeout(() => card.remove(), 1350 * spd());
-      setTimeout(done, 520 * spd());
+      setTimeout(() => card.classList.add('out'), 900 * spd());
+      setTimeout(() => card.remove(), 1300 * spd());
+      setTimeout(done, 480 * spd());
       return;
     }
     if (p.event === 'reshuffle') {

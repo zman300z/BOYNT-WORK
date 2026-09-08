@@ -77,7 +77,8 @@ const Overlays = (() => {
   const SHELF_META = {
     curio: { title: 'CURIOS', sub: 'objects — each one takes a seat on your mantel', cls: 'sh-curio' },
     mod:   { title: 'CARD MODS', sub: 'permanently mark a card already in your deck — no seat needed', cls: 'sh-mod' },
-    card:  { title: 'NEW CARDS', sub: 'adds a brand new card into your deck and the piles', cls: 'sh-card' },
+    card:  { title: 'SPECIAL CARDS', sub: 'strange new cards shuffled into your deck', cls: 'sh-card' },
+    plain: { title: 'SPARE CARDS', sub: 'another copy of an ordinary card — stacks on its own twin', cls: 'sh-plain' },
     house: { title: 'HOUSE RULES', sub: 'permanent rules for the rest of the run', cls: 'sh-house' }
   };
 
@@ -101,6 +102,10 @@ const Overlays = (() => {
           '<div class="mantel-inline" id="shop-mantel"></div>' +
         '</div>' +
         '<div class="shop-body">' + shelves + '</div>' +
+        '<section class="shelf sh-plain">' +
+          '<div class="shelf-head"><h3>' + SHELF_META.plain.title + '</h3><span>' + SHELF_META.plain.sub + '</span></div>' +
+          '<div class="shelf-row plain-row" id="shelf-plain"></div>' +
+        '</section>' +
         '<section class="shelf sh-counter">' +
           '<div class="shelf-head"><h3>THE COUNTER</h3><span>always in stock · permanent · the price climbs every time you buy</span></div>' +
           '<div class="counter-row" id="counter-row"></div>' +
@@ -149,7 +154,7 @@ const Overlays = (() => {
     const rr = $('#shop-reroll');
     if (rr) rr.innerHTML = 'REROLL $<b>' + Game.rerollCost() + '</b>';
 
-    ['curio', 'mod', 'card', 'house'].forEach(shelf => {
+    ['curio', 'mod', 'card', 'plain', 'house'].forEach(shelf => {
       const row = $('#shelf-' + shelf);
       row.innerHTML = '';
       (run.shop[Game.SHELVES[shelf]] || []).forEach((item, i) => row.appendChild(shopCard(item, i, shelf)));
@@ -249,6 +254,31 @@ const Overlays = (() => {
     const run = G.run;
     let def, rarity = '', badge = '', preview = '';
 
+    if (shelf === 'plain') {
+      const price0 = Game.priceOf(item);
+      const n0 = el('div', 'shop-item sh-plain' + (item.bought ? ' bought' : '') + (run.money < price0 ? ' broke' : ''));
+      const c0 = UI.cardEl({ id: 'p' + index, rank: item.rank, suit: item.suit, faceUp: true,
+                             enhancement: 'none', finish: 'none', seal: 'none' });
+      c0.classList.add('mini');
+      n0.innerHTML =
+        '<div class="si-preview">' + c0.outerHTML + '</div>' +
+        '<div class="si-name">Spare ' + RANK_NAMES[item.rank] + SUITS[item.suit].sym + '</div>' +
+        '<div class="si-text">A second copy of an ordinary card. Duplicates stack on each other in the tableau, ' +
+        'and can be laid on their twin once the foundation has passed that rank.</div>' +
+        '<div class="si-badge add">+1 CARD TO YOUR DECK</div>' +
+        '<div class="si-price">' + (item.bought ? 'SOLD' : '$' + price0) + '</div>';
+      if (!item.bought) {
+        n0.onclick = () => {
+          const res = Game.buy('plain', index);
+          if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(n0); return; }
+          Sfx.money(); UI.burst(n0, 12, '#ffd166');
+          UI.toast('Added a second ' + RANK_NAMES[item.rank] + SUITS[item.suit].sym + ' to your deck');
+          refreshShop(); UI.render();
+        };
+      }
+      return n0;
+    }
+
     if (shelf === 'curio') {
       def = CURIO_BY_ID[item.id];
       rarity = def.rarity;
@@ -299,6 +329,13 @@ const Overlays = (() => {
 
   /* a face-up sample of what a New Card slot puts in your deck */
   function previewCard(def, spec) {
+    if ((spec && spec.oddity) || def.kind === 'oddity') {
+      const odd = (spec && spec.oddity) || ODDITY_KEYS[0];
+      const c = UI.cardEl({ id: 'prevodd', rank: 0, suit: 'S', faceUp: true, oddity: odd,
+                            enhancement: 'none', finish: 'none', seal: 'none' });
+      c.classList.add('mini');
+      return c.outerHTML + '<div class="odd-blurb">' + ODDITIES[odd].text + '</div>';
+    }
     if (def.kind === 'duplicate') {
       return '<div class="mini-pair">' + UI.cardEl({ id: 'p1', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML +
              UI.cardEl({ id: 'p2', rank: 12, suit: 'H', enhancement: 'none', finish: 'none', seal: 'none', faceUp: true }).outerHTML + '</div>';
@@ -485,10 +522,11 @@ const Overlays = (() => {
     { id: 'curios',  name: 'CURIOS',     sub: 'objects that take a mantel seat' },
     { id: 'marks',   name: 'CARD MARKS', sub: 'enhancements, finishes and seals' },
     { id: 'cards',   name: 'NEW CARDS',  sub: 'cards you can add to the deck' },
+    { id: 'oddities', name: 'ODDITIES',  sub: 'cards that were never in a deck of 52' },
     { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
     { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
-    { id: 'dares',   name: 'DARES',      sub: 'challenges you can take mid-round' },
+    { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -558,6 +596,12 @@ const Overlays = (() => {
       CARD_MODS.forEach(m => { html += almEntry(m.icon, m.name, '$' + m.cost, m.text, ''); });
     } else if (almanacTab === 'cards') {
       NEW_CARDS.forEach(c => { html += almEntry(c.icon, c.name, '$' + c.cost, c.text, ''); });
+    } else if (almanacTab === 'oddities') {
+      ODDITY_KEYS.forEach(k => {
+        const o = ODDITIES[k];
+        html += almEntry(o.icon, o.name, k === 'joker' ? 'advances a foundation' : 'lays on any started pile',
+          o.text, o.long || '');
+      });
     } else if (almanacTab === 'rules') {
       HOUSE_RULES.forEach(h => {
         const owned = G.run ? (G.run.houseRules[h.id] || 0) : 0;
@@ -570,11 +614,25 @@ const Overlays = (() => {
       });
     } else if (almanacTab === 'whims') {
       WHIMS.forEach(w => { html += almEntry(w.icon, w.name, w.mood, w.text, '', 'mood-' + w.mood); });
-    } else if (almanacTab === 'dares') {
-      DARES.forEach(d => {
-        html += almEntry(d.icon, d.name, d.moves + ' moves',
-          d.goal + '.', 'Land it: ' + d.rewardText + '. Miss it: ' + d.forfeitText + '.');
-      });
+    } else if (almanacTab === 'pot') {
+      html += almEntry('coinstack', 'The pot fills itself', 'automatic',
+        Math.round(TUNE.potShare * 100) + '% of every score you make also drops into the Side Pot.',
+        'It costs you nothing — the points still land on your score as normal. The pot is a copy, sitting in the corner waiting for you to decide what to do with it.');
+      html += almEntry('coin', 'CASH IT', 'safe',
+        'The whole pot is added straight to your round score.', 'No risk, no flip. The pot resets to zero.');
+      html += almEntry('dice', 'DOUBLE OR NOTHING', 'needs ' + TUNE.potMinFlip + '+',
+        'A card is flipped from a freshly shuffled deck. Red doubles the pot and raises your HEAT. Black takes the pot and one of your passes.',
+        'The deck is reshuffled for every single flip, so there is no order to memorise and no right moment to wait for. Two wins in a row turns 400 into 1,600.');
+      html += almEntry('twinflame', 'HEAT', 'from winning flips',
+        'Each winning flip raises Heat by one. Heat multiplies EVERY score for the rest of the round — X'
+        + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four.',
+        'A busted flip resets Heat to zero, so a long streak is worth protecting — or cashing.');
+      html += almEntry('magnifier', 'The Card Counter', 'curio',
+        'Makes the first flip of each round unloseable.', '');
+      html += almEntry('coinstack', 'The Skimmer', 'curio',
+        'The pot takes a much bigger cut of every score.', '');
+      html += almEntry('dice', 'The Daredevil', 'curio',
+        'Every winning flip also pays you $5.', '');
     } else if (almanacTab === 'bandit') {
       Object.keys(BANDIT_PRIZES).forEach(sym => {
         const p = BANDIT_PRIZES[sym];
@@ -639,18 +697,28 @@ const Overlays = (() => {
           'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
           'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
 
-          '<h4>The Dealer\'s Dare</h4>' +
-          '<p><b>TAKE A DARE</b> and the table sets you a challenge with a move budget — send 3 cards home in 6 moves, ' +
-          'cash a run of 4, empty a column, flip 4 face-down cards, score 2,500 in 5 moves. Nothing is hidden and ' +
-          'nothing is random: it is judged purely on how you play, so there is nothing to memorise or wait out.</p>' +
+          '<h4>The Side Pot — the corner gamble</h4>' +
+          '<p>Every score drops a slice of itself into the <b>SIDE POT</b> in the bottom-right corner. It just sits ' +
+          'there getting bigger while you play, and you decide what to do with it:</p>' +
           '<ul>' +
-            '<li><b>Land it</b> — usually <b>HEAT</b>, which multiplies <i>every</i> score for the rest of the round ' +
-            '(X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four), plus cash, Mult or a reshuffle depending on the dare.</li>' +
-            '<li><b>Miss it</b> — usually a pass through the stock. ALL IN takes half of what you scored during it.</li>' +
+            '<li><b>CASH IT</b> — the whole pot is added straight to your round score. Safe.</li>' +
+            '<li><b>DOUBLE OR NOTHING</b> — a card is flipped from a <i>freshly shuffled</i> deck, so there is no ' +
+            'order to learn and nothing to wait for. <b>Red</b> doubles the pot and raises your <b>HEAT</b>, which ' +
+            'multiplies every score for the rest of the round. <b>Black</b> takes the pot and a pass with it.</li>' +
           '</ul>' +
-          '<p>You can take another the moment one resolves, so a hot streak is a chain of dares. Hot Hand makes each ' +
-          'level of Heat worth more, The Card Counter buys you 3 extra moves on every dare, and The Daredevil pays ' +
-          'a bonus every time you land one.</p>' +
+          '<p>Push it twice and a 400 pot is 1,600. Push it four times and you are somewhere silly. ' +
+          'The Card Counter makes your first flip each round unloseable, The Daredevil pays $5 per win, and ' +
+          'The Skimmer makes the pot fill nearly twice as fast.</p>' +
+
+          '<h4>Oddities and spare cards</h4>' +
+          '<p>The shop sells cards that were never in a deck of 52 — a <b>Joker</b> that becomes whatever a ' +
+          'foundation is waiting for, a <b>Report Card</b> graded on how many cards you have sent home, a ' +
+          '<b>Coupon</b>, a <b>Bus Transfer</b> worth a pass, a <b>Loyalty Card</b> that grows every time it is ' +
+          'scored. Oddities stack onto anything in the tableau and can be laid on any started foundation to cash ' +
+          'their ability without advancing it.</p>' +
+          '<p>The <b>SPARE CARDS</b> shelf sells a second copy of any ordinary card, cheap. Duplicates stack on ' +
+          'each other in a column — two 2 of Clubs sit together — and once a foundation has passed their rank they ' +
+          'can be laid on their twin for a full score.</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
           '<p>A reshuffle throws the waste back in with the stock and shuffles the lot — the fix when draw-3 has ' +

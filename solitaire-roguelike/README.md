@@ -60,6 +60,25 @@ card, enhancement, finish, seal, combo, then each Curio on your mantel, left to 
 A card only pays once per round, and a column pays its clear bonus once per round, so shuffling
 cards back and forth is a tactic for unblocking — never a score loop.
 
+### Oddities and spare cards
+
+The shop sells cards that were never in a deck of 52, each with its own face and ability:
+
+| | |
+|---|---|
+| **Joker** | Every rank and suit — sends home to *any* foundation as the exact card it needs |
+| **Report Card** | +40 Chips for every card you've sent home this round. Graded on a curve |
+| **Loyalty Card** | Gains +30 Chips permanently every time it's scored, forever |
+| **Bus Transfer** | +1 pass through the stock |
+| **Coupon** · **Credit Card** · **Business Card** · **Birthday Card** · **Punch Card** · **Get Out Of Jail Free** | cash, huge chips, mult per curio, a board-wide flip… |
+
+Oddities stack onto anything in the tableau, and can be laid on any started foundation to cash their ability
+without advancing it. Only the Joker actually advances a pile.
+
+The **SPARE CARDS** shelf sells a second copy of any ordinary card, cheap. Duplicates **stack on each other in
+a column** — two 2♣ sit together — and once a foundation has passed their rank they can be laid on their twin
+for a full score.
+
 ### Stuck cards: Twins and the Stash
 
 A duplicate card can never advance a foundation, since the pile only wants the *next* rank. Two answers:
@@ -82,19 +101,18 @@ A bar in the header that fills every time you score and drains while you sit sti
 more **every** score is worth — up to ×1.9 at a full bar. It is a bonus only: thinking never costs you
 points, but playing fast pays. It also drives the soundtrack, which speeds up and adds layers as you heat up.
 
-### The Dealer's Dare
+### The Side Pot — the corner gamble
 
-**TAKE A DARE** and the table sets a challenge with a move budget — send 3 cards home in 6 moves, cash a run
-of 4, empty a column, flip 4 face-down cards, score 2,500 in 5. Nothing is hidden and nothing is random: it's
-judged purely on how you play, so there's nothing to memorise and nothing to wait out.
+Every score drops **12%** of itself into a pot in the bottom-right corner (it costs you nothing — the points
+still land on your score as normal). Then it's your call:
 
-- **Land it** — usually **HEAT**, which multiplies *every* score for the rest of the round (×1.5 at one level,
-  ×3 at four), plus cash, Mult or a reshuffle depending on the dare.
-- **Miss it** — usually a pass through the stock. ALL IN takes half of what you scored during it.
+- **CASH IT** — the whole pot goes straight onto your round score. Safe.
+- **DOUBLE OR NOTHING** — a card is flipped from a *freshly shuffled* deck, so there's no order to learn and
+  no right moment to wait for. **Red** doubles the pot and raises your **HEAT**, which multiplies every score
+  for the rest of the round (×1.5 at one level, ×3 at four). **Black** takes the pot and one of your passes.
 
-You can take another the moment one resolves, so a hot streak is a chain of dares. **Hot Hand** makes each
-level of Heat worth more, **The Card Counter** buys 3 extra moves on every dare, and **The Daredevil** pays a
-bonus every time you land one.
+Push twice and a 400 pot is 1,600. **The Card Counter** makes your first flip each round unloseable,
+**The Daredevil** pays $5 a win, and **The Skimmer** nearly doubles how fast the pot fills.
 
 ### Reshuffling
 

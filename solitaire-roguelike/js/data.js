@@ -15,7 +15,7 @@ const SUIT_KEYS = ['S', 'H', 'D', 'C'];
 
 /* ---------- tuning knobs (all the balance lives here) ---------- */
 const TUNE = {
-  baseQuota: 2000,   // eased a touch: dealing 3 at a time is a real difficulty bump
+  baseQuota: 3500,   // you have far more scoring tools now, so the table asks for more
   quotaGrowth: 2.2,
   roundsPerAnte: 3,
   finalAnte: 8,
@@ -46,7 +46,8 @@ const TUNE = {
   momentumPerMove: 26,      // TEMPO gained per scoring action
   momentumDecay: 15,        // ...lost per second of dithering
   momentumMaxMult: 0.9,     // full bar is worth X1.9
-  dareRewardGrowth: 0.25,   // each dare you land makes the next one richer
+  potShare: 0.12,           // this slice of every score also drops into the SIDE POT
+  potMinFlip: 200,          // the pot must hold at least this to gamble it
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
@@ -301,9 +302,9 @@ const CURIOS = [
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
   { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
-    text: 'Every Dare gets 3 extra moves to complete.',
-    long: 'Dares are the fastest way to build Heat, and the move budget is what makes them scary. Three more moves turns most dares from a gamble into a plan.',
-    mods: { dareMoves: 3 } },
+    text: 'The first Side Pot flip each round cannot lose.',
+    long: 'One guaranteed double every round. Build the pot as high as you dare before spending it, because after that the flips are honest again.',
+    mods: { firstFlipSafe: true } },
 
   { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
     text: 'Each level of Heat is worth X0.4 more Mult than usual.',
@@ -335,8 +336,13 @@ const CURIOS = [
     mods: { stashPlayMult: 3 } },
 
   { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
-    text: 'Landing a Dare also gives +2 HEAT and $5.',
+    text: 'Every winning Side Pot flip also pays you $5.',
     mods: { dareBonus: true } },
+
+  { id: 'the_skimmer', name: 'The Skimmer', icon: 'coinstack', rarity: 'uncommon', cost: 8,
+    text: 'The Side Pot takes a bigger cut of every score.',
+    long: 'Normally 12% of each score drops into the pot. This makes it 22%, so the pot builds to a gambleable size much faster.',
+    mods: { potShare: 0.10 } },
 
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
@@ -560,6 +566,10 @@ const NEW_CARDS = [
     text: 'A duplicate Ace, Gilded and Foiled. Drop it onto its twin on the foundation for a free score.',
     build: () => ({ rank: 1, suit: rndSuit(), enhancement: 'gilded', finish: 'foil' }) },
 
+  { id: 'n_oddity', name: 'Something Strange', icon: 'newcard', cost: 12, kind: 'oddity',
+    text: 'A card that was never in a deck of 52 — a Joker, a Report Card, a Coupon, who knows.',
+    build: () => ({ oddity: ODDITY_KEYS[Math.floor(Math.random() * ODDITY_KEYS.length)] }) },
+
   { id: 'n_twin', name: 'The Understudy', icon: 'twincards', cost: 7, kind: 'duplicate',
     text: 'Choose any card in your deck. An exact copy joins it, marks and all.' }
 ];
@@ -708,77 +718,84 @@ const WHIM_BY_ID = {};
 WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
 
 
+
+
+
+
 /* =========================================================
-   THE DEALER'S DARE
-   A challenge you choose to take, resolved by how you PLAY rather than by
-   what the stock happens to hold -- so it cannot be memorised or waited out.
-   Each dare has a move budget, a reward and a forfeit.
+   ODDITIES -- cards that were never in a deck of 52.
+   They stack onto anything in the tableau (and anything stacks on them), and
+   they can be laid onto any started foundation for their ability without
+   advancing it. The Joker is the exception: it advances a pile like a real card.
    ========================================================= */
-const DARES = [
-  { id: 'hot_streak', name: 'HOT STREAK', icon: 'twinflame', moves: 6,
-    goal: 'Send 3 cards home', target: 3,
-    rewardText: '+2 HEAT', forfeitText: 'costs a pass',
-    read: (G, s) => G.round.scoredCards - s.scoredCards,
-    snap: G => ({ scoredCards: G.round.scoredCards }),
-    win: G => { G.round.heat += 2; return '+2 Heat — every score is worth more now'; } },
-
-  { id: 'deep_cut', name: 'DEEP CUT', icon: 'ladder', moves: 8,
-    goal: 'Cash in a run of 4 or more', target: 1,
-    rewardText: 'X2 Mult for the round', forfeitText: 'costs a pass',
-    read: (G, s) => G.round.bigCashes - s.bigCashes,
-    snap: G => ({ bigCashes: G.round.bigCashes }),
-    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 8; return '+8 Mult for the rest of the round'; } },
-
-  { id: 'clean_sweep', name: 'CLEAN SWEEP', icon: 'vacuum', moves: 10,
-    goal: 'Empty a column', target: 1,
-    rewardText: '$10 and +2 HEAT', forfeitText: 'costs a pass',
-    read: (G, s) => G.round.clears - s.clears,
-    snap: G => ({ clears: G.round.clears }),
-    win: G => { G.run.money += 10; G.round.money += 10; G.round.heat += 2; return '+$10 and +2 Heat'; } },
-
-  { id: 'dig_deep', name: 'DIG DEEP', icon: 'pick', moves: 8,
-    goal: 'Flip 4 face-down cards', target: 4,
-    rewardText: '+6 Mult for the round', forfeitText: 'costs a pass',
-    read: (G, s) => G.round.reveals - s.reveals,
-    snap: G => ({ reveals: G.round.reveals }),
-    win: G => { G.round.wellMult = (G.round.wellMult || 0) + 6; return '+6 Mult for the rest of the round'; } },
-
-  { id: 'suit_up', name: 'SUIT UP', icon: 'rainbow', moves: 8,
-    goal: 'Build a Suit Run of 3', target: 3,
-    rewardText: 'a free reshuffle and +2 HEAT', forfeitText: 'costs a pass',
-    read: (G, s) => Math.max(0, G.round.bestSuitRun - s.bestSuitRun),
-    snap: G => ({ bestSuitRun: Math.max(2, G.round.bestSuitRun) }),
-    win: G => { G.board.freeReshuffles++; G.round.heat += 2; return '+1 free reshuffle and +2 Heat'; } },
-
-  { id: 'all_in', name: 'ALL IN', icon: 'dice', moves: 5,
-    goal: 'Score 2,500 points', target: 2500, scoreGoal: true,
-    rewardText: 'double everything you scored', forfeitText: 'lose half of it',
-    read: (G, s) => G.round.score - s.score,
-    snap: G => ({ score: G.round.score }),
-    win: (G, s) => { const made = G.round.score - s.score; G.round.score += made; return 'doubled — +' + made.toLocaleString('en-US') + ' points'; },
-    lose: (G, s) => { const made = Math.max(0, G.round.score - s.score); const lost = Math.floor(made / 2);
-                      G.round.score = Math.max(0, G.round.score - lost); return 'the table keeps ' + lost.toLocaleString('en-US') + ' points'; } },
-
-  { id: 'house_money', name: 'HOUSE MONEY', icon: 'coinstack', moves: 10,
-    goal: 'Earn $6 while the dare runs', target: 6,
-    rewardText: 'double the cash you made', forfeitText: 'costs $4',
-    read: (G, s) => G.round.money - s.money,
-    snap: G => ({ money: G.round.money }),
-    win: (G, s) => { const made = G.round.money - s.money; G.run.money += made; return 'doubled — +$' + made; },
-    lose: G => { const l = Math.min(4, G.run.money); G.run.money -= l; return '-$' + l; } },
-
-  { id: 'stash_run', name: 'SLEIGHT OF HAND', icon: 'sleeve', moves: 9,
-    goal: 'Play 2 cards out of your Stash', target: 2,
-    rewardText: '+1 Stash slot for the run', forfeitText: 'costs a pass',
-    read: (G, s) => G.round.stashPlays - s.stashPlays,
-    snap: G => ({ stashPlays: G.round.stashPlays }),
-    win: G => { G.run.bonusStash++; return '+1 Stash slot, permanently'; } }
-];
-const DARE_BY_ID = {};
-DARES.forEach(d => { DARE_BY_ID[d.id] = d; });
-
-function rollDare(exclude) {
-  const pool = DARES.filter(d => d.id !== exclude);
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
+const ODDITIES = {
+  joker: {
+    name: 'Joker', icon: 'jester', tint: 'odd-joker', chips: 50,
+    text: 'Every rank and every suit. Sends home to ANY foundation as the exact card it needs.',
+    long: 'The only Oddity that actually advances a pile. Drop it wherever a foundation is stuck and it becomes the missing card, then scores X1.5 on top. Also stacks anywhere in the tableau.',
+    score: c => c.xMult(1.5)
+  },
+  report_card: {
+    name: 'Report Card', icon: 'notebook', tint: 'odd-report', chips: 0,
+    text: '+40 Chips for every card you have sent home this round. Graded on a curve.',
+    long: 'Worthless early in a round and enormous late in one. Hold it in the Stash until the foundations are deep, then cash it.',
+    score: c => c.addChips(40 * c.round.scoredCards)
+  },
+  coupon: {
+    name: 'Coupon', icon: 'tag', tint: 'odd-coupon', chips: 30,
+    text: 'Earn $7 when scored. Expires never.',
+    score: c => c.money(7)
+  },
+  transfer: {
+    name: 'Bus Transfer', icon: 'refresh', tint: 'odd-transfer', chips: 40,
+    text: '+1 pass through the stock when scored.',
+    long: 'Passes buy reshuffles, so a Bus Transfer is really a free reshuffle you can post into the deck.',
+    score: c => { c.board.passesLeft++; c.flash(); }
+  },
+  loyalty: {
+    name: 'Loyalty Card', icon: 'stamp', tint: 'odd-loyalty', chips: 20,
+    text: 'Gains +30 Chips permanently every time it is scored. Ten punches and it is yours.',
+    long: 'It remembers between rounds and between antes. Score it every round and by Ante 5 it is one of the biggest Chip sources you own.',
+    score: c => {
+      const card = c.card;
+      card.oddCount = (card.oddCount || 0) + 1;
+      const deckCard = c.run.deck.find(x => x.id === card.id);
+      if (deckCard) deckCard.oddCount = card.oddCount;
+      c.addChips(30 * card.oddCount);
+      c.flash();
+    }
+  },
+  credit: {
+    name: 'Credit Card', icon: 'coin', tint: 'odd-credit', chips: 260,
+    text: '+260 Chips, but it charges you $3.',
+    score: c => c.money(-3)
+  },
+  business: {
+    name: 'Business Card', icon: 'bossman', tint: 'odd-business', chips: 25,
+    text: '+4 Mult for every Curio on your mantel.',
+    score: c => c.addMult(4 * c.run.mantel.length)
+  },
+  jail_free: {
+    name: 'Get Out Of Jail Free', icon: 'keycard', tint: 'odd-jail', chips: 60,
+    text: 'Flips the top face-down card of EVERY column when scored.',
+    long: 'The board-clearing Oddity. Every flip it causes scores a Reveal of its own, so a full board of face-down cards turns into a chain of scores.',
+    score: c => { c.round.flipAllPending = true; c.flash(); }
+  },
+  birthday: {
+    name: 'Birthday Card', icon: 'sparkle', tint: 'odd-birthday', chips: 40,
+    text: '+10 Mult, and +$1 for every card in your Stash.',
+    score: c => { c.addMult(10); const n = (c.run.stash || []).length; if (n) c.money(n); }
+  },
+  punch: {
+    name: 'Punch Card', icon: 'ladder', tint: 'odd-punch', chips: 30,
+    text: 'X1.4 Mult, and X0.2 more for every time it has been scored this run.',
+    score: c => {
+      const card = c.card;
+      card.oddCount = (card.oddCount || 0) + 1;
+      const deckCard = c.run.deck.find(x => x.id === card.id);
+      if (deckCard) deckCard.oddCount = card.oddCount;
+      c.xMult(+(1.4 + 0.2 * (card.oddCount - 1)).toFixed(2));
+    }
+  }
+};
+const ODDITY_KEYS = Object.keys(ODDITIES);

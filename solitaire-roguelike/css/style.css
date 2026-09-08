@@ -726,10 +726,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    twins, whims, the counter, the bandit
    ============================================================ */
-.card.twin-card{
-  transform:translate(5px,6px) rotate(6deg);
-  box-shadow:0 0 0 2px var(--violet), 0 8px 16px rgba(0,0,0,.55);
-}
+
 .twin-count{
   position:absolute; top:-9px; left:-6px; z-index:60;
   font-family:var(--display); font-size:8px; letter-spacing:.06em;
@@ -950,36 +947,24 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    THE CUT -- the on-table gamble
    ============================================================ */
-.cut-bar{
-  display:flex; align-items:center; gap:5px; margin-left:16px; padding-left:16px;
-  border-left:1px solid var(--line);
-}
-.cut-cap{ font-size:9px; letter-spacing:.14em; opacity:.55; }
-.cut-heat{
-  font-size:9px; letter-spacing:.1em; opacity:.55; padding:3px 8px; border-radius:8px;
-  border:1px solid var(--line); display:flex; align-items:center; gap:4px;
-}
-.cut-heat b{ font-family:var(--display); font-size:12px; }
-.cut-heat i{ font-style:normal; font-size:8px; opacity:.5; }
-.cut-heat.on{
-  opacity:1; color:#ff8f3f; border-color:#ff8f3f; background:rgba(255,143,63,.14);
-  box-shadow:0 0 16px rgba(255,143,63,.45); animation:heatGlow .9s infinite alternate;
-}
+
+
+
+
+
+
 @keyframes heatGlow{ to{ box-shadow:0 0 26px rgba(255,143,63,.8) } }
-.cut-btn{
-  font-family:var(--display); font-size:10px; padding:4px 11px; border-radius:8px; cursor:pointer;
-  border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
-}
-.cut-red{ border-color:#d92b4b; color:#ff8fa3; }
-.cut-red:hover{ background:rgba(217,43,75,.28); }
-.cut-black{ border-color:#8b93a7; color:#cfd6e4; }
-.cut-black:hover{ background:rgba(139,147,167,.25); }
-.cut-bank{ border-color:var(--lime); color:var(--lime); }
-.cut-bank:hover{ background:rgba(126,231,135,.22); }
-.cut-btn.off{ opacity:.3; cursor:not-allowed; }
-.cut-btn.peeked{ box-shadow:0 0 0 2px var(--gold), 0 0 16px rgba(255,209,102,.6); }
-.cut-peek{ font-size:9px; letter-spacing:.1em; opacity:.7; margin-left:4px; }
-.cut-peek.red{ color:#ff8fa3; } .cut-peek.black{ color:#cfd6e4; }
+
+
+
+
+
+
+
+
+
+
+ .cut-peek.black{ color:#cfd6e4; }
 .cm.heat{ background:#2a1408; color:#ff8f3f; border-color:#ff8f3f; box-shadow:0 0 14px rgba(255,143,63,.6); }
 
 
@@ -1103,22 +1088,18 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    THE DARE
    ============================================================ */
-.dare-take{ border-color:var(--violet) !important; color:#d3b7ff !important; }
+
 .dare-take:hover{ background:rgba(176,124,255,.28) !important; }
-.dare-live{
-  display:flex; flex-direction:column; gap:2px; min-width:190px; cursor:help;
-  padding:4px 9px; border-radius:9px;
-  background:rgba(176,124,255,.12); border:2px solid var(--violet);
-}
-.dl-head{ display:flex; align-items:center; gap:5px; font-family:var(--display); font-size:10px; color:#d3b7ff; }
-.dl-ico{ width:13px; height:13px; }
-.dl-moves{ margin-left:auto; font-size:9px; opacity:.75; }
-.dl-goal{ font-size:9px; opacity:.8; }
-.dl-goal b{ color:var(--gold); }
-.dl-bar{ height:4px; border-radius:3px; background:#0008; overflow:hidden; }
-.dl-bar div{ height:100%; background:linear-gradient(90deg,var(--violet),var(--lime)); transition:width .2s; }
-.dare-live.urgent{ border-color:var(--hot); background:rgba(255,77,109,.14); animation:heatGlow .6s infinite alternate; }
-.dare-live.urgent .dl-head{ color:#ff8fa3; }
+
+
+
+
+
+
+
+
+
+
 .rs-pass{ background:rgba(255,209,102,.14); border-color:rgba(255,209,102,.5); color:var(--gold); }
 .card.in-stash{ box-shadow:0 0 0 2px var(--violet), 0 0 14px rgba(176,124,255,.6); }
 .card.in-stash::after{
@@ -1126,3 +1107,122 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   background:var(--violet); color:#fff; font-family:var(--display); font-size:6px;
   letter-spacing:.1em; text-align:center; padding:1px 0;
 }
+
+/* ============================================================
+   ODDITIES -- cards that were never in a deck of 52
+   ============================================================ */
+.card.oddity{ background:linear-gradient(165deg,#fdf8ec,#e6ddc7); border-color:#2a2030; }
+.odd-face{ display:flex; flex-direction:column; align-items:center; padding:0; }
+.odd-head{
+  display:flex; align-items:center; gap:3px; width:100%; box-sizing:border-box;
+  padding:3px 4px; min-height:26px;
+  background:rgba(0,0,0,.14); border-bottom:1px solid rgba(0,0,0,.18);
+}
+.odd-head span{
+  font-family:var(--display); font-size:7px; line-height:1.05; color:#241d2e;
+  text-transform:uppercase; letter-spacing:.01em;
+}
+.odd-mini{ width:13px; height:13px; flex:none; color:#3a2f45; }
+.odd-art{ width:46%; height:auto; aspect-ratio:1; margin:auto; color:#3a2f45; opacity:.85; }
+.odd-foot{
+  font-family:var(--display); font-size:5.5px; letter-spacing:.2em;
+  opacity:.4; color:#3a2f45; padding-bottom:4px;
+}
+.odd-count{
+  position:absolute; top:3px; right:3px; font-family:var(--display); font-size:8px;
+  background:#241d2e; color:#ffd166; border-radius:5px; padding:0 4px;
+}
+.odd-joker{ background:linear-gradient(165deg,#ffe9f6,#ffc9e6); border-color:#b0247a; }
+.odd-joker .odd-art, .odd-joker .odd-head span, .odd-joker .odd-mini{ color:#8d1b60; }
+.odd-report{ background:linear-gradient(165deg,#eef6ff,#cfe3fa); border-color:#2f6fa8; }
+.odd-report .odd-art, .odd-report .odd-head span, .odd-report .odd-mini{ color:#1d4d78; }
+.odd-coupon{ background:linear-gradient(165deg,#fff6d8,#ffe9a8); border-color:#b8860b; }
+.odd-coupon .odd-art, .odd-coupon .odd-head span, .odd-coupon .odd-mini{ color:#7a5a08; }
+.odd-transfer{ background:linear-gradient(165deg,#e8fff1,#c4f2d8); border-color:#2f8f5b; }
+.odd-transfer .odd-art, .odd-transfer .odd-head span, .odd-transfer .odd-mini{ color:#1c6640; }
+.odd-loyalty{ background:linear-gradient(165deg,#f6ecff,#dfc9ff); border-color:#6d3fb0; }
+.odd-loyalty .odd-art, .odd-loyalty .odd-head span, .odd-loyalty .odd-mini{ color:#4b2680; }
+.odd-credit{ background:linear-gradient(165deg,#e9eef5,#c3ccda); border-color:#4a5568; }
+.odd-credit .odd-art, .odd-credit .odd-head span, .odd-credit .odd-mini{ color:#2c3444; }
+.odd-business{ background:linear-gradient(165deg,#fdfdfd,#e2e2e2); border-color:#333; }
+.odd-business .odd-art, .odd-business .odd-head span, .odd-business .odd-mini{ color:#222; }
+.odd-jail{ background:linear-gradient(165deg,#fff2e2,#ffd7ad); border-color:#b8600b; }
+.odd-jail .odd-art, .odd-jail .odd-head span, .odd-jail .odd-mini{ color:#7d4108; }
+.odd-birthday{ background:linear-gradient(165deg,#ffeef8,#ffd6ec); border-color:#d1479a; }
+.odd-birthday .odd-art, .odd-birthday .odd-head span, .odd-birthday .odd-mini{ color:#8e2c66; }
+.odd-punch{ background:linear-gradient(165deg,#eafff9,#c2f0e4); border-color:#2f8f83; }
+.odd-punch .odd-art, .odd-punch .odd-head span, .odd-punch .odd-mini{ color:#1d635a; }
+
+/* ============================================================
+   twins fan out behind the pile so the top card stays readable
+   ============================================================ */
+.card.twin-card{
+  transform:translate(calc(var(--tw) * 7px), calc(var(--tw) * -5px)) rotate(calc(var(--tw) * 4deg));
+  filter:brightness(.8) saturate(.85);
+  box-shadow:0 0 0 2px rgba(176,124,255,.7), 0 6px 12px rgba(0,0,0,.5);
+}
+.twin-count{
+  position:absolute; top:-9px; left:-8px; z-index:60;
+  font-family:var(--display); font-size:8px; letter-spacing:.06em;
+  background:var(--violet); color:#fff; padding:1px 5px; border-radius:6px; border:2px solid #1a1226;
+}
+.run-badge.solo{ background:#0b140dfa; }
+
+/* ============================================================
+   THE SIDE POT -- the corner gamble
+   ============================================================ */
+.sidepot{
+  display:flex; flex-direction:column; gap:2px; align-items:center;
+  padding:6px 12px; border-radius:12px; margin-right:12px; min-width:172px;
+  border:2px solid var(--line); background:linear-gradient(165deg, rgba(0,0,0,.5), rgba(0,0,0,.25));
+  cursor:help; transition:box-shadow .2s, border-color .2s;
+}
+.sp-cap{ font-size:8px; letter-spacing:.2em; opacity:.55; display:flex; gap:6px; align-items:center; }
+.sp-streak{ background:var(--hot); color:#fff; border-radius:6px; padding:0 5px; letter-spacing:.06em; font-size:7px; }
+.sp-amount{ font-family:var(--display); font-size:22px; color:var(--paper); line-height:1; opacity:.4; }
+.sp-sub{ font-size:8px; opacity:.5; }
+.sp-btns{ display:flex; gap:5px; margin-top:3px; }
+.sp-btn{
+  font-family:var(--display); font-size:9px; padding:4px 8px; border-radius:7px; cursor:pointer;
+  border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
+}
+.sp-cash{ border-color:var(--lime); color:var(--lime); }
+.sp-cash:hover{ background:rgba(126,231,135,.24); }
+.sp-flip{ border-color:var(--hot); color:#ff8fa3; }
+.sp-flip:hover{ background:rgba(255,77,109,.28); }
+.sp-btn.off{ opacity:.28; cursor:not-allowed; }
+.sidepot.live{ border-color:var(--gold); }
+.sidepot.live .sp-amount{ opacity:1; color:var(--gold); text-shadow:0 0 16px rgba(255,209,102,.7); }
+.sidepot.ready{ box-shadow:0 0 22px rgba(255,143,63,.5); border-color:#ff8f3f; }
+.sidepot.ready .sp-amount{ color:#ff8f3f; text-shadow:0 0 20px rgba(255,143,63,.9); }
+.sidepot.blazing{ border-color:var(--hot); animation:heatGlow .7s infinite alternate; }
+.sidepot.blazing .sp-amount{ color:var(--hot); }
+@media (max-width:860px){ .sidepot{ min-width:0; padding:4px 8px; margin-right:6px; } .sp-amount{ font-size:16px; } }
+
+/* the flip card reuses the old cut styling */
+.cut-flip{
+  position:fixed; left:50%; top:40%; transform:translate(-50%,-50%);
+  width:240px; padding:14px; border-radius:14px; text-align:center; z-index:5200;
+  background:linear-gradient(165deg,#1b1020,#0c0a12); border:3px solid var(--gold);
+  box-shadow:0 0 40px rgba(255,209,102,.5), 0 20px 44px rgba(0,0,0,.7);
+  animation:cutIn .4s cubic-bezier(.2,1.6,.3,1);
+}
+@keyframes cutIn{ 0%{ opacity:0; transform:translate(-50%,-40%) scale(.6) rotateY(80deg) } 100%{ opacity:1 } }
+.cut-flip.hit{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.miss{ border-color:var(--hot); box-shadow:0 0 50px rgba(255,77,109,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.out{ animation:wishOut .4s ease forwards; }
+.cf-call{ font-size:8.5px; letter-spacing:.2em; opacity:.5; }
+.cf-card{
+  font-family:var(--display); font-size:40px; line-height:1.15; margin:3px 0 5px;
+  background:var(--paper); border-radius:9px; border:2px solid #1a1a1a; padding:6px 0;
+}
+.cf-card.red{ color:#d92b4b; } .cf-card.black{ color:#16181d; }
+.cf-verdict{ font-family:var(--display); font-size:11px; }
+.cut-flip.hit .cf-verdict{ color:var(--lime); }
+.cut-flip.miss .cf-verdict{ color:var(--hot); }
+
+/* plain-card shelf */
+.sh-plain .shelf-head h3{ color:#e8dcc0; }
+.shop-item.sh-plain{ border-color:#8d8264; background:linear-gradient(170deg,#23200f,#16140c); }
+.shelf-row.plain-row{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+.odd-blurb{ font-size:9px; opacity:.7; margin-top:4px; line-height:1.35; }

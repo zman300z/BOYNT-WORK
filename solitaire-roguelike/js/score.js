@@ -66,7 +66,15 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    if (ctx.event !== 'stash') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (card.oddity) {
+      const od = ODDITIES[card.oddity];
+      if (od) {
+        if (ctx.event !== 'stash') ctx.addChips(od.chips + TUNE.chipsPerDepth * (ctx.depth || 0));
+        if (od.score) od.score(ctx);
+      }
+    } else if (ctx.event !== 'stash') {
+      ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    }
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;

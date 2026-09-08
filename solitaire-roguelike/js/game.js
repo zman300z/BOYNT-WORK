@@ -86,6 +86,7 @@ const Game = (() => {
 
   function scoreEvent(ev) {
     const packet = Score.event(G, ev);
+    if (packet.total > 0) addToPot(packet.total);
     push(packet);
     if (ev.card && ev.card.enhancement === 'glass' && Math.random() < (G.run.luck || 1) / 5) {
       shatter(ev.card);
@@ -249,6 +250,19 @@ const Game = (() => {
         }
       }
 
+      if (G.round.flipAllPending) {
+        G.round.flipAllPending = false;
+        b.tableau.forEach((pile, col) => {
+          for (let i = pile.length - 1; i >= 0; i--) {
+            if (!pile[i].faceUp) {
+              pile[i].faceUp = true;
+              G.round.reveals++;
+              scoreEvent({ event: 'reveal', card: null, anchor: { zone: 'tableau', col } });
+              break;
+            }
+          }
+        });
+      }
       if (card.enhancement === 'riffle' && !replay) {
         doReshuffle();
         push({ event: 'cash', label: 'RIFFLE — STOCK RESHUFFLED', amount: 0,
@@ -320,7 +334,6 @@ const Game = (() => {
   }
 
   function afterMove() {
-    checkDare();
     save();
     if (Engine.isWon(G)) {
       G.round.won = true;
@@ -426,65 +439,64 @@ const Game = (() => {
     return illegal();
   }
 
-  /* ---------------- THE DEALER'S DARE ----------------
-     Offered on demand, judged on how you play. There is nothing to memorise and
-     nothing to wait for -- the clock is your own moves.                        */
-  function dareMoveBudget(def) {
-    return def.moves + Engine.mods(G.run).dareMoves;
+  /* ---------------- THE SIDE POT ----------------
+     A slice of every score also drops into a pot in the corner. Cash it whenever
+     you like, or push it: a card is flipped from a freshly shuffled fate deck,
+     so there is no order to memorise. Red doubles it and stokes your HEAT.
+     Black takes the lot and a pass with it.                                     */
+  function addToPot(points) {
+    const cut = Math.round(points * (TUNE.potShare + Engine.mods(G.run).potShare));
+    if (cut <= 0) return;
+    G.round.pot = (G.round.pot || 0) + cut;
   }
 
-  function takeDare() {
-    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
-    if (G.round.dare) return { ok: false, reason: 'Finish the one you have.' };
-    const def = rollDare(G.round.lastDare);
-    G.round.dare = {
-      id: def.id,
-      snap: def.snap(G),
-      startMoves: G.round.moves,
-      budget: dareMoveBudget(def)
-    };
-    G.round.lastDare = def.id;
-    push({ event: 'dare-start', dare: def, budget: G.round.dare.budget,
+  function cashPot() {
+    const pot = G.round.pot || 0;
+    if (pot <= 0) return { ok: false, reason: 'The pot is empty.' };
+    snapshot();
+    G.round.score += pot;
+    G.round.pot = 0;
+    G.round.potStreak = 0;
+    push({ event: 'pot-cash', amount: pot, chips: 0, mult: 0, total: pot, triggers: [] });
+    bumpMomentum(TUNE.momentumPerMove * 0.5);
+    save();
+    return { ok: true, amount: pot };
+  }
+
+  function pushPot() {
+    const pot = G.round.pot || 0;
+    if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to gamble.' };
+    snapshot();
+    const m = Engine.mods(G.run);
+    /* a fresh shuffle every single flip: nothing to count, nothing to wait for */
+    const fate = Engine.newCard(1 + Math.floor(Math.random() * 13), SUIT_KEYS[Math.floor(Math.random() * 4)], { faceUp: true });
+    let win = SUITS[fate.suit].color === 'red';
+    let guaranteed = false;
+    if (!win && m.firstFlipSafe && !G.round.usedSafeFlip) {
+      win = true; guaranteed = true;
+      G.round.usedSafeFlip = true;
+      fate.suit = Math.random() < 0.5 ? 'H' : 'D';
+    }
+
+    let penalty = null;
+    if (win) {
+      G.round.pot = pot * 2;
+      G.round.potStreak = (G.round.potStreak || 0) + 1;
+      G.round.heat++;
+      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      bumpMomentum();
+    } else {
+      G.round.pot = 0;
+      G.round.potStreak = 0;
+      G.round.heat = 0;
+      if (G.board.passesLeft > 0) { G.board.passesLeft--; penalty = 'pass'; }
+      else penalty = 'none';
+    }
+    push({ event: 'pot-flip', win, guaranteed, card: fate, pot: G.round.pot,
+           streak: G.round.potStreak, penalty, lost: win ? 0 : pot,
            chips: 0, mult: 0, total: 0, triggers: [] });
     save();
-    return { ok: true, dare: def };
-  }
-
-  function dareState() {
-    const d = G.round && G.round.dare;
-    if (!d) return null;
-    const def = DARE_BY_ID[d.id];
-    return {
-      def, progress: Math.max(0, def.read(G, d.snap)), target: def.target,
-      movesLeft: Math.max(0, d.budget - (G.round.moves - d.startMoves))
-    };
-  }
-
-  function checkDare() {
-    const st = dareState();
-    if (!st) return;
-    const d = G.round.dare, def = st.def;
-    if (st.progress >= st.target) {
-      G.round.dare = null;
-      G.run.daresDone = (G.run.daresDone || 0) + 1;
-      const detail = def.win(G, d.snap) || '';
-      const extra = [];
-      if (Engine.mods(G.run).dareBonus) { G.round.heat += 2; G.run.money += 5; extra.push('Daredevil: +2 Heat and $5'); }
-      push({ event: 'dare-end', won: true, dare: def, detail, extra,
-             chips: 0, mult: 0, total: 0, triggers: [] });
-      save();
-      return;
-    }
-    if (st.movesLeft <= 0) {
-      G.round.dare = null;
-      let detail;
-      if (def.lose) detail = def.lose(G, d.snap);
-      else if (G.board.passesLeft > 0) { G.board.passesLeft--; detail = 'lost a pass through the stock'; }
-      else { G.round.score = Math.max(0, G.round.score - 300); detail = 'no passes left — lost 300 points'; }
-      push({ event: 'dare-end', won: false, dare: def, detail, extra: [],
-             chips: 0, mult: 0, total: 0, triggers: [] });
-      save();
-    }
+    return { ok: true, win, pot: G.round.pot };
   }
 
   function heatMult() {
@@ -644,15 +656,19 @@ const Game = (() => {
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
         const uncovers = i > 0 && !pile[i - 1].faceUp;
+        const emptiesColumn = i === 0;
+        /* A tableau move is only worth suggesting if it turns a card over or
+           frees a whole column. Sliding a 9 off one black 10 onto a different
+           black 10 changes nothing at all, so it is never offered. */
+        if (!uncovers && !emptiesColumn) continue;
         for (let d = 0; d < b.tableau.length; d++) {
           if (d === c) continue;
           const intoEmpty = !b.tableau[d].length;
-          if (intoEmpty && !uncovers) continue;      // pure furniture-shuffling
+          if (intoEmpty && !uncovers) continue;   // shuffling furniture between empty slots
           if (!Engine.canPlaceOnColumn(b, d, pile[i], m)) continue;
-          if (!intoEmpty && !uncovers && i === 0) continue;  // merging two whole columns gains nothing either
           return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
                    cardId: pile[i].id, kind: 'build',
-                   label: uncovers ? 'Uncovers a face-down card' : 'Builds your column run' };
+                   label: uncovers ? 'Uncovers a face-down card' : 'Frees up a whole column' };
         }
       }
     }
@@ -749,7 +765,7 @@ const Game = (() => {
        mods    -> permanently mark a card you already own
        cards   -> add a brand new card to the deck
        houses  -> permanent run rules, no seat needed              */
-  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', house: 'houses' };
+  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', plain: 'plain', house: 'houses' };
 
   function weightedCurio(exclude) {
     const pool = CURIOS.filter(c => !exclude.has(c.id));
@@ -773,6 +789,7 @@ const Game = (() => {
   function priceOf(item) {
     const base = item.type === 'house' ? HOUSE_BY_ID[item.id].cost
                : item.type === 'curio' ? CURIO_BY_ID[item.id].cost
+               : item.type === 'plain' ? item.cost
                : SHOP_BY_ID[item.id].cost;
     let p = base;
     if (item.finish && item.finish !== 'none') p += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
@@ -785,7 +802,7 @@ const Game = (() => {
     return copy.slice(0, n).map(d => {
       const item = { type, id: d.id, cost: d.cost };
       /* roll the real card now, so what the shop shows is what you buy */
-      if (d.kind === 'add') item.spec = d.build();
+      if (d.kind === 'add' || d.kind === 'oddity') item.spec = d.build();
       return item;
     });
   }
@@ -801,17 +818,31 @@ const Game = (() => {
       curios.push({ type: 'curio', id: c.id, cost: c.cost, finish: rollFinish() });
     }
     const avail = HOUSE_RULES.filter(h => (G.run.houseRules[h.id] || 0) < h.max);
+    /* three plain duplicates: any real card in your deck, offered cheap */
+    const plain = [];
+    const seen = new Set();
+    for (let i = 0; i < 3; i++) {
+      const pool = G.run.deck.filter(c => !c.oddity && !seen.has(c.rank + c.suit));
+      if (!pool.length) break;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      seen.add(pick.rank + pick.suit);
+      plain.push({ type: 'plain', id: 'plain_' + pick.rank + pick.suit,
+                   rank: pick.rank, suit: pick.suit,
+                   cost: 3 + Math.ceil(rankChips(pick.rank) / 3) });
+    }
     return {
       curios,
       mods: pickN(CARD_MODS, 2, 'mod'),
       cards: pickN(NEW_CARDS, 2, 'card'),
+      plain,
       houses: pickN(avail, 2, 'house')
     };
   }
 
   function openShop(anteCleared) {
     const r = rollShopItems();
-    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, houses: r.houses, rerolls: 0, pulls: 0 };
+    G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, plain: r.plain,
+                   houses: r.houses, rerolls: 0, pulls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -828,7 +859,7 @@ const Game = (() => {
     const r = rollShopItems();
     const shop = G.run.shop;
     /* keep anything already bought marked as sold so the shelf reads honestly */
-    ['curios', 'mods', 'cards', 'houses'].forEach(k => { shop[k] = r[k]; });
+    ['curios', 'mods', 'cards', 'plain', 'houses'].forEach(k => { shop[k] = r[k]; });
     shop.rerolls++;
     save();
     return true;
@@ -856,6 +887,14 @@ const Game = (() => {
       return { ok: true, kind: 'curio' };
     }
 
+    if (item.type === 'plain') {
+      G.run.money -= price;
+      G.run.deck.push(Engine.newCard(item.rank, item.suit));
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'plain', card: { rank: item.rank, suit: item.suit } };
+    }
+
     if (item.type === 'house') {
       G.run.money -= price;
       HOUSE_BY_ID[item.id].apply(G.run);
@@ -866,9 +905,16 @@ const Game = (() => {
     }
 
     const def = SHOP_BY_ID[item.id];
-    if (def.kind === 'add') {
+    if (def.kind === 'add' || def.kind === 'oddity') {
       G.run.money -= price;
       const spec = item.spec || def.build();
+      if (spec.oddity) {
+        const card = Engine.newCard(0, 'S', { oddity: spec.oddity });
+        G.run.deck.push(card);
+        item.bought = true;
+        save();
+        return { ok: true, kind: 'card', card };
+      }
       const card = Engine.newCard(spec.rank, spec.suit, {
         enhancement: spec.enhancement || 'none', finish: spec.finish || 'none', seal: spec.seal || 'none'
       });
@@ -1079,7 +1125,7 @@ const Game = (() => {
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
-    takeDare, dareState, checkDare,
+    cashPot, pushPot,
     bumpMomentum, decayMomentum
   };
 })();

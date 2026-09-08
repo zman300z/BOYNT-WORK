@@ -89,7 +89,8 @@ const Engine = (() => {
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
       reshuffles: 0, heatPer: 0,
-      stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareMoves: 0, dareBonus: false
+      stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareBonus: false, firstFlipSafe: false,
+      potShare: 0
     };
     const merge = src => {
       if (!src) return;
@@ -195,7 +196,9 @@ const Engine = (() => {
         bigCashes: 0,
         bestSuitRun: 0,
         stashPlays: 0,
-        dare: null,
+        pot: 0,
+        potStreak: 0,
+        usedSafeFlip: false,
         cuts: 0,
         cutsHit: 0,
         over: false,
@@ -216,8 +219,12 @@ const Engine = (() => {
   }
 
   function canStack(under, over, m) {
+    /* Oddities are not real cards, so the rank ladder does not apply to them */
+    if (over.oddity || under.oddity) return true;
     if (over.enhancement === 'phantom') return true;
     if (under.enhancement === 'phantom') return true;
+    /* an exact duplicate sits on its twin -- two 2 of Clubs stack */
+    if (under.rank === over.rank && under.suit === over.suit) return true;
     if (!altColor(under, over)) return false;
     if (under.rank === over.rank + 1) return true;
     if (m && m.wrapAround && under.rank === 1 && over.rank === 13) return true;
@@ -226,6 +233,9 @@ const Engine = (() => {
 
   function canPlaceOnFoundation(board, card, suit) {
     const f = board.foundations[suit];
+    /* the Joker becomes whatever the pile is waiting for */
+    if (card.oddity === 'joker') return f.length < 13;
+    if (card.oddity) return false;
     if (!suitsOf(card).includes(suit)) return false;
     const need = f.length + 1;
     return card.rank === need;
@@ -242,6 +252,8 @@ const Engine = (() => {
   function canTwin(board, card, suit) {
     const f = board.foundations[suit];
     if (!f.length) return false;
+    /* an Oddity can be laid on any started pile to cash its ability */
+    if (card.oddity) return card.oddity !== 'joker';
     if (!suitsOf(card).includes(suit)) return false;
     return card.rank <= f.length;
   }
@@ -256,7 +268,7 @@ const Engine = (() => {
 
   function canPlaceOnColumn(board, col, card, m) {
     const pile = board.tableau[col];
-    if (!pile.length) return (card.rank === 13 || card.enhancement === 'phantom' || (m && m.anyIntoEmpty));
+    if (!pile.length) return (card.rank === 13 || card.oddity || card.enhancement === 'phantom' || (m && m.anyIntoEmpty));
     const top = pile[pile.length - 1];
     if (!top.faceUp) return false;
     return canStack(top, card, m);
