@@ -1067,6 +1067,41 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .tip-detail.hot b{ color:var(--gold); } .tip-detail.fin b{ color:#ff9ff3; } .tip-detail.seal b{ color:var(--cool); }
 #tooltip{ max-height:74vh; overflow-y:auto; }
 
+/* ============================================================
+   TEMPO meter -- play fast, score more
+   ============================================================ */
+.tempo{ display:flex; flex-direction:column; gap:2px; min-width:96px; }
+.tempo-cap{ font-size:8px; letter-spacing:.2em; opacity:.5; }
+.tempo-bar{
+  position:relative; height:9px; border-radius:5px; overflow:hidden;
+  background:rgba(0,0,0,.5); border:1px solid var(--line);
+}
+.tempo-fill{
+  position:absolute; inset:0 auto 0 0; width:0%;
+  background:linear-gradient(90deg,#4cc9f0,#7ee787);
+  transition:width .12s linear;
+}
+.tempo-mult{ font-family:var(--display); font-size:10px; opacity:.5; letter-spacing:.04em; }
+.tempo.hot .tempo-fill{ background:linear-gradient(90deg,var(--gold),#ff8f3f); box-shadow:0 0 14px rgba(255,143,63,.7); }
+.tempo.hot .tempo-mult{ opacity:1; color:#ff8f3f; }
+.tempo.max .tempo-fill{ background:linear-gradient(90deg,#ff8f3f,var(--hot)); box-shadow:0 0 20px rgba(255,77,109,.9); }
+.tempo.max .tempo-mult{ color:var(--hot); animation:heatGlow .6s infinite alternate; }
+.tempo.max .tempo-cap{ opacity:1; color:var(--hot); }
+.cm.tempo{ background:#0d2230; color:#7ee787; border-color:#7ee787; box-shadow:0 0 14px rgba(126,231,135,.55); }
+
+/* a card that just landed pops, so a move reads instantly */
+.card.landed{ animation:landPop .22s cubic-bezier(.2,1.8,.3,1); z-index:940; }
+@keyframes landPop{
+  0%{ transform:translateY(-14px) scale(1.1); filter:brightness(1.5) }
+  60%{ transform:translateY(2px) scale(.99) }
+  100%{ transform:none; filter:none }
+}
+
+/* everything on the table settles a touch quicker now */
+.card{ transition:transform .07s ease, box-shadow .1s ease, filter .1s; }
+.quota-fill{ transition:width .22s cubic-bezier(.2,.9,.25,1); }
+@media (max-width:860px){ .tempo{ min-width:72px; } .tempo-cap{ font-size:7px; } }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -1079,6 +1114,12 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
       <div class="badge ante">ANTE <b id="ante-num">1</b></div>
       <div class="badge round">ROUND <b id="round-num">1/3</b></div>
       <div class="badge whim" id="whim-badge" style="display:none"></div>
+    </div>
+
+    <div class="tempo" id="tempo" title="TEMPO - play fast and every score is worth more">
+      <div class="tempo-cap">TEMPO</div>
+      <div class="tempo-bar"><div class="tempo-fill" id="tempo-fill"></div></div>
+      <div class="tempo-mult" id="tempo-mult">X1</div>
     </div>
 
     <div class="hud-quota">
@@ -1324,6 +1365,9 @@ const TUNE = {
   heatMultPer: 0.5,         // each Heat level adds this much X Mult
   heatBankBase: 250,        // banking Heat pays heat^2 x this
   heatMissScore: 200,       // a wrong call with no passes left costs this much score
+  momentumPerMove: 26,      // TEMPO gained per scoring action
+  momentumDecay: 15,        // ...lost per second of dithering
+  momentumMaxMult: 0.9,     // full bar is worth X1.9
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -2207,6 +2251,7 @@ const Engine = (() => {
         wellMult: 0,
         blessing: 0,
         heat: 0,
+        momentum: 0,
         cuts: 0,
         cutsHit: 0,
         over: false,
@@ -2484,6 +2529,10 @@ const Score = (() => {
       const per = TUNE.heatMultPer + Engine.mods(ctx.run).heatPer;
       ctx.xMult(+(1 + per * ctx.round.heat).toFixed(2));
     }
+    /* TEMPO: play quickly and everything is worth more. Never a penalty. */
+    if (ctx.round.momentum > 4) {
+      ctx.xMult(+(1 + (ctx.round.momentum / 100) * TUNE.momentumMaxMult).toFixed(2));
+    }
     ctx._src = null;
   }
 
@@ -2689,6 +2738,23 @@ const Game = (() => {
   }
 
   /* ---------------- scoring plumbing ---------------- */
+  function bumpMomentum(amount) {
+    G.round.momentum = Math.min(100, (G.round.momentum || 0) + (amount || TUNE.momentumPerMove));
+    G.round.momentumAt = Date.now();
+  }
+
+  function decayMomentum() {
+    if (G.phase !== 'play' || !G.round) return 0;
+    const now = Date.now();
+    const last = G.round.momentumAt || now;
+    const dt = (now - last) / 1000;
+    if (dt > 0) {
+      G.round.momentum = Math.max(0, (G.round.momentum || 0) - TUNE.momentumDecay * dt);
+      G.round.momentumAt = now;
+    }
+    return G.round.momentum;
+  }
+
   function scoreEvent(ev) {
     const packet = Score.event(G, ev);
     push(packet);
@@ -2806,6 +2872,7 @@ const Game = (() => {
       G.round.moves++;
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
+      bumpMomentum();
       G.round.cascade++;
       if (G.round.cascade > 0 && G.round.cascade % TUNE.cascadeCashEvery === 0) {
         G.run.money += 1;
@@ -2964,6 +3031,7 @@ const Game = (() => {
     if (correct) {
       G.round.heat++;
       G.round.cutsHit++;
+      bumpMomentum();
     } else {
       G.round.heat = 0;
       if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
@@ -3032,6 +3100,7 @@ const Game = (() => {
     removeFrom(src, 1);
     b.well.push(card);
     b.wishesLeft--;
+    bumpMomentum(TUNE.momentumPerMove * 0.7);
     G.round.moves++;
 
     const m = Engine.mods(G.run);
@@ -3605,7 +3674,8 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult
+    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult,
+    bumpMomentum, decayMomentum
   };
 })();
 
@@ -3662,61 +3732,107 @@ const Sfx = (() => {
   }
 
   /* ---------------- background music ----------------
-     A short generated lounge loop: walking bass, off-beat chord stabs, a shaker
-     and a little melody that drifts. All synthesised, so the file stays
-     self-contained with no audio assets.                                      */
-  let musicOn = false, musicTimer = null, step = 0, musicGain = null;
-  const ROOT = 55;                                   // A1
-  const PROG = [0, 0, 5, 5, 3, 3, 7, 7];             // i i iv iv III III v v (per bar)
-  const MINOR = [0, 2, 3, 5, 7, 8, 10];
+     A driving little casino-lounge loop, all synthesised so the file stays
+     self-contained. It reacts to the game: as your TEMPO and HEAT climb the
+     tempo nudges up, a hat layer and an arp come in, and the filter opens.   */
+  let musicOn = false, musicTimer = null, step = 0, musicGain = null, musicFilter = null;
+  let intensity = 0, targetIntensity = 0;
+
+  const ROOT = 55;                                    // A1
+  /* i - VI - III - VII : the four chords every card game runs on */
+  const PROG = [
+    { deg: 0,  quality: [0, 3, 7, 10] },
+    { deg: 8,  quality: [0, 4, 7, 11] },
+    { deg: 3,  quality: [0, 4, 7, 11] },
+    { deg: 10, quality: [0, 4, 7, 10] }
+  ];
+  const PENT = [0, 3, 5, 7, 10, 12, 15];
   const semi = n => Math.pow(2, n / 12);
 
-  function tone(freq, dur, type, vol, when, slide) {
-    if (!ctx) return;
+  function mtone(freq, dur, type, vol, when, slide) {
+    if (!ctx || !musicGain) return;
     const t = when || ctx.currentTime;
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type;
     o.frequency.setValueAtTime(freq, t);
-    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, slide), t + dur);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.015);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(musicGain);
+    o.connect(g); g.connect(musicFilter);
     o.start(t); o.stop(t + dur + 0.03);
   }
 
-  function shaker(when, vol) {
-    if (!ctx) return;
-    const len = Math.floor(ctx.sampleRate * 0.05);
+  function kick(when) {
+    if (!ctx || !musicGain) return;
+    const t = when || ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(130, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.11);
+    g.gain.setValueAtTime(0.5, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
+    o.connect(g); g.connect(musicGain);
+    o.start(t); o.stop(t + 0.2);
+  }
+
+  function noiseHit(when, dur, hp, vol) {
+    if (!ctx || !musicGain) return;
+    const t = when || ctx.currentTime;
+    const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const s2 = ctx.createBufferSource(); s2.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 6000;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
     const g = ctx.createGain(); g.gain.value = vol;
-    s2.connect(f); f.connect(g); g.connect(musicGain);
-    s2.start(when || ctx.currentTime);
+    src.connect(f); f.connect(g); g.connect(musicGain);
+    src.start(t);
   }
 
+  /* one sixteenth */
   function tick() {
     if (!musicOn || !ctx) return;
-    const bar = Math.floor(step / 8) % PROG.length;
-    const deg = PROG[bar];
-    const beat = step % 8;
-    const t = ctx.currentTime + 0.02;
-    const rootHz = ROOT * semi(MINOR[deg % 7] + (deg >= 7 ? 12 : 0));
+    intensity += (targetIntensity - intensity) * 0.08;
 
-    if (beat % 2 === 0) tone(rootHz, 0.34, 'triangle', 0.16, t);          // bass
-    if (beat === 4) tone(rootHz * semi(7), 0.22, 'triangle', 0.09, t);
-    if (beat === 2 || beat === 6) {                                        // chord stab
-      [0, 3, 7, 10].forEach(iv => tone(rootHz * 2 * semi(iv), 0.2, 'sine', 0.05, t));
+    const bar = Math.floor(step / 16) % PROG.length;
+    const chord = PROG[bar];
+    const s16 = step % 16;
+    const t = ctx.currentTime + 0.03;
+    const rootHz = ROOT * semi(chord.deg);
+
+    if (musicFilter) musicFilter.frequency.setTargetAtTime(700 + intensity * 4200, ctx.currentTime, 0.25);
+
+    /* backbeat */
+    if (s16 === 0 || s16 === 6 || s16 === 10) kick(t);
+    if (s16 === 4 || s16 === 12) noiseHit(t, 0.13, 1400, 0.16 + intensity * 0.07);   // snare
+    if (s16 % 2 === 0) noiseHit(t, 0.03, 7000, s16 % 4 === 0 ? 0.035 : 0.02);        // hats
+    if (intensity > 0.35 && s16 % 2 === 1) noiseHit(t, 0.02, 9000, 0.016);           // driving 16ths
+
+    /* bass: root, fifth, octave walk */
+    if (s16 % 4 === 0) mtone(rootHz, 0.2, 'triangle', 0.2, t);
+    else if (s16 === 6) mtone(rootHz * semi(7), 0.13, 'triangle', 0.13, t);
+    else if (s16 === 14) mtone(rootHz * semi(10), 0.13, 'triangle', 0.12, t);
+
+    /* offbeat chord stabs */
+    if (s16 === 2 || s16 === 8 || s16 === 14) {
+      chord.quality.forEach(iv => mtone(rootHz * 4 * semi(iv), 0.14, 'sawtooth', 0.028 + intensity * 0.02, t));
     }
-    shaker(t, beat % 2 ? 0.03 : 0.05);
-    if (Math.random() < 0.35) {                                            // drifting melody
-      const note = MINOR[Math.floor(Math.random() * MINOR.length)];
-      tone(rootHz * 4 * semi(note), 0.26, 'sine', 0.045, t + 0.06);
+
+    /* the arp only shows up when things are going well */
+    if (intensity > 0.5 && s16 % 2 === 0) {
+      const n = PENT[(step * 3 + bar) % PENT.length];
+      mtone(rootHz * 8 * semi(n + chord.quality[1]), 0.1, 'square', 0.03 + intensity * 0.025, t);
     }
+    if (intensity > 0.8 && s16 === 15) {
+      mtone(rootHz * 8 * semi(12), 0.18, 'square', 0.05, t, rootHz * 16);
+    }
+
     step++;
+    /* 124bpm sixteenths, up to ~15% faster when the table is hot */
+    const ms = 121 - intensity * 18;
+    clearTimeout(musicTimer);
+    musicTimer = setTimeout(tick, ms);
   }
 
   const api = {
@@ -3724,24 +3840,39 @@ const Sfx = (() => {
     music(v) {
       init();
       if (!ctx) return false;
-      musicOn = v == null ? !musicOn : v;
-      if (musicOn) {
+      const want = v == null ? !musicOn : v;
+      if (want && !musicOn) {
         if (ctx.state === 'suspended') ctx.resume();
         if (!musicGain) {
           musicGain = ctx.createGain();
-          musicGain.gain.value = 0.5;
+          musicGain.gain.value = 0.42;
+          musicFilter = ctx.createBiquadFilter();
+          musicFilter.type = 'lowpass';
+          musicFilter.frequency.value = 900;
+          musicFilter.Q.value = 0.7;
+          musicFilter.connect(musicGain);
           musicGain.connect(master);
         }
-        musicGain.gain.setTargetAtTime(0.5, ctx.currentTime, 0.3);
-        if (!musicTimer) musicTimer = setInterval(tick, 250);   // 120bpm eighths
-      } else if (musicTimer) {
-        clearInterval(musicTimer);
+        musicOn = true;
+        musicGain.gain.setTargetAtTime(0.42, ctx.currentTime, 0.3);
+        clearTimeout(musicTimer);
+        tick();
+      } else if (!want && musicOn) {
+        musicOn = false;
+        clearTimeout(musicTimer);
         musicTimer = null;
         if (musicGain) musicGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.1);
       }
       return musicOn;
     },
     musicOn: () => musicOn,
+    /* the game tells the music how excited to be (0..1) */
+    setIntensity(v) { targetIntensity = Math.max(0, Math.min(1, v || 0)); },
+    stinger() {
+      if (!ctx || !musicGain) return;
+      const t = ctx.currentTime;
+      [0, 4, 7, 12].forEach((iv, i) => mtone(220 * semi(iv), 0.3, 'square', 0.07, t + i * 0.05));
+    },
     isOn: () => on,
     click: () => beep(420, 0.05, 'square', 0.15),
     flip:  () => { noise(0.06, 0.12); beep(700, 0.05, 'triangle', 0.12); },
@@ -3837,6 +3968,7 @@ const UI = (() => {
     renderMantel();
     renderBoard();
     renderControls();
+    renderMomentum(true);
   }
 
   function renderHud() {
@@ -4076,6 +4208,7 @@ const UI = (() => {
           const n = cardEl(c);
           n.style.zIndex = i;
           if (i === pile.length - showFrom - 1) attachDrag(n, { zone: 'foundation', suit: s });
+          if (c.id === landedId) n.classList.add('landed');
           attachInspect(n, c);
           f.appendChild(n);
         });
@@ -4108,6 +4241,7 @@ const UI = (() => {
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
       pile.forEach((c, i) => {
         const n = cardEl(c, { topDown: i === lastDownIdx });
+        if (c.id === landedId) n.classList.add('landed');
         lastTop = y;
         n.style.top = Math.round(y) + 'px';
         n.style.zIndex = i;
@@ -4186,6 +4320,7 @@ const UI = (() => {
 
   function clearSelection() { selection = null; applySelectionClasses(); }
 
+  let landedId = null;
   function doMove(src, dst) {
     if (dst.zone === 'well') {
       const wished = Game.makeWish(src);
@@ -4193,8 +4328,12 @@ const UI = (() => {
       else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
       return wished;
     }
+    const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
+                 : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
+                 : null;
     const ok = Game.tryMove(src, dst);
     if (ok) {
+      landedId = moving ? moving.id : null;
       Sfx.place();
       clearSelection();
       render();
@@ -4438,8 +4577,8 @@ const UI = (() => {
       else { rush = false; afterFx(); }
       return;
     }
-    const base = q.length > 4 ? 0.35 : 1;
-    const speed = () => base * (rush ? 0.08 : 1);
+    const base = q.length > 6 ? 0.28 : (q.length > 3 ? 0.5 : 1);
+    const speed = () => base * (rush ? 0.06 : 1);
     animatePacket(q[i], speed, () => runPackets(q, i + 1));
   }
 
@@ -4463,9 +4602,9 @@ const UI = (() => {
       else if (w.cls === 'meh') { Sfx.error(); }
       else { Sfx.money(); burst(anchor, 12, '#ffd166'); }
       renderHud();
-      setTimeout(() => card.classList.add('out'), 1500 * spd());
-      setTimeout(() => card.remove(), 2000 * spd());
-      setTimeout(done, 900 * spd());
+      setTimeout(() => card.classList.add('out'), 1050 * spd());
+      setTimeout(() => card.remove(), 1450 * spd());
+      setTimeout(done, 520 * spd());
       return;
     }
     if (p.event === 'cut') {
@@ -4485,9 +4624,9 @@ const UI = (() => {
         Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
       }
       renderHud();
-      setTimeout(() => card.classList.add('out'), 1000 * spd());
-      setTimeout(() => card.remove(), 1400 * spd());
-      setTimeout(done, 700 * spd());
+      setTimeout(() => card.classList.add('out'), 780 * spd());
+      setTimeout(() => card.remove(), 1150 * spd());
+      setTimeout(done, 420 * spd());
       return;
     }
     if (p.event === 'bank-heat') {
@@ -4498,7 +4637,7 @@ const UI = (() => {
       screenShake(10);
       flashScreen(0.24, '#7ee787');
       animateScoreTo(G.round.score);
-      setTimeout(done, 700 * spd());
+      setTimeout(done, 420 * spd());
       return;
     }
     if (p.event === 'reshuffle') {
@@ -4506,7 +4645,7 @@ const UI = (() => {
       const st = $('#stock');
       if (st) { st.classList.remove('reshuffled'); void st.offsetWidth; st.classList.add('reshuffled'); }
       floatText(st || $('#scorebox'), 'RESHUFFLED', 'fx-flash');
-      setTimeout(done, 200 * spd());
+      setTimeout(done, 120 * spd());
       return;
     }
     if (p.event === 'cash') {
@@ -4517,7 +4656,7 @@ const UI = (() => {
       burst(a, 8, '#ffd166');
       renderHud();
       renderControls();
-      setTimeout(done, 220 * spd());
+      setTimeout(done, 130 * spd());
       return;
     }
     if (p.event === 'recycle') { Sfx.deal(); flashScreen(0.10, '#4cc9f0'); done(); return; }
@@ -4531,7 +4670,7 @@ const UI = (() => {
     if (p.event === 'curioFlash') { flashCurioById(p.curio); done(); return; }
     if (p.event === 'replay') {
       floatText(anchorEl(p.anchor), 'ALREADY PAID', 'fx-flash');
-      setTimeout(done, 160 * spd());
+      setTimeout(done, 100 * spd());
       return;
     }
     if (p.event === 'shatter') {
@@ -4539,7 +4678,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
-      setTimeout(done, 350 * spd());
+      setTimeout(done, 210 * spd());
       return;
     }
 
@@ -4556,10 +4695,12 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * spd());
-        }, 90 * spd());
+          setTimeout(() => { box.classList.remove('live'); done(); }, 170 * spd());
+        }, 45 * spd());
         return;
       }
+      /* the more there is to show, the faster each beat of it goes by */
+      const stepMs = Math.max(16, 52 - trigs.length * 1.6);
       const t = trigs[ti++];
       const src = resolveSrc(t.src, p);
       if (t.kind === 'chips') { chips += t.amount; setScoreBox(chips, mult); floatText(src, '+' + t.amount, 'fx-chips'); Sfx.chip(ti); }
@@ -4573,7 +4714,7 @@ const UI = (() => {
         setTimeout(() => src.classList.remove('trigger'), 260);
         if (t.kind === 'xmult' || t.kind === 'retrigger') spark(src);
       }
-      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * spd());
+      setTimeout(step, (t.kind === 'flash' ? stepMs * 0.5 : stepMs) * spd());
     };
     step();
   }
@@ -4619,6 +4760,43 @@ const UI = (() => {
     n.classList.add('bump');
   }
 
+  /* TEMPO -- rewards playing fast, never punishes thinking */
+  function momentumMult() {
+    const m = G.round ? (G.round.momentum || 0) : 0;
+    return +(1 + (m / 100) * TUNE.momentumMaxMult).toFixed(2);
+  }
+
+  let lastMomentumPaint = -1;
+  function renderMomentum(force) {
+    const bar = $('#tempo-fill');
+    if (!bar || !G.round) return;
+    const m = G.round.momentum || 0;
+    /* the loop runs at 60fps -- only touch the DOM when it actually moved */
+    if (!force && Math.abs(m - lastMomentumPaint) < 0.8) return;
+    lastMomentumPaint = m;
+    bar.style.width = m + '%';
+    const wrap = $('#tempo');
+    wrap.classList.toggle('hot', m > 55);
+    wrap.classList.toggle('max', m > 88);
+    const lab = $('#tempo-mult');
+    if (lab) lab.textContent = 'X' + momentumMult();
+  }
+
+  /* one loop drives the decay, the bar and the music intensity */
+  function startMomentumLoop() {
+    const tick = () => {
+      if (G.phase === 'play' && G.round && !Overlays.isOpen()) {
+        Game.decayMomentum();
+        renderMomentum();
+      }
+      const heat = G.round ? (G.round.heat || 0) : 0;
+      const mo = G.round ? (G.round.momentum || 0) : 0;
+      Sfx.setIntensity(Math.min(1, mo / 100 * 0.7 + Math.min(heat, 5) / 5 * 0.5));
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
   /* the persistent combo readout inside the score box */
   function renderCombo() {
     const m = $('#combo-meter');
@@ -4627,6 +4805,7 @@ const UI = (() => {
     if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
     if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
     if (G.round.heat > 0) bits.push('<span class="cm heat">HEAT <b>X' + Game.heatMult() + '</b></span>');
+    if ((G.round.momentum || 0) > 20) bits.push('<span class="cm tempo">TEMPO <b>X' + momentumMult() + '</b></span>');
     m.innerHTML = bits.join('');
     m.classList.toggle('active', bits.length > 0);
     if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
@@ -4715,7 +4894,7 @@ const UI = (() => {
   }
 
   function animateScoreTo(target) {
-    const start = displayScore, t0 = performance.now(), dur = 420;
+    const start = displayScore, t0 = performance.now(), dur = 240;
     const tick = now => {
       const k = Math.min(1, (now - t0) / dur);
       displayScore = start + (target - start) * (1 - Math.pow(1 - k, 3));
@@ -4903,6 +5082,7 @@ const UI = (() => {
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
+    startMomentumLoop, renderMomentum, momentumMult,
     get busy() { return fxBusy; }
   };
 })();
@@ -5811,6 +5991,7 @@ const Overlays = (() => {
     };
     UI.bindPileTargets();
     UI.installDragHandlers();
+    UI.startMomentumLoop();
 
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;

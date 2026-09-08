@@ -181,6 +181,7 @@ const Engine = (() => {
         wellMult: 0,
         blessing: 0,
         heat: 0,
+        momentum: 0,
         cuts: 0,
         cutsHit: 0,
         over: false,

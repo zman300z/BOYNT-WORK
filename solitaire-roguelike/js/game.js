@@ -67,6 +67,23 @@ const Game = (() => {
   }
 
   /* ---------------- scoring plumbing ---------------- */
+  function bumpMomentum(amount) {
+    G.round.momentum = Math.min(100, (G.round.momentum || 0) + (amount || TUNE.momentumPerMove));
+    G.round.momentumAt = Date.now();
+  }
+
+  function decayMomentum() {
+    if (G.phase !== 'play' || !G.round) return 0;
+    const now = Date.now();
+    const last = G.round.momentumAt || now;
+    const dt = (now - last) / 1000;
+    if (dt > 0) {
+      G.round.momentum = Math.max(0, (G.round.momentum || 0) - TUNE.momentumDecay * dt);
+      G.round.momentumAt = now;
+    }
+    return G.round.momentum;
+  }
+
   function scoreEvent(ev) {
     const packet = Score.event(G, ev);
     push(packet);
@@ -184,6 +201,7 @@ const Game = (() => {
       G.round.moves++;
       G.round.scoredCards++;
       G.run.stats.cardsScored++;
+      bumpMomentum();
       G.round.cascade++;
       if (G.round.cascade > 0 && G.round.cascade % TUNE.cascadeCashEvery === 0) {
         G.run.money += 1;
@@ -342,6 +360,7 @@ const Game = (() => {
     if (correct) {
       G.round.heat++;
       G.round.cutsHit++;
+      bumpMomentum();
     } else {
       G.round.heat = 0;
       if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
@@ -410,6 +429,7 @@ const Game = (() => {
     removeFrom(src, 1);
     b.well.push(card);
     b.wishesLeft--;
+    bumpMomentum(TUNE.momentumPerMove * 0.7);
     G.round.moves++;
 
     const m = Engine.mods(G.run);
@@ -983,6 +1003,7 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult
+    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult,
+    bumpMomentum, decayMomentum
   };
 })();

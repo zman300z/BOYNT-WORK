@@ -68,6 +68,7 @@ const UI = (() => {
     renderMantel();
     renderBoard();
     renderControls();
+    renderMomentum(true);
   }
 
   function renderHud() {
@@ -307,6 +308,7 @@ const UI = (() => {
           const n = cardEl(c);
           n.style.zIndex = i;
           if (i === pile.length - showFrom - 1) attachDrag(n, { zone: 'foundation', suit: s });
+          if (c.id === landedId) n.classList.add('landed');
           attachInspect(n, c);
           f.appendChild(n);
         });
@@ -339,6 +341,7 @@ const UI = (() => {
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
       pile.forEach((c, i) => {
         const n = cardEl(c, { topDown: i === lastDownIdx });
+        if (c.id === landedId) n.classList.add('landed');
         lastTop = y;
         n.style.top = Math.round(y) + 'px';
         n.style.zIndex = i;
@@ -417,6 +420,7 @@ const UI = (() => {
 
   function clearSelection() { selection = null; applySelectionClasses(); }
 
+  let landedId = null;
   function doMove(src, dst) {
     if (dst.zone === 'well') {
       const wished = Game.makeWish(src);
@@ -424,8 +428,12 @@ const UI = (() => {
       else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
       return wished;
     }
+    const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
+                 : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
+                 : null;
     const ok = Game.tryMove(src, dst);
     if (ok) {
+      landedId = moving ? moving.id : null;
       Sfx.place();
       clearSelection();
       render();
@@ -669,8 +677,8 @@ const UI = (() => {
       else { rush = false; afterFx(); }
       return;
     }
-    const base = q.length > 4 ? 0.35 : 1;
-    const speed = () => base * (rush ? 0.08 : 1);
+    const base = q.length > 6 ? 0.28 : (q.length > 3 ? 0.5 : 1);
+    const speed = () => base * (rush ? 0.06 : 1);
     animatePacket(q[i], speed, () => runPackets(q, i + 1));
   }
 
@@ -694,9 +702,9 @@ const UI = (() => {
       else if (w.cls === 'meh') { Sfx.error(); }
       else { Sfx.money(); burst(anchor, 12, '#ffd166'); }
       renderHud();
-      setTimeout(() => card.classList.add('out'), 1500 * spd());
-      setTimeout(() => card.remove(), 2000 * spd());
-      setTimeout(done, 900 * spd());
+      setTimeout(() => card.classList.add('out'), 1050 * spd());
+      setTimeout(() => card.remove(), 1450 * spd());
+      setTimeout(done, 520 * spd());
       return;
     }
     if (p.event === 'cut') {
@@ -716,9 +724,9 @@ const UI = (() => {
         Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
       }
       renderHud();
-      setTimeout(() => card.classList.add('out'), 1000 * spd());
-      setTimeout(() => card.remove(), 1400 * spd());
-      setTimeout(done, 700 * spd());
+      setTimeout(() => card.classList.add('out'), 780 * spd());
+      setTimeout(() => card.remove(), 1150 * spd());
+      setTimeout(done, 420 * spd());
       return;
     }
     if (p.event === 'bank-heat') {
@@ -729,7 +737,7 @@ const UI = (() => {
       screenShake(10);
       flashScreen(0.24, '#7ee787');
       animateScoreTo(G.round.score);
-      setTimeout(done, 700 * spd());
+      setTimeout(done, 420 * spd());
       return;
     }
     if (p.event === 'reshuffle') {
@@ -737,7 +745,7 @@ const UI = (() => {
       const st = $('#stock');
       if (st) { st.classList.remove('reshuffled'); void st.offsetWidth; st.classList.add('reshuffled'); }
       floatText(st || $('#scorebox'), 'RESHUFFLED', 'fx-flash');
-      setTimeout(done, 200 * spd());
+      setTimeout(done, 120 * spd());
       return;
     }
     if (p.event === 'cash') {
@@ -748,7 +756,7 @@ const UI = (() => {
       burst(a, 8, '#ffd166');
       renderHud();
       renderControls();
-      setTimeout(done, 220 * spd());
+      setTimeout(done, 130 * spd());
       return;
     }
     if (p.event === 'recycle') { Sfx.deal(); flashScreen(0.10, '#4cc9f0'); done(); return; }
@@ -762,7 +770,7 @@ const UI = (() => {
     if (p.event === 'curioFlash') { flashCurioById(p.curio); done(); return; }
     if (p.event === 'replay') {
       floatText(anchorEl(p.anchor), 'ALREADY PAID', 'fx-flash');
-      setTimeout(done, 160 * spd());
+      setTimeout(done, 100 * spd());
       return;
     }
     if (p.event === 'shatter') {
@@ -770,7 +778,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
-      setTimeout(done, 350 * spd());
+      setTimeout(done, 210 * spd());
       return;
     }
 
@@ -787,10 +795,12 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 380 * spd());
-        }, 90 * spd());
+          setTimeout(() => { box.classList.remove('live'); done(); }, 170 * spd());
+        }, 45 * spd());
         return;
       }
+      /* the more there is to show, the faster each beat of it goes by */
+      const stepMs = Math.max(16, 52 - trigs.length * 1.6);
       const t = trigs[ti++];
       const src = resolveSrc(t.src, p);
       if (t.kind === 'chips') { chips += t.amount; setScoreBox(chips, mult); floatText(src, '+' + t.amount, 'fx-chips'); Sfx.chip(ti); }
@@ -804,7 +814,7 @@ const UI = (() => {
         setTimeout(() => src.classList.remove('trigger'), 260);
         if (t.kind === 'xmult' || t.kind === 'retrigger') spark(src);
       }
-      setTimeout(step, (t.kind === 'flash' ? 60 : 105) * spd());
+      setTimeout(step, (t.kind === 'flash' ? stepMs * 0.5 : stepMs) * spd());
     };
     step();
   }
@@ -850,6 +860,43 @@ const UI = (() => {
     n.classList.add('bump');
   }
 
+  /* TEMPO -- rewards playing fast, never punishes thinking */
+  function momentumMult() {
+    const m = G.round ? (G.round.momentum || 0) : 0;
+    return +(1 + (m / 100) * TUNE.momentumMaxMult).toFixed(2);
+  }
+
+  let lastMomentumPaint = -1;
+  function renderMomentum(force) {
+    const bar = $('#tempo-fill');
+    if (!bar || !G.round) return;
+    const m = G.round.momentum || 0;
+    /* the loop runs at 60fps -- only touch the DOM when it actually moved */
+    if (!force && Math.abs(m - lastMomentumPaint) < 0.8) return;
+    lastMomentumPaint = m;
+    bar.style.width = m + '%';
+    const wrap = $('#tempo');
+    wrap.classList.toggle('hot', m > 55);
+    wrap.classList.toggle('max', m > 88);
+    const lab = $('#tempo-mult');
+    if (lab) lab.textContent = 'X' + momentumMult();
+  }
+
+  /* one loop drives the decay, the bar and the music intensity */
+  function startMomentumLoop() {
+    const tick = () => {
+      if (G.phase === 'play' && G.round && !Overlays.isOpen()) {
+        Game.decayMomentum();
+        renderMomentum();
+      }
+      const heat = G.round ? (G.round.heat || 0) : 0;
+      const mo = G.round ? (G.round.momentum || 0) : 0;
+      Sfx.setIntensity(Math.min(1, mo / 100 * 0.7 + Math.min(heat, 5) / 5 * 0.5));
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
   /* the persistent combo readout inside the score box */
   function renderCombo() {
     const m = $('#combo-meter');
@@ -858,6 +905,7 @@ const UI = (() => {
     if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
     if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
     if (G.round.heat > 0) bits.push('<span class="cm heat">HEAT <b>X' + Game.heatMult() + '</b></span>');
+    if ((G.round.momentum || 0) > 20) bits.push('<span class="cm tempo">TEMPO <b>X' + momentumMult() + '</b></span>');
     m.innerHTML = bits.join('');
     m.classList.toggle('active', bits.length > 0);
     if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
@@ -946,7 +994,7 @@ const UI = (() => {
   }
 
   function animateScoreTo(target) {
-    const start = displayScore, t0 = performance.now(), dur = 420;
+    const start = displayScore, t0 = performance.now(), dur = 240;
     const tick = now => {
       const k = Math.min(1, (now - t0) / dur);
       displayScore = start + (target - start) * (1 - Math.pow(1 - k, 3));
@@ -1134,6 +1182,7 @@ const UI = (() => {
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
+    startMomentumLoop, renderMomentum, momentumMult,
     get busy() { return fxBusy; }
   };
 })();

@@ -140,6 +140,10 @@ const Score = (() => {
       const per = TUNE.heatMultPer + Engine.mods(ctx.run).heatPer;
       ctx.xMult(+(1 + per * ctx.round.heat).toFixed(2));
     }
+    /* TEMPO: play quickly and everything is worth more. Never a penalty. */
+    if (ctx.round.momentum > 4) {
+      ctx.xMult(+(1 + (ctx.round.momentum / 100) * TUNE.momentumMaxMult).toFixed(2));
+    }
     ctx._src = null;
   }
 

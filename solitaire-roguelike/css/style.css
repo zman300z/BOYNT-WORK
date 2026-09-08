@@ -1058,3 +1058,38 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .tip-detail b{ display:block; font-family:var(--display); font-size:10px; margin-bottom:2px; }
 .tip-detail.hot b{ color:var(--gold); } .tip-detail.fin b{ color:#ff9ff3; } .tip-detail.seal b{ color:var(--cool); }
 #tooltip{ max-height:74vh; overflow-y:auto; }
+
+/* ============================================================
+   TEMPO meter -- play fast, score more
+   ============================================================ */
+.tempo{ display:flex; flex-direction:column; gap:2px; min-width:96px; }
+.tempo-cap{ font-size:8px; letter-spacing:.2em; opacity:.5; }
+.tempo-bar{
+  position:relative; height:9px; border-radius:5px; overflow:hidden;
+  background:rgba(0,0,0,.5); border:1px solid var(--line);
+}
+.tempo-fill{
+  position:absolute; inset:0 auto 0 0; width:0%;
+  background:linear-gradient(90deg,#4cc9f0,#7ee787);
+  transition:width .12s linear;
+}
+.tempo-mult{ font-family:var(--display); font-size:10px; opacity:.5; letter-spacing:.04em; }
+.tempo.hot .tempo-fill{ background:linear-gradient(90deg,var(--gold),#ff8f3f); box-shadow:0 0 14px rgba(255,143,63,.7); }
+.tempo.hot .tempo-mult{ opacity:1; color:#ff8f3f; }
+.tempo.max .tempo-fill{ background:linear-gradient(90deg,#ff8f3f,var(--hot)); box-shadow:0 0 20px rgba(255,77,109,.9); }
+.tempo.max .tempo-mult{ color:var(--hot); animation:heatGlow .6s infinite alternate; }
+.tempo.max .tempo-cap{ opacity:1; color:var(--hot); }
+.cm.tempo{ background:#0d2230; color:#7ee787; border-color:#7ee787; box-shadow:0 0 14px rgba(126,231,135,.55); }
+
+/* a card that just landed pops, so a move reads instantly */
+.card.landed{ animation:landPop .22s cubic-bezier(.2,1.8,.3,1); z-index:940; }
+@keyframes landPop{
+  0%{ transform:translateY(-14px) scale(1.1); filter:brightness(1.5) }
+  60%{ transform:translateY(2px) scale(.99) }
+  100%{ transform:none; filter:none }
+}
+
+/* everything on the table settles a touch quicker now */
+.card{ transition:transform .07s ease, box-shadow .1s ease, filter .1s; }
+.quota-fill{ transition:width .22s cubic-bezier(.2,.9,.25,1); }
+@media (max-width:860px){ .tempo{ min-width:72px; } .tempo-cap{ font-size:7px; } }

@@ -135,6 +135,7 @@
     };
     UI.bindPileTargets();
     UI.installDragHandlers();
+    UI.startMomentumLoop();
 
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;

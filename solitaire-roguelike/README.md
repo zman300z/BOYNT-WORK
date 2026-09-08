@@ -76,6 +76,12 @@ A duplicate card can never advance a foundation, since the pile only wants the *
 New Cards are also weighted low on purpose — roughly 60% land between Ace and 5, only 8% are face cards —
 and the shop preview shows the *exact* card you'll receive, rolled when the shop was stocked.
 
+### Tempo
+
+A bar in the header that fills every time you score and drains while you sit still. The fuller it is, the
+more **every** score is worth — up to ×1.9 at a full bar. It is a bonus only: thinking never costs you
+points, but playing fast pays. It also drives the soundtrack, which speeds up and adds layers as you heat up.
+
 ### The Cut — the gamble on the table
 
 Below PASSES there's a **RED / BLACK** call on the next card off the stock. The cards turn over either way,

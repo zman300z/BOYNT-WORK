@@ -45,6 +45,9 @@ const TUNE = {
   heatMultPer: 0.5,         // each Heat level adds this much X Mult
   heatBankBase: 250,        // banking Heat pays heat^2 x this
   heatMissScore: 200,       // a wrong call with no passes left costs this much score
+  momentumPerMove: 26,      // TEMPO gained per scoring action
+  momentumDecay: 15,        // ...lost per second of dithering
+  momentumMaxMult: 0.9,     // full bar is worth X1.9
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
