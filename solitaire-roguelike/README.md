@@ -24,9 +24,10 @@ from a USB stick. Regenerate it after any source change with `python3 build.py`.
 | **The shop** | Opens after *every* round — win or lose — because you get paid either way. |
 | **Winning** | Clear ante 8. Then keep going in endless mode if you want. |
 
-Beat the quota early and the summary screen offers to **bank the ante** — skip the
-remaining rounds for cash and jump straight to the next ante. Or keep playing them
-for more money and more shop trips.
+Beat the quota early and the summary offers to **bank the ante** — skip the remaining rounds and jump to the
+next one. The **Early Finish Bonus** is $8 per round skipped, plus $1 for every 25% you finished over quota
+(up to $12), itemised on the panel — so it's worth more than the round you're giving up, but you still trade
+away a shop trip.
 
 ## Scoring — what Chips actually do
 

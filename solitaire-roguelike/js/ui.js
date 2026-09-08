@@ -467,7 +467,7 @@ const UI = (() => {
   function doMove(src, dst) {
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
-      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
@@ -834,6 +834,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
+      toast(quip('shatter'));
       setTimeout(done, 210 * spd());
       return;
     }
@@ -990,6 +991,7 @@ const UI = (() => {
       confetti(box, tier.parts, tier.cls);
       flashScreen(0.34 - SCORE_TIERS.indexOf(tier) * 0.05, tierColor(tier));
       if (mag >= 8000) Sfx.big();
+      if (mag >= 25000) toast(quip('bigScore'), 2400);
       document.body.classList.add('hot');
       clearTimeout(hotTimer);
       hotTimer = setTimeout(() => document.body.classList.remove('hot'), 900);
@@ -1088,7 +1090,7 @@ const UI = (() => {
     if (!Engine.anyMoveAvailable(G, G.run)) {
       G.round.stuck = true;
       renderControls();
-      toast('No moves left — cash out!', 2600);
+      toast('No moves left — cash out! <span class="quip">' + quip('stuck') + '</span>', 3400);
     }
   }
 

@@ -19,7 +19,9 @@ const TUNE = {
   quotaGrowth: 2.2,
   roundsPerAnte: 3,
   finalAnte: 8,
-  skipBonus: 5,
+  skipBonus: 8,             // per round skipped when you bank an ante early
+  skipOvershootPer: 25,     // ...plus $1 per this % of the quota you were over
+  skipOvershootCap: 12,
   drawCount: 3,                 // classic Klondike: three at a time, top one playable
   baseMoney: 3,
   interestPer: 5,
@@ -820,4 +822,100 @@ const ROULETTE_ODDS = {
 };
 function roulettePay(colour) {
   return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
+}
+
+
+/* =========================================================
+   QUIPS -- the table has opinions. Purely cosmetic.
+   ========================================================= */
+const QUIPS = {
+  wheelLose: [
+    'The wheel remembers nothing. It owes you nothing.',
+    'The croupier does not make eye contact.',
+    'Somewhere a man in a nice suit buys a boat.',
+    'That is why they can afford the carpet.',
+    'The ball had other plans.',
+    'You were due. The wheel disagrees.',
+    'Statistically, this was always on the menu.'
+  ],
+  wheelWin: [
+    'The croupier claps very slowly.',
+    'Do not tell anyone how easy that looked.',
+    'The wheel blinks first.',
+    'Somebody in a nice suit stops smiling.',
+    'You have beaten physics. Briefly.'
+  ],
+  wheelGreen: [
+    'THE ZERO. Nobody hits the zero.',
+    'The pit boss is on the phone to someone.',
+    'One in nineteen. You animal.'
+  ],
+  banditLose: [
+    'The machine hums, unbothered.',
+    'It ate the coin and asked for another.',
+    'Three cherries were RIGHT THERE. Metaphorically.',
+    'The lever squeaks. You imagine it laughing.',
+    'That was a donation, not a bet.'
+  ],
+  banditPair: [
+    'Two out of three. The machine calls that generous.',
+    'A consolation, delivered with a shrug.',
+    'Nearly. Nearly is the whole business model.'
+  ],
+  banditJackpot: [
+    'The machine makes a noise it has never made before.',
+    'Somewhere, an accountant sits up.',
+    'You have broken something and nobody noticed.'
+  ],
+  stuck: [
+    'The board is out of ideas. So, apparently, are you.',
+    'Nothing moves. The felt is very quiet.',
+    'That is a dead end with excellent lighting.'
+  ],
+  shatter: [
+    'It was fragile. You knew it was fragile.',
+    'Glass does that.',
+    'A moment of silence. Fine, half a moment.'
+  ],
+  bigScore: [
+    'The table shudders.',
+    'Somebody get a bigger abacus.',
+    'That number has no business being that shape.',
+    'The felt is smoking slightly.'
+  ],
+  roundWon: [
+    'Cleared. The deck looks embarrassed.',
+    'A full board. Show-off.',
+    'Nothing left to place. Marvellous.'
+  ],
+  roundBad: [
+    'A round happened. Technically.',
+    'We will call that a rehearsal.',
+    'Points were scored. Not many, but some.'
+  ],
+  broke: [
+    'Your wallet makes a papery sound.',
+    'Funds: theoretical.',
+    'The shop looks at you with pity.'
+  ],
+  reroll: [
+    'New stock, same regrets.',
+    'The shopkeeper sighs and re-shelves everything.',
+    'Shuffling the merchandise. Again.'
+  ],
+  oddity: [
+    'That was never in a deck of 52.',
+    'Nobody asks where these come from.',
+    'The rules did not anticipate this.'
+  ],
+  wish: [
+    'It goes in your pocket. Nobody saw.',
+    'Held back for a better moment.',
+    'Squirrelled away.'
+  ]
+};
+function quip(key) {
+  const list = QUIPS[key];
+  if (!list || !list.length) return '';
+  return list[Math.floor(Math.random() * list.length)];
 }

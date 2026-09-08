@@ -38,6 +38,7 @@ const Overlays = (() => {
         '<div class="panel-flag ' + (r.won ? 'good' : '') + '">' + headline + '</div>' +
         '<div class="big-score">' + UI.fmt(r.score) + '</div>' +
         '<div class="sub">chips banked this round</div>' +
+        '<div class="quip panel-quip">' + quip(r.won ? 'roundWon' : (r.score < Engine.quotaFor(run) / 6 ? 'roundBad' : 'roundWon')) + '</div>' +
         '<div class="quota-block ' + (met ? 'met' : '') + '">' +
           '<div class="qb-row"><span>Ante ' + run.ante + ' progress</span><b>' + UI.fmt(total) + ' / ' + UI.fmt(quota) + '</b></div>' +
           '<div class="qb-bar"><div style="width:' + Math.min(100, total / quota * 100) + '%"></div></div>' +
@@ -48,11 +49,19 @@ const Overlays = (() => {
         '</div>' +
         '<div class="payout"><div class="pay-title">PAYOUT</div>' + midRound + payLines +
           '<div class="pay-line total"><span>Total</span><b>+$' + pay.total + '</b></div></div>' +
-        (met && !last
-          ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + ((TUNE.roundsPerAnte - run.round) * TUNE.skipBonus) + '</button>'
+        (met && !last && Game.earlyFinishBonus()
+          ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + Game.earlyFinishBonus().total + '</button>'
           : '') +
         '<button class="btn big" id="ov-continue">' + (last && !met ? 'FACE THE MUSIC' : 'TO THE SHOP →') + '</button>' +
-        (met && !last ? '<div class="bank-note">Bank it to skip straight to Ante ' + (run.ante + 1) + ', or keep playing this ante for more cash and Curios.</div>' : '') +
+        (met && !last && Game.earlyFinishBonus()
+          ? (function () {
+              const b2 = Game.earlyFinishBonus();
+              return '<div class="bank-note"><b>Early Finish Bonus:</b> $' + b2.base + ' for the ' + b2.skipped +
+                ' round' + (b2.skipped > 1 ? 's' : '') + ' you are skipping' +
+                (b2.over ? ', plus $' + b2.over + ' for finishing ' + b2.overshootPct + '% over quota' : '') +
+                ' = <b>$' + b2.total + '</b>.<br>Or keep playing this ante for more rounds, more cash and more shops.</div>';
+            })()
+          : '') +
       '</div>', 'centered');
 
     $('#ov-continue').onclick = () => {
@@ -66,7 +75,7 @@ const Overlays = (() => {
     if (bank) bank.onclick = () => {
       const gain = Game.bankAnte();
       Sfx.money();
-      UI.toast('Ante banked — +$' + gain);
+      UI.toast('Ante banked early — +$' + (gain && gain.total));
       if (G.phase === 'shop') shop();
       else if (G.phase === 'victory') victory();
     };
@@ -131,7 +140,7 @@ const Overlays = (() => {
 
     refreshShop();
     $('#shop-reroll').onclick = () => {
-      if (Game.reroll()) { Sfx.money(); refreshShop(); }
+      if (Game.reroll()) { Sfx.money(); UI.toast(quip('reroll')); refreshShop(); }
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
@@ -240,7 +249,10 @@ const Overlays = (() => {
     const out = $('#bandit-result');
     const r = res.result;
     out.className = 'bandit-result ' + r.kind;
-    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '');
+    const flavour = r.kind === 'jackpot' ? (r.symbol === '☠' ? quip('banditLose') : quip('banditJackpot'))
+                  : r.kind === 'pair' ? quip('banditPair') : quip('banditLose');
+    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '') +
+      '<br><span class="quip">' + flavour + '</span>';
     if (r.kind === 'jackpot') {
       if (r.symbol === '☠') { Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d'); }
       else { Sfx.win(); UI.screenShake(12); UI.confetti($('#bandit'), 70, 't4'); UI.flashScreen(0.3, '#ffd166'); }
@@ -583,44 +595,80 @@ const Overlays = (() => {
   function placeBet(colour) {
     const res = Game.spinRoulette(colour);
     if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
-    $$('.rw-bet').forEach(b => { b.disabled = true; b.classList.toggle('chosen', b.dataset.col === colour); });
+    $$('.rw-bet').forEach(x => { x.disabled = true; x.classList.toggle('chosen', x.dataset.col === colour); });
     $('#rw-close').disabled = true;
     $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
 
     const wheel = $('#rw-wheel');
     const ball = $('#rw-ball');
-    /* land the chosen pocket under the pointer after a few full turns */
-    const turns = 4 + Math.floor(Math.random() * 3);
-    const target = 360 * turns - res.index * SEG - SEG / 2;
-    wheel.style.transition = 'transform 3.1s cubic-bezier(.15,.6,.2,1)';
-    wheel.style.transform = 'rotate(' + target + 'deg)';
-    ball.classList.add('rolling');
-    Sfx.click();
-    let ticks = 0;
-    const tick = setInterval(() => { Sfx.chip(ticks++ % 8); }, 110);
-    setTimeout(() => clearInterval(tick), 2700);
+    const DUR = 5800;
 
-    setTimeout(() => {
-      ball.classList.remove('rolling');
-      ball.classList.add('settled');
-      finishSpin(res);
-    }, 3200);
+    /* the wheel: several slow turns easing out across the whole spin */
+    const turns = 4 + Math.floor(Math.random() * 2);
+    const target = 360 * turns - res.index * SEG - SEG / 2;
+    wheel.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.10,.62,.12,1)';
+    wheel.style.transform = 'rotate(' + target + 'deg)';
+
+    /* the ball: orbits the other way, bleeds off speed, and only drops from the
+       rim into the pocket once it is genuinely slow */
+    const R_RIM = 96, R_POCKET = 73;
+    const spins = 8 + Math.random() * 2;
+    const t0 = performance.now();
+    let nextTick = 0;
+    ball.classList.remove('settled');
+    ball.classList.add('live');
+
+    const easeOut = k => 1 - Math.pow(1 - k, 3.6);   // long, soft deceleration
+
+    const frame = now => {
+      const k = Math.min(1, (now - t0) / DUR);
+      const e = easeOut(k);
+      /* winds down to the top, where the winning pocket comes around to meet it */
+      const angle = -(360 * spins) * (1 - e);
+
+      let r = R_RIM;
+      if (k > 0.60) {
+        const f = (k - 0.60) / 0.40;
+        const smooth = f * f * (3 - 2 * f);
+        const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;   // a couple of bounces off the frets
+        r = R_RIM - (R_RIM - R_POCKET) * smooth + hop;
+      }
+      const rad = angle * Math.PI / 180;
+      ball.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
+                             (-Math.cos(rad) * r).toFixed(2) + 'px)';
+
+      /* clicks thin out with the ball, like it is passing fewer frets a second */
+      if (now >= nextTick) {
+        const speed = Math.max(0.015, 1 - e);
+        Sfx.chip(Math.floor(6 * speed));
+        nextTick = now + 48 + 300 * (1 - speed);
+      }
+      if (k < 1) requestAnimationFrame(frame);
+      else {
+        ball.classList.remove('live');
+        ball.classList.add('settled');
+        setTimeout(() => finishWheel(res), 300);
+      }
+    };
+    requestAnimationFrame(frame);
   }
 
-  function finishSpin(res) {
+  function finishWheel(res) {
     const p = res.pocket;
     const box = $('#rw-result');
     if (res.win) {
       box.className = 'wheel-result win';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the pot is now <b>' + UI.fmt(res.pot) + '</b>' +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>';
+        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>' +
+        '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
       UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
     } else {
       box.className = 'wheel-result lose';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' + UI.fmt(res.staked) + '</b>' +
-        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>';
+        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>' +
+        '<br><span class="quip">' + quip('wheelLose') + '</span>';
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
     const btn = $('#rw-close');

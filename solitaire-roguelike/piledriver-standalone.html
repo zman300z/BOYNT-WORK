@@ -1274,18 +1274,14 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   border-top:18px solid var(--gold); filter:drop-shadow(0 3px 5px rgba(0,0,0,.7));
 }
 .rw-ball{
-  position:absolute; left:50%; top:14px; margin-left:-6px; width:12px; height:12px; z-index:9;
-  border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #b9b9c4);
-  box-shadow:0 2px 6px rgba(0,0,0,.7);
+  position:absolute; left:50%; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; z-index:9;
+  border-radius:50%; background:radial-gradient(circle at 34% 28%, #fff, #cfcfd8 55%, #8d8d99);
+  box-shadow:0 3px 7px rgba(0,0,0,.75), inset 0 -2px 3px rgba(0,0,0,.3);
+  transform:translate(0,-96px); will-change:transform;
 }
-.rw-ball.rolling{ animation:ballRoll .42s linear infinite; }
-@keyframes ballRoll{
-  0%{ transform:rotate(0deg) translateY(0) }
-  100%{ transform:rotate(360deg) translateY(0) }
-}
-.rw-ball.rolling{ transform-origin:6px 96px; }
-.rw-ball.settled{ animation:ballDrop .3s ease-out; }
-@keyframes ballDrop{ 0%{ transform:translateY(-8px) scale(1.3) } 100%{ transform:none } }
+.rw-ball.live{ box-shadow:0 3px 10px rgba(0,0,0,.8), 0 0 12px rgba(255,255,255,.35); }
+.rw-ball.settled{ animation:ballSettle .45s cubic-bezier(.2,1.6,.3,1); }
+@keyframes ballSettle{ 0%{ filter:brightness(1.6) } 100%{ filter:none } }
 
 .wheel-bets{ display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
 .rw-bet{
@@ -1311,6 +1307,9 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .rw-note{ font-size:10.5px; opacity:.75; }
 .rw-spinning{ opacity:.5; font-style:italic; }
 .tip-kind.odd-kind{ background:rgba(255,209,102,.16); color:#ffdf9c; }
+.quip{ font-size:10.5px; opacity:.55; font-style:italic; }
+.panel-quip{ margin:-8px 0 14px; }
+#toast .quip{ opacity:.7; }
 
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
@@ -1546,7 +1545,9 @@ const TUNE = {
   quotaGrowth: 2.2,
   roundsPerAnte: 3,
   finalAnte: 8,
-  skipBonus: 5,
+  skipBonus: 8,             // per round skipped when you bank an ante early
+  skipOvershootPer: 25,     // ...plus $1 per this % of the quota you were over
+  skipOvershootCap: 12,
   drawCount: 3,                 // classic Klondike: three at a time, top one playable
   baseMoney: 3,
   interestPer: 5,
@@ -2347,6 +2348,102 @@ const ROULETTE_ODDS = {
 };
 function roulettePay(colour) {
   return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
+}
+
+
+/* =========================================================
+   QUIPS -- the table has opinions. Purely cosmetic.
+   ========================================================= */
+const QUIPS = {
+  wheelLose: [
+    'The wheel remembers nothing. It owes you nothing.',
+    'The croupier does not make eye contact.',
+    'Somewhere a man in a nice suit buys a boat.',
+    'That is why they can afford the carpet.',
+    'The ball had other plans.',
+    'You were due. The wheel disagrees.',
+    'Statistically, this was always on the menu.'
+  ],
+  wheelWin: [
+    'The croupier claps very slowly.',
+    'Do not tell anyone how easy that looked.',
+    'The wheel blinks first.',
+    'Somebody in a nice suit stops smiling.',
+    'You have beaten physics. Briefly.'
+  ],
+  wheelGreen: [
+    'THE ZERO. Nobody hits the zero.',
+    'The pit boss is on the phone to someone.',
+    'One in nineteen. You animal.'
+  ],
+  banditLose: [
+    'The machine hums, unbothered.',
+    'It ate the coin and asked for another.',
+    'Three cherries were RIGHT THERE. Metaphorically.',
+    'The lever squeaks. You imagine it laughing.',
+    'That was a donation, not a bet.'
+  ],
+  banditPair: [
+    'Two out of three. The machine calls that generous.',
+    'A consolation, delivered with a shrug.',
+    'Nearly. Nearly is the whole business model.'
+  ],
+  banditJackpot: [
+    'The machine makes a noise it has never made before.',
+    'Somewhere, an accountant sits up.',
+    'You have broken something and nobody noticed.'
+  ],
+  stuck: [
+    'The board is out of ideas. So, apparently, are you.',
+    'Nothing moves. The felt is very quiet.',
+    'That is a dead end with excellent lighting.'
+  ],
+  shatter: [
+    'It was fragile. You knew it was fragile.',
+    'Glass does that.',
+    'A moment of silence. Fine, half a moment.'
+  ],
+  bigScore: [
+    'The table shudders.',
+    'Somebody get a bigger abacus.',
+    'That number has no business being that shape.',
+    'The felt is smoking slightly.'
+  ],
+  roundWon: [
+    'Cleared. The deck looks embarrassed.',
+    'A full board. Show-off.',
+    'Nothing left to place. Marvellous.'
+  ],
+  roundBad: [
+    'A round happened. Technically.',
+    'We will call that a rehearsal.',
+    'Points were scored. Not many, but some.'
+  ],
+  broke: [
+    'Your wallet makes a papery sound.',
+    'Funds: theoretical.',
+    'The shop looks at you with pity.'
+  ],
+  reroll: [
+    'New stock, same regrets.',
+    'The shopkeeper sighs and re-shelves everything.',
+    'Shuffling the merchandise. Again.'
+  ],
+  oddity: [
+    'That was never in a deck of 52.',
+    'Nobody asks where these come from.',
+    'The rules did not anticipate this.'
+  ],
+  wish: [
+    'It goes in your pocket. Nobody saw.',
+    'Held back for a better moment.',
+    'Squirrelled away.'
+  ]
+};
+function quip(key) {
+  const list = QUIPS[key];
+  if (!list || !list.length) return '';
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 /* ===== js/engine.js ===== */
@@ -3904,14 +4001,27 @@ const Game = (() => {
     }
   }
 
-  /* quota already met with rounds to spare -- bank it and take the cash */
-  function bankAnte() {
+  /* quota already met with rounds to spare -- bank it and take the cash.
+     Skipping a round costs you its payout and its shop, so the bonus has to be
+     worth more than the round you are giving up. */
+  function earlyFinishBonus() {
     const run = G.run;
-    if (run.anteScore < Engine.quotaFor(run)) return false;
-    const skipped = TUNE.roundsPerAnte - run.round;
-    run.money += skipped * TUNE.skipBonus;
+    const quota = Engine.quotaFor(run);
+    if (!quota || run.anteScore < quota) return null;
+    const skipped = Math.max(0, TUNE.roundsPerAnte - run.round);
+    if (!skipped) return null;
+    const base = skipped * TUNE.skipBonus;
+    const overshootPct = (run.anteScore - quota) / quota * 100;
+    const over = Math.min(TUNE.skipOvershootCap, Math.floor(overshootPct / TUNE.skipOvershootPer));
+    return { skipped, base, over, overshootPct: Math.round(overshootPct), total: base + over };
+  }
+
+  function bankAnte() {
+    const b2 = earlyFinishBonus();
+    if (!b2) return false;
+    G.run.money += b2.total;
     clearAnte();
-    return skipped * TUNE.skipBonus;
+    return b2;
   }
 
   /* ---------------- the shop ---------------- */
@@ -3962,6 +4072,27 @@ const Game = (() => {
     });
   }
 
+  /* Special cards: each slot has a good chance of being an Oddity rather than a
+     marked-up ordinary card, because the Oddities are the interesting half. */
+  function pickCards(n) {
+    const oddityDef = NEW_CARDS.find(c => c.kind === 'oddity');
+    const normals = NEW_CARDS.filter(c => c.kind !== 'oddity');
+    Engine.shuffle(normals);
+    const out = [];
+    let ni = 0;
+    for (let i = 0; i < n; i++) {
+      if (oddityDef && Math.random() < 0.5) {
+        out.push({ type: 'card', id: oddityDef.id, cost: oddityDef.cost, spec: oddityDef.build() });
+      } else {
+        const d = normals[ni++ % normals.length];
+        const item = { type: 'card', id: d.id, cost: d.cost };
+        if (d.kind === 'add') item.spec = d.build();
+        out.push(item);
+      }
+    }
+    return out;
+  }
+
   function rollShopItems() {
     const owned = new Set(G.run.mantel.map(c => c.id));
     const used = new Set();
@@ -3988,7 +4119,7 @@ const Game = (() => {
     return {
       curios,
       mods: pickN(CARD_MODS, 2, 'mod'),
-      cards: pickN(NEW_CARDS, 2, 'card'),
+      cards: pickCards(2),
       plain,
       houses: pickN(avail, 2, 'house')
     };
@@ -4277,7 +4408,7 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
+    bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
     cashPot, spinRoulette,
@@ -4973,7 +5104,7 @@ const UI = (() => {
   function doMove(src, dst) {
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
-      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
@@ -5340,6 +5471,7 @@ const UI = (() => {
       const n = document.querySelector('[data-id="' + p.card.id + '"]');
       if (n) { n.classList.add('shattering'); burst(n, 14, '#9fe8ff'); }
       floatText(n || $('#scorebox'), 'SHATTERED', 'fx-shatter');
+      toast(quip('shatter'));
       setTimeout(done, 210 * spd());
       return;
     }
@@ -5496,6 +5628,7 @@ const UI = (() => {
       confetti(box, tier.parts, tier.cls);
       flashScreen(0.34 - SCORE_TIERS.indexOf(tier) * 0.05, tierColor(tier));
       if (mag >= 8000) Sfx.big();
+      if (mag >= 25000) toast(quip('bigScore'), 2400);
       document.body.classList.add('hot');
       clearTimeout(hotTimer);
       hotTimer = setTimeout(() => document.body.classList.remove('hot'), 900);
@@ -5594,7 +5727,7 @@ const UI = (() => {
     if (!Engine.anyMoveAvailable(G, G.run)) {
       G.round.stuck = true;
       renderControls();
-      toast('No moves left — cash out!', 2600);
+      toast('No moves left — cash out! <span class="quip">' + quip('stuck') + '</span>', 3400);
     }
   }
 
@@ -5832,6 +5965,7 @@ const Overlays = (() => {
         '<div class="panel-flag ' + (r.won ? 'good' : '') + '">' + headline + '</div>' +
         '<div class="big-score">' + UI.fmt(r.score) + '</div>' +
         '<div class="sub">chips banked this round</div>' +
+        '<div class="quip panel-quip">' + quip(r.won ? 'roundWon' : (r.score < Engine.quotaFor(run) / 6 ? 'roundBad' : 'roundWon')) + '</div>' +
         '<div class="quota-block ' + (met ? 'met' : '') + '">' +
           '<div class="qb-row"><span>Ante ' + run.ante + ' progress</span><b>' + UI.fmt(total) + ' / ' + UI.fmt(quota) + '</b></div>' +
           '<div class="qb-bar"><div style="width:' + Math.min(100, total / quota * 100) + '%"></div></div>' +
@@ -5842,11 +5976,19 @@ const Overlays = (() => {
         '</div>' +
         '<div class="payout"><div class="pay-title">PAYOUT</div>' + midRound + payLines +
           '<div class="pay-line total"><span>Total</span><b>+$' + pay.total + '</b></div></div>' +
-        (met && !last
-          ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + ((TUNE.roundsPerAnte - run.round) * TUNE.skipBonus) + '</button>'
+        (met && !last && Game.earlyFinishBonus()
+          ? '<button class="btn bank" id="ov-bank">BANK THE ANTE NOW +$' + Game.earlyFinishBonus().total + '</button>'
           : '') +
         '<button class="btn big" id="ov-continue">' + (last && !met ? 'FACE THE MUSIC' : 'TO THE SHOP →') + '</button>' +
-        (met && !last ? '<div class="bank-note">Bank it to skip straight to Ante ' + (run.ante + 1) + ', or keep playing this ante for more cash and Curios.</div>' : '') +
+        (met && !last && Game.earlyFinishBonus()
+          ? (function () {
+              const b2 = Game.earlyFinishBonus();
+              return '<div class="bank-note"><b>Early Finish Bonus:</b> $' + b2.base + ' for the ' + b2.skipped +
+                ' round' + (b2.skipped > 1 ? 's' : '') + ' you are skipping' +
+                (b2.over ? ', plus $' + b2.over + ' for finishing ' + b2.overshootPct + '% over quota' : '') +
+                ' = <b>$' + b2.total + '</b>.<br>Or keep playing this ante for more rounds, more cash and more shops.</div>';
+            })()
+          : '') +
       '</div>', 'centered');
 
     $('#ov-continue').onclick = () => {
@@ -5860,7 +6002,7 @@ const Overlays = (() => {
     if (bank) bank.onclick = () => {
       const gain = Game.bankAnte();
       Sfx.money();
-      UI.toast('Ante banked — +$' + gain);
+      UI.toast('Ante banked early — +$' + (gain && gain.total));
       if (G.phase === 'shop') shop();
       else if (G.phase === 'victory') victory();
     };
@@ -5925,7 +6067,7 @@ const Overlays = (() => {
 
     refreshShop();
     $('#shop-reroll').onclick = () => {
-      if (Game.reroll()) { Sfx.money(); refreshShop(); }
+      if (Game.reroll()) { Sfx.money(); UI.toast(quip('reroll')); refreshShop(); }
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
@@ -6034,7 +6176,10 @@ const Overlays = (() => {
     const out = $('#bandit-result');
     const r = res.result;
     out.className = 'bandit-result ' + r.kind;
-    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '');
+    const flavour = r.kind === 'jackpot' ? (r.symbol === '☠' ? quip('banditLose') : quip('banditJackpot'))
+                  : r.kind === 'pair' ? quip('banditPair') : quip('banditLose');
+    out.innerHTML = '<b>' + r.name + '</b> — ' + r.text + (r.lines.length ? '<br>' + r.lines.join('<br>') : '') +
+      '<br><span class="quip">' + flavour + '</span>';
     if (r.kind === 'jackpot') {
       if (r.symbol === '☠') { Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d'); }
       else { Sfx.win(); UI.screenShake(12); UI.confetti($('#bandit'), 70, 't4'); UI.flashScreen(0.3, '#ffd166'); }
@@ -6377,44 +6522,80 @@ const Overlays = (() => {
   function placeBet(colour) {
     const res = Game.spinRoulette(colour);
     if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
-    $$('.rw-bet').forEach(b => { b.disabled = true; b.classList.toggle('chosen', b.dataset.col === colour); });
+    $$('.rw-bet').forEach(x => { x.disabled = true; x.classList.toggle('chosen', x.dataset.col === colour); });
     $('#rw-close').disabled = true;
     $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
 
     const wheel = $('#rw-wheel');
     const ball = $('#rw-ball');
-    /* land the chosen pocket under the pointer after a few full turns */
-    const turns = 4 + Math.floor(Math.random() * 3);
-    const target = 360 * turns - res.index * SEG - SEG / 2;
-    wheel.style.transition = 'transform 3.1s cubic-bezier(.15,.6,.2,1)';
-    wheel.style.transform = 'rotate(' + target + 'deg)';
-    ball.classList.add('rolling');
-    Sfx.click();
-    let ticks = 0;
-    const tick = setInterval(() => { Sfx.chip(ticks++ % 8); }, 110);
-    setTimeout(() => clearInterval(tick), 2700);
+    const DUR = 5800;
 
-    setTimeout(() => {
-      ball.classList.remove('rolling');
-      ball.classList.add('settled');
-      finishSpin(res);
-    }, 3200);
+    /* the wheel: several slow turns easing out across the whole spin */
+    const turns = 4 + Math.floor(Math.random() * 2);
+    const target = 360 * turns - res.index * SEG - SEG / 2;
+    wheel.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.10,.62,.12,1)';
+    wheel.style.transform = 'rotate(' + target + 'deg)';
+
+    /* the ball: orbits the other way, bleeds off speed, and only drops from the
+       rim into the pocket once it is genuinely slow */
+    const R_RIM = 96, R_POCKET = 73;
+    const spins = 8 + Math.random() * 2;
+    const t0 = performance.now();
+    let nextTick = 0;
+    ball.classList.remove('settled');
+    ball.classList.add('live');
+
+    const easeOut = k => 1 - Math.pow(1 - k, 3.6);   // long, soft deceleration
+
+    const frame = now => {
+      const k = Math.min(1, (now - t0) / DUR);
+      const e = easeOut(k);
+      /* winds down to the top, where the winning pocket comes around to meet it */
+      const angle = -(360 * spins) * (1 - e);
+
+      let r = R_RIM;
+      if (k > 0.60) {
+        const f = (k - 0.60) / 0.40;
+        const smooth = f * f * (3 - 2 * f);
+        const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;   // a couple of bounces off the frets
+        r = R_RIM - (R_RIM - R_POCKET) * smooth + hop;
+      }
+      const rad = angle * Math.PI / 180;
+      ball.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
+                             (-Math.cos(rad) * r).toFixed(2) + 'px)';
+
+      /* clicks thin out with the ball, like it is passing fewer frets a second */
+      if (now >= nextTick) {
+        const speed = Math.max(0.015, 1 - e);
+        Sfx.chip(Math.floor(6 * speed));
+        nextTick = now + 48 + 300 * (1 - speed);
+      }
+      if (k < 1) requestAnimationFrame(frame);
+      else {
+        ball.classList.remove('live');
+        ball.classList.add('settled');
+        setTimeout(() => finishWheel(res), 300);
+      }
+    };
+    requestAnimationFrame(frame);
   }
 
-  function finishSpin(res) {
+  function finishWheel(res) {
     const p = res.pocket;
     const box = $('#rw-result');
     if (res.win) {
       box.className = 'wheel-result win';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the pot is now <b>' + UI.fmt(res.pot) + '</b>' +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>';
+        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>' +
+        '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
       UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
     } else {
       box.className = 'wheel-result lose';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' + UI.fmt(res.staked) + '</b>' +
-        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>';
+        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>' +
+        '<br><span class="quip">' + quip('wheelLose') + '</span>';
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
     const btn = $('#rw-close');

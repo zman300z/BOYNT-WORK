@@ -906,14 +906,27 @@ const Game = (() => {
     }
   }
 
-  /* quota already met with rounds to spare -- bank it and take the cash */
-  function bankAnte() {
+  /* quota already met with rounds to spare -- bank it and take the cash.
+     Skipping a round costs you its payout and its shop, so the bonus has to be
+     worth more than the round you are giving up. */
+  function earlyFinishBonus() {
     const run = G.run;
-    if (run.anteScore < Engine.quotaFor(run)) return false;
-    const skipped = TUNE.roundsPerAnte - run.round;
-    run.money += skipped * TUNE.skipBonus;
+    const quota = Engine.quotaFor(run);
+    if (!quota || run.anteScore < quota) return null;
+    const skipped = Math.max(0, TUNE.roundsPerAnte - run.round);
+    if (!skipped) return null;
+    const base = skipped * TUNE.skipBonus;
+    const overshootPct = (run.anteScore - quota) / quota * 100;
+    const over = Math.min(TUNE.skipOvershootCap, Math.floor(overshootPct / TUNE.skipOvershootPer));
+    return { skipped, base, over, overshootPct: Math.round(overshootPct), total: base + over };
+  }
+
+  function bankAnte() {
+    const b2 = earlyFinishBonus();
+    if (!b2) return false;
+    G.run.money += b2.total;
     clearAnte();
-    return skipped * TUNE.skipBonus;
+    return b2;
   }
 
   /* ---------------- the shop ---------------- */
@@ -964,6 +977,27 @@ const Game = (() => {
     });
   }
 
+  /* Special cards: each slot has a good chance of being an Oddity rather than a
+     marked-up ordinary card, because the Oddities are the interesting half. */
+  function pickCards(n) {
+    const oddityDef = NEW_CARDS.find(c => c.kind === 'oddity');
+    const normals = NEW_CARDS.filter(c => c.kind !== 'oddity');
+    Engine.shuffle(normals);
+    const out = [];
+    let ni = 0;
+    for (let i = 0; i < n; i++) {
+      if (oddityDef && Math.random() < 0.5) {
+        out.push({ type: 'card', id: oddityDef.id, cost: oddityDef.cost, spec: oddityDef.build() });
+      } else {
+        const d = normals[ni++ % normals.length];
+        const item = { type: 'card', id: d.id, cost: d.cost };
+        if (d.kind === 'add') item.spec = d.build();
+        out.push(item);
+      }
+    }
+    return out;
+  }
+
   function rollShopItems() {
     const owned = new Set(G.run.mantel.map(c => c.id));
     const used = new Set();
@@ -990,7 +1024,7 @@ const Game = (() => {
     return {
       curios,
       mods: pickN(CARD_MODS, 2, 'mod'),
-      cards: pickN(NEW_CARDS, 2, 'card'),
+      cards: pickCards(2),
       plain,
       houses: pickN(avail, 2, 'house')
     };
@@ -1279,7 +1313,7 @@ const Game = (() => {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
-    bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
+    bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
     cashPot, spinRoulette,
