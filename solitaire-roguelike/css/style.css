@@ -1226,3 +1226,80 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .shop-item.sh-plain{ border-color:#8d8264; background:linear-gradient(170deg,#23200f,#16140c); }
 .shelf-row.plain-row{ grid-template-columns:repeat(3,minmax(0,1fr)); }
 .odd-blurb{ font-size:9px; opacity:.7; margin-top:4px; line-height:1.35; }
+
+/* the deal: every card flies out of the deck to its seat */
+.card.dealing{
+  animation:dealFly .3s cubic-bezier(.2,.9,.3,1) backwards;
+}
+@keyframes dealFly{
+  0%{ transform:translate(var(--dx), var(--dy)) rotate(-16deg) scale(.9); opacity:0 }
+  35%{ opacity:1 }
+  100%{ transform:none; opacity:1 }
+}
+
+/* ============================================================
+   THE WHEEL
+   ============================================================ */
+.wheel-panel{ max-width:430px; }
+.wheel-stake{ font-size:12px; opacity:.8; margin-bottom:10px; }
+.wheel-stake b{ font-family:var(--display); color:var(--gold); font-size:17px; }
+.wheel-wrap{ position:relative; width:220px; height:220px; margin:0 auto 14px; }
+.rw-wheel{
+  position:absolute; inset:0; border-radius:50%;
+  border:6px solid #3a2a16;
+  box-shadow:0 0 0 3px #7a5a2a, inset 0 0 30px rgba(0,0,0,.65), 0 16px 34px rgba(0,0,0,.6);
+}
+.rw-nums{ position:absolute; inset:0; }
+.rw-num{
+  position:absolute; left:50%; top:50%; width:20px; height:14px; margin:-7px 0 0 -10px;
+  font-family:var(--display); font-size:9px; text-align:center; color:#fff;
+  text-shadow:0 1px 2px #000; pointer-events:none;
+}
+.rw-hub{
+  position:absolute; left:50%; top:50%; width:64px; height:64px; margin:-32px 0 0 -32px;
+  border-radius:50%; background:radial-gradient(circle at 40% 35%, #d8b26a, #6b4a1c);
+  border:3px solid #3a2a16; box-shadow:inset 0 0 14px rgba(0,0,0,.6);
+}
+.rw-pointer{
+  position:absolute; left:50%; top:-12px; margin-left:-9px; z-index:10;
+  width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent;
+  border-top:18px solid var(--gold); filter:drop-shadow(0 3px 5px rgba(0,0,0,.7));
+}
+.rw-ball{
+  position:absolute; left:50%; top:14px; margin-left:-6px; width:12px; height:12px; z-index:9;
+  border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #b9b9c4);
+  box-shadow:0 2px 6px rgba(0,0,0,.7);
+}
+.rw-ball.rolling{ animation:ballRoll .42s linear infinite; }
+@keyframes ballRoll{
+  0%{ transform:rotate(0deg) translateY(0) }
+  100%{ transform:rotate(360deg) translateY(0) }
+}
+.rw-ball.rolling{ transform-origin:6px 96px; }
+.rw-ball.settled{ animation:ballDrop .3s ease-out; }
+@keyframes ballDrop{ 0%{ transform:translateY(-8px) scale(1.3) } 100%{ transform:none } }
+
+.wheel-bets{ display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
+.rw-bet{
+  flex:1; display:flex; flex-direction:column; gap:2px; align-items:center; cursor:pointer;
+  padding:9px 6px; border-radius:11px; border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
+  transition:transform .1s, box-shadow .14s;
+}
+.rw-bet:hover:not(:disabled){ transform:translateY(-3px); }
+.rw-bet:disabled{ opacity:.4; cursor:default; }
+.rw-bet.chosen{ opacity:1; box-shadow:0 0 0 3px var(--gold), 0 0 22px rgba(255,209,102,.6); }
+.rw-red{ border-color:#c62b45; background:rgba(198,43,69,.2); }
+.rw-black{ border-color:#8b93a7; background:rgba(27,28,34,.6); }
+.rw-green{ border-color:#1f9d55; background:rgba(31,157,85,.2); }
+.rw-bl{ font-family:var(--display); font-size:12px; }
+.rw-bo{ font-size:8.5px; opacity:.55; letter-spacing:.08em; }
+.rw-bp{ font-family:var(--display); font-size:11px; color:var(--gold); }
+.wheel-warn{ font-size:10px; opacity:.6; margin-bottom:8px; }
+.wheel-warn b{ color:var(--hot); }
+.wheel-result{ min-height:44px; font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+.wheel-result b{ font-family:var(--display); font-size:15px; }
+.wheel-result.win{ color:var(--lime); }
+.wheel-result.lose{ color:#ff8fa3; }
+.rw-note{ font-size:10.5px; opacity:.75; }
+.rw-spinning{ opacity:.5; font-style:italic; }
+.tip-kind.odd-kind{ background:rgba(255,209,102,.16); color:#ffdf9c; }

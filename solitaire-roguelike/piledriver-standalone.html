@@ -1235,6 +1235,83 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .shelf-row.plain-row{ grid-template-columns:repeat(3,minmax(0,1fr)); }
 .odd-blurb{ font-size:9px; opacity:.7; margin-top:4px; line-height:1.35; }
 
+/* the deal: every card flies out of the deck to its seat */
+.card.dealing{
+  animation:dealFly .3s cubic-bezier(.2,.9,.3,1) backwards;
+}
+@keyframes dealFly{
+  0%{ transform:translate(var(--dx), var(--dy)) rotate(-16deg) scale(.9); opacity:0 }
+  35%{ opacity:1 }
+  100%{ transform:none; opacity:1 }
+}
+
+/* ============================================================
+   THE WHEEL
+   ============================================================ */
+.wheel-panel{ max-width:430px; }
+.wheel-stake{ font-size:12px; opacity:.8; margin-bottom:10px; }
+.wheel-stake b{ font-family:var(--display); color:var(--gold); font-size:17px; }
+.wheel-wrap{ position:relative; width:220px; height:220px; margin:0 auto 14px; }
+.rw-wheel{
+  position:absolute; inset:0; border-radius:50%;
+  border:6px solid #3a2a16;
+  box-shadow:0 0 0 3px #7a5a2a, inset 0 0 30px rgba(0,0,0,.65), 0 16px 34px rgba(0,0,0,.6);
+}
+.rw-nums{ position:absolute; inset:0; }
+.rw-num{
+  position:absolute; left:50%; top:50%; width:20px; height:14px; margin:-7px 0 0 -10px;
+  font-family:var(--display); font-size:9px; text-align:center; color:#fff;
+  text-shadow:0 1px 2px #000; pointer-events:none;
+}
+.rw-hub{
+  position:absolute; left:50%; top:50%; width:64px; height:64px; margin:-32px 0 0 -32px;
+  border-radius:50%; background:radial-gradient(circle at 40% 35%, #d8b26a, #6b4a1c);
+  border:3px solid #3a2a16; box-shadow:inset 0 0 14px rgba(0,0,0,.6);
+}
+.rw-pointer{
+  position:absolute; left:50%; top:-12px; margin-left:-9px; z-index:10;
+  width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent;
+  border-top:18px solid var(--gold); filter:drop-shadow(0 3px 5px rgba(0,0,0,.7));
+}
+.rw-ball{
+  position:absolute; left:50%; top:14px; margin-left:-6px; width:12px; height:12px; z-index:9;
+  border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #b9b9c4);
+  box-shadow:0 2px 6px rgba(0,0,0,.7);
+}
+.rw-ball.rolling{ animation:ballRoll .42s linear infinite; }
+@keyframes ballRoll{
+  0%{ transform:rotate(0deg) translateY(0) }
+  100%{ transform:rotate(360deg) translateY(0) }
+}
+.rw-ball.rolling{ transform-origin:6px 96px; }
+.rw-ball.settled{ animation:ballDrop .3s ease-out; }
+@keyframes ballDrop{ 0%{ transform:translateY(-8px) scale(1.3) } 100%{ transform:none } }
+
+.wheel-bets{ display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
+.rw-bet{
+  flex:1; display:flex; flex-direction:column; gap:2px; align-items:center; cursor:pointer;
+  padding:9px 6px; border-radius:11px; border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
+  transition:transform .1s, box-shadow .14s;
+}
+.rw-bet:hover:not(:disabled){ transform:translateY(-3px); }
+.rw-bet:disabled{ opacity:.4; cursor:default; }
+.rw-bet.chosen{ opacity:1; box-shadow:0 0 0 3px var(--gold), 0 0 22px rgba(255,209,102,.6); }
+.rw-red{ border-color:#c62b45; background:rgba(198,43,69,.2); }
+.rw-black{ border-color:#8b93a7; background:rgba(27,28,34,.6); }
+.rw-green{ border-color:#1f9d55; background:rgba(31,157,85,.2); }
+.rw-bl{ font-family:var(--display); font-size:12px; }
+.rw-bo{ font-size:8.5px; opacity:.55; letter-spacing:.08em; }
+.rw-bp{ font-family:var(--display); font-size:11px; color:var(--gold); }
+.wheel-warn{ font-size:10px; opacity:.6; margin-bottom:8px; }
+.wheel-warn b{ color:var(--hot); }
+.wheel-result{ min-height:44px; font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+.wheel-result b{ font-family:var(--display); font-size:15px; }
+.wheel-result.win{ color:var(--lime); }
+.wheel-result.lose{ color:#ff8fa3; }
+.rw-note{ font-size:10.5px; opacity:.75; }
+.rw-spinning{ opacity:.5; font-style:italic; }
+.tip-kind.odd-kind{ background:rgba(255,209,102,.16); color:#ffdf9c; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -1497,7 +1574,9 @@ const TUNE = {
   momentumDecay: 15,        // ...lost per second of dithering
   momentumMaxMult: 0.9,     // full bar is worth X1.9
   potShare: 0.12,           // this slice of every score also drops into the SIDE POT
-  potMinFlip: 200,          // the pot must hold at least this to gamble it
+  potMinFlip: 200,          // the pot must hold at least this to take it to the wheel
+  roulettePayEven: 3,       // red or black pays the pot times this
+  roulettePayGreen: 20,     // the zero pays this
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
@@ -2238,7 +2317,8 @@ const ODDITIES = {
   },
   punch: {
     name: 'Punch Card', icon: 'ladder', tint: 'odd-punch', chips: 30,
-    text: 'X1.4 Mult, and X0.2 more for every time it has been scored this run.',
+    text: 'X1.4 Mult, and X0.2 more for every time it has already been scored this run.',
+    long: 'Starts at X1.4 Mult. Every time you score it the card is punched, and it keeps that punch for the whole run — X1.6 the second time, X1.8 the third, X2.0 the fourth. Score it every round and it quietly becomes one of the strongest multipliers you own. The punch count is printed in the corner of the card.',
     score: c => {
       const card = c.card;
       card.oddCount = (card.oddCount || 0) + 1;
@@ -2249,6 +2329,25 @@ const ODDITIES = {
   }
 };
 const ODDITY_KEYS = Object.keys(ODDITIES);
+
+
+/* =========================================================
+   THE WHEEL -- 19 pockets, one of them green.
+   Red or black is a coin flip you can nearly afford; the zero is a lottery.
+   ========================================================= */
+const ROULETTE = (() => {
+  const pockets = [{ n: 0, c: 'green' }];
+  for (let i = 1; i <= 18; i++) pockets.push({ n: i, c: i % 2 === 1 ? 'red' : 'black' });
+  return pockets;
+})();
+const ROULETTE_ODDS = {
+  red:   { count: 9, pay: 3,  label: 'RED' },
+  black: { count: 9, pay: 3,  label: 'BLACK' },
+  green: { count: 1, pay: 20, label: 'GREEN 0' }
+};
+function roulettePay(colour) {
+  return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
+}
 
 /* ===== js/engine.js ===== */
 /* ============================================================
@@ -3362,6 +3461,163 @@ const Game = (() => {
     return { ok: true, amount: pot };
   }
 
+  /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
+     Lose and the pot is gone AND the same amount comes off your ante total, so
+     a bad spin genuinely costs you quota progress.                             */
+  function spinRoulette(colour) {
+    const pot = Math.round(G.round.pot || 0);
+    if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.' };
+    if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
+    snapshot();
+    const m = Engine.mods(G.run);
+
+    let index = Math.floor(Math.random() * ROULETTE.length);
+    let guaranteed = false;
+    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
+      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
+      index = winners[Math.floor(Math.random() * winners.length)];
+      guaranteed = true;
+      G.round.usedSafeFlip = true;
+    }
+    const pocket = ROULETTE[index];
+    const win = pocket.c === colour;
+    const pay = roulettePay(colour);
+
+    let anteHit = 0;
+    if (win) {
+      G.round.pot = pot * pay;
+      G.round.potStreak = (G.round.potStreak || 0) + 1;
+      G.round.heat += (colour === 'green' ? 3 : 1);
+      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      bumpMomentum();
+    } else {
+      G.round.pot = 0;
+      G.round.potStreak = 0;
+      G.round.heat = 0;
+      anteHit = pot;
+      spendAnteScore(pot);          /* this round's score first, then banked rounds */
+    }
+    save();
+    return { ok: true, win, guaranteed, pocket, index, colour, pay,
+             pot: G.round.pot, staked: pot, anteHit, heat: G.round.heat };
+  }
+
+  /* ---------------- THE STASH ----------------
+     Hold cards back out of the deal and play them whenever they help. The Stash
+     survives rounds and antes, so a spare Ace or a Gilded King can be saved for
+     the exact moment your multipliers are highest.                             */
+  function stashCapacity() { return Engine.stashCapacity(G.run); }
+
+  function canStash(src) {
+    if (G.phase !== 'play') return false;
+    if ((G.run.stash || []).length >= stashCapacity()) return false;
+    const b = G.board;
+    if (src.zone === 'waste') {
+      const allowed = Engine.playableWaste(b, Engine.mods(G.run));
+      const idx = src.index != null ? src.index : b.waste.length - 1;
+      return allowed.some(w => w.index === idx);
+    }
+    if (src.zone === 'tableau') {
+      const pile = b.tableau[src.col];
+      return pile.length > 0 && src.index === pile.length - 1 && pile[src.index].faceUp;
+    }
+    return false;
+  }
+
+  function stash(src) {
+    if (!canStash(src)) { illegal(); return false; }
+    const cards = grab(src, Engine.mods(G.run));
+    if (!cards || cards.length !== 1) { illegal(); return false; }
+    snapshot();
+    const card = cards[0];
+    removeFrom(src, 1);
+    if (!G.run.stash) G.run.stash = [];
+    G.run.stash.push(Object.assign({}, card, { faceUp: true, scoredRound: false }));
+    G.round.moves++;
+    bumpMomentum(TUNE.momentumPerMove * 0.5);
+
+    const m = Engine.mods(G.run);
+    if (m.stashCash) { G.run.money += m.stashCash; G.round.money += m.stashCash; }
+    scoreEvent({ event: 'stash', card, baseChips: rankChips(card.rank) * TUNE.stashChipsPerRank,
+                 label: 'POCKETED', anchor: { zone: 'stash' } });
+    if (src.zone === 'tableau') settleColumn(src.col);
+    afterMove();
+    return true;
+  }
+
+  /* play a held card back onto the board */
+  function stashPlay(index, dst) {
+    if (G.phase !== 'play') return false;
+    const card = (G.run.stash || [])[index];
+    if (!card) return false;
+    const b = G.board, m = Engine.mods(G.run);
+
+    if (dst.zone === 'foundation') {
+      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit) ? dst.suit : Engine.foundationTargetFor(b, card);
+      let twin = false;
+      if (!suit) { suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card); twin = !!suit; }
+      if (!suit) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      const depth = b.foundations[suit].length;
+      if (twin) b.twins[suit].push(card); else b.foundations[suit].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      G.round.scoredCards++;
+      G.round.cascade++;
+      bumpMomentum();
+      const anchor = { zone: 'foundation', suit };
+      card.scoredRound = true;
+      scoreEvent({ event: 'foundation', card, fromZone: 'stash', depth: twin ? Math.max(0, depth - 1) : depth,
+                   anchor, twin, fromStash: true, label: twin ? 'TWIN FROM THE STASH!' : 'FROM THE STASH!' });
+      G.round.blessing = 0;
+      if (!twin) checkSuitComplete(suit, anchor);
+      afterMove();
+      return true;
+    }
+
+    if (dst.zone === 'tableau') {
+      if (!Engine.canPlaceOnColumn(b, dst.col, card, m)) return illegal();
+      snapshot();
+      G.run.stash.splice(index, 1);
+      card.faceUp = true;
+      b.tableau[dst.col].push(card);
+      G.round.moves++;
+      G.round.stashPlays++;
+      breakCascade();
+      bumpMomentum(TUNE.momentumPerMove * 0.5);
+      push({ event: 'cash', label: 'OUT OF THE STASH', amount: 0,
+             anchor: { zone: 'tableau', col: dst.col }, chips: 0, mult: 0, total: 0, triggers: [] });
+      afterMove();
+      return true;
+    }
+    return illegal();
+  }
+
+  /* ---------------- THE SIDE POT ----------------
+     A slice of every score also drops into a pot in the corner. Cash it whenever
+     you like, or push it: a card is flipped from a freshly shuffled fate deck,
+     so there is no order to memorise. Red doubles it and stokes your HEAT.
+     Black takes the lot and a pass with it.                                     */
+  function addToPot(points) {
+    const cut = Math.round(points * (TUNE.potShare + Engine.mods(G.run).potShare));
+    if (cut <= 0) return;
+    G.round.pot = (G.round.pot || 0) + cut;
+  }
+
+  function cashPot() {
+    const pot = G.round.pot || 0;
+    if (pot <= 0) return { ok: false, reason: 'The pot is empty.' };
+    snapshot();
+    G.round.score += pot;
+    G.round.pot = 0;
+    G.round.potStreak = 0;
+    push({ event: 'pot-cash', amount: pot, chips: 0, mult: 0, total: pot, triggers: [] });
+    bumpMomentum(TUNE.momentumPerMove * 0.5);
+    save();
+    return { ok: true, amount: pot };
+  }
+
   function pushPot() {
     const pot = G.round.pot || 0;
     if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to gamble.' };
@@ -4024,7 +4280,7 @@ const Game = (() => {
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
-    cashPot, pushPot,
+    cashPot, spinRoulette,
     bumpMomentum, decayMomentum
   };
 })();
@@ -4483,7 +4739,7 @@ const UI = (() => {
       '<div class="sp-cap">SIDE POT' + (streak ? '<span class="sp-streak">' + streak + ' straight</span>' : '') + '</div>' +
       '<div class="sp-amount">' + fmt(pot) + '</div>' +
       '<div class="sp-sub">' + (heat ? 'HEAT X' + Game.heatMult() + ' · ' : '') +
-        (canFlip ? 'flip doubles it to ' + fmt(pot * 2) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
+        (canFlip ? 'red/black pays ' + fmt(pot * TUNE.roulettePayEven) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
 
     const row = el('div', 'sp-btns');
     const cash = el('button', 'sp-btn sp-cash' + (pot > 0 ? '' : ' off'), 'CASH IT');
@@ -4492,11 +4748,11 @@ const UI = (() => {
       if (!res.ok) { Sfx.error(); toast(res.reason); return; }
       render(); drainFx();
     };
-    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'DOUBLE OR NOTHING');
+    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'SPIN THE WHEEL');
     flip.onclick = () => {
-      const res = Game.pushPot();
-      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-      render(); drainFx();
+      if (!canFlip) { Sfx.error(); toast('The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.'); return; }
+      Sfx.click();
+      Overlays.roulette();
     };
     row.appendChild(cash);
     row.appendChild(flip);
@@ -5046,29 +5302,6 @@ const UI = (() => {
       setTimeout(done, 420 * spd());
       return;
     }
-    if (p.event === 'pot-flip') {
-      const c = p.card;
-      const card = el('div', 'cut-flip ' + (p.win ? 'hit' : 'miss'),
-        '<div class="cf-call">DOUBLE OR NOTHING</div>' +
-        '<div class="cf-card ' + (SUITS[c.suit].color === 'red' ? 'red' : 'black') + '">' +
-          RANK_NAMES[c.rank] + SUITS[c.suit].sym + '</div>' +
-        '<div class="cf-verdict">' + (p.win
-          ? 'RED — POT IS NOW ' + fmt(p.pot) + (p.guaranteed ? ' (counted)' : '')
-          : 'BLACK — lost ' + fmt(p.lost) + (p.penalty === 'pass' ? ' and a pass' : '')) + '</div>');
-      $('#fxlayer').appendChild(card);
-      if (p.win) {
-        Sfx.win(); screenShake(9 + p.streak * 2); confetti($('#sidepot'), 30 + p.streak * 12, 't3');
-        flashScreen(0.24, '#ffd166');
-        if (p.streak >= 3) bannerText(p.streak + ' STRAIGHT');
-      } else {
-        Sfx.lose(); screenShake(13); flashScreen(0.3, '#ff4d6d');
-      }
-      renderHud();
-      setTimeout(() => card.classList.add('out'), 900 * spd());
-      setTimeout(() => card.remove(), 1300 * spd());
-      setTimeout(done, 480 * spd());
-      return;
-    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -5463,6 +5696,37 @@ const UI = (() => {
     hintTimer = setTimeout(clearHints, 2600);
   }
 
+  /* ---------------- the deal ----------------
+     Every card flies out of the deck to its seat, in the order it was dealt. */
+  function dealAnimation() {
+    const stock = $('#stock');
+    if (!stock) return;
+    const from = stock.getBoundingClientRect();
+    const cards = [];
+    $$('#tableau .tab-pile').forEach((pile, col) => {
+      Array.from(pile.children).forEach(n => {
+        if (!n.classList.contains('card')) return;
+        cards.push({ n, col, row: +(n.dataset.index || 0) });
+      });
+    });
+    /* klondike deals across the columns, one row at a time */
+    cards.sort((a, b) => (a.row - b.row) || (a.col - b.col));
+    cards.forEach((c, i) => {
+      const r = c.n.getBoundingClientRect();
+      c.n.style.setProperty('--dx', Math.round(from.left - r.left) + 'px');
+      c.n.style.setProperty('--dy', Math.round(from.top - r.top) + 'px');
+      c.n.style.animationDelay = (i * 26) + 'ms';
+      c.n.classList.add('dealing');
+      setTimeout(() => Sfx.deal(), i * 26);
+    });
+    const last = cards.length * 26 + 260;
+    setTimeout(() => { $$('.card.dealing').forEach(n => {
+      n.classList.remove('dealing');
+      n.style.animationDelay = '';
+    }); }, last);
+    return last;
+  }
+
   let toastTimer = null;
   function toast(msg, ms) {
     const t = $('#toast');
@@ -5477,10 +5741,21 @@ const UI = (() => {
     const t = $('#tooltip');
     t.innerHTML = html;
     t.classList.add('show');
+    t.style.left = '-9999px';
+    t.style.top = '0px';
+    /* measure first, then place it wherever it actually fits */
     const r = ref.getBoundingClientRect();
-    const w = 250;
-    t.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
-    t.style.top = (r.bottom + 8) + 'px';
+    const tw = t.offsetWidth || 270;
+    const th = t.offsetHeight || 160;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(window.innerWidth - tw - 8, left));
+    let top = r.bottom + 8;
+    if (top + th > window.innerHeight - 8) {
+      top = r.top - th - 8;                       // flip above
+      if (top < 8) top = Math.max(8, window.innerHeight - th - 8);
+    }
+    t.style.left = left + 'px';
+    t.style.top = top + 'px';
   }
   function hideTip() { const t = $('#tooltip'); if (t) t.classList.remove('show'); }
 
@@ -5511,7 +5786,7 @@ const UI = (() => {
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
-    startMomentumLoop, renderMomentum, momentumMult,
+    startMomentumLoop, renderMomentum, momentumMult, dealAnimation,
     get busy() { return fxBusy; }
   };
 })();
@@ -5662,6 +5937,7 @@ const Overlays = (() => {
       Game.leaveShop();
       UI.resetDisplayScore();
       UI.render();
+      UI.dealAnimation();
       UI.toast('Ante ' + G.run.ante + ' · Round ' + G.run.round, 1400);
     };
   }
@@ -5923,6 +6199,26 @@ const Overlays = (() => {
 
   /* full value breakdown for a card, used on the deck screen */
   function cardTip(card) {
+    /* Oddities are not rank-and-suit cards, so they get their own readout */
+    if (card.oddity) {
+      const od = ODDITIES[card.oddity];
+      if (!od) return '<div class="tip-title">Unknown Oddity</div>';
+      let o = '<div class="tip-title">' + icon(od.icon, 'tip-ico') + ' ' + od.name + '</div>';
+      o += '<div class="tip-kind odd-kind">ODDITY — not a card from a deck of 52</div>';
+      o += '<div class="tip-rows">' +
+             '<div class="tip-row"><span>Base value</span><i>+' + od.chips + ' Chips</i></div>' +
+             (card.oddCount ? '<div class="tip-row"><span>Scored so far</span><i>' + card.oddCount + ' time' + (card.oddCount > 1 ? 's' : '') + '</i></div>' : '') +
+           '</div>';
+      o += '<div class="tip-text hot">' + od.text + '</div>';
+      if (od.long) o += '<div class="tip-detail hot"><b>How it works</b>' + od.long + '</div>';
+      o += '<div class="tip-detail"><b>Where it can go</b>' +
+(card.oddity === 'joker'
+             ? 'It has no rank and no suit, so it <b>stacks onto any card in the tableau and any card stacks on top of it</b> — use it to bridge two runs together. On the foundations it is the exception: it becomes whatever card a pile is waiting for and <b>advances it like a real card</b>.'
+             : 'It has no rank and no suit, so it <b>stacks onto any card in the tableau and any card stacks on top of it</b> — that is why a 10 will happily sit on it. Use it to bridge two runs together or to unstick a dead column. On the foundations it can be laid onto <b>any pile that has been started</b>, which scores its ability in full without advancing that pile.') +
+           '</div>';
+      return o;
+    }
+
     const base = rankChips(card.rank);
     let chips = base, mult = 1, xmult = 1, cash = 0;
     const rows = [];
@@ -6036,6 +6332,97 @@ const Overlays = (() => {
 
   function stat(k, v) { return '<div class="stat"><span>' + k + '</span><b>' + v + '</b></div>'; }
 
+  /* ---------------- THE WHEEL ---------------- */
+  const SEG = 360 / ROULETTE.length;
+
+  function roulette() {
+    const pot = Math.round(G.round.pot || 0);
+    const nums = ROULETTE.map((p, i) =>
+      '<div class="rw-num r-' + p.c + '" style="transform:rotate(' + (i * SEG) + 'deg) translateY(-86px) rotate(' + (-i * SEG) + 'deg)">' + p.n + '</div>').join('');
+    const stops = ROULETTE.map((p, i) => {
+      const c = p.c === 'green' ? '#1f9d55' : (p.c === 'red' ? '#c62b45' : '#1b1c22');
+      return c + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
+    }).join(',');
+
+    const bet = (col) => {
+      const o = ROULETTE_ODDS[col];
+      return '<button class="rw-bet rw-' + col + '" data-col="' + col + '">' +
+        '<span class="rw-bl">' + o.label + '</span>' +
+        '<span class="rw-bo">' + o.count + ' in ' + ROULETTE.length + '</span>' +
+        '<span class="rw-bp">pays ' + UI.fmt(pot * o.pay) + '</span></button>';
+    };
+
+    open(
+      '<div class="panel wheel-panel">' +
+        '<div class="panel-flag">THE WHEEL</div>' +
+        '<div class="wheel-stake">Staking the pot: <b>' + UI.fmt(pot) + '</b></div>' +
+        '<div class="wheel-wrap">' +
+          '<div class="rw-pointer"></div>' +
+          '<div class="rw-wheel" id="rw-wheel" style="background:conic-gradient(' + stops + ')">' +
+            '<div class="rw-nums">' + nums + '</div>' +
+            '<div class="rw-hub"></div>' +
+          '</div>' +
+          '<div class="rw-ball" id="rw-ball"></div>' +
+        '</div>' +
+        '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
+        '<div class="wheel-warn">Lose and the pot is gone — and the same again comes off your <b>ante total</b>.</div>' +
+        '<div class="wheel-result" id="rw-result"></div>' +
+        '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
+      '</div>', 'centered');
+
+    $$('.rw-bet').forEach(b => { b.onclick = () => placeBet(b.dataset.col); });
+    $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
+  }
+
+  function placeBet(colour) {
+    const res = Game.spinRoulette(colour);
+    if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
+    $$('.rw-bet').forEach(b => { b.disabled = true; b.classList.toggle('chosen', b.dataset.col === colour); });
+    $('#rw-close').disabled = true;
+    $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
+
+    const wheel = $('#rw-wheel');
+    const ball = $('#rw-ball');
+    /* land the chosen pocket under the pointer after a few full turns */
+    const turns = 4 + Math.floor(Math.random() * 3);
+    const target = 360 * turns - res.index * SEG - SEG / 2;
+    wheel.style.transition = 'transform 3.1s cubic-bezier(.15,.6,.2,1)';
+    wheel.style.transform = 'rotate(' + target + 'deg)';
+    ball.classList.add('rolling');
+    Sfx.click();
+    let ticks = 0;
+    const tick = setInterval(() => { Sfx.chip(ticks++ % 8); }, 110);
+    setTimeout(() => clearInterval(tick), 2700);
+
+    setTimeout(() => {
+      ball.classList.remove('rolling');
+      ball.classList.add('settled');
+      finishSpin(res);
+    }, 3200);
+  }
+
+  function finishSpin(res) {
+    const p = res.pocket;
+    const box = $('#rw-result');
+    if (res.win) {
+      box.className = 'wheel-result win';
+      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the pot is now <b>' + UI.fmt(res.pot) + '</b>' +
+        (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
+        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>';
+      Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
+      UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
+    } else {
+      box.className = 'wheel-result lose';
+      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' + UI.fmt(res.staked) + '</b>' +
+        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>';
+      Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
+    }
+    const btn = $('#rw-close');
+    btn.disabled = false;
+    btn.textContent = res.win ? 'BACK TO THE TABLE' : 'THAT IS GAMBLING';
+    UI.renderHud();
+  }
+
   /* ---------------- the almanac: every ability in the game ---------------- */
   const ALMANAC_TABS = [
     { id: 'curios',  name: 'CURIOS',     sub: 'objects that take a mantel seat' },
@@ -6139,9 +6526,10 @@ const Overlays = (() => {
         'It costs you nothing — the points still land on your score as normal. The pot is a copy, sitting in the corner waiting for you to decide what to do with it.');
       html += almEntry('coin', 'CASH IT', 'safe',
         'The whole pot is added straight to your round score.', 'No risk, no flip. The pot resets to zero.');
-      html += almEntry('dice', 'DOUBLE OR NOTHING', 'needs ' + TUNE.potMinFlip + '+',
-        'A card is flipped from a freshly shuffled deck. Red doubles the pot and raises your HEAT. Black takes the pot and one of your passes.',
-        'The deck is reshuffled for every single flip, so there is no order to memorise and no right moment to wait for. Two wins in a row turns 400 into 1,600.');
+      html += almEntry('dice', 'SPIN THE WHEEL', 'needs ' + TUNE.potMinFlip + '+',
+        'Nineteen pockets — nine red, nine black, one green zero. Red or black pays ' + TUNE.roulettePayEven +
+        'x the pot, the green 0 pays ' + TUNE.roulettePayGreen + 'x. Winning also raises HEAT.',
+        'Lose and the pot is gone AND the same amount again comes off your ante total, this round first and then your banked rounds. The stake is really double the pot.');
       html += almEntry('twinflame', 'HEAT', 'from winning flips',
         'Each winning flip raises Heat by one. Heat multiplies EVERY score for the rest of the round — X'
         + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four.',
@@ -6221,12 +6609,15 @@ const Overlays = (() => {
           'there getting bigger while you play, and you decide what to do with it:</p>' +
           '<ul>' +
             '<li><b>CASH IT</b> — the whole pot is added straight to your round score. Safe.</li>' +
-            '<li><b>DOUBLE OR NOTHING</b> — a card is flipped from a <i>freshly shuffled</i> deck, so there is no ' +
-            'order to learn and nothing to wait for. <b>Red</b> doubles the pot and raises your <b>HEAT</b>, which ' +
-            'multiplies every score for the rest of the round. <b>Black</b> takes the pot and a pass with it.</li>' +
+            '<li><b>SPIN THE WHEEL</b> takes the pot to roulette. Nineteen pockets: nine red, nine black and a ' +
+            'single green zero. Back <b>RED</b> or <b>BLACK</b> (9 in 19) and the pot pays <b>' + TUNE.roulettePayEven + 'x</b>; ' +
+            'back the green <b>0</b> (1 in 19) and it pays <b>' + TUNE.roulettePayGreen + 'x</b>. Winning also raises your ' +
+            '<b>HEAT</b>, which multiplies every score for the rest of the round.</li>' +
+            '<li><b>If it misses</b>, the pot is gone <i>and the same amount again comes off your ante total</i> — ' +
+            'this round\'s score first, then your banked rounds. A bad spin costs real quota progress, so only ' +
+            'take a big pot to the wheel when you can afford to lose twice its size.</li>' +
           '</ul>' +
-          '<p>Push it twice and a 400 pot is 1,600. Push it four times and you are somewhere silly. ' +
-          'The Card Counter makes your first flip each round unloseable, The Daredevil pays $5 per win, and ' +
+          '<p>The Card Counter makes your first spin each round unloseable, The Daredevil pays $5 per win, and ' +
           'The Skimmer makes the pot fill nearly twice as fast.</p>' +
 
           '<h4>Oddities and spare cards</h4>' +
@@ -6349,7 +6740,7 @@ const Overlays = (() => {
     };
   }
 
-  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title, cardTip, almanac };
+  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title, cardTip, almanac, roulette };
 })();
 
 /* ===== js/main.js ===== */
@@ -6369,6 +6760,7 @@ const Overlays = (() => {
       Overlays.close();
       UI.resetDisplayScore();
       UI.render();
+      UI.dealAnimation();
       UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' across 3 rounds. Chips <b>X</b> Mult = points.', 4200);
       setTimeout(() => { if (G.phase === 'play') UI.toast('Build long face-up runs, then cash them home — the <b>RUN</b> badge shows the bonus.', 4200); }, 4600);
     });

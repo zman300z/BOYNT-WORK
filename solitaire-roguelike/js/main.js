@@ -14,6 +14,7 @@
       Overlays.close();
       UI.resetDisplayScore();
       UI.render();
+      UI.dealAnimation();
       UI.toast('Ante 1 · Round 1 — hit ' + UI.fmt(Engine.quotaFor(G.run)) + ' across 3 rounds. Chips <b>X</b> Mult = points.', 4200);
       setTimeout(() => { if (G.phase === 'play') UI.toast('Build long face-up runs, then cash them home — the <b>RUN</b> badge shows the bonus.', 4200); }, 4600);
     });

@@ -101,18 +101,21 @@ A bar in the header that fills every time you score and drains while you sit sti
 more **every** score is worth — up to ×1.9 at a full bar. It is a bonus only: thinking never costs you
 points, but playing fast pays. It also drives the soundtrack, which speeds up and adds layers as you heat up.
 
-### The Side Pot — the corner gamble
+### The Side Pot and the Wheel
 
 Every score drops **12%** of itself into a pot in the bottom-right corner (it costs you nothing — the points
 still land on your score as normal). Then it's your call:
 
 - **CASH IT** — the whole pot goes straight onto your round score. Safe.
-- **DOUBLE OR NOTHING** — a card is flipped from a *freshly shuffled* deck, so there's no order to learn and
-  no right moment to wait for. **Red** doubles the pot and raises your **HEAT**, which multiplies every score
-  for the rest of the round (×1.5 at one level, ×3 at four). **Black** takes the pot and one of your passes.
+- **SPIN THE WHEEL** — takes the pot to roulette. Nineteen pockets: nine red, nine black, one green zero.
+  Back **RED** or **BLACK** (9 in 19) and the pot pays **3×**; back the green **0** (1 in 19) and it pays **20×**.
+  Winning also raises your **HEAT**, which multiplies every score for the rest of the round.
+- **If it misses**, the pot is gone *and the same amount again comes off your ante total* — this round's score
+  first, then your banked rounds. The real stake is double the pot, so only take a big one to the wheel when
+  you can afford to lose twice its size.
 
-Push twice and a 400 pot is 1,600. **The Card Counter** makes your first flip each round unloseable,
-**The Daredevil** pays $5 a win, and **The Skimmer** nearly doubles how fast the pot fills.
+**The Card Counter** makes your first spin each round unloseable, **The Daredevil** pays $5 a win, and
+**The Skimmer** nearly doubles how fast the pot fills.
 
 ### Reshuffling
 

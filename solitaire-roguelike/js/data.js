@@ -47,7 +47,9 @@ const TUNE = {
   momentumDecay: 15,        // ...lost per second of dithering
   momentumMaxMult: 0.9,     // full bar is worth X1.9
   potShare: 0.12,           // this slice of every score also drops into the SIDE POT
-  potMinFlip: 200,          // the pot must hold at least this to gamble it
+  potMinFlip: 200,          // the pot must hold at least this to take it to the wheel
+  roulettePayEven: 3,       // red or black pays the pot times this
+  roulettePayGreen: 20,     // the zero pays this
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
@@ -788,7 +790,8 @@ const ODDITIES = {
   },
   punch: {
     name: 'Punch Card', icon: 'ladder', tint: 'odd-punch', chips: 30,
-    text: 'X1.4 Mult, and X0.2 more for every time it has been scored this run.',
+    text: 'X1.4 Mult, and X0.2 more for every time it has already been scored this run.',
+    long: 'Starts at X1.4 Mult. Every time you score it the card is punched, and it keeps that punch for the whole run — X1.6 the second time, X1.8 the third, X2.0 the fourth. Score it every round and it quietly becomes one of the strongest multipliers you own. The punch count is printed in the corner of the card.',
     score: c => {
       const card = c.card;
       card.oddCount = (card.oddCount || 0) + 1;
@@ -799,3 +802,22 @@ const ODDITIES = {
   }
 };
 const ODDITY_KEYS = Object.keys(ODDITIES);
+
+
+/* =========================================================
+   THE WHEEL -- 19 pockets, one of them green.
+   Red or black is a coin flip you can nearly afford; the zero is a lottery.
+   ========================================================= */
+const ROULETTE = (() => {
+  const pockets = [{ n: 0, c: 'green' }];
+  for (let i = 1; i <= 18; i++) pockets.push({ n: i, c: i % 2 === 1 ? 'red' : 'black' });
+  return pockets;
+})();
+const ROULETTE_ODDS = {
+  red:   { count: 9, pay: 3,  label: 'RED' },
+  black: { count: 9, pay: 3,  label: 'BLACK' },
+  green: { count: 1, pay: 20, label: 'GREEN 0' }
+};
+function roulettePay(colour) {
+  return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
+}

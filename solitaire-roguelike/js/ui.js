@@ -233,7 +233,7 @@ const UI = (() => {
       '<div class="sp-cap">SIDE POT' + (streak ? '<span class="sp-streak">' + streak + ' straight</span>' : '') + '</div>' +
       '<div class="sp-amount">' + fmt(pot) + '</div>' +
       '<div class="sp-sub">' + (heat ? 'HEAT X' + Game.heatMult() + ' · ' : '') +
-        (canFlip ? 'flip doubles it to ' + fmt(pot * 2) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
+        (canFlip ? 'red/black pays ' + fmt(pot * TUNE.roulettePayEven) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
 
     const row = el('div', 'sp-btns');
     const cash = el('button', 'sp-btn sp-cash' + (pot > 0 ? '' : ' off'), 'CASH IT');
@@ -242,11 +242,11 @@ const UI = (() => {
       if (!res.ok) { Sfx.error(); toast(res.reason); return; }
       render(); drainFx();
     };
-    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'DOUBLE OR NOTHING');
+    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'SPIN THE WHEEL');
     flip.onclick = () => {
-      const res = Game.pushPot();
-      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
-      render(); drainFx();
+      if (!canFlip) { Sfx.error(); toast('The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.'); return; }
+      Sfx.click();
+      Overlays.roulette();
     };
     row.appendChild(cash);
     row.appendChild(flip);
@@ -796,29 +796,6 @@ const UI = (() => {
       setTimeout(done, 420 * spd());
       return;
     }
-    if (p.event === 'pot-flip') {
-      const c = p.card;
-      const card = el('div', 'cut-flip ' + (p.win ? 'hit' : 'miss'),
-        '<div class="cf-call">DOUBLE OR NOTHING</div>' +
-        '<div class="cf-card ' + (SUITS[c.suit].color === 'red' ? 'red' : 'black') + '">' +
-          RANK_NAMES[c.rank] + SUITS[c.suit].sym + '</div>' +
-        '<div class="cf-verdict">' + (p.win
-          ? 'RED — POT IS NOW ' + fmt(p.pot) + (p.guaranteed ? ' (counted)' : '')
-          : 'BLACK — lost ' + fmt(p.lost) + (p.penalty === 'pass' ? ' and a pass' : '')) + '</div>');
-      $('#fxlayer').appendChild(card);
-      if (p.win) {
-        Sfx.win(); screenShake(9 + p.streak * 2); confetti($('#sidepot'), 30 + p.streak * 12, 't3');
-        flashScreen(0.24, '#ffd166');
-        if (p.streak >= 3) bannerText(p.streak + ' STRAIGHT');
-      } else {
-        Sfx.lose(); screenShake(13); flashScreen(0.3, '#ff4d6d');
-      }
-      renderHud();
-      setTimeout(() => card.classList.add('out'), 900 * spd());
-      setTimeout(() => card.remove(), 1300 * spd());
-      setTimeout(done, 480 * spd());
-      return;
-    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -1213,6 +1190,37 @@ const UI = (() => {
     hintTimer = setTimeout(clearHints, 2600);
   }
 
+  /* ---------------- the deal ----------------
+     Every card flies out of the deck to its seat, in the order it was dealt. */
+  function dealAnimation() {
+    const stock = $('#stock');
+    if (!stock) return;
+    const from = stock.getBoundingClientRect();
+    const cards = [];
+    $$('#tableau .tab-pile').forEach((pile, col) => {
+      Array.from(pile.children).forEach(n => {
+        if (!n.classList.contains('card')) return;
+        cards.push({ n, col, row: +(n.dataset.index || 0) });
+      });
+    });
+    /* klondike deals across the columns, one row at a time */
+    cards.sort((a, b) => (a.row - b.row) || (a.col - b.col));
+    cards.forEach((c, i) => {
+      const r = c.n.getBoundingClientRect();
+      c.n.style.setProperty('--dx', Math.round(from.left - r.left) + 'px');
+      c.n.style.setProperty('--dy', Math.round(from.top - r.top) + 'px');
+      c.n.style.animationDelay = (i * 26) + 'ms';
+      c.n.classList.add('dealing');
+      setTimeout(() => Sfx.deal(), i * 26);
+    });
+    const last = cards.length * 26 + 260;
+    setTimeout(() => { $$('.card.dealing').forEach(n => {
+      n.classList.remove('dealing');
+      n.style.animationDelay = '';
+    }); }, last);
+    return last;
+  }
+
   let toastTimer = null;
   function toast(msg, ms) {
     const t = $('#toast');
@@ -1227,10 +1235,21 @@ const UI = (() => {
     const t = $('#tooltip');
     t.innerHTML = html;
     t.classList.add('show');
+    t.style.left = '-9999px';
+    t.style.top = '0px';
+    /* measure first, then place it wherever it actually fits */
     const r = ref.getBoundingClientRect();
-    const w = 250;
-    t.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
-    t.style.top = (r.bottom + 8) + 'px';
+    const tw = t.offsetWidth || 270;
+    const th = t.offsetHeight || 160;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(window.innerWidth - tw - 8, left));
+    let top = r.bottom + 8;
+    if (top + th > window.innerHeight - 8) {
+      top = r.top - th - 8;                       // flip above
+      if (top < 8) top = Math.max(8, window.innerHeight - th - 8);
+    }
+    t.style.left = left + 'px';
+    t.style.top = top + 'px';
   }
   function hideTip() { const t = $('#tooltip'); if (t) t.classList.remove('show'); }
 
@@ -1261,7 +1280,7 @@ const UI = (() => {
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
-    startMomentumLoop, renderMomentum, momentumMult,
+    startMomentumLoop, renderMomentum, momentumMult, dealAnimation,
     get busy() { return fxBusy; }
   };
 })();
