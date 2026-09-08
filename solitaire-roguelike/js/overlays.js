@@ -119,6 +119,7 @@ const Overlays = (() => {
         '<div class="shop-foot">' +
           '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
           '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
+          '<button class="btn ghost" id="shop-almanac">ALMANAC</button>' +
           '<button class="btn big" id="shop-next">NEXT ROUND →</button>' +
         '</div>' +
       '</div>', 'shop-open');
@@ -129,6 +130,7 @@ const Overlays = (() => {
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
+    $('#shop-almanac').onclick = () => almanac();
     wireBandit();
     $('#shop-next').onclick = () => {
       Sfx.click();
@@ -369,9 +371,11 @@ const Overlays = (() => {
     const rows = [];
     rows.push(row('Base rank value', '+' + base + ' Chips'));
 
+    const details = [];
     const e = ENHANCEMENTS[card.enhancement];
     if (card.enhancement !== 'none') {
       rows.push(row(e.name, e.text, 'hot'));
+      if (e.long) details.push({ name: e.name, long: e.long, cls: 'hot' });
       if (card.enhancement === 'gilded') chips += 50;
       if (card.enhancement === 'voltaic') mult += 4;
       if (card.enhancement === 'glass') xmult *= 2;
@@ -383,6 +387,7 @@ const Overlays = (() => {
     const f = FINISHES[card.finish];
     if (card.finish !== 'none') {
       rows.push(row(f.name, f.text, 'fin'));
+      if (f.long) details.push({ name: f.name, long: f.long, cls: 'fin' });
       if (card.finish === 'foil') chips += 60;
       if (card.finish === 'holo') mult += 12;
       if (card.finish === 'poly') xmult *= 1.5;
@@ -390,6 +395,7 @@ const Overlays = (() => {
     const sl = SEALS[card.seal];
     if (card.seal !== 'none') {
       rows.push(row(sl.name, sl.text, 'seal'));
+      if (sl.long) details.push({ name: sl.name, long: sl.long, cls: 'seal' });
       if (card.seal === 'blue') chips += 30;
       if (card.seal === 'gold') cash += 4;
     }
@@ -407,6 +413,9 @@ const Overlays = (() => {
       UI.fmt(alone * retrig) + '</b></div>';
     if (retrig > 1) out += '<div class="tip-foot">Red Seal: scored twice.</div>';
     if (cash) out += '<div class="tip-cash">Pays $' + cash + ' when scored.</div>';
+    details.forEach(d => {
+      out += '<div class="tip-detail ' + d.cls + '"><b>' + d.name + '</b>' + d.long + '</div>';
+    });
     out += '<div class="tip-foot">Curios, Cascade and your Column Stack multiply this further.</div>';
     return out;
   }
@@ -470,6 +479,115 @@ const Overlays = (() => {
 
   function stat(k, v) { return '<div class="stat"><span>' + k + '</span><b>' + v + '</b></div>'; }
 
+  /* ---------------- the almanac: every ability in the game ---------------- */
+  const ALMANAC_TABS = [
+    { id: 'curios',  name: 'CURIOS',     sub: 'objects that take a mantel seat' },
+    { id: 'marks',   name: 'CARD MARKS', sub: 'enhancements, finishes and seals' },
+    { id: 'cards',   name: 'NEW CARDS',  sub: 'cards you can add to the deck' },
+    { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
+    { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
+    { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
+    { id: 'wishes',  name: 'THE WELL',   sub: 'what the Wishing Well can give you' },
+    { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
+  ];
+  let almanacTab = 'curios';
+
+  function almanac(tab) {
+    almanacTab = tab || almanacTab;
+    open(
+      '<div class="panel almanac">' +
+        '<div class="panel-flag">THE ALMANAC</div>' +
+        '<div class="sub">every ability in the game, whether you own it or not</div>' +
+        '<div class="alm-tabs">' + ALMANAC_TABS.map(t =>
+          '<button class="alm-tab' + (t.id === almanacTab ? ' on' : '') + '" data-tab="' + t.id + '">' + t.name + '</button>').join('') + '</div>' +
+        '<div class="alm-sub" id="alm-sub"></div>' +
+        '<div class="alm-list" id="alm-list"></div>' +
+        '<button class="btn ghost" id="alm-close">CLOSE</button>' +
+      '</div>', 'centered wide');
+
+    $$('.alm-tab').forEach(b => { b.onclick = () => { Sfx.click(); almanac(b.dataset.tab); }; });
+    $('#alm-close').onclick = () => { Sfx.click(); close(); if (G.phase === 'shop') shop(); };
+    renderAlmanac();
+  }
+
+  function almEntry(iconName, title, tag, short, long, cls) {
+    return '<div class="alm-entry ' + (cls || '') + '">' +
+      '<div class="alm-ico">' + icon(iconName) + '</div>' +
+      '<div class="alm-body">' +
+        '<div class="alm-title">' + title + (tag ? '<span class="alm-tag">' + tag + '</span>' : '') + '</div>' +
+        '<div class="alm-short">' + short + '</div>' +
+        (long ? '<div class="alm-long">' + long + '</div>' : '') +
+      '</div></div>';
+  }
+
+  function renderAlmanac() {
+    const meta = ALMANAC_TABS.find(t => t.id === almanacTab);
+    $('#alm-sub').textContent = meta.sub;
+    const list = $('#alm-list');
+    let html = '';
+
+    if (almanacTab === 'curios') {
+      const owned = new Set(G.run ? G.run.mantel.map(c => c.id) : []);
+      ['common', 'uncommon', 'rare', 'legendary'].forEach(rar => {
+        html += '<div class="alm-group r-' + rar + '">' + rar.toUpperCase() + '</div>';
+        CURIOS.filter(c => c.rarity === rar).forEach(c => {
+          html += almEntry(c.icon, c.name, '$' + c.cost + (owned.has(c.id) ? ' · OWNED' : ''), c.text, c.long || '', 'r-' + rar + (owned.has(c.id) ? ' owned' : ''));
+        });
+      });
+    } else if (almanacTab === 'marks') {
+      html += '<div class="alm-group">ENHANCEMENTS</div>';
+      Object.keys(ENHANCEMENTS).forEach(k => {
+        const e = ENHANCEMENTS[k];
+        if (k === 'none') return;
+        html += almEntry('sparkle', e.glyph + ' ' + e.name, 'enhancement', e.text, e.long || '');
+      });
+      html += '<div class="alm-group">FINISHES</div>';
+      Object.keys(FINISHES).forEach(k => {
+        const f = FINISHES[k];
+        if (k === 'none') return;
+        html += almEntry('prism', f.name, 'finish', f.text, f.long || '');
+      });
+      html += '<div class="alm-group">SEALS</div>';
+      Object.keys(SEALS).forEach(k => {
+        const sl = SEALS[k];
+        if (k === 'none') return;
+        html += almEntry('stamp', sl.name, 'seal', sl.text, sl.long || '');
+      });
+      html += '<div class="alm-group">CARD MODS IN THE SHOP</div>';
+      CARD_MODS.forEach(m => { html += almEntry(m.icon, m.name, '$' + m.cost, m.text, ''); });
+    } else if (almanacTab === 'cards') {
+      NEW_CARDS.forEach(c => { html += almEntry(c.icon, c.name, '$' + c.cost, c.text, ''); });
+    } else if (almanacTab === 'rules') {
+      HOUSE_RULES.forEach(h => {
+        const owned = G.run ? (G.run.houseRules[h.id] || 0) : 0;
+        html += almEntry(h.icon, h.name, '$' + h.cost + ' · max ' + h.max + (owned ? ' · owned ' + owned : ''), h.text, '');
+      });
+    } else if (almanacTab === 'counter') {
+      COUNTER_ITEMS.forEach(c => {
+        const owned = G.run && G.run.counterBought ? (G.run.counterBought[c.id] || 0) : 0;
+        html += almEntry(c.icon, c.name, 'from $' + c.base + ' · +$' + c.step + ' each' + (owned ? ' · bought ' + owned : ''), c.text, '');
+      });
+    } else if (almanacTab === 'whims') {
+      WHIMS.forEach(w => { html += almEntry(w.icon, w.name, w.mood, w.text, '', 'mood-' + w.mood); });
+    } else if (almanacTab === 'wishes') {
+      const total = WISHES.reduce((a, w) => a + w.w, 0);
+      WISHES.forEach(w => {
+        html += almEntry('coin', w.name, Math.round(w.w / total * 100) + '% chance', w.text, '', w.cls);
+      });
+    } else if (almanacTab === 'bandit') {
+      Object.keys(BANDIT_PRIZES).forEach(sym => {
+        const p = BANDIT_PRIZES[sym];
+        html += '<div class="alm-entry"><div class="alm-ico reel-ico ' +
+          (REEL_SYMBOLS.find(r => r.s === sym) || {}).cls + '">' + sym + sym + sym + '</div>' +
+          '<div class="alm-body"><div class="alm-title">' + p.name + '</div>' +
+          '<div class="alm-short">' + p.text + '</div></div></div>';
+      });
+      html += almEntry('dice', 'Two of a kind', 'consolation', 'Returns $6.', '');
+      html += almEntry('dice', 'No match', 'consolation', 'Returns $1 and a lesson.', '');
+    }
+    list.innerHTML = html;
+  }
+
   /* ---------------- menus ---------------- */
   function help() {
     open(
@@ -519,6 +637,20 @@ const Overlays = (() => {
           'next foundation play, more wishes — or it hands the card back with a <b>new mark permanently printed on it</b>, ' +
           'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
           'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
+
+          '<h4>The Cut — the gamble on the table</h4>' +
+          '<p>Down by PASSES there is a <b>RED</b> / <b>BLACK</b> call. Guess the colour of the next card ' +
+          'off the stock and the cards turn over as normal — but the call has stakes:</p>' +
+          '<ul>' +
+            '<li><b>Right</b> — your <b>HEAT</b> climbs a level. Heat multiplies <i>every</i> score for the rest of ' +
+            'the round: X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four. It shows up in the combo readout.</li>' +
+            '<li><b>Wrong</b> — the Heat is gone and it costs you a pass through the stock. With no passes left it costs ' +
+            TUNE.heatMissScore + ' points instead.</li>' +
+            '<li><b>BANK</b> — cash the streak in for score instead of pressing on: <b>Heat squared x ' + TUNE.heatBankBase + '</b>. ' +
+            'Four levels is ' + (16 * TUNE.heatBankBase) + ' points, but you give up the multiplier.</li>' +
+          '</ul>' +
+          '<p>You never have to call — the normal deal is always there. The Card Counter Curio shows you the colour ' +
+          'in advance, and Hot Hand makes every level of Heat worth more.</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
           '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
@@ -575,7 +707,12 @@ const Overlays = (() => {
             '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
           '</ul>' +
 
-          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; R = reshuffle &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
+          '<h4>Looking things up</h4>' +
+          '<p>Hover any face-up card — on the table or in your deck — to read exactly what its marks do, ' +
+          'with the full explanation. Right-click pins the tooltip open. The <b>Almanac</b> (the book icon, or K) ' +
+          'lists every Curio, card mark, New Card, House Rule, Whim, Well outcome and Bandit payout in the game, ' +
+          'whether you own it or not.</p>' +
+          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; R = reshuffle &nbsp; K = almanac &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
         '</div>' +
         '<button class="btn ghost" id="help-close">GOT IT</button>' +
       '</div>', 'centered wide');
@@ -590,6 +727,7 @@ const Overlays = (() => {
           '<button class="btn" id="m-resume">RESUME</button>' +
           '<button class="btn ghost" id="m-help">HOW TO PLAY</button>' +
           '<button class="btn ghost" id="m-deck">VIEW DECK</button>' +
+          '<button class="btn ghost" id="m-almanac">THE ALMANAC</button>' +
           '<button class="btn danger" id="m-new">ABANDON RUN</button>' +
         '</div>' +
         '<div class="menu-foot">Ante ' + G.run.ante + ' · Round ' + G.run.round + ' · $' + G.run.money + '</div>' +
@@ -597,6 +735,7 @@ const Overlays = (() => {
     $('#m-resume').onclick = () => { Sfx.click(); close(); };
     $('#m-help').onclick = () => { Sfx.click(); help(); };
     $('#m-deck').onclick = () => { Sfx.click(); deckView(); };
+    $('#m-almanac').onclick = () => { Sfx.click(); almanac(); };
     $('#m-new').onclick = () => {
       if (!confirm('Abandon this run and start fresh?')) return;
       Sfx.click(); close(); Game.clearSave(); Game.startRun(); UI.resetDisplayScore(); UI.render();
@@ -621,5 +760,5 @@ const Overlays = (() => {
     };
   }
 
-  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title };
+  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title, cardTip, almanac };
 })();

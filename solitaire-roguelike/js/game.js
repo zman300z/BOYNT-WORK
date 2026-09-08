@@ -311,6 +311,75 @@ const Game = (() => {
     }
   }
 
+  /* ---------------- THE CUT ----------------
+     Call the colour of the next card off the stock. Right, and your Heat climbs,
+     multiplying every score for the rest of the round. Wrong, and the Heat is
+     gone and it costs you a pass through the stock. Bank the Heat any time to
+     convert it straight into score.                                            */
+  function peekCut() {
+    const b = G.board;
+    if (!b.stock.length) return null;
+    return b.stock[b.stock.length - 1];
+  }
+
+  function heatMult() {
+    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
+    return +(1 + per * G.round.heat).toFixed(2);
+  }
+
+  function callCut(colour) {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    const b = G.board;
+    if (!b.stock.length) return { ok: false, reason: 'The stock is empty — nothing to call.' };
+    const card = b.stock[b.stock.length - 1];
+    const actual = Engine.isRed(card) && !Engine.isBlack(card) ? 'red'
+                 : (SUITS[card.suit].color === 'red' ? 'red' : 'black');
+    const correct = card.enhancement === 'wild' ? true : actual === colour;
+
+    snapshot();
+    G.round.cuts++;
+    let penalty = null;
+    if (correct) {
+      G.round.heat++;
+      G.round.cutsHit++;
+    } else {
+      G.round.heat = 0;
+      if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
+      else { G.round.score = Math.max(0, G.round.score - TUNE.heatMissScore); penalty = 'score'; }
+    }
+
+    /* the call always turns the cards over */
+    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
+    const turned = [];
+    for (let i = 0; i < n; i++) {
+      const c = b.stock.pop();
+      c.faceUp = true;
+      b.waste.push(c);
+      turned.push(c);
+    }
+    breakCascade();
+    G.round.moves++;
+    push({ event: 'cut', correct, colour, card, heat: G.round.heat, penalty,
+           mult: heatMult(), chips: 0, total: 0, triggers: [] });
+    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
+    afterMove();
+    return { ok: true, correct, card, heat: G.round.heat, penalty };
+  }
+
+  function bankHeat() {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    const h = G.round.heat;
+    if (h <= 0) return { ok: false, reason: 'No Heat to bank.' };
+    snapshot();
+    const gain = h * h * TUNE.heatBankBase;
+    G.round.score += gain;
+    G.round.heat = 0;
+    push({ event: 'bank-heat', heat: h, gain, chips: 0, mult: 0, total: gain, triggers: [] });
+    save();
+    return { ok: true, gain, heat: h };
+  }
+
   /* ---------------- the wishing well ----------------
      An exit for cards you will never place -- a fourth Queen, a duplicate the
      foundation has not reached. The card always pays Chips, then the well rolls
@@ -914,6 +983,6 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost
+    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult
   };
 })();

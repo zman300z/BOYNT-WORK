@@ -374,8 +374,8 @@ body.dragging-now{ cursor:grabbing; }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 
 #tooltip{
-  position:fixed; width:250px; background:#0b0b12f2; border:2px solid var(--line);
-  border-radius:10px; padding:10px; font-size:11.5px; line-height:1.45; z-index:7000;
+  position:fixed; width:250px; background:#0b0b12f8; border:2px solid var(--line);
+  border-radius:10px; padding:10px; font-size:11.5px; line-height:1.45; z-index:9500;
   opacity:0; pointer-events:none; transition:opacity .12s; box-shadow:var(--shadow);
 }
 #tooltip.show{ opacity:1; }
@@ -959,3 +959,102 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   box-shadow:0 6px 16px rgba(0,0,0,.55); animation:hintTag .3s cubic-bezier(.2,1.6,.3,1);
 }
 @keyframes hintTag{ 0%{ opacity:0; transform:translate(-50%,-70%) scale(.8) } 100%{ opacity:1 } }
+
+/* ============================================================
+   THE CUT -- the on-table gamble
+   ============================================================ */
+.cut-bar{
+  display:flex; align-items:center; gap:5px; margin-left:16px; padding-left:16px;
+  border-left:1px solid var(--line);
+}
+.cut-cap{ font-size:9px; letter-spacing:.14em; opacity:.55; }
+.cut-heat{
+  font-size:9px; letter-spacing:.1em; opacity:.55; padding:3px 8px; border-radius:8px;
+  border:1px solid var(--line); display:flex; align-items:center; gap:4px;
+}
+.cut-heat b{ font-family:var(--display); font-size:12px; }
+.cut-heat i{ font-style:normal; font-size:8px; opacity:.5; }
+.cut-heat.on{
+  opacity:1; color:#ff8f3f; border-color:#ff8f3f; background:rgba(255,143,63,.14);
+  box-shadow:0 0 16px rgba(255,143,63,.45); animation:heatGlow .9s infinite alternate;
+}
+@keyframes heatGlow{ to{ box-shadow:0 0 26px rgba(255,143,63,.8) } }
+.cut-btn{
+  font-family:var(--display); font-size:10px; padding:4px 11px; border-radius:8px; cursor:pointer;
+  border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
+}
+.cut-red{ border-color:#d92b4b; color:#ff8fa3; }
+.cut-red:hover{ background:rgba(217,43,75,.28); }
+.cut-black{ border-color:#8b93a7; color:#cfd6e4; }
+.cut-black:hover{ background:rgba(139,147,167,.25); }
+.cut-bank{ border-color:var(--lime); color:var(--lime); }
+.cut-bank:hover{ background:rgba(126,231,135,.22); }
+.cut-btn.off{ opacity:.3; cursor:not-allowed; }
+.cut-btn.peeked{ box-shadow:0 0 0 2px var(--gold), 0 0 16px rgba(255,209,102,.6); }
+.cut-peek{ font-size:9px; letter-spacing:.1em; opacity:.7; margin-left:4px; }
+.cut-peek.red{ color:#ff8fa3; } .cut-peek.black{ color:#cfd6e4; }
+.cm.heat{ background:#2a1408; color:#ff8f3f; border-color:#ff8f3f; box-shadow:0 0 14px rgba(255,143,63,.6); }
+
+.cut-flip{
+  position:fixed; left:50%; top:40%; transform:translate(-50%,-50%);
+  width:230px; padding:14px; border-radius:14px; text-align:center; z-index:5200;
+  background:linear-gradient(165deg,#1b1020,#0c0a12); border:3px solid var(--gold);
+  box-shadow:0 0 40px rgba(255,209,102,.5), 0 20px 44px rgba(0,0,0,.7);
+  animation:cutIn .4s cubic-bezier(.2,1.6,.3,1);
+}
+.cut-flip.hit{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.miss{ border-color:var(--hot); box-shadow:0 0 50px rgba(255,77,109,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.out{ animation:wishOut .4s ease forwards; }
+@keyframes cutIn{ 0%{ opacity:0; transform:translate(-50%,-40%) scale(.6) rotateY(80deg) } 100%{ opacity:1 } }
+.cf-call{ font-size:9px; letter-spacing:.2em; opacity:.5; }
+.cf-card{
+  font-family:var(--display); font-size:42px; line-height:1.15; margin:2px 0 4px;
+  background:var(--paper); border-radius:9px; border:2px solid #1a1a1a; padding:6px 0;
+}
+.cf-card.red{ color:#d92b4b; } .cf-card.black{ color:#16181d; }
+.cf-verdict{ font-family:var(--display); font-size:12px; }
+.cut-flip.hit .cf-verdict{ color:var(--lime); }
+.cut-flip.miss .cf-verdict{ color:var(--hot); }
+
+/* ============================================================
+   the almanac
+   ============================================================ */
+.almanac{ max-width:860px; }
+.alm-tabs{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:6px; }
+.alm-tab{
+  font-family:var(--display); font-size:9.5px; letter-spacing:.05em; cursor:pointer;
+  padding:5px 10px; border-radius:8px; border:2px solid var(--line);
+  background:rgba(255,255,255,.05); color:var(--paper);
+}
+.alm-tab:hover{ background:rgba(255,255,255,.13); }
+.alm-tab.on{ background:var(--gold); color:#12100f; border-color:var(--gold); }
+.alm-sub{ font-size:10px; opacity:.5; margin-bottom:10px; letter-spacing:.06em; }
+.alm-list{ max-height:56vh; overflow-y:auto; text-align:left; padding-right:6px; }
+.alm-group{
+  font-family:var(--display); font-size:10px; letter-spacing:.16em; opacity:.55;
+  margin:14px 0 6px; padding-bottom:3px; border-bottom:1px solid var(--line);
+}
+.alm-group.r-uncommon{ color:var(--cool); } .alm-group.r-rare{ color:var(--hot); }
+.alm-group.r-legendary{ color:var(--violet); }
+.alm-entry{ display:flex; gap:10px; padding:8px 8px; border-radius:9px; align-items:flex-start; }
+.alm-entry:nth-child(odd){ background:rgba(255,255,255,.03); }
+.alm-entry.owned{ box-shadow:inset 0 0 0 1px var(--gold); }
+.alm-ico{ width:26px; height:26px; flex:none; color:#cdd8e0; margin-top:2px; }
+.alm-entry.r-uncommon .alm-ico{ color:var(--cool); }
+.alm-entry.r-rare .alm-ico{ color:var(--hot); }
+.alm-entry.r-legendary .alm-ico{ color:var(--violet); }
+.alm-entry.great .alm-ico, .alm-entry.mood-good .alm-ico{ color:var(--lime); }
+.alm-entry.jackpot .alm-ico{ color:var(--violet); }
+.alm-entry.mood-bad .alm-ico{ color:var(--hot); }
+.alm-ico.reel-ico{ width:auto; font-family:var(--display); font-size:17px; letter-spacing:1px; }
+.alm-body{ flex:1; min-width:0; }
+.alm-title{ font-family:var(--display); font-size:12px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+.alm-tag{ font-family:var(--font); font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; opacity:.45; }
+.alm-short{ font-size:11px; opacity:.85; margin-top:2px; }
+.alm-long{ font-size:10.5px; opacity:.6; margin-top:4px; line-height:1.5; font-style:italic; }
+
+/* longer card tooltips */
+.tip-detail{ margin-top:7px; padding-top:6px; border-top:1px dotted rgba(255,255,255,.14); font-size:10.5px; line-height:1.5; opacity:.8; }
+.tip-detail b{ display:block; font-family:var(--display); font-size:10px; margin-bottom:2px; }
+.tip-detail.hot b{ color:var(--gold); } .tip-detail.fin b{ color:#ff9ff3; } .tip-detail.seal b{ color:var(--cool); }
+#tooltip{ max-height:74vh; overflow-y:auto; }

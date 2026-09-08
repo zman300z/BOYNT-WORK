@@ -76,6 +76,19 @@ A duplicate card can never advance a foundation, since the pile only wants the *
 New Cards are also weighted low on purpose — roughly 60% land between Ace and 5, only 8% are face cards —
 and the shop preview shows the *exact* card you'll receive, rolled when the shop was stocked.
 
+### The Cut — the gamble on the table
+
+Below PASSES there's a **RED / BLACK** call on the next card off the stock. The cards turn over either way,
+but the call has stakes:
+
+- **Right** — your **HEAT** climbs a level, multiplying *every* score for the rest of the round (×1.5 at one
+  level, ×3 at four). It shows in the combo readout.
+- **Wrong** — the Heat is gone and it costs you a pass through the stock; with no passes left, 200 points.
+- **BANK** — cash the streak straight into score for **Heat² × 250**, giving up the multiplier.
+
+You never have to call — the normal deal is always there. **The Card Counter** curio shows you the colour in
+advance; **Hot Hand** makes every level of Heat worth more.
+
 ### Reshuffling
 
 A reshuffle throws the waste back in with the stock and shuffles it **without spending a pass** — the fix
@@ -114,8 +127,11 @@ They are deliberately kept distinct — colour-coded, badged, and separated:
 | **The One-Armed Bandit** | Pull the lever and accept your fate. `777` a free Curio · `★★★` a Gilded Polychrome card · `$$$` +$35 · `♠♠♠` permanent +3 Mult · `♥♥♥` a seat and a pass · `☠☠☠` half your cash. Two of a kind returns $6. Each pull costs more; resets every shop. | Cash, and your dignity. |
 
 Hovering a Curio on your mantel in the shop shows a red **SELL $X** band — clicking sells it for that.
-Hovering any card in the deck viewer breaks down exactly what it's worth: base rank, every mark on it,
-and the chips × mult it scores on its own.
+
+**Looking things up:** hover any face-up card — on the table or in the deck viewer — for a full breakdown:
+base rank, every mark with its long-form explanation, and the chips × mult it scores on its own.
+Right-click pins the tooltip open. The **Almanac** (book icon, or `K`) lists every Curio, card mark, New Card,
+House Rule, Whim, Well outcome and Bandit payout in the game, whether you own it or not.
 
 ## Controls
 

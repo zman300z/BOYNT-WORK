@@ -122,6 +122,7 @@
     $('#btn-deck').onclick = () => { if (G.run) { Sfx.click(); Overlays.deckView(); } };
     $('#btn-menu').onclick = () => { if (G.run) { Sfx.click(); Overlays.menu(); } };
     $('#btn-help').onclick = () => { Sfx.click(); Overlays.help(); };
+    $('#btn-almanac').onclick = () => { Sfx.click(); Overlays.almanac(); };
     $('#btn-music').onclick = e => {
       const on = Sfx.music();
       e.currentTarget.classList.toggle('off', !on);
@@ -133,6 +134,7 @@
       e.currentTarget.classList.toggle('off', !on);
     };
     UI.bindPileTargets();
+    UI.installDragHandlers();
 
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;
@@ -144,6 +146,7 @@
       else if (k === 'u') undo();
       else if (k === 'h') hint();
       else if (k === 'd') { if (G.run) Overlays.deckView(); }
+      else if (k === 'k') Overlays.almanac();
       else if (k === 'c') cashOut();
       else if (k === 'r') {
         const res = Game.reshuffle(Game.reshuffleCost().free > 0 ? 'free' : 'cash');

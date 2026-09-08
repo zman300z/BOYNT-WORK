@@ -42,6 +42,9 @@ const TUNE = {
   reshuffleCashStep: 3,
   reshufflePoints: 250,     // ...or pay in score, which starts cheap
   reshufflePointsStep: 250,
+  heatMultPer: 0.5,         // each Heat level adds this much X Mult
+  heatBankBase: 250,        // banking Heat pays heat^2 x this
+  heatMissScore: 200,       // a wrong call with no passes left costs this much score
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -83,31 +86,47 @@ function tierFor(total) {
    ========================================================= */
 const ENHANCEMENTS = {
   none:    { name: 'Plain',     cls: '', text: '' },
-  gilded:  { name: 'Gilded',    cls: 'enh-gilded',  glyph: '✦', text: '+50 Chips when scored.' },
-  voltaic: { name: 'Voltaic',   cls: 'enh-voltaic', glyph: '⚡', text: '+4 Mult when scored.' },
-  glass:   { name: 'Glass',     cls: 'enh-glass',   glyph: '◇', text: 'X2 Mult. 1 in 5 chance to shatter (removed from deck).' },
-  wild:    { name: 'Chameleon', cls: 'enh-wild',    glyph: '✿', text: 'Counts as every suit.' },
-  phantom: { name: 'Phantom',   cls: 'enh-phantom', glyph: '◌', text: 'Stacks onto any rank in the tableau. +2 Mult.' },
-  lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.' },
-  steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.' },
-  bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.' },
-  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.' },
-  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.' }
+  gilded:  { name: 'Gilded',    cls: 'enh-gilded',  glyph: '✦', text: '+50 Chips when scored.',
+            long: 'Adds a flat 50 Chips to the base value whenever this card scores — reaching a foundation, being wished into the Well, or detonated by a Fuse. Chips are the left half of Chips X Mult, so Gilded is at its best on a card you score while your Mult is already high.' },
+  voltaic: { name: 'Voltaic',   cls: 'enh-voltaic', glyph: '⚡', text: '+4 Mult when scored.',
+            long: 'Adds 4 to your Mult for this score. Additive Mult is applied before any X Mult in the chain, so stacking Voltaic cards and then hitting a Polychrome or a X Mult Curio multiplies the whole pile at once.' },
+  glass:   { name: 'Glass',     cls: 'enh-glass',   glyph: '◇', text: 'X2 Mult. 1 in 5 chance to shatter (removed from deck).',
+            long: 'Doubles your Mult for this score, but every time it scores there is a 1 in 5 chance it shatters and is destroyed permanently — gone from your deck for the rest of the run. A thinner deck deals more kindly, so losing one is not always a disaster.' },
+  wild:    { name: 'Chameleon', cls: 'enh-wild',    glyph: '✿', text: 'Counts as every suit.',
+            long: 'This card is every suit at once. It can be stacked on any colour in the tableau, it goes home to whichever foundation needs its rank, and it counts as a match for every suit-based Curio at the same time. Excellent for keeping a Suit Run alive.' },
+  phantom: { name: 'Phantom',   cls: 'enh-phantom', glyph: '◌', text: 'Stacks onto any rank in the tableau. +2 Mult.',
+            long: 'Ignores the descending-rank rule in the tableau: it drops onto any card, and any card drops onto it. That makes it a joint you can use to bridge two runs together, or a way to unstick a column that has nothing legal to place. Still needs its real rank to reach a foundation.' },
+  lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.',
+            long: 'Two independent rolls every time it scores: a 1 in 4 shot at +20 Mult, and a separate 1 in 8 shot at $3. Both can hit at once. The Lucky Horseshoe House Rule doubles both chances.' },
+  steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.',
+            long: 'Multiplies your Mult by 1.5, but only when the card goes home directly from a tableau column — not from the waste. Pairs naturally with Column Stack play, since you are cashing off columns anyway.' },
+  bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.',
+            long: 'When this goes home from a column it detonates: the card underneath is flipped face-up if needed and scored as a second full play, Curios and all, without leaving the tableau. Sitting a Fuse on top of a King is how you double-dip on your biggest card.' },
+  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.',
+            long: 'Pays $4 into your pocket the moment it scores, on top of whatever points it makes. The money lands immediately, mid-round, so it can fund a reshuffle before the round is even over.' },
+  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.',
+            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot — without spending a pass and without costing you cash or score. The rescue button for when draw-3 has buried the card you need.' }
 };
 
 const FINISHES = {
   none: { name: '', cls: '', text: '' },
-  foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.' },
-  holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.' },
-  poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.' },
+  foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.',
+         long: 'A flat +60 Chips on every score. Finishes stack with enhancements and seals, so a Gilded Foil card carries +110 Chips before anything else touches it.' },
+  holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.',
+         long: 'A flat +12 Mult on every score — one of the largest additive Mult sources in the game, and it goes on any card regardless of what else is printed there.' },
+  poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.',
+         long: 'Multiplies your Mult by 1.5. Because it multiplies rather than adds, it is worth the most on a card you score late in a chain, after your additive Mult has already piled up.' },
   neg:  { name: 'Negative',    cls: 'fin-neg',  text: '+1 Mantel seat (Curios only).' }
 };
 
 const SEALS = {
   none: { name: '', cls: '', text: '' },
-  red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.' },
-  gold: { name: 'Gold Seal', cls: 'seal-gold', text: 'Earn $4 when scored.' },
-  blue: { name: 'Blue Seal', cls: 'seal-blue', text: '+30 Chips.' }
+  red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.',
+         long: 'The whole scoring pass runs twice: the card, its marks, your combos and every Curio on the mantel all fire again. Effectively doubles that card, which makes it the single best thing to stamp on your most decorated card.' },
+  gold: { name: 'Gold Seal', cls: 'seal-gold', text: 'Earn $4 when scored.',
+         long: 'Pays $4 when the card scores. Stacks with Bullion, so a Bullion card wearing a Gold Seal is worth $8 the moment it reaches a foundation.' },
+  blue: { name: 'Blue Seal', cls: 'seal-blue', text: '+30 Chips.',
+         long: 'A flat +30 Chips. The cheapest way to pad a card that is already going to score with a big multiplier behind it.' }
 };
 
 /* =========================================================
@@ -278,6 +297,16 @@ const CURIOS = [
   { id: 'skyscraper', name: 'Skyscraper', icon: 'expand', rarity: 'rare', cost: 10,
     text: '+25 Chips for every card in your tallest column.',
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
+
+  { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
+    text: 'The Cut shows you the colour of the next card before you call it.',
+    long: 'Turns the 50/50 into a certainty — as long as you actually look. Heat climbs as fast as you can click.',
+    mods: { peekStock: true } },
+
+  { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
+    text: 'Each level of Heat is worth X0.4 more Mult than usual.',
+    long: 'Heat normally gives X(1 + 0.5 per level). With Hot Hand it is X(1 + 0.9 per level), so a Heat 4 streak swings from X3 to X4.6.',
+    mods: { heatPer: 0.4 } },
 
   { id: 'croupier', name: 'The Croupier', icon: 'refresh', rarity: 'uncommon', cost: 8,
     text: '+1 free stock reshuffle every round. +2 Mult.',

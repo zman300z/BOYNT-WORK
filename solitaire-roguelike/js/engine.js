@@ -84,7 +84,8 @@ const Engine = (() => {
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0
+      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0,
+      heatPer: 0, peekStock: false
     };
     const merge = src => {
       if (!src) return;
@@ -179,6 +180,9 @@ const Engine = (() => {
         paidClears: [],
         wellMult: 0,
         blessing: 0,
+        heat: 0,
+        cuts: 0,
+        cutsHit: 0,
         over: false,
         won: false
       }

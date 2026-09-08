@@ -62,6 +62,8 @@ const UI = (() => {
     if (!G.run) return;
     hideTip();
     clearHints();
+    if (drag) cancelDrag(true);
+    else sweepGhosts();
     renderHud();
     renderMantel();
     renderBoard();
@@ -161,6 +163,7 @@ const UI = (() => {
     const passes = Engine.mods(G.run).infinitePasses ? '∞' : (G.board ? G.board.passesLeft : 0);
     $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
     renderReshuffle();
+    renderCut();
     $('#deck-count').textContent = G.run.deck.length;
     $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
     const pv = $('#cash-preview');
@@ -192,6 +195,49 @@ const UI = (() => {
     if (c.free > 0) add('free', 'FREE x' + c.free, true);
     add('cash', '$' + c.cash, G.run.money >= c.cash);
     add('points', c.points + ' pts', G.round && G.round.score >= c.points);
+  }
+
+  /* THE CUT -- the on-table gamble */
+  function renderCut() {
+    const bar = $('#cut-bar');
+    if (!bar || !G.board || !G.round) return;
+    const m = Engine.mods(G.run);
+    const hot = G.round.heat > 0;
+    const peek = m.peekStock ? Game.peekCut() : null;
+    const peekColour = peek ? ((Engine.isRed(peek) && !Engine.isBlack(peek)) ||
+      SUITS[peek.suit].color === 'red' ? 'red' : 'black') : null;
+
+    bar.innerHTML =
+      '<span class="cut-cap">THE CUT</span>' +
+      '<span class="cut-heat' + (hot ? ' on' : '') + '" title="Heat multiplies every score">HEAT <b>X' +
+        Game.heatMult() + '</b><i>' + G.round.heat + '</i></span>';
+
+    const canCall = G.board.stock.length > 0;
+    ['red', 'black'].forEach(col => {
+      const btn = el('button', 'cut-btn cut-' + col + (canCall ? '' : ' off') +
+        (peekColour === col ? ' peeked' : ''), col.toUpperCase());
+      btn.onclick = () => {
+        const res = Game.callCut(col);
+        if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+        clearSelection();
+        render();
+        drainFx();
+        checkStuck();
+      };
+      bar.appendChild(btn);
+    });
+    const bank = el('button', 'cut-btn cut-bank' + (hot ? '' : ' off'),
+      'BANK' + (hot ? ' ' + fmt(G.round.heat * G.round.heat * TUNE.heatBankBase) : ''));
+    bank.onclick = () => {
+      const res = Game.bankHeat();
+      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+      render();
+      drainFx();
+    };
+    bar.appendChild(bank);
+    if (peek) {
+      bar.appendChild(el('span', 'cut-peek ' + peekColour, 'next: ' + peekColour.toUpperCase()));
+    }
   }
 
   function renderBoard() {
@@ -228,6 +274,7 @@ const UI = (() => {
         n.classList.add('playable');
         attachDrag(n, { zone: 'waste', index: absIdx });
       } else n.classList.add('under');
+      attachInspect(n, c);
       waste.appendChild(n);
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
@@ -260,6 +307,7 @@ const UI = (() => {
           const n = cardEl(c);
           n.style.zIndex = i;
           if (i === pile.length - showFrom - 1) attachDrag(n, { zone: 'foundation', suit: s });
+          attachInspect(n, c);
           f.appendChild(n);
         });
         f.appendChild(el('div', 'pile-count', String(pile.length)));
@@ -297,7 +345,7 @@ const UI = (() => {
         n.dataset.col = col;
         n.dataset.index = i;
         y += (c.faceUp ? 30 : 15) * squeeze;
-        if (c.faceUp) attachDrag(n, { zone: 'tableau', col, index: i });
+        if (c.faceUp) { attachDrag(n, { zone: 'tableau', col, index: i }); attachInspect(n, c); }
         p.appendChild(n);
       });
       const runLen = Engine.runLength(b, col, Engine.mods(G.run));
@@ -407,8 +455,50 @@ const UI = (() => {
     return null;
   }
 
-  /* --- pointer drag --- */
+  /* --- pointer drag ---
+     Move/up/cancel live on the window, not on the card. render() destroys and
+     rebuilds every card element, so a listener bound to the node dies with it
+     and the drag ghost gets stranded on screen forever. */
   let drag = null;
+
+  function cancelDrag(silent) {
+    if (drag && drag.ghost) drag.ghost.remove();
+    drag = null;
+    document.body.classList.remove('dragging-now');
+    clearDropHighlights();
+    $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
+    $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
+    sweepGhosts();
+    if (!silent) render();
+  }
+
+  /* belt and braces: nothing should ever be left in the drag layer */
+  function sweepGhosts() {
+    const layer = $('#draglayer');
+    if (!layer) return;
+    Array.from(layer.children).forEach(n => { if (!drag || n !== drag.ghost) n.remove(); });
+  }
+
+  /* hover a face-up card for a beat to read exactly what it does */
+  let inspectTimer = null;
+  function attachInspect(node, card) {
+    node.addEventListener('pointerenter', () => {
+      clearTimeout(inspectTimer);
+      inspectTimer = setTimeout(() => {
+        if (drag) return;
+        showTip(node, Overlays.cardTip(card));
+      }, 340);
+    });
+    node.addEventListener('pointerleave', () => { clearTimeout(inspectTimer); hideTip(); });
+    node.addEventListener('pointerdown', () => { clearTimeout(inspectTimer); hideTip(); });
+    /* right-click pins it open for as long as you like */
+    node.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      clearTimeout(inspectTimer);
+      showTip(node, Overlays.cardTip(card));
+    });
+  }
+
   function attachDrag(node, src) {
     node.classList.add('grabbable');
     node.addEventListener('pointerdown', e => {
@@ -417,50 +507,64 @@ const UI = (() => {
       if (e.button != null && e.button !== 0) return;
       const cards = src.zone === 'tableau'
         ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
-        : (src.zone === 'waste' ? G.board.waste.slice(-1) : G.board.foundations[src.suit].slice(-1));
+        : (src.zone === 'waste'
+            ? (G.board.waste[src.index != null ? src.index : G.board.waste.length - 1] ? [G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]] : null)
+            : G.board.foundations[src.suit].slice(-1));
       if (!cards || !cards.length) { Sfx.error(); shake(node); return; }
+      cancelDrag(true);
       node.classList.add('pressed');
-      drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, t: Date.now() };
-      node.setPointerCapture && node.setPointerCapture(e.pointerId);
+      drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, id: e.pointerId };
       e.preventDefault();
     });
-    node.addEventListener('pointermove', e => {
-      if (!drag || drag.node !== node) return;
-      const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
-      if (!drag.moved && Math.hypot(dx, dy) > 6) {
-        drag.moved = true;
-        buildGhost(e);
-        document.body.classList.add('dragging-now');
-      }
-      if (drag.moved && drag.ghost) {
-        drag.ghost.style.transform = 'translate(' + (e.clientX - drag.ox) + 'px,' + (e.clientY - drag.oy) + 'px) rotate(' + Math.max(-8, Math.min(8, dx * 0.05)) + 'deg)';
-        highlightDrop(e.clientX, e.clientY);
-      }
-    });
-    const finish = e => {
-      if (!drag || drag.node !== node) return;
-      const d = drag; drag = null;
-      $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
-      document.body.classList.remove('dragging-now');
-      clearDropHighlights();
-      if (d.ghost) d.ghost.remove();
-      $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
-      if (d.moved) {
-        const dst = dropTargetAt(e.clientX, e.clientY);
-        if (dst) doMove(d.src, dst);
-        else { render(); }
-      } else {
-        onTap(d.src, e);
-      }
-    };
-    node.addEventListener('pointerup', finish);
-    node.addEventListener('pointercancel', () => { $$('.card.pressed').forEach(n => n.classList.remove('pressed')); if (drag) { document.body.classList.remove('dragging-now'); if (drag.ghost) drag.ghost.remove(); clearDropHighlights(); drag = null; render(); } });
     node.addEventListener('dblclick', e => {
       if (G.phase !== 'play') return;
       e.preventDefault();
+      cancelDrag(true);
       const t = autoTarget(src);
       if (t) doMove(src, t); else { Sfx.error(); shake(node); }
     });
+  }
+
+  function onDragMove(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.moved && Math.hypot(dx, dy) > 6) {
+      drag.moved = true;
+      buildGhost(e);
+      document.body.classList.add('dragging-now');
+    }
+    if (drag.moved && drag.ghost) {
+      drag.ghost.style.transform = 'translate(' + (e.clientX - drag.ox) + 'px,' + (e.clientY - drag.oy) + 'px) rotate(' +
+        Math.max(-8, Math.min(8, dx * 0.05)) + 'deg)';
+      highlightDrop(e.clientX, e.clientY);
+    }
+  }
+
+  function onDragEnd(e) {
+    if (!drag) { sweepGhosts(); return; }
+    const d = drag;
+    drag = null;
+    if (d.ghost) d.ghost.remove();
+    sweepGhosts();
+    document.body.classList.remove('dragging-now');
+    clearDropHighlights();
+    $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
+    $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
+    if (d.moved) {
+      const dst = dropTargetAt(e.clientX, e.clientY);
+      if (dst) doMove(d.src, dst);
+      else render();
+    } else {
+      onTap(d.src, e);
+    }
+  }
+
+  function installDragHandlers() {
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    window.addEventListener('pointercancel', () => cancelDrag());
+    window.addEventListener('blur', () => cancelDrag());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
   }
 
   function buildGhost(e) {
@@ -595,6 +699,39 @@ const UI = (() => {
       setTimeout(done, 900 * spd());
       return;
     }
+    if (p.event === 'cut') {
+      const anchor = $('#cut-bar') || $('#scorebox');
+      const card = el('div', 'cut-flip ' + (p.correct ? 'hit' : 'miss'),
+        '<div class="cf-call">' + p.colour.toUpperCase() + '</div>' +
+        '<div class="cf-card ' + ((Engine.isRed(p.card) && !Engine.isBlack(p.card)) ? 'red' : 'black') + '">' +
+          RANK_NAMES[p.card.rank] + (p.card.enhancement === 'wild' ? '✿' : SUITS[p.card.suit].sym) + '</div>' +
+        '<div class="cf-verdict">' + (p.correct
+          ? 'HIT — HEAT X' + p.mult
+          : (p.penalty === 'pass' ? 'MISS — lost a pass' : 'MISS — lost ' + TUNE.heatMissScore + ' points')) + '</div>');
+      $('#fxlayer').appendChild(card);
+      if (p.correct) {
+        Sfx.big(); confetti(anchor, 18 + p.heat * 6, 't2'); flashScreen(0.14, '#ffd166');
+        if (p.heat >= 4) { screenShake(8); bannerText('HEAT X' + p.mult); }
+      } else {
+        Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
+      }
+      renderHud();
+      setTimeout(() => card.classList.add('out'), 1000 * spd());
+      setTimeout(() => card.remove(), 1400 * spd());
+      setTimeout(done, 700 * spd());
+      return;
+    }
+    if (p.event === 'bank-heat') {
+      const box = $('#scorebox');
+      bannerText('HEAT BANKED — X' + p.heat);
+      Sfx.win();
+      confetti(box, 50, 't3');
+      screenShake(10);
+      flashScreen(0.24, '#7ee787');
+      animateScoreTo(G.round.score);
+      setTimeout(done, 700 * spd());
+      return;
+    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -720,6 +857,7 @@ const UI = (() => {
     const bits = [];
     if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
     if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
+    if (G.round.heat > 0) bits.push('<span class="cm heat">HEAT <b>X' + Game.heatMult() + '</b></span>');
     m.innerHTML = bits.join('');
     m.classList.toggle('active', bits.length > 0);
     if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
@@ -995,6 +1133,7 @@ const UI = (() => {
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
+    installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
     get busy() { return fxBusy; }
   };
 })();

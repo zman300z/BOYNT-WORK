@@ -382,8 +382,8 @@ body.dragging-now{ cursor:grabbing; }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 
 #tooltip{
-  position:fixed; width:250px; background:#0b0b12f2; border:2px solid var(--line);
-  border-radius:10px; padding:10px; font-size:11.5px; line-height:1.45; z-index:7000;
+  position:fixed; width:250px; background:#0b0b12f8; border:2px solid var(--line);
+  border-radius:10px; padding:10px; font-size:11.5px; line-height:1.45; z-index:9500;
   opacity:0; pointer-events:none; transition:opacity .12s; box-shadow:var(--shadow);
 }
 #tooltip.show{ opacity:1; }
@@ -968,6 +968,105 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 }
 @keyframes hintTag{ 0%{ opacity:0; transform:translate(-50%,-70%) scale(.8) } 100%{ opacity:1 } }
 
+/* ============================================================
+   THE CUT -- the on-table gamble
+   ============================================================ */
+.cut-bar{
+  display:flex; align-items:center; gap:5px; margin-left:16px; padding-left:16px;
+  border-left:1px solid var(--line);
+}
+.cut-cap{ font-size:9px; letter-spacing:.14em; opacity:.55; }
+.cut-heat{
+  font-size:9px; letter-spacing:.1em; opacity:.55; padding:3px 8px; border-radius:8px;
+  border:1px solid var(--line); display:flex; align-items:center; gap:4px;
+}
+.cut-heat b{ font-family:var(--display); font-size:12px; }
+.cut-heat i{ font-style:normal; font-size:8px; opacity:.5; }
+.cut-heat.on{
+  opacity:1; color:#ff8f3f; border-color:#ff8f3f; background:rgba(255,143,63,.14);
+  box-shadow:0 0 16px rgba(255,143,63,.45); animation:heatGlow .9s infinite alternate;
+}
+@keyframes heatGlow{ to{ box-shadow:0 0 26px rgba(255,143,63,.8) } }
+.cut-btn{
+  font-family:var(--display); font-size:10px; padding:4px 11px; border-radius:8px; cursor:pointer;
+  border:2px solid; background:rgba(255,255,255,.05); color:var(--paper);
+}
+.cut-red{ border-color:#d92b4b; color:#ff8fa3; }
+.cut-red:hover{ background:rgba(217,43,75,.28); }
+.cut-black{ border-color:#8b93a7; color:#cfd6e4; }
+.cut-black:hover{ background:rgba(139,147,167,.25); }
+.cut-bank{ border-color:var(--lime); color:var(--lime); }
+.cut-bank:hover{ background:rgba(126,231,135,.22); }
+.cut-btn.off{ opacity:.3; cursor:not-allowed; }
+.cut-btn.peeked{ box-shadow:0 0 0 2px var(--gold), 0 0 16px rgba(255,209,102,.6); }
+.cut-peek{ font-size:9px; letter-spacing:.1em; opacity:.7; margin-left:4px; }
+.cut-peek.red{ color:#ff8fa3; } .cut-peek.black{ color:#cfd6e4; }
+.cm.heat{ background:#2a1408; color:#ff8f3f; border-color:#ff8f3f; box-shadow:0 0 14px rgba(255,143,63,.6); }
+
+.cut-flip{
+  position:fixed; left:50%; top:40%; transform:translate(-50%,-50%);
+  width:230px; padding:14px; border-radius:14px; text-align:center; z-index:5200;
+  background:linear-gradient(165deg,#1b1020,#0c0a12); border:3px solid var(--gold);
+  box-shadow:0 0 40px rgba(255,209,102,.5), 0 20px 44px rgba(0,0,0,.7);
+  animation:cutIn .4s cubic-bezier(.2,1.6,.3,1);
+}
+.cut-flip.hit{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.miss{ border-color:var(--hot); box-shadow:0 0 50px rgba(255,77,109,.6), 0 20px 44px rgba(0,0,0,.7); }
+.cut-flip.out{ animation:wishOut .4s ease forwards; }
+@keyframes cutIn{ 0%{ opacity:0; transform:translate(-50%,-40%) scale(.6) rotateY(80deg) } 100%{ opacity:1 } }
+.cf-call{ font-size:9px; letter-spacing:.2em; opacity:.5; }
+.cf-card{
+  font-family:var(--display); font-size:42px; line-height:1.15; margin:2px 0 4px;
+  background:var(--paper); border-radius:9px; border:2px solid #1a1a1a; padding:6px 0;
+}
+.cf-card.red{ color:#d92b4b; } .cf-card.black{ color:#16181d; }
+.cf-verdict{ font-family:var(--display); font-size:12px; }
+.cut-flip.hit .cf-verdict{ color:var(--lime); }
+.cut-flip.miss .cf-verdict{ color:var(--hot); }
+
+/* ============================================================
+   the almanac
+   ============================================================ */
+.almanac{ max-width:860px; }
+.alm-tabs{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:6px; }
+.alm-tab{
+  font-family:var(--display); font-size:9.5px; letter-spacing:.05em; cursor:pointer;
+  padding:5px 10px; border-radius:8px; border:2px solid var(--line);
+  background:rgba(255,255,255,.05); color:var(--paper);
+}
+.alm-tab:hover{ background:rgba(255,255,255,.13); }
+.alm-tab.on{ background:var(--gold); color:#12100f; border-color:var(--gold); }
+.alm-sub{ font-size:10px; opacity:.5; margin-bottom:10px; letter-spacing:.06em; }
+.alm-list{ max-height:56vh; overflow-y:auto; text-align:left; padding-right:6px; }
+.alm-group{
+  font-family:var(--display); font-size:10px; letter-spacing:.16em; opacity:.55;
+  margin:14px 0 6px; padding-bottom:3px; border-bottom:1px solid var(--line);
+}
+.alm-group.r-uncommon{ color:var(--cool); } .alm-group.r-rare{ color:var(--hot); }
+.alm-group.r-legendary{ color:var(--violet); }
+.alm-entry{ display:flex; gap:10px; padding:8px 8px; border-radius:9px; align-items:flex-start; }
+.alm-entry:nth-child(odd){ background:rgba(255,255,255,.03); }
+.alm-entry.owned{ box-shadow:inset 0 0 0 1px var(--gold); }
+.alm-ico{ width:26px; height:26px; flex:none; color:#cdd8e0; margin-top:2px; }
+.alm-entry.r-uncommon .alm-ico{ color:var(--cool); }
+.alm-entry.r-rare .alm-ico{ color:var(--hot); }
+.alm-entry.r-legendary .alm-ico{ color:var(--violet); }
+.alm-entry.great .alm-ico, .alm-entry.mood-good .alm-ico{ color:var(--lime); }
+.alm-entry.jackpot .alm-ico{ color:var(--violet); }
+.alm-entry.mood-bad .alm-ico{ color:var(--hot); }
+.alm-ico.reel-ico{ width:auto; font-family:var(--display); font-size:17px; letter-spacing:1px; }
+.alm-body{ flex:1; min-width:0; }
+.alm-title{ font-family:var(--display); font-size:12px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+.alm-tag{ font-family:var(--font); font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; opacity:.45; }
+.alm-short{ font-size:11px; opacity:.85; margin-top:2px; }
+.alm-long{ font-size:10.5px; opacity:.6; margin-top:4px; line-height:1.5; font-style:italic; }
+
+/* longer card tooltips */
+.tip-detail{ margin-top:7px; padding-top:6px; border-top:1px dotted rgba(255,255,255,.14); font-size:10.5px; line-height:1.5; opacity:.8; }
+.tip-detail b{ display:block; font-family:var(--display); font-size:10px; margin-bottom:2px; }
+.tip-detail.hot b{ color:var(--gold); } .tip-detail.fin b{ color:#ff9ff3; } .tip-detail.seal b{ color:var(--cool); }
+#tooltip{ max-height:74vh; overflow-y:auto; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -995,6 +1094,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
       <div class="badge cash" id="money">$0</div>
       <button class="icon" id="btn-deck" title="View deck (D)">🂠<span id="deck-count">52</span></button>
       <button class="icon" id="btn-help" title="How to play">?</button>
+      <button class="icon" id="btn-almanac" title="The Almanac - every ability (K)">📖</button>
       <button class="icon" id="btn-sound" title="Sound effects">🔊</button>
       <button class="icon" id="btn-music" title="Music">♪</button>
       <button class="icon" id="btn-menu" title="Menu (Esc)">☰</button>
@@ -1039,6 +1139,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
     <div class="ctl-left">
       <div class="chip" id="passes">PASSES <b>3</b></div>
       <div class="reshuffle-bar" id="reshuffle-bar"></div>
+      <div class="cut-bar" id="cut-bar"></div>
     </div>
     <div class="ctl-mid">
       <button class="btn ghost" id="btn-undo">UNDO <b>3</b></button>
@@ -1220,6 +1321,9 @@ const TUNE = {
   reshuffleCashStep: 3,
   reshufflePoints: 250,     // ...or pay in score, which starts cheap
   reshufflePointsStep: 250,
+  heatMultPer: 0.5,         // each Heat level adds this much X Mult
+  heatBankBase: 250,        // banking Heat pays heat^2 x this
+  heatMissScore: 200,       // a wrong call with no passes left costs this much score
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 3,
@@ -1261,31 +1365,47 @@ function tierFor(total) {
    ========================================================= */
 const ENHANCEMENTS = {
   none:    { name: 'Plain',     cls: '', text: '' },
-  gilded:  { name: 'Gilded',    cls: 'enh-gilded',  glyph: '✦', text: '+50 Chips when scored.' },
-  voltaic: { name: 'Voltaic',   cls: 'enh-voltaic', glyph: '⚡', text: '+4 Mult when scored.' },
-  glass:   { name: 'Glass',     cls: 'enh-glass',   glyph: '◇', text: 'X2 Mult. 1 in 5 chance to shatter (removed from deck).' },
-  wild:    { name: 'Chameleon', cls: 'enh-wild',    glyph: '✿', text: 'Counts as every suit.' },
-  phantom: { name: 'Phantom',   cls: 'enh-phantom', glyph: '◌', text: 'Stacks onto any rank in the tableau. +2 Mult.' },
-  lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.' },
-  steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.' },
-  bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.' },
-  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.' },
-  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.' }
+  gilded:  { name: 'Gilded',    cls: 'enh-gilded',  glyph: '✦', text: '+50 Chips when scored.',
+            long: 'Adds a flat 50 Chips to the base value whenever this card scores — reaching a foundation, being wished into the Well, or detonated by a Fuse. Chips are the left half of Chips X Mult, so Gilded is at its best on a card you score while your Mult is already high.' },
+  voltaic: { name: 'Voltaic',   cls: 'enh-voltaic', glyph: '⚡', text: '+4 Mult when scored.',
+            long: 'Adds 4 to your Mult for this score. Additive Mult is applied before any X Mult in the chain, so stacking Voltaic cards and then hitting a Polychrome or a X Mult Curio multiplies the whole pile at once.' },
+  glass:   { name: 'Glass',     cls: 'enh-glass',   glyph: '◇', text: 'X2 Mult. 1 in 5 chance to shatter (removed from deck).',
+            long: 'Doubles your Mult for this score, but every time it scores there is a 1 in 5 chance it shatters and is destroyed permanently — gone from your deck for the rest of the run. A thinner deck deals more kindly, so losing one is not always a disaster.' },
+  wild:    { name: 'Chameleon', cls: 'enh-wild',    glyph: '✿', text: 'Counts as every suit.',
+            long: 'This card is every suit at once. It can be stacked on any colour in the tableau, it goes home to whichever foundation needs its rank, and it counts as a match for every suit-based Curio at the same time. Excellent for keeping a Suit Run alive.' },
+  phantom: { name: 'Phantom',   cls: 'enh-phantom', glyph: '◌', text: 'Stacks onto any rank in the tableau. +2 Mult.',
+            long: 'Ignores the descending-rank rule in the tableau: it drops onto any card, and any card drops onto it. That makes it a joint you can use to bridge two runs together, or a way to unstick a column that has nothing legal to place. Still needs its real rank to reach a foundation.' },
+  lucky:   { name: "Rabbit's",  cls: 'enh-lucky',   glyph: '♣', text: '1 in 4: +20 Mult.  1 in 8: earn $3.',
+            long: 'Two independent rolls every time it scores: a 1 in 4 shot at +20 Mult, and a separate 1 in 8 shot at $3. Both can hit at once. The Lucky Horseshoe House Rule doubles both chances.' },
+  steel:   { name: 'Steel',     cls: 'enh-steel',   glyph: '⚒', text: 'X1.5 Mult if scored straight off the tableau.',
+            long: 'Multiplies your Mult by 1.5, but only when the card goes home directly from a tableau column — not from the waste. Pairs naturally with Column Stack play, since you are cashing off columns anyway.' },
+  bomb:    { name: 'Fuse',      cls: 'enh-bomb',    glyph: '✹', text: 'Also scores the card it was sitting on. +30 Chips.',
+            long: 'When this goes home from a column it detonates: the card underneath is flipped face-up if needed and scored as a second full play, Curios and all, without leaving the tableau. Sitting a Fuse on top of a King is how you double-dip on your biggest card.' },
+  bullion: { name: 'Bullion',   cls: 'enh-bullion', glyph: '$', text: 'Earn $4 when scored.',
+            long: 'Pays $4 into your pocket the moment it scores, on top of whatever points it makes. The money lands immediately, mid-round, so it can fund a reshuffle before the round is even over.' },
+  riffle:  { name: 'Riffle',    cls: 'enh-riffle',  glyph: '↻', text: 'Reshuffles the stock for free when scored. +2 Mult.',
+            long: 'Scoring this card throws the waste back in with the stock and shuffles the lot — without spending a pass and without costing you cash or score. The rescue button for when draw-3 has buried the card you need.' }
 };
 
 const FINISHES = {
   none: { name: '', cls: '', text: '' },
-  foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.' },
-  holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.' },
-  poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.' },
+  foil: { name: 'Foil',        cls: 'fin-foil', text: '+60 Chips.',
+         long: 'A flat +60 Chips on every score. Finishes stack with enhancements and seals, so a Gilded Foil card carries +110 Chips before anything else touches it.' },
+  holo: { name: 'Holographic', cls: 'fin-holo', text: '+12 Mult.',
+         long: 'A flat +12 Mult on every score — one of the largest additive Mult sources in the game, and it goes on any card regardless of what else is printed there.' },
+  poly: { name: 'Polychrome',  cls: 'fin-poly', text: 'X1.5 Mult.',
+         long: 'Multiplies your Mult by 1.5. Because it multiplies rather than adds, it is worth the most on a card you score late in a chain, after your additive Mult has already piled up.' },
   neg:  { name: 'Negative',    cls: 'fin-neg',  text: '+1 Mantel seat (Curios only).' }
 };
 
 const SEALS = {
   none: { name: '', cls: '', text: '' },
-  red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.' },
-  gold: { name: 'Gold Seal', cls: 'seal-gold', text: 'Earn $4 when scored.' },
-  blue: { name: 'Blue Seal', cls: 'seal-blue', text: '+30 Chips.' }
+  red:  { name: 'Red Seal',  cls: 'seal-red',  text: 'Scores a second time.',
+         long: 'The whole scoring pass runs twice: the card, its marks, your combos and every Curio on the mantel all fire again. Effectively doubles that card, which makes it the single best thing to stamp on your most decorated card.' },
+  gold: { name: 'Gold Seal', cls: 'seal-gold', text: 'Earn $4 when scored.',
+         long: 'Pays $4 when the card scores. Stacks with Bullion, so a Bullion card wearing a Gold Seal is worth $8 the moment it reaches a foundation.' },
+  blue: { name: 'Blue Seal', cls: 'seal-blue', text: '+30 Chips.',
+         long: 'A flat +30 Chips. The cheapest way to pad a card that is already going to score with a big multiplier behind it.' }
 };
 
 /* =========================================================
@@ -1456,6 +1576,16 @@ const CURIOS = [
   { id: 'skyscraper', name: 'Skyscraper', icon: 'expand', rarity: 'rare', cost: 10,
     text: '+25 Chips for every card in your tallest column.',
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
+
+  { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
+    text: 'The Cut shows you the colour of the next card before you call it.',
+    long: 'Turns the 50/50 into a certainty — as long as you actually look. Heat climbs as fast as you can click.',
+    mods: { peekStock: true } },
+
+  { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
+    text: 'Each level of Heat is worth X0.4 more Mult than usual.',
+    long: 'Heat normally gives X(1 + 0.5 per level). With Hot Hand it is X(1 + 0.9 per level), so a Heat 4 streak swings from X3 to X4.6.',
+    mods: { heatPer: 0.4 } },
 
   { id: 'croupier', name: 'The Croupier', icon: 'refresh', rarity: 'uncommon', cost: 8,
     text: '+1 free stock reshuffle every round. +2 Mult.',
@@ -1980,7 +2110,8 @@ const Engine = (() => {
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0
+      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0,
+      heatPer: 0, peekStock: false
     };
     const merge = src => {
       if (!src) return;
@@ -2075,6 +2206,9 @@ const Engine = (() => {
         paidClears: [],
         wellMult: 0,
         blessing: 0,
+        heat: 0,
+        cuts: 0,
+        cutsHit: 0,
         over: false,
         won: false
       }
@@ -2346,6 +2480,10 @@ const Score = (() => {
     if (ctx.run.permaMult) ctx.addMult(ctx.run.permaMult);
     if (ctx.round.wellMult) ctx.addMult(ctx.round.wellMult);
     if (ctx.round.blessing && ctx.event === 'foundation') ctx.xMult(ctx.round.blessing);
+    if (ctx.round.heat) {
+      const per = TUNE.heatMultPer + Engine.mods(ctx.run).heatPer;
+      ctx.xMult(+(1 + per * ctx.round.heat).toFixed(2));
+    }
     ctx._src = null;
   }
 
@@ -2793,6 +2931,75 @@ const Game = (() => {
     } else {
       G.round.stuck = false;
     }
+  }
+
+  /* ---------------- THE CUT ----------------
+     Call the colour of the next card off the stock. Right, and your Heat climbs,
+     multiplying every score for the rest of the round. Wrong, and the Heat is
+     gone and it costs you a pass through the stock. Bank the Heat any time to
+     convert it straight into score.                                            */
+  function peekCut() {
+    const b = G.board;
+    if (!b.stock.length) return null;
+    return b.stock[b.stock.length - 1];
+  }
+
+  function heatMult() {
+    const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
+    return +(1 + per * G.round.heat).toFixed(2);
+  }
+
+  function callCut(colour) {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    const b = G.board;
+    if (!b.stock.length) return { ok: false, reason: 'The stock is empty — nothing to call.' };
+    const card = b.stock[b.stock.length - 1];
+    const actual = Engine.isRed(card) && !Engine.isBlack(card) ? 'red'
+                 : (SUITS[card.suit].color === 'red' ? 'red' : 'black');
+    const correct = card.enhancement === 'wild' ? true : actual === colour;
+
+    snapshot();
+    G.round.cuts++;
+    let penalty = null;
+    if (correct) {
+      G.round.heat++;
+      G.round.cutsHit++;
+    } else {
+      G.round.heat = 0;
+      if (b.passesLeft > 0) { b.passesLeft--; penalty = 'pass'; }
+      else { G.round.score = Math.max(0, G.round.score - TUNE.heatMissScore); penalty = 'score'; }
+    }
+
+    /* the call always turns the cards over */
+    const n = Math.min(Engine.drawCount(G.run), b.stock.length);
+    const turned = [];
+    for (let i = 0; i < n; i++) {
+      const c = b.stock.pop();
+      c.faceUp = true;
+      b.waste.push(c);
+      turned.push(c);
+    }
+    breakCascade();
+    G.round.moves++;
+    push({ event: 'cut', correct, colour, card, heat: G.round.heat, penalty,
+           mult: heatMult(), chips: 0, total: 0, triggers: [] });
+    push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
+    afterMove();
+    return { ok: true, correct, card, heat: G.round.heat, penalty };
+  }
+
+  function bankHeat() {
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
+    const h = G.round.heat;
+    if (h <= 0) return { ok: false, reason: 'No Heat to bank.' };
+    snapshot();
+    const gain = h * h * TUNE.heatBankBase;
+    G.round.score += gain;
+    G.round.heat = 0;
+    push({ event: 'bank-heat', heat: h, gain, chips: 0, mult: 0, total: gain, triggers: [] });
+    save();
+    return { ok: true, gain, heat: h };
   }
 
   /* ---------------- the wishing well ----------------
@@ -3398,7 +3605,7 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canWish, makeWish, reshuffle, reshuffleCost
+    canWish, makeWish, reshuffle, reshuffleCost, callCut, bankHeat, peekCut, heatMult
   };
 })();
 
@@ -3624,6 +3831,8 @@ const UI = (() => {
     if (!G.run) return;
     hideTip();
     clearHints();
+    if (drag) cancelDrag(true);
+    else sweepGhosts();
     renderHud();
     renderMantel();
     renderBoard();
@@ -3723,6 +3932,7 @@ const UI = (() => {
     const passes = Engine.mods(G.run).infinitePasses ? '∞' : (G.board ? G.board.passesLeft : 0);
     $('#passes').innerHTML = 'PASSES <b>' + passes + '</b>';
     renderReshuffle();
+    renderCut();
     $('#deck-count').textContent = G.run.deck.length;
     $('#btn-cash').classList.toggle('urgent', !!(G.round && G.round.stuck));
     const pv = $('#cash-preview');
@@ -3754,6 +3964,49 @@ const UI = (() => {
     if (c.free > 0) add('free', 'FREE x' + c.free, true);
     add('cash', '$' + c.cash, G.run.money >= c.cash);
     add('points', c.points + ' pts', G.round && G.round.score >= c.points);
+  }
+
+  /* THE CUT -- the on-table gamble */
+  function renderCut() {
+    const bar = $('#cut-bar');
+    if (!bar || !G.board || !G.round) return;
+    const m = Engine.mods(G.run);
+    const hot = G.round.heat > 0;
+    const peek = m.peekStock ? Game.peekCut() : null;
+    const peekColour = peek ? ((Engine.isRed(peek) && !Engine.isBlack(peek)) ||
+      SUITS[peek.suit].color === 'red' ? 'red' : 'black') : null;
+
+    bar.innerHTML =
+      '<span class="cut-cap">THE CUT</span>' +
+      '<span class="cut-heat' + (hot ? ' on' : '') + '" title="Heat multiplies every score">HEAT <b>X' +
+        Game.heatMult() + '</b><i>' + G.round.heat + '</i></span>';
+
+    const canCall = G.board.stock.length > 0;
+    ['red', 'black'].forEach(col => {
+      const btn = el('button', 'cut-btn cut-' + col + (canCall ? '' : ' off') +
+        (peekColour === col ? ' peeked' : ''), col.toUpperCase());
+      btn.onclick = () => {
+        const res = Game.callCut(col);
+        if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+        clearSelection();
+        render();
+        drainFx();
+        checkStuck();
+      };
+      bar.appendChild(btn);
+    });
+    const bank = el('button', 'cut-btn cut-bank' + (hot ? '' : ' off'),
+      'BANK' + (hot ? ' ' + fmt(G.round.heat * G.round.heat * TUNE.heatBankBase) : ''));
+    bank.onclick = () => {
+      const res = Game.bankHeat();
+      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+      render();
+      drainFx();
+    };
+    bar.appendChild(bank);
+    if (peek) {
+      bar.appendChild(el('span', 'cut-peek ' + peekColour, 'next: ' + peekColour.toUpperCase()));
+    }
   }
 
   function renderBoard() {
@@ -3790,6 +4043,7 @@ const UI = (() => {
         n.classList.add('playable');
         attachDrag(n, { zone: 'waste', index: absIdx });
       } else n.classList.add('under');
+      attachInspect(n, c);
       waste.appendChild(n);
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
@@ -3822,6 +4076,7 @@ const UI = (() => {
           const n = cardEl(c);
           n.style.zIndex = i;
           if (i === pile.length - showFrom - 1) attachDrag(n, { zone: 'foundation', suit: s });
+          attachInspect(n, c);
           f.appendChild(n);
         });
         f.appendChild(el('div', 'pile-count', String(pile.length)));
@@ -3859,7 +4114,7 @@ const UI = (() => {
         n.dataset.col = col;
         n.dataset.index = i;
         y += (c.faceUp ? 30 : 15) * squeeze;
-        if (c.faceUp) attachDrag(n, { zone: 'tableau', col, index: i });
+        if (c.faceUp) { attachDrag(n, { zone: 'tableau', col, index: i }); attachInspect(n, c); }
         p.appendChild(n);
       });
       const runLen = Engine.runLength(b, col, Engine.mods(G.run));
@@ -3969,8 +4224,50 @@ const UI = (() => {
     return null;
   }
 
-  /* --- pointer drag --- */
+  /* --- pointer drag ---
+     Move/up/cancel live on the window, not on the card. render() destroys and
+     rebuilds every card element, so a listener bound to the node dies with it
+     and the drag ghost gets stranded on screen forever. */
   let drag = null;
+
+  function cancelDrag(silent) {
+    if (drag && drag.ghost) drag.ghost.remove();
+    drag = null;
+    document.body.classList.remove('dragging-now');
+    clearDropHighlights();
+    $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
+    $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
+    sweepGhosts();
+    if (!silent) render();
+  }
+
+  /* belt and braces: nothing should ever be left in the drag layer */
+  function sweepGhosts() {
+    const layer = $('#draglayer');
+    if (!layer) return;
+    Array.from(layer.children).forEach(n => { if (!drag || n !== drag.ghost) n.remove(); });
+  }
+
+  /* hover a face-up card for a beat to read exactly what it does */
+  let inspectTimer = null;
+  function attachInspect(node, card) {
+    node.addEventListener('pointerenter', () => {
+      clearTimeout(inspectTimer);
+      inspectTimer = setTimeout(() => {
+        if (drag) return;
+        showTip(node, Overlays.cardTip(card));
+      }, 340);
+    });
+    node.addEventListener('pointerleave', () => { clearTimeout(inspectTimer); hideTip(); });
+    node.addEventListener('pointerdown', () => { clearTimeout(inspectTimer); hideTip(); });
+    /* right-click pins it open for as long as you like */
+    node.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      clearTimeout(inspectTimer);
+      showTip(node, Overlays.cardTip(card));
+    });
+  }
+
   function attachDrag(node, src) {
     node.classList.add('grabbable');
     node.addEventListener('pointerdown', e => {
@@ -3979,50 +4276,64 @@ const UI = (() => {
       if (e.button != null && e.button !== 0) return;
       const cards = src.zone === 'tableau'
         ? (Engine.isRunFrom(G.board, src.col, src.index, Engine.mods(G.run)) ? G.board.tableau[src.col].slice(src.index) : null)
-        : (src.zone === 'waste' ? G.board.waste.slice(-1) : G.board.foundations[src.suit].slice(-1));
+        : (src.zone === 'waste'
+            ? (G.board.waste[src.index != null ? src.index : G.board.waste.length - 1] ? [G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]] : null)
+            : G.board.foundations[src.suit].slice(-1));
       if (!cards || !cards.length) { Sfx.error(); shake(node); return; }
+      cancelDrag(true);
       node.classList.add('pressed');
-      drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, t: Date.now() };
-      node.setPointerCapture && node.setPointerCapture(e.pointerId);
+      drag = { src, cards, x0: e.clientX, y0: e.clientY, moved: false, node, ghost: null, id: e.pointerId };
       e.preventDefault();
     });
-    node.addEventListener('pointermove', e => {
-      if (!drag || drag.node !== node) return;
-      const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
-      if (!drag.moved && Math.hypot(dx, dy) > 6) {
-        drag.moved = true;
-        buildGhost(e);
-        document.body.classList.add('dragging-now');
-      }
-      if (drag.moved && drag.ghost) {
-        drag.ghost.style.transform = 'translate(' + (e.clientX - drag.ox) + 'px,' + (e.clientY - drag.oy) + 'px) rotate(' + Math.max(-8, Math.min(8, dx * 0.05)) + 'deg)';
-        highlightDrop(e.clientX, e.clientY);
-      }
-    });
-    const finish = e => {
-      if (!drag || drag.node !== node) return;
-      const d = drag; drag = null;
-      $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
-      document.body.classList.remove('dragging-now');
-      clearDropHighlights();
-      if (d.ghost) d.ghost.remove();
-      $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
-      if (d.moved) {
-        const dst = dropTargetAt(e.clientX, e.clientY);
-        if (dst) doMove(d.src, dst);
-        else { render(); }
-      } else {
-        onTap(d.src, e);
-      }
-    };
-    node.addEventListener('pointerup', finish);
-    node.addEventListener('pointercancel', () => { $$('.card.pressed').forEach(n => n.classList.remove('pressed')); if (drag) { document.body.classList.remove('dragging-now'); if (drag.ghost) drag.ghost.remove(); clearDropHighlights(); drag = null; render(); } });
     node.addEventListener('dblclick', e => {
       if (G.phase !== 'play') return;
       e.preventDefault();
+      cancelDrag(true);
       const t = autoTarget(src);
       if (t) doMove(src, t); else { Sfx.error(); shake(node); }
     });
+  }
+
+  function onDragMove(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.moved && Math.hypot(dx, dy) > 6) {
+      drag.moved = true;
+      buildGhost(e);
+      document.body.classList.add('dragging-now');
+    }
+    if (drag.moved && drag.ghost) {
+      drag.ghost.style.transform = 'translate(' + (e.clientX - drag.ox) + 'px,' + (e.clientY - drag.oy) + 'px) rotate(' +
+        Math.max(-8, Math.min(8, dx * 0.05)) + 'deg)';
+      highlightDrop(e.clientX, e.clientY);
+    }
+  }
+
+  function onDragEnd(e) {
+    if (!drag) { sweepGhosts(); return; }
+    const d = drag;
+    drag = null;
+    if (d.ghost) d.ghost.remove();
+    sweepGhosts();
+    document.body.classList.remove('dragging-now');
+    clearDropHighlights();
+    $$('.card.pressed').forEach(n => n.classList.remove('pressed'));
+    $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
+    if (d.moved) {
+      const dst = dropTargetAt(e.clientX, e.clientY);
+      if (dst) doMove(d.src, dst);
+      else render();
+    } else {
+      onTap(d.src, e);
+    }
+  }
+
+  function installDragHandlers() {
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    window.addEventListener('pointercancel', () => cancelDrag());
+    window.addEventListener('blur', () => cancelDrag());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
   }
 
   function buildGhost(e) {
@@ -4157,6 +4468,39 @@ const UI = (() => {
       setTimeout(done, 900 * spd());
       return;
     }
+    if (p.event === 'cut') {
+      const anchor = $('#cut-bar') || $('#scorebox');
+      const card = el('div', 'cut-flip ' + (p.correct ? 'hit' : 'miss'),
+        '<div class="cf-call">' + p.colour.toUpperCase() + '</div>' +
+        '<div class="cf-card ' + ((Engine.isRed(p.card) && !Engine.isBlack(p.card)) ? 'red' : 'black') + '">' +
+          RANK_NAMES[p.card.rank] + (p.card.enhancement === 'wild' ? '✿' : SUITS[p.card.suit].sym) + '</div>' +
+        '<div class="cf-verdict">' + (p.correct
+          ? 'HIT — HEAT X' + p.mult
+          : (p.penalty === 'pass' ? 'MISS — lost a pass' : 'MISS — lost ' + TUNE.heatMissScore + ' points')) + '</div>');
+      $('#fxlayer').appendChild(card);
+      if (p.correct) {
+        Sfx.big(); confetti(anchor, 18 + p.heat * 6, 't2'); flashScreen(0.14, '#ffd166');
+        if (p.heat >= 4) { screenShake(8); bannerText('HEAT X' + p.mult); }
+      } else {
+        Sfx.lose(); screenShake(9); flashScreen(0.22, '#ff4d6d');
+      }
+      renderHud();
+      setTimeout(() => card.classList.add('out'), 1000 * spd());
+      setTimeout(() => card.remove(), 1400 * spd());
+      setTimeout(done, 700 * spd());
+      return;
+    }
+    if (p.event === 'bank-heat') {
+      const box = $('#scorebox');
+      bannerText('HEAT BANKED — X' + p.heat);
+      Sfx.win();
+      confetti(box, 50, 't3');
+      screenShake(10);
+      flashScreen(0.24, '#7ee787');
+      animateScoreTo(G.round.score);
+      setTimeout(done, 700 * spd());
+      return;
+    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -4282,6 +4626,7 @@ const UI = (() => {
     const bits = [];
     if (G.round.cascade > 1) bits.push('<span class="cm cascade">CASCADE <b>X' + G.round.cascade + '</b></span>');
     if (G.round.suitRun > 1) bits.push('<span class="cm suitrun">' + SUITS[G.round.lastSuit].sym + ' RUN <b>X' + G.round.suitRun + '</b></span>');
+    if (G.round.heat > 0) bits.push('<span class="cm heat">HEAT <b>X' + Game.heatMult() + '</b></span>');
     m.innerHTML = bits.join('');
     m.classList.toggle('active', bits.length > 0);
     if (bits.length) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
@@ -4557,6 +4902,7 @@ const UI = (() => {
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
+    installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
     get busy() { return fxBusy; }
   };
 })();
@@ -4683,6 +5029,7 @@ const Overlays = (() => {
         '<div class="shop-foot">' +
           '<button class="btn ghost" id="shop-reroll">REROLL $<b>' + Game.rerollCost() + '</b></button>' +
           '<button class="btn ghost" id="shop-deck">VIEW DECK (' + run.deck.length + ')</button>' +
+          '<button class="btn ghost" id="shop-almanac">ALMANAC</button>' +
           '<button class="btn big" id="shop-next">NEXT ROUND →</button>' +
         '</div>' +
       '</div>', 'shop-open');
@@ -4693,6 +5040,7 @@ const Overlays = (() => {
       else { Sfx.error(); UI.toast('Not enough cash to reroll.'); }
     };
     $('#shop-deck').onclick = () => deckView();
+    $('#shop-almanac').onclick = () => almanac();
     wireBandit();
     $('#shop-next').onclick = () => {
       Sfx.click();
@@ -4933,9 +5281,11 @@ const Overlays = (() => {
     const rows = [];
     rows.push(row('Base rank value', '+' + base + ' Chips'));
 
+    const details = [];
     const e = ENHANCEMENTS[card.enhancement];
     if (card.enhancement !== 'none') {
       rows.push(row(e.name, e.text, 'hot'));
+      if (e.long) details.push({ name: e.name, long: e.long, cls: 'hot' });
       if (card.enhancement === 'gilded') chips += 50;
       if (card.enhancement === 'voltaic') mult += 4;
       if (card.enhancement === 'glass') xmult *= 2;
@@ -4947,6 +5297,7 @@ const Overlays = (() => {
     const f = FINISHES[card.finish];
     if (card.finish !== 'none') {
       rows.push(row(f.name, f.text, 'fin'));
+      if (f.long) details.push({ name: f.name, long: f.long, cls: 'fin' });
       if (card.finish === 'foil') chips += 60;
       if (card.finish === 'holo') mult += 12;
       if (card.finish === 'poly') xmult *= 1.5;
@@ -4954,6 +5305,7 @@ const Overlays = (() => {
     const sl = SEALS[card.seal];
     if (card.seal !== 'none') {
       rows.push(row(sl.name, sl.text, 'seal'));
+      if (sl.long) details.push({ name: sl.name, long: sl.long, cls: 'seal' });
       if (card.seal === 'blue') chips += 30;
       if (card.seal === 'gold') cash += 4;
     }
@@ -4971,6 +5323,9 @@ const Overlays = (() => {
       UI.fmt(alone * retrig) + '</b></div>';
     if (retrig > 1) out += '<div class="tip-foot">Red Seal: scored twice.</div>';
     if (cash) out += '<div class="tip-cash">Pays $' + cash + ' when scored.</div>';
+    details.forEach(d => {
+      out += '<div class="tip-detail ' + d.cls + '"><b>' + d.name + '</b>' + d.long + '</div>';
+    });
     out += '<div class="tip-foot">Curios, Cascade and your Column Stack multiply this further.</div>';
     return out;
   }
@@ -5034,6 +5389,115 @@ const Overlays = (() => {
 
   function stat(k, v) { return '<div class="stat"><span>' + k + '</span><b>' + v + '</b></div>'; }
 
+  /* ---------------- the almanac: every ability in the game ---------------- */
+  const ALMANAC_TABS = [
+    { id: 'curios',  name: 'CURIOS',     sub: 'objects that take a mantel seat' },
+    { id: 'marks',   name: 'CARD MARKS', sub: 'enhancements, finishes and seals' },
+    { id: 'cards',   name: 'NEW CARDS',  sub: 'cards you can add to the deck' },
+    { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
+    { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
+    { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
+    { id: 'wishes',  name: 'THE WELL',   sub: 'what the Wishing Well can give you' },
+    { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
+  ];
+  let almanacTab = 'curios';
+
+  function almanac(tab) {
+    almanacTab = tab || almanacTab;
+    open(
+      '<div class="panel almanac">' +
+        '<div class="panel-flag">THE ALMANAC</div>' +
+        '<div class="sub">every ability in the game, whether you own it or not</div>' +
+        '<div class="alm-tabs">' + ALMANAC_TABS.map(t =>
+          '<button class="alm-tab' + (t.id === almanacTab ? ' on' : '') + '" data-tab="' + t.id + '">' + t.name + '</button>').join('') + '</div>' +
+        '<div class="alm-sub" id="alm-sub"></div>' +
+        '<div class="alm-list" id="alm-list"></div>' +
+        '<button class="btn ghost" id="alm-close">CLOSE</button>' +
+      '</div>', 'centered wide');
+
+    $$('.alm-tab').forEach(b => { b.onclick = () => { Sfx.click(); almanac(b.dataset.tab); }; });
+    $('#alm-close').onclick = () => { Sfx.click(); close(); if (G.phase === 'shop') shop(); };
+    renderAlmanac();
+  }
+
+  function almEntry(iconName, title, tag, short, long, cls) {
+    return '<div class="alm-entry ' + (cls || '') + '">' +
+      '<div class="alm-ico">' + icon(iconName) + '</div>' +
+      '<div class="alm-body">' +
+        '<div class="alm-title">' + title + (tag ? '<span class="alm-tag">' + tag + '</span>' : '') + '</div>' +
+        '<div class="alm-short">' + short + '</div>' +
+        (long ? '<div class="alm-long">' + long + '</div>' : '') +
+      '</div></div>';
+  }
+
+  function renderAlmanac() {
+    const meta = ALMANAC_TABS.find(t => t.id === almanacTab);
+    $('#alm-sub').textContent = meta.sub;
+    const list = $('#alm-list');
+    let html = '';
+
+    if (almanacTab === 'curios') {
+      const owned = new Set(G.run ? G.run.mantel.map(c => c.id) : []);
+      ['common', 'uncommon', 'rare', 'legendary'].forEach(rar => {
+        html += '<div class="alm-group r-' + rar + '">' + rar.toUpperCase() + '</div>';
+        CURIOS.filter(c => c.rarity === rar).forEach(c => {
+          html += almEntry(c.icon, c.name, '$' + c.cost + (owned.has(c.id) ? ' · OWNED' : ''), c.text, c.long || '', 'r-' + rar + (owned.has(c.id) ? ' owned' : ''));
+        });
+      });
+    } else if (almanacTab === 'marks') {
+      html += '<div class="alm-group">ENHANCEMENTS</div>';
+      Object.keys(ENHANCEMENTS).forEach(k => {
+        const e = ENHANCEMENTS[k];
+        if (k === 'none') return;
+        html += almEntry('sparkle', e.glyph + ' ' + e.name, 'enhancement', e.text, e.long || '');
+      });
+      html += '<div class="alm-group">FINISHES</div>';
+      Object.keys(FINISHES).forEach(k => {
+        const f = FINISHES[k];
+        if (k === 'none') return;
+        html += almEntry('prism', f.name, 'finish', f.text, f.long || '');
+      });
+      html += '<div class="alm-group">SEALS</div>';
+      Object.keys(SEALS).forEach(k => {
+        const sl = SEALS[k];
+        if (k === 'none') return;
+        html += almEntry('stamp', sl.name, 'seal', sl.text, sl.long || '');
+      });
+      html += '<div class="alm-group">CARD MODS IN THE SHOP</div>';
+      CARD_MODS.forEach(m => { html += almEntry(m.icon, m.name, '$' + m.cost, m.text, ''); });
+    } else if (almanacTab === 'cards') {
+      NEW_CARDS.forEach(c => { html += almEntry(c.icon, c.name, '$' + c.cost, c.text, ''); });
+    } else if (almanacTab === 'rules') {
+      HOUSE_RULES.forEach(h => {
+        const owned = G.run ? (G.run.houseRules[h.id] || 0) : 0;
+        html += almEntry(h.icon, h.name, '$' + h.cost + ' · max ' + h.max + (owned ? ' · owned ' + owned : ''), h.text, '');
+      });
+    } else if (almanacTab === 'counter') {
+      COUNTER_ITEMS.forEach(c => {
+        const owned = G.run && G.run.counterBought ? (G.run.counterBought[c.id] || 0) : 0;
+        html += almEntry(c.icon, c.name, 'from $' + c.base + ' · +$' + c.step + ' each' + (owned ? ' · bought ' + owned : ''), c.text, '');
+      });
+    } else if (almanacTab === 'whims') {
+      WHIMS.forEach(w => { html += almEntry(w.icon, w.name, w.mood, w.text, '', 'mood-' + w.mood); });
+    } else if (almanacTab === 'wishes') {
+      const total = WISHES.reduce((a, w) => a + w.w, 0);
+      WISHES.forEach(w => {
+        html += almEntry('coin', w.name, Math.round(w.w / total * 100) + '% chance', w.text, '', w.cls);
+      });
+    } else if (almanacTab === 'bandit') {
+      Object.keys(BANDIT_PRIZES).forEach(sym => {
+        const p = BANDIT_PRIZES[sym];
+        html += '<div class="alm-entry"><div class="alm-ico reel-ico ' +
+          (REEL_SYMBOLS.find(r => r.s === sym) || {}).cls + '">' + sym + sym + sym + '</div>' +
+          '<div class="alm-body"><div class="alm-title">' + p.name + '</div>' +
+          '<div class="alm-short">' + p.text + '</div></div></div>';
+      });
+      html += almEntry('dice', 'Two of a kind', 'consolation', 'Returns $6.', '');
+      html += almEntry('dice', 'No match', 'consolation', 'Returns $1 and a lesson.', '');
+    }
+    list.innerHTML = html;
+  }
+
   /* ---------------- menus ---------------- */
   function help() {
     open(
@@ -5083,6 +5547,20 @@ const Overlays = (() => {
           'next foundation play, more wishes — or it hands the card back with a <b>new mark permanently printed on it</b>, ' +
           'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
           'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
+
+          '<h4>The Cut — the gamble on the table</h4>' +
+          '<p>Down by PASSES there is a <b>RED</b> / <b>BLACK</b> call. Guess the colour of the next card ' +
+          'off the stock and the cards turn over as normal — but the call has stakes:</p>' +
+          '<ul>' +
+            '<li><b>Right</b> — your <b>HEAT</b> climbs a level. Heat multiplies <i>every</i> score for the rest of ' +
+            'the round: X' + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four. It shows up in the combo readout.</li>' +
+            '<li><b>Wrong</b> — the Heat is gone and it costs you a pass through the stock. With no passes left it costs ' +
+            TUNE.heatMissScore + ' points instead.</li>' +
+            '<li><b>BANK</b> — cash the streak in for score instead of pressing on: <b>Heat squared x ' + TUNE.heatBankBase + '</b>. ' +
+            'Four levels is ' + (16 * TUNE.heatBankBase) + ' points, but you give up the multiplier.</li>' +
+          '</ul>' +
+          '<p>You never have to call — the normal deal is always there. The Card Counter Curio shows you the colour ' +
+          'in advance, and Hot Hand makes every level of Heat worth more.</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
           '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
@@ -5139,7 +5617,12 @@ const Overlays = (() => {
             '<li><b>New Cards</b> add a whole extra card to the deck — chameleons, phantoms, fuses. They change the piles themselves.</li>' +
           '</ul>' +
 
-          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; R = reshuffle &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
+          '<h4>Looking things up</h4>' +
+          '<p>Hover any face-up card — on the table or in your deck — to read exactly what its marks do, ' +
+          'with the full explanation. Right-click pins the tooltip open. The <b>Almanac</b> (the book icon, or K) ' +
+          'lists every Curio, card mark, New Card, House Rule, Whim, Well outcome and Bandit payout in the game, ' +
+          'whether you own it or not.</p>' +
+          '<p class="keys"><b>Keys:</b> Space = deal &nbsp; R = reshuffle &nbsp; K = almanac &nbsp; A = auto-collect &nbsp; U = undo &nbsp; H = hint &nbsp; D = deck &nbsp; Esc = menu</p>' +
         '</div>' +
         '<button class="btn ghost" id="help-close">GOT IT</button>' +
       '</div>', 'centered wide');
@@ -5154,6 +5637,7 @@ const Overlays = (() => {
           '<button class="btn" id="m-resume">RESUME</button>' +
           '<button class="btn ghost" id="m-help">HOW TO PLAY</button>' +
           '<button class="btn ghost" id="m-deck">VIEW DECK</button>' +
+          '<button class="btn ghost" id="m-almanac">THE ALMANAC</button>' +
           '<button class="btn danger" id="m-new">ABANDON RUN</button>' +
         '</div>' +
         '<div class="menu-foot">Ante ' + G.run.ante + ' · Round ' + G.run.round + ' · $' + G.run.money + '</div>' +
@@ -5161,6 +5645,7 @@ const Overlays = (() => {
     $('#m-resume').onclick = () => { Sfx.click(); close(); };
     $('#m-help').onclick = () => { Sfx.click(); help(); };
     $('#m-deck').onclick = () => { Sfx.click(); deckView(); };
+    $('#m-almanac').onclick = () => { Sfx.click(); almanac(); };
     $('#m-new').onclick = () => {
       if (!confirm('Abandon this run and start fresh?')) return;
       Sfx.click(); close(); Game.clearSave(); Game.startRun(); UI.resetDisplayScore(); UI.render();
@@ -5185,7 +5670,7 @@ const Overlays = (() => {
     };
   }
 
-  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title };
+  return { open, close, isOpen, roundEnd, shop, refreshShop, deckView, gameOver, victory, help, menu, title, cardTip, almanac };
 })();
 
 /* ===== js/main.js ===== */
@@ -5313,6 +5798,7 @@ const Overlays = (() => {
     $('#btn-deck').onclick = () => { if (G.run) { Sfx.click(); Overlays.deckView(); } };
     $('#btn-menu').onclick = () => { if (G.run) { Sfx.click(); Overlays.menu(); } };
     $('#btn-help').onclick = () => { Sfx.click(); Overlays.help(); };
+    $('#btn-almanac').onclick = () => { Sfx.click(); Overlays.almanac(); };
     $('#btn-music').onclick = e => {
       const on = Sfx.music();
       e.currentTarget.classList.toggle('off', !on);
@@ -5324,6 +5810,7 @@ const Overlays = (() => {
       e.currentTarget.classList.toggle('off', !on);
     };
     UI.bindPileTargets();
+    UI.installDragHandlers();
 
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;
@@ -5335,6 +5822,7 @@ const Overlays = (() => {
       else if (k === 'u') undo();
       else if (k === 'h') hint();
       else if (k === 'd') { if (G.run) Overlays.deckView(); }
+      else if (k === 'k') Overlays.almanac();
       else if (k === 'c') cashOut();
       else if (k === 'r') {
         const res = Game.reshuffle(Game.reshuffleCost().free > 0 ? 'free' : 'cash');

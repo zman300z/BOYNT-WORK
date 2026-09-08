@@ -136,6 +136,10 @@ const Score = (() => {
     if (ctx.run.permaMult) ctx.addMult(ctx.run.permaMult);
     if (ctx.round.wellMult) ctx.addMult(ctx.round.wellMult);
     if (ctx.round.blessing && ctx.event === 'foundation') ctx.xMult(ctx.round.blessing);
+    if (ctx.round.heat) {
+      const per = TUNE.heatMultPer + Engine.mods(ctx.run).heatPer;
+      ctx.xMult(+(1 + per * ctx.round.heat).toFixed(2));
+    }
     ctx._src = null;
   }
 
