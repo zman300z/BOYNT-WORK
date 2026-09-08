@@ -213,6 +213,7 @@ const Game = (() => {
         card.scoredRound = true;
         scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth: twin ? Math.max(0, depth - 1) : depth,
                      anchor, stack, twin, label: twin ? 'TWIN!' : null });
+        G.round.blessing = 0;
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -310,12 +311,13 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- the furnace ----------------
-     An exit for cards you will never place -- a fourth Queen, a duplicate that
-     the foundation has not reached yet. Burning clears it for this round only;
-     the card is back in the deck next round.                                  */
-  function canBurn(src) {
-    if (G.phase !== 'play' || !G.board.burnsLeft) return false;
+  /* ---------------- the wishing well ----------------
+     An exit for cards you will never place -- a fourth Queen, a duplicate the
+     foundation has not reached. The card always pays Chips, then the well rolls
+     for something else: cash, a free reshuffle, a blessing, or it hands the card
+     back with a new mark printed on it. The card returns to the deck next round. */
+  function canWish(src) {
+    if (G.phase !== 'play' || !G.board.wishesLeft) return false;
     const b = G.board;
     if (src.zone === 'waste') {
       const allowed = Engine.playableWaste(b, Engine.mods(G.run));
@@ -329,26 +331,34 @@ const Game = (() => {
     return false;
   }
 
-  function burn(src) {
-    if (!canBurn(src)) { illegal(); return false; }
+  function makeWish(src) {
+    if (!canWish(src)) { illegal(); return false; }
     const b = G.board;
     const cards = grab(src, Engine.mods(G.run));
     if (!cards || cards.length !== 1) { illegal(); return false; }
     snapshot();
     const card = cards[0];
     removeFrom(src, 1);
-    b.furnace.push(card);
-    b.burnsLeft--;
+    b.well.push(card);
+    b.wishesLeft--;
     G.round.moves++;
+
     const m = Engine.mods(G.run);
-    const mult = m.furnaceDouble ? 2 : 1;
-    const chips = (rankChips(card.rank) * TUNE.furnaceChipsPerRank + TUNE.furnaceFlat) * mult;
-    G.run.money += mult;
-    G.round.money += mult;
-    scoreEvent({ event: 'burn', card, fromZone: src.zone, baseChips: chips,
-                 label: 'BURNED!', anchor: { zone: 'furnace' } });
-    push({ event: 'cash', label: 'FURNACE', amount: mult,
-           anchor: { zone: 'furnace' }, chips: 0, mult: 0, total: 0, triggers: [] });
+    const mult = m.wellDouble ? 2 : 1;
+    const chips = (rankChips(card.rank) * TUNE.wellChipsPerRank + TUNE.wellFlat) * mult;
+    scoreEvent({ event: 'wish', card, fromZone: src.zone, baseChips: chips,
+                 label: 'INTO THE WELL', anchor: { zone: 'well' } });
+
+    /* roll the wish -- Wishbone rolls twice and keeps the rarer result */
+    let wish = rollWish();
+    for (let i = 0; i < (m.wishRerolls || 0); i++) {
+      const other = rollWish();
+      if (other.w < wish.w) wish = other;
+    }
+    const detail = wish.apply(G, card);
+    push({ event: 'wish-result', wish: { id: wish.id, name: wish.name, text: wish.text, cls: wish.cls },
+           detail, anchor: { zone: 'well' }, chips: 0, mult: 0, total: 0, triggers: [] });
+
     if (src.zone === 'tableau') settleColumn(src.col);
     afterMove();
     return true;
@@ -426,34 +436,106 @@ const Game = (() => {
     return moved;
   }
 
+  /* Ranked advice. Returns { src, dst, cardId, kind, label } or null only when
+     there is genuinely nothing left to do -- including wishes and reshuffles. */
   function hint() {
     const b = G.board, m = Engine.mods(G.run);
-    const w = b.waste[b.waste.length - 1];
-    if (w && (Engine.foundationTargetFor(b, w) || Engine.twinTargetFor(b, w))) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
+    const homeable = c => !!(Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c));
+    const waste = Engine.playableWaste(b, m);
+
+    /* 1. anything that can go home */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
+      if (top.faceUp && homeable(top)) {
+        return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' },
+                 cardId: top.id, kind: 'home', label: 'Send it home' };
+      }
     }
+    for (const w of waste) {
+      if (homeable(w.card)) {
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'foundation' },
+                 cardId: w.card.id, kind: 'home', label: 'Send it home' };
+      }
+    }
+
+    /* 2. tableau moves that uncover a face-down card */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
-        const gainsFlip = i > 0 && !pile[i - 1].faceUp;
+        const uncovers = i > 0 && !pile[i - 1].faceUp;
+        if (!uncovers) continue;
         for (let d = 0; d < b.tableau.length; d++) {
           if (d === c) continue;
-          if (!b.tableau[d].length && i === 0) continue;
           if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
-            if (gainsFlip || !b.tableau[d].length || i === 0) return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d } };
+            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                     cardId: pile[i].id, kind: 'dig', label: 'Uncovers a face-down card' };
           }
         }
       }
     }
-    if (w) {
-      for (let d = 0; d < b.tableau.length; d++) if (Engine.canPlaceOnColumn(b, d, w, m)) return { src: { zone: 'waste' }, dst: { zone: 'tableau', col: d } };
+
+    /* 3. waste onto the tableau -- prefer landing on a longer run */
+    let best = null;
+    for (const w of waste) {
+      for (let d = 0; d < b.tableau.length; d++) {
+        if (!Engine.canPlaceOnColumn(b, d, w.card, m)) continue;
+        const score = Engine.runLength(b, d, m);
+        if (!best || score > best.score) {
+          best = { score, hint: { src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: d },
+                                  cardId: w.card.id, kind: 'build', label: 'Builds your column run' } };
+        }
+      }
     }
-    if (b.stock.length || b.waste.length) return { src: { zone: 'stock' } };
+    if (best) return best.hint;
+
+    /* 4. any other tableau move that grows a run */
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c) continue;
+          if (!b.tableau[d].length && i === 0) continue;
+          if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
+            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                     cardId: pile[i].id, kind: 'build', label: 'Builds your column run' };
+          }
+        }
+      }
+    }
+
+    /* 5. deal */
+    if (b.stock.length) return { src: { zone: 'stock' }, kind: 'draw', label: 'Deal three more' };
+    if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) {
+      return { src: { zone: 'stock' }, kind: 'draw', label: 'Turn the waste back over' };
+    }
+
+    /* 6. a reshuffle re-orders what draw-3 buried */
+    const rc = reshuffleCost();
+    if ((b.stock.length || b.waste.length) && (rc.free > 0 || G.run.money >= rc.cash || G.round.score >= rc.points)) {
+      return { src: { zone: 'reshuffle' }, kind: 'reshuffle',
+               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock' };
+    }
+
+    /* 7. nothing moves -- make a wish on a card you cannot place */
+    if (b.wishesLeft > 0) {
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        if (!pile.length) continue;
+        const top = pile[pile.length - 1];
+        if (top.faceUp) {
+          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'well' },
+                   cardId: top.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+        }
+      }
+      for (const w of waste) {
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'well' },
+                 cardId: w.card.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+      }
+    }
     return null;
   }
 
@@ -832,6 +914,6 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canBurn, burn, reshuffle, reshuffleCost
+    canWish, makeWish, reshuffle, reshuffleCost
   };
 })();

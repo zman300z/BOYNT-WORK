@@ -66,9 +66,12 @@ A duplicate card can never advance a foundation, since the pile only wants the *
 
 - **Twins** — drop it on top of its match. Any card whose rank its foundation has already passed scores
   in full there (plus +3 Mult) without advancing the pile.
-- **The Furnace** — the pile beside the waste. Drag any accessible card onto it and it burns for
-  **rank × 20 Chips** plus $1, clearing out of your way. Three burns a round (buy more at the Counter),
-  and the card is back in the deck next round. This is the escape hatch for a fourth Queen.
+- **The Wishing Well** — the pool beside the waste. Drag any accessible card in and it always pays
+  **rank × 18 Chips**, then the well rolls for what else you get: cash, a free reshuffle, +3 Mult for the
+  rest of the round, a ×3 blessing on your next foundation play, more wishes, an overflow jackpot — or it
+  hands the card back with a **new mark permanently printed on it**, so the dead Queen resurfaces next
+  round Gilded. Sometimes you just get a frog. Three wishes a round (more from the Counter or The Well
+  Witch; Wishbone rolls twice and keeps the better result).
 
 New Cards are also weighted low on purpose — roughly 60% land between Ace and 5, only 8% are face cards —
 and the shop preview shows the *exact* card you'll receive, rolled when the shop was stocked.
@@ -117,7 +120,9 @@ and the chips × mult it scores on its own.
 ## Controls
 
 Drag a card or a sequence, or click one and click where it goes. Double-click sends a
-card home. `Space` deal · `R` reshuffle · `A` auto-collect · `U` undo · `H` hint · `D` deck · `Esc` menu.
+card home. **HINT** ranks every option — a card that can go home, a move that uncovers a face-down card,
+a build that lengthens a run, a deal, a reshuffle, or a wish when nothing else moves — then lights the
+card and its destination and tells you why. `Space` deal · `R` reshuffle · `A` auto-collect · `U` undo · `H` hint · `D` deck · `Esc` menu.
 There's a generated lounge soundtrack — the ♪ button in the header mutes it, 🔊 mutes effects.
 Acting during a score animation fast-forwards it rather than being ignored.
 

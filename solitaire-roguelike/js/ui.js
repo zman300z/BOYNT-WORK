@@ -61,6 +61,7 @@ const UI = (() => {
   function render() {
     if (!G.run) return;
     hideTip();
+    clearHints();
     renderHud();
     renderMantel();
     renderBoard();
@@ -231,19 +232,19 @@ const UI = (() => {
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
-    /* furnace */
-    const fur = $('#furnace');
-    if (fur) {
-      Array.from(fur.querySelectorAll('.card')).forEach(n => n.remove());
-      const burned = b.furnace || [];
-      if (burned.length) {
-        const n = cardEl(burned[burned.length - 1]);
-        n.classList.add('burnt');
-        fur.appendChild(n);
+    /* the wishing well */
+    const wl = $('#well');
+    if (wl) {
+      Array.from(wl.querySelectorAll('.card')).forEach(n => n.remove());
+      const tossed = b.well || [];
+      if (tossed.length) {
+        const n = cardEl(tossed[tossed.length - 1]);
+        n.classList.add('sunk');
+        wl.appendChild(n);
       }
-      fur.classList.toggle('spent', !b.burnsLeft);
-      const bl = $('#burns-left');
-      if (bl) bl.textContent = b.burnsLeft;
+      wl.classList.toggle('spent', !b.wishesLeft);
+      const c = $('#wishes-left');
+      if (c) c.textContent = b.wishesLeft;
     }
 
     /* foundations */
@@ -369,11 +370,11 @@ const UI = (() => {
   function clearSelection() { selection = null; applySelectionClasses(); }
 
   function doMove(src, dst) {
-    if (dst.zone === 'furnace') {
-      const burned = Game.burn(src);
-      if (burned) { Sfx.shatter(); clearSelection(); render(); drainFx(); checkStuck(); }
-      else { Sfx.error(); shake($('#furnace')); render(); G.fx.length = 0; }
-      return burned;
+    if (dst.zone === 'well') {
+      const wished = Game.makeWish(src);
+      if (wished) { Sfx.money(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
+      return wished;
     }
     const ok = Game.tryMove(src, dst);
     if (ok) {
@@ -491,7 +492,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
       if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
-      if (z === 'furnace') return { zone: 'furnace' };
+      if (z === 'well') return { zone: 'well' };
     }
     return null;
   }
@@ -502,9 +503,9 @@ const UI = (() => {
     if (!t || !drag) return;
     const m = Engine.mods(G.run);
     let ok = false, node = null;
-    if (t.zone === 'furnace') {
-      node = $('#furnace');
-      ok = drag.cards.length === 1 && Game.canBurn(drag.src);
+    if (t.zone === 'well') {
+      node = $('#well');
+      ok = drag.cards.length === 1 && Game.canWish(drag.src);
     } else if (t.zone === 'tableau') {
       node = $$('#tableau .tab-pile')[t.col];
       ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
@@ -543,7 +544,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
       else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
-      else if (z === 'furnace') { const held = selection; clearSelection(); doMove(held, { zone: 'furnace' }); }
+      else if (z === 'well') { const held = selection; clearSelection(); doMove(held, { zone: 'well' }); }
     });
   }
 
@@ -576,6 +577,24 @@ const UI = (() => {
   function animatePacket(p, spd, done) {
     if (p.event === 'illegal') { done(); return; }
     if (p.event === 'nudge') { floatText($('#table'), p.label, 'fx-flash'); done(); return; }
+    if (p.event === 'wish-result') {
+      const w = p.wish;
+      const anchor = anchorEl(p.anchor);
+      const card = el('div', 'wish-card ' + w.cls,
+        '<div class="wc-name">' + w.name + '</div>' +
+        '<div class="wc-text">' + w.text + '</div>' +
+        (p.detail ? '<div class="wc-detail">' + p.detail + '</div>' : ''));
+      $('#fxlayer').appendChild(card);
+      if (w.cls === 'jackpot') { Sfx.win(); screenShake(12); confetti(anchor, 60, 't4'); flashScreen(0.3, '#b07cff'); }
+      else if (w.cls === 'great') { Sfx.big(); confetti(anchor, 26, 't2'); flashScreen(0.16, '#7ee787'); }
+      else if (w.cls === 'meh') { Sfx.error(); }
+      else { Sfx.money(); burst(anchor, 12, '#ffd166'); }
+      renderHud();
+      setTimeout(() => card.classList.add('out'), 1500 * spd());
+      setTimeout(() => card.remove(), 2000 * spd());
+      setTimeout(done, 900 * spd());
+      return;
+    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -666,7 +685,7 @@ const UI = (() => {
 
   function anchorEl(a) {
     if (!a) return $('#scorebox');
-    if (a.zone === 'furnace') return $('#furnace') || $('#scorebox');
+    if (a.zone === 'well') return $('#well') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
@@ -905,6 +924,30 @@ const UI = (() => {
     if (n) { n.classList.add('trigger'); setTimeout(() => n.classList.remove('trigger'), 300); }
   }
 
+  /* ---------------- hints ---------------- */
+  let hintTimer = null;
+  function clearHints() {
+    $$('.hinted,.hinted-dst').forEach(n => n.classList.remove('hinted', 'hinted-dst'));
+    $$('.hint-label').forEach(n => n.remove());
+    clearTimeout(hintTimer);
+  }
+
+  function showHint(srcNode, dstNode, label) {
+    clearHints();
+    if (srcNode) srcNode.classList.add('hinted');
+    if (dstNode) dstNode.classList.add('hinted-dst');
+    const anchor = srcNode || dstNode;
+    if (anchor && label) {
+      const tag = el('div', 'hint-label', label);
+      const r = anchor.getBoundingClientRect();
+      tag.style.left = (r.left + r.width / 2) + 'px';
+      tag.style.top = (r.top - 26) + 'px';
+      $('#fxlayer').appendChild(tag);
+    }
+    if (!srcNode && !dstNode) toast(label || 'Try that.');
+    hintTimer = setTimeout(clearHints, 2600);
+  }
+
   let toastTimer = null;
   function toast(msg, ms) {
     const t = $('#toast');
@@ -951,7 +994,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
-    renderCombo, flashScreen, confetti, rushFx, renderReshuffle,
+    renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     get busy() { return fxBusy; }
   };
 })();

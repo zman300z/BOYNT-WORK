@@ -66,7 +66,7 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    if (ctx.event !== 'burn') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (ctx.event !== 'wish') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;
@@ -132,9 +132,10 @@ const Score = (() => {
 
   /* permanent Mult bought or won during the run */
   function permaPass(ctx) {
-    if (!ctx.run.permaMult) return;
     ctx._src = { type: 'combo' };
-    ctx.addMult(ctx.run.permaMult);
+    if (ctx.run.permaMult) ctx.addMult(ctx.run.permaMult);
+    if (ctx.round.wellMult) ctx.addMult(ctx.round.wellMult);
+    if (ctx.round.blessing && ctx.event === 'foundation') ctx.xMult(ctx.round.blessing);
     ctx._src = null;
   }
 
@@ -174,7 +175,7 @@ const Score = (() => {
     if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
-    if (ev.event === 'burn')   base = { chips: ev.baseChips || 0, mult: 1 };
+    if (ev.event === 'wish')   base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 

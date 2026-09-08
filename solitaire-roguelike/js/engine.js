@@ -53,7 +53,7 @@ const Engine = (() => {
       quotaScale: 1,
       drawReduce: 0,
       counterBought: {},
-      bonusFurnace: 0,
+      bonusWishes: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
@@ -78,13 +78,13 @@ const Engine = (() => {
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
       drawReduce: 0,
       counterBought: {},
-      bonusFurnace: 0,
+      bonusWishes: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, furnaceUses: 0, furnaceDouble: false
+      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0
     };
     const merge = src => {
       if (!src) return;
@@ -152,8 +152,8 @@ const Engine = (() => {
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
       undos: TUNE.startingUndos + run.bonusUndos + m.undos,
-      furnace: [],
-      burnsLeft: TUNE.furnaceUses + (run.bonusFurnace || 0) + m.furnaceUses,
+      well: [],
+      wishesLeft: TUNE.wellUses + (run.bonusWishes || 0) + m.wellUses,
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
@@ -177,6 +177,8 @@ const Engine = (() => {
         illegal: 0,
         money: 0,
         paidClears: [],
+        wellMult: 0,
+        blessing: 0,
         over: false,
         won: false
       }
@@ -265,6 +267,10 @@ const Engine = (() => {
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
+    /* the Well and a reshuffle are real moves -- a board with either is not dead */
+    if (b.wishesLeft > 0 && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
+    if ((b.stock.length || b.waste.length) &&
+        (b.freeReshuffles > 0 || run.money >= TUNE.reshuffleCash + TUNE.reshuffleCashStep * (b.paidReshuffles || 0))) return true;
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {

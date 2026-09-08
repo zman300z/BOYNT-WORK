@@ -161,7 +161,7 @@ body::before{
 .stock-pile:hover{ border-color:var(--gold); }
 .drop-ok{ box-shadow:0 0 0 3px var(--lime), 0 0 26px rgba(126,231,135,.6) !important; border-color:var(--lime) !important; }
 .drop-no{ box-shadow:0 0 0 3px var(--hot) !important; border-color:var(--hot) !important; }
-.hinted{ animation:hintPulse 1.4s ease; box-shadow:0 0 0 3px var(--gold), 0 0 30px rgba(255,209,102,.7); border-radius:9px; }
+
 @keyframes hintPulse{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.5) } }
 
 #tableau{
@@ -856,19 +856,14 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    the furnace
    ============================================================ */
-.furnace-pile{
-  border:2px dashed rgba(255,122,47,.5) !important;
-  background:radial-gradient(circle at 50% 120%, rgba(255,122,47,.28), transparent 65%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-  cursor:pointer;
-}
-.furnace-pile:hover{ border-color:#ff9a4f !important; box-shadow:0 0 22px rgba(255,122,47,.4); }
-.furnace-label{ font-family:var(--display); font-size:8px; letter-spacing:.12em; color:#ff9a4f; opacity:.85; }
-.furnace-uses{ font-size:8px; opacity:.6; }
-.furnace-uses b{ font-family:var(--display); font-size:13px; color:#ff9a4f; }
-.furnace-pile.spent{ opacity:.4; filter:grayscale(.6); }
-.furnace-pile .card.burnt{ filter:brightness(.5) sepia(.6) hue-rotate(-20deg); transform:rotate(-6deg) scale(.92); }
-.furnace-pile.drop-ok{ box-shadow:0 0 0 3px #ff9a4f, 0 0 30px rgba(255,122,47,.7) !important; }
+
+
+
+
+
+
+
+
 
 /* ============================================================
    reshuffle bar
@@ -903,8 +898,75 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .enh-riffle{ background:linear-gradient(150deg,#d8f0ff,#a9d8f5); border-color:#3f8fc4; box-shadow:0 0 14px rgba(76,201,240,.5); }
 
 /* keep the furnace counter readable once something is burning in it */
-.furnace-label, .furnace-uses{ position:relative; z-index:5; text-shadow:0 2px 4px #000, 0 0 8px #000; }
+
 .furnace-pile .card.burnt{ position:absolute; inset:auto 0 4px 0; margin:0 auto; z-index:1; opacity:.55; }
+
+/* ============================================================
+   the wishing well
+   ============================================================ */
+.well-pile{
+  border:2px dashed rgba(76,201,240,.5) !important; cursor:pointer;
+  background:radial-gradient(circle at 50% 130%, rgba(76,201,240,.3), transparent 62%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  overflow:hidden;
+}
+.well-pile::after{
+  content:''; position:absolute; inset:auto -20% -30% -20%; height:60%;
+  background:radial-gradient(ellipse at 50% 0%, rgba(76,201,240,.35), transparent 70%);
+  animation:wellShimmer 3.5s ease-in-out infinite alternate; pointer-events:none;
+}
+@keyframes wellShimmer{ to{ transform:translateY(-4px) scale(1.06); opacity:.7 } }
+.well-pile:hover{ border-color:var(--cool) !important; box-shadow:0 0 24px rgba(76,201,240,.45); }
+.well-label{ position:relative; z-index:5; font-family:var(--display); font-size:8px; line-height:1.15;
+  letter-spacing:.1em; color:var(--cool); text-align:center; text-shadow:0 2px 4px #000; }
+.well-uses{ position:relative; z-index:5; font-size:8px; opacity:.75; text-shadow:0 2px 4px #000; }
+.well-uses b{ font-family:var(--display); font-size:13px; color:var(--cool); }
+.well-pile.spent{ opacity:.4; filter:grayscale(.6); }
+.well-pile .card.sunk{
+  position:absolute; inset:auto 0 -18% 0; margin:0 auto; z-index:1; opacity:.4;
+  filter:brightness(.6) saturate(.5); transform:scale(.86) rotate(-5deg);
+}
+.well-pile.drop-ok{ box-shadow:0 0 0 3px var(--cool), 0 0 30px rgba(76,201,240,.75) !important; }
+
+.wish-card{
+  position:fixed; left:50%; top:34%; transform:translate(-50%,-50%);
+  width:290px; padding:16px 18px; border-radius:14px; text-align:center; z-index:5200;
+  background:linear-gradient(165deg,#12233a,#0a121c); border:2px solid var(--cool);
+  box-shadow:0 0 46px rgba(76,201,240,.5), 0 24px 50px rgba(0,0,0,.7);
+  animation:wishIn .45s cubic-bezier(.2,1.5,.3,1);
+}
+.wish-card.out{ animation:wishOut .45s ease forwards; }
+@keyframes wishIn{ 0%{ opacity:0; transform:translate(-50%,-30%) scale(.7) rotate(-4deg) } 100%{ opacity:1 } }
+@keyframes wishOut{ to{ opacity:0; transform:translate(-50%,-75%) scale(.94) } }
+.wc-name{ font-family:var(--display); font-size:16px; letter-spacing:.04em; color:var(--cool); margin-bottom:5px; }
+.wc-text{ font-size:11.5px; opacity:.72; line-height:1.45; font-style:italic; }
+.wc-detail{ margin-top:9px; font-family:var(--display); font-size:13px; color:var(--gold); }
+.wish-card.great{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.55), 0 24px 50px rgba(0,0,0,.7); }
+.wish-card.great .wc-name{ color:var(--lime); }
+.wish-card.jackpot{ border-color:var(--violet); box-shadow:0 0 60px rgba(176,124,255,.7), 0 24px 50px rgba(0,0,0,.7); }
+.wish-card.jackpot .wc-name{ color:#fff; text-shadow:0 0 20px var(--violet); font-size:19px; }
+.wish-card.meh{ border-color:#6d7f8c; box-shadow:0 18px 40px rgba(0,0,0,.7); }
+.wish-card.meh .wc-name{ color:#9fb0bd; }
+
+/* ============================================================
+   hints that actually point at something
+   ============================================================ */
+.hinted{
+  box-shadow:0 0 0 3px var(--gold), 0 0 34px rgba(255,209,102,.85) !important;
+  border-radius:9px; z-index:960 !important; animation:hintPulse .8s ease-in-out infinite alternate;
+}
+@keyframes hintPulse{ from{ filter:brightness(1) } to{ filter:brightness(1.4) } }
+.hinted-dst{
+  box-shadow:0 0 0 3px var(--lime), 0 0 30px rgba(126,231,135,.7) !important;
+  border-radius:9px; animation:hintPulse .8s ease-in-out infinite alternate;
+}
+.hint-label{
+  position:fixed; transform:translate(-50%,-100%); z-index:5300; pointer-events:none;
+  font-family:var(--display); font-size:10.5px; letter-spacing:.03em; white-space:nowrap;
+  background:var(--gold); color:#12100f; padding:4px 10px; border-radius:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,.55); animation:hintTag .3s cubic-bezier(.2,1.6,.3,1);
+}
+@keyframes hintTag{ 0%{ opacity:0; transform:translate(-50%,-70%) scale(.8) } 100%{ opacity:1 } }
 
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
@@ -945,9 +1007,9 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
     <div id="top-row">
       <div class="pile stock-pile" id="stock" data-zone="stock"></div>
       <div class="pile waste-pile" id="waste" data-zone="waste"></div>
-      <div class="pile furnace-pile" id="furnace" data-zone="furnace" title="Burn a card you will never place">
-        <div class="furnace-label">FURNACE</div>
-        <div class="furnace-uses"><b id="burns-left">3</b> left</div>
+      <div class="pile well-pile" id="well" data-zone="well" title="Toss in a card you will never place and see what the well gives back">
+        <div class="well-label">WISHING<br>WELL</div>
+        <div class="well-uses"><b id="wishes-left">3</b> wishes</div>
       </div>
 
       <div id="scorebox">
@@ -1151,9 +1213,9 @@ const TUNE = {
   banditBase: 5,            // first pull of the lever each shop
   banditStep: 4,            // each extra pull
   whimsFromAnte: 2,         // the table starts getting opinions at this ante
-  furnaceUses: 3,           // cards you can burn per round
-  furnaceChipsPerRank: 20,  // burn value = rank x this
-  furnaceFlat: 40,
+  wellUses: 3,              // wishes you can make per round
+  wellChipsPerRank: 18,     // a wish always pays rank x this...
+  wellFlat: 40,             // ...plus this, before the wish itself lands
   reshuffleCash: 3,         // first paid reshuffle of a round
   reshuffleCashStep: 3,
   reshufflePoints: 250,     // ...or pay in score, which starts cheap
@@ -1400,9 +1462,13 @@ const CURIOS = [
     mods: { reshuffles: 1 },
     hooks: { score: c => c.addMult(2) } },
 
-  { id: 'stoker', name: 'The Stoker', icon: 'candle', rarity: 'uncommon', cost: 7,
-    text: '+2 Furnace burns per round, and burning pays double.',
-    mods: { furnaceUses: 2, furnaceDouble: true } },
+  { id: 'well_witch', name: 'The Well Witch', icon: 'moon', rarity: 'uncommon', cost: 8,
+    text: '+2 wishes per round, and the Well pays double Chips.',
+    mods: { wellUses: 2, wellDouble: true } },
+
+  { id: 'wishbone', name: 'Wishbone', icon: 'clover', rarity: 'rare', cost: 9,
+    text: 'Every wish rolls twice and you keep the better one.',
+    mods: { wishRerolls: 1 } },
 
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
@@ -1665,9 +1731,9 @@ const COUNTER_ITEMS = [
     text: '+1 Undo every round, forever.',
     apply: run => { run.bonusUndos++; } },
 
-  { id: 'c_burn', name: 'Furnace Capacity', icon: 'candle', base: 7, step: 5,
-    text: '+1 card you can burn in the Furnace each round.',
-    apply: run => { run.bonusFurnace++; } },
+  { id: 'c_wish', name: 'Deeper Well', icon: 'coin', base: 7, step: 5,
+    text: '+1 wish at the Wishing Well each round.',
+    apply: run => { run.bonusWishes++; } },
 
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
     text: '+1 free stock reshuffle every round, forever.',
@@ -1773,6 +1839,60 @@ const WHIMS = [
 const WHIM_BY_ID = {};
 WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
 
+
+/* =========================================================
+   THE WISHING WELL -- toss in a card you will never place.
+   It always pays chips, then the well decides what else you get.
+   ========================================================= */
+const WISHES = [
+  { id: 'coins', w: 20, name: 'A HANDFUL OF COINS', cls: 'good',
+    text: 'The well spits your money back, with interest.',
+    apply: (G) => { G.run.money += 3; G.round.money += 3; return '+$3'; } },
+
+  { id: 'polish', w: 16, name: 'IT COMES BACK CHANGED', cls: 'great',
+    text: 'The card surfaces with something new printed on it.',
+    apply: (G, card) => {
+      const marks = ['gilded', 'voltaic', 'lucky', 'steel', 'bullion', 'riffle'];
+      const pick = marks[Math.floor(Math.random() * marks.length)];
+      const inDeck = G.run.deck.find(c => c.id === card.id);
+      if (!inDeck) return 'but the deck has already forgotten it';
+      inDeck.enhancement = pick;
+      return 'your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now ' + ENHANCEMENTS[pick].name;
+    } },
+
+  { id: 'churn', w: 14, name: 'THE WATERS CHURN', cls: 'good',
+    text: 'Something stirs down there and the stock rearranges itself.',
+    apply: (G) => { G.board.freeReshuffles++; return '+1 free reshuffle'; } },
+
+  { id: 'echo', w: 14, name: 'AN ECHO ANSWERS', cls: 'great',
+    text: 'Every score for the rest of the round rings a little louder.',
+    apply: (G) => { G.round.wellMult = (G.round.wellMult || 0) + 3; return '+3 Mult on every score this round (now +' + G.round.wellMult + ')'; } },
+
+  { id: 'blessing', w: 12, name: 'A BLESSING', cls: 'great',
+    text: 'The next card you send home is touched by something.',
+    apply: (G) => { G.round.blessing = 3; return 'your next foundation play scores X3'; } },
+
+  { id: 'downpour', w: 10, name: 'DOWNPOUR', cls: 'good',
+    text: 'The well fills back up.',
+    apply: (G) => { G.board.wishesLeft += 2; return '+2 wishes'; } },
+
+  { id: 'frog', w: 10, name: 'JUST A FROG', cls: 'meh',
+    text: 'It looks at you. You look at it. It keeps the card.',
+    apply: (G) => { G.run.money += 1; G.round.money += 1; return 'ribbit (+$1)' ; } },
+
+  { id: 'overflow', w: 4, name: 'THE WELL OVERFLOWS', cls: 'jackpot',
+    text: 'You should not have been able to do that.',
+    apply: (G) => { G.run.money += 12; G.round.wellMult = (G.round.wellMult || 0) + 6; return '+$12 and +6 Mult for the round'; } }
+];
+
+function rollWish() {
+  let total = 0;
+  WISHES.forEach(w => { total += w.w; });
+  let x = Math.random() * total;
+  for (const w of WISHES) { x -= w.w; if (x <= 0) return w; }
+  return WISHES[0];
+}
+
 /* ===== js/engine.js ===== */
 /* ============================================================
    PILE-DRIVER  ::  engine.js
@@ -1829,7 +1949,7 @@ const Engine = (() => {
       quotaScale: 1,
       drawReduce: 0,
       counterBought: {},
-      bonusFurnace: 0,
+      bonusWishes: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
@@ -1854,13 +1974,13 @@ const Engine = (() => {
       infinitePasses: false, wrapAround: false, noInterest: false, copyLeft: false,
       drawReduce: 0,
       counterBought: {},
-      bonusFurnace: 0,
+      bonusWishes: 0,
       bonusReshuffles: 0,
       permaMult: 0,
       whim: null,
       banditPulls: 0, wasteAll: false, stackMult: 1,
       twinMult: 1, noRevealScore: false, banditLuck: false,
-      reshuffles: 0, furnaceUses: 0, furnaceDouble: false
+      reshuffles: 0, wellUses: 0, wellDouble: false, wishRerolls: 0
     };
     const merge = src => {
       if (!src) return;
@@ -1928,8 +2048,8 @@ const Engine = (() => {
       waste: [],
       passesLeft: TUNE.startingStockPasses + run.bonusPasses + m.stockPasses,
       undos: TUNE.startingUndos + run.bonusUndos + m.undos,
-      furnace: [],
-      burnsLeft: TUNE.furnaceUses + (run.bonusFurnace || 0) + m.furnaceUses,
+      well: [],
+      wishesLeft: TUNE.wellUses + (run.bonusWishes || 0) + m.wellUses,
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
@@ -1953,6 +2073,8 @@ const Engine = (() => {
         illegal: 0,
         money: 0,
         paidClears: [],
+        wellMult: 0,
+        blessing: 0,
         over: false,
         won: false
       }
@@ -2041,6 +2163,10 @@ const Engine = (() => {
   /* ---------------- move enumeration ---------------- */
   function anyMoveAvailable(state, run) {
     const b = state.board, m = mods(run);
+    /* the Well and a reshuffle are real moves -- a board with either is not dead */
+    if (b.wishesLeft > 0 && (b.waste.length || b.tableau.some(p => p.length && p[p.length - 1].faceUp))) return true;
+    if ((b.stock.length || b.waste.length) &&
+        (b.freeReshuffles > 0 || run.money >= TUNE.reshuffleCash + TUNE.reshuffleCashStep * (b.paidReshuffles || 0))) return true;
     if (b.stock.length) return true;
     if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return true;
     for (const w of playableWaste(b, m)) {
@@ -2150,7 +2276,7 @@ const Score = (() => {
     if (!card) return;
     ctx._src = { type: 'card', id: card.id };
 
-    if (ctx.event !== 'burn') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
+    if (ctx.event !== 'wish') ctx.addChips(rankChips(card.rank) + TUNE.chipsPerDepth * (ctx.depth || 0));
 
     switch (card.enhancement) {
       case 'gilded':  ctx.addChips(50); break;
@@ -2216,9 +2342,10 @@ const Score = (() => {
 
   /* permanent Mult bought or won during the run */
   function permaPass(ctx) {
-    if (!ctx.run.permaMult) return;
     ctx._src = { type: 'combo' };
-    ctx.addMult(ctx.run.permaMult);
+    if (ctx.run.permaMult) ctx.addMult(ctx.run.permaMult);
+    if (ctx.round.wellMult) ctx.addMult(ctx.round.wellMult);
+    if (ctx.round.blessing && ctx.event === 'foundation') ctx.xMult(ctx.round.blessing);
     ctx._src = null;
   }
 
@@ -2258,7 +2385,7 @@ const Score = (() => {
     if (ev.event === 'reveal') base = { chips: m.noRevealScore ? 0 : TUNE.revealChips, mult: m.noRevealScore ? 0 : 1 };
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
-    if (ev.event === 'burn')   base = { chips: ev.baseChips || 0, mult: 1 };
+    if (ev.event === 'wish')   base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 
@@ -2570,6 +2697,7 @@ const Game = (() => {
         card.scoredRound = true;
         scoreEvent({ event: 'foundation', card, fromZone: src.zone, depth: twin ? Math.max(0, depth - 1) : depth,
                      anchor, stack, twin, label: twin ? 'TWIN!' : null });
+        G.round.blessing = 0;
       }
 
       /* Fuse cards detonate the card they were sitting on */
@@ -2667,12 +2795,13 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- the furnace ----------------
-     An exit for cards you will never place -- a fourth Queen, a duplicate that
-     the foundation has not reached yet. Burning clears it for this round only;
-     the card is back in the deck next round.                                  */
-  function canBurn(src) {
-    if (G.phase !== 'play' || !G.board.burnsLeft) return false;
+  /* ---------------- the wishing well ----------------
+     An exit for cards you will never place -- a fourth Queen, a duplicate the
+     foundation has not reached. The card always pays Chips, then the well rolls
+     for something else: cash, a free reshuffle, a blessing, or it hands the card
+     back with a new mark printed on it. The card returns to the deck next round. */
+  function canWish(src) {
+    if (G.phase !== 'play' || !G.board.wishesLeft) return false;
     const b = G.board;
     if (src.zone === 'waste') {
       const allowed = Engine.playableWaste(b, Engine.mods(G.run));
@@ -2686,26 +2815,34 @@ const Game = (() => {
     return false;
   }
 
-  function burn(src) {
-    if (!canBurn(src)) { illegal(); return false; }
+  function makeWish(src) {
+    if (!canWish(src)) { illegal(); return false; }
     const b = G.board;
     const cards = grab(src, Engine.mods(G.run));
     if (!cards || cards.length !== 1) { illegal(); return false; }
     snapshot();
     const card = cards[0];
     removeFrom(src, 1);
-    b.furnace.push(card);
-    b.burnsLeft--;
+    b.well.push(card);
+    b.wishesLeft--;
     G.round.moves++;
+
     const m = Engine.mods(G.run);
-    const mult = m.furnaceDouble ? 2 : 1;
-    const chips = (rankChips(card.rank) * TUNE.furnaceChipsPerRank + TUNE.furnaceFlat) * mult;
-    G.run.money += mult;
-    G.round.money += mult;
-    scoreEvent({ event: 'burn', card, fromZone: src.zone, baseChips: chips,
-                 label: 'BURNED!', anchor: { zone: 'furnace' } });
-    push({ event: 'cash', label: 'FURNACE', amount: mult,
-           anchor: { zone: 'furnace' }, chips: 0, mult: 0, total: 0, triggers: [] });
+    const mult = m.wellDouble ? 2 : 1;
+    const chips = (rankChips(card.rank) * TUNE.wellChipsPerRank + TUNE.wellFlat) * mult;
+    scoreEvent({ event: 'wish', card, fromZone: src.zone, baseChips: chips,
+                 label: 'INTO THE WELL', anchor: { zone: 'well' } });
+
+    /* roll the wish -- Wishbone rolls twice and keeps the rarer result */
+    let wish = rollWish();
+    for (let i = 0; i < (m.wishRerolls || 0); i++) {
+      const other = rollWish();
+      if (other.w < wish.w) wish = other;
+    }
+    const detail = wish.apply(G, card);
+    push({ event: 'wish-result', wish: { id: wish.id, name: wish.name, text: wish.text, cls: wish.cls },
+           detail, anchor: { zone: 'well' }, chips: 0, mult: 0, total: 0, triggers: [] });
+
     if (src.zone === 'tableau') settleColumn(src.col);
     afterMove();
     return true;
@@ -2783,34 +2920,106 @@ const Game = (() => {
     return moved;
   }
 
+  /* Ranked advice. Returns { src, dst, cardId, kind, label } or null only when
+     there is genuinely nothing left to do -- including wishes and reshuffles. */
   function hint() {
     const b = G.board, m = Engine.mods(G.run);
-    const w = b.waste[b.waste.length - 1];
-    if (w && (Engine.foundationTargetFor(b, w) || Engine.twinTargetFor(b, w))) return { src: { zone: 'waste' }, dst: { zone: 'foundation' } };
+    const homeable = c => !!(Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c));
+    const waste = Engine.playableWaste(b, m);
+
+    /* 1. anything that can go home */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       if (!pile.length) continue;
       const top = pile[pile.length - 1];
-      if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' } };
+      if (top.faceUp && homeable(top)) {
+        return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' },
+                 cardId: top.id, kind: 'home', label: 'Send it home' };
+      }
     }
+    for (const w of waste) {
+      if (homeable(w.card)) {
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'foundation' },
+                 cardId: w.card.id, kind: 'home', label: 'Send it home' };
+      }
+    }
+
+    /* 2. tableau moves that uncover a face-down card */
     for (let c = 0; c < b.tableau.length; c++) {
       const pile = b.tableau[c];
       for (let i = 0; i < pile.length; i++) {
         if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
-        const gainsFlip = i > 0 && !pile[i - 1].faceUp;
+        const uncovers = i > 0 && !pile[i - 1].faceUp;
+        if (!uncovers) continue;
         for (let d = 0; d < b.tableau.length; d++) {
           if (d === c) continue;
-          if (!b.tableau[d].length && i === 0) continue;
           if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
-            if (gainsFlip || !b.tableau[d].length || i === 0) return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d } };
+            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                     cardId: pile[i].id, kind: 'dig', label: 'Uncovers a face-down card' };
           }
         }
       }
     }
-    if (w) {
-      for (let d = 0; d < b.tableau.length; d++) if (Engine.canPlaceOnColumn(b, d, w, m)) return { src: { zone: 'waste' }, dst: { zone: 'tableau', col: d } };
+
+    /* 3. waste onto the tableau -- prefer landing on a longer run */
+    let best = null;
+    for (const w of waste) {
+      for (let d = 0; d < b.tableau.length; d++) {
+        if (!Engine.canPlaceOnColumn(b, d, w.card, m)) continue;
+        const score = Engine.runLength(b, d, m);
+        if (!best || score > best.score) {
+          best = { score, hint: { src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: d },
+                                  cardId: w.card.id, kind: 'build', label: 'Builds your column run' } };
+        }
+      }
     }
-    if (b.stock.length || b.waste.length) return { src: { zone: 'stock' } };
+    if (best) return best.hint;
+
+    /* 4. any other tableau move that grows a run */
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c) continue;
+          if (!b.tableau[d].length && i === 0) continue;
+          if (Engine.canPlaceOnColumn(b, d, pile[i], m)) {
+            return { src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d },
+                     cardId: pile[i].id, kind: 'build', label: 'Builds your column run' };
+          }
+        }
+      }
+    }
+
+    /* 5. deal */
+    if (b.stock.length) return { src: { zone: 'stock' }, kind: 'draw', label: 'Deal three more' };
+    if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) {
+      return { src: { zone: 'stock' }, kind: 'draw', label: 'Turn the waste back over' };
+    }
+
+    /* 6. a reshuffle re-orders what draw-3 buried */
+    const rc = reshuffleCost();
+    if ((b.stock.length || b.waste.length) && (rc.free > 0 || G.run.money >= rc.cash || G.round.score >= rc.points)) {
+      return { src: { zone: 'reshuffle' }, kind: 'reshuffle',
+               label: rc.free > 0 ? 'Use a free reshuffle' : 'Reshuffle the stock' };
+    }
+
+    /* 7. nothing moves -- make a wish on a card you cannot place */
+    if (b.wishesLeft > 0) {
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        if (!pile.length) continue;
+        const top = pile[pile.length - 1];
+        if (top.faceUp) {
+          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'well' },
+                   cardId: top.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+        }
+      }
+      for (const w of waste) {
+        return { src: { zone: 'waste', index: w.index }, dst: { zone: 'well' },
+                 cardId: w.card.id, kind: 'wish', label: 'Nothing else moves — wish it away' };
+      }
+    }
     return null;
   }
 
@@ -3189,7 +3398,7 @@ const Game = (() => {
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
-    canBurn, burn, reshuffle, reshuffleCost
+    canWish, makeWish, reshuffle, reshuffleCost
   };
 })();
 
@@ -3414,6 +3623,7 @@ const UI = (() => {
   function render() {
     if (!G.run) return;
     hideTip();
+    clearHints();
     renderHud();
     renderMantel();
     renderBoard();
@@ -3584,19 +3794,19 @@ const UI = (() => {
     }
     if (b.waste.length > 3) waste.appendChild(el('div', 'pile-count', String(b.waste.length)));
 
-    /* furnace */
-    const fur = $('#furnace');
-    if (fur) {
-      Array.from(fur.querySelectorAll('.card')).forEach(n => n.remove());
-      const burned = b.furnace || [];
-      if (burned.length) {
-        const n = cardEl(burned[burned.length - 1]);
-        n.classList.add('burnt');
-        fur.appendChild(n);
+    /* the wishing well */
+    const wl = $('#well');
+    if (wl) {
+      Array.from(wl.querySelectorAll('.card')).forEach(n => n.remove());
+      const tossed = b.well || [];
+      if (tossed.length) {
+        const n = cardEl(tossed[tossed.length - 1]);
+        n.classList.add('sunk');
+        wl.appendChild(n);
       }
-      fur.classList.toggle('spent', !b.burnsLeft);
-      const bl = $('#burns-left');
-      if (bl) bl.textContent = b.burnsLeft;
+      wl.classList.toggle('spent', !b.wishesLeft);
+      const c = $('#wishes-left');
+      if (c) c.textContent = b.wishesLeft;
     }
 
     /* foundations */
@@ -3722,11 +3932,11 @@ const UI = (() => {
   function clearSelection() { selection = null; applySelectionClasses(); }
 
   function doMove(src, dst) {
-    if (dst.zone === 'furnace') {
-      const burned = Game.burn(src);
-      if (burned) { Sfx.shatter(); clearSelection(); render(); drainFx(); checkStuck(); }
-      else { Sfx.error(); shake($('#furnace')); render(); G.fx.length = 0; }
-      return burned;
+    if (dst.zone === 'well') {
+      const wished = Game.makeWish(src);
+      if (wished) { Sfx.money(); clearSelection(); render(); drainFx(); checkStuck(); }
+      else { Sfx.error(); shake($('#well')); render(); G.fx.length = 0; }
+      return wished;
     }
     const ok = Game.tryMove(src, dst);
     if (ok) {
@@ -3844,7 +4054,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') return { zone: 'tableau', col: +pile.dataset.col };
       if (z === 'foundation') return { zone: 'foundation', suit: pile.dataset.suit };
-      if (z === 'furnace') return { zone: 'furnace' };
+      if (z === 'well') return { zone: 'well' };
     }
     return null;
   }
@@ -3855,9 +4065,9 @@ const UI = (() => {
     if (!t || !drag) return;
     const m = Engine.mods(G.run);
     let ok = false, node = null;
-    if (t.zone === 'furnace') {
-      node = $('#furnace');
-      ok = drag.cards.length === 1 && Game.canBurn(drag.src);
+    if (t.zone === 'well') {
+      node = $('#well');
+      ok = drag.cards.length === 1 && Game.canWish(drag.src);
     } else if (t.zone === 'tableau') {
       node = $$('#tableau .tab-pile')[t.col];
       ok = !(drag.src.zone === 'tableau' && drag.src.col === t.col) && Engine.canPlaceOnColumn(G.board, t.col, drag.cards[0], m);
@@ -3896,7 +4106,7 @@ const UI = (() => {
       const z = pile.dataset.zone;
       if (z === 'tableau') { const held = selection; clearSelection(); doMove(held, { zone: 'tableau', col: +pile.dataset.col }); }
       else if (z === 'foundation') { const held = selection; clearSelection(); doMove(held, { zone: 'foundation', suit: pile.dataset.suit }); }
-      else if (z === 'furnace') { const held = selection; clearSelection(); doMove(held, { zone: 'furnace' }); }
+      else if (z === 'well') { const held = selection; clearSelection(); doMove(held, { zone: 'well' }); }
     });
   }
 
@@ -3929,6 +4139,24 @@ const UI = (() => {
   function animatePacket(p, spd, done) {
     if (p.event === 'illegal') { done(); return; }
     if (p.event === 'nudge') { floatText($('#table'), p.label, 'fx-flash'); done(); return; }
+    if (p.event === 'wish-result') {
+      const w = p.wish;
+      const anchor = anchorEl(p.anchor);
+      const card = el('div', 'wish-card ' + w.cls,
+        '<div class="wc-name">' + w.name + '</div>' +
+        '<div class="wc-text">' + w.text + '</div>' +
+        (p.detail ? '<div class="wc-detail">' + p.detail + '</div>' : ''));
+      $('#fxlayer').appendChild(card);
+      if (w.cls === 'jackpot') { Sfx.win(); screenShake(12); confetti(anchor, 60, 't4'); flashScreen(0.3, '#b07cff'); }
+      else if (w.cls === 'great') { Sfx.big(); confetti(anchor, 26, 't2'); flashScreen(0.16, '#7ee787'); }
+      else if (w.cls === 'meh') { Sfx.error(); }
+      else { Sfx.money(); burst(anchor, 12, '#ffd166'); }
+      renderHud();
+      setTimeout(() => card.classList.add('out'), 1500 * spd());
+      setTimeout(() => card.remove(), 2000 * spd());
+      setTimeout(done, 900 * spd());
+      return;
+    }
     if (p.event === 'reshuffle') {
       Sfx.deal();
       const st = $('#stock');
@@ -4019,7 +4247,7 @@ const UI = (() => {
 
   function anchorEl(a) {
     if (!a) return $('#scorebox');
-    if (a.zone === 'furnace') return $('#furnace') || $('#scorebox');
+    if (a.zone === 'well') return $('#well') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
@@ -4258,6 +4486,30 @@ const UI = (() => {
     if (n) { n.classList.add('trigger'); setTimeout(() => n.classList.remove('trigger'), 300); }
   }
 
+  /* ---------------- hints ---------------- */
+  let hintTimer = null;
+  function clearHints() {
+    $$('.hinted,.hinted-dst').forEach(n => n.classList.remove('hinted', 'hinted-dst'));
+    $$('.hint-label').forEach(n => n.remove());
+    clearTimeout(hintTimer);
+  }
+
+  function showHint(srcNode, dstNode, label) {
+    clearHints();
+    if (srcNode) srcNode.classList.add('hinted');
+    if (dstNode) dstNode.classList.add('hinted-dst');
+    const anchor = srcNode || dstNode;
+    if (anchor && label) {
+      const tag = el('div', 'hint-label', label);
+      const r = anchor.getBoundingClientRect();
+      tag.style.left = (r.left + r.width / 2) + 'px';
+      tag.style.top = (r.top - 26) + 'px';
+      $('#fxlayer').appendChild(tag);
+    }
+    if (!srcNode && !dstNode) toast(label || 'Try that.');
+    hintTimer = setTimeout(clearHints, 2600);
+  }
+
   let toastTimer = null;
   function toast(msg, ms) {
     const t = $('#toast');
@@ -4304,7 +4556,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
-    renderCombo, flashScreen, confetti, rushFx, renderReshuffle,
+    renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     get busy() { return fxBusy; }
   };
 })();
@@ -4824,10 +5076,13 @@ const Overlays = (() => {
             'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
 
-          '<h4>Stuck cards: the Furnace and Twins</h4>' +
-          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it onto the ' +
-          '<b>FURNACE</b> beside the waste pile. It burns for <b>rank x ' + TUNE.furnaceChipsPerRank + ' Chips</b> plus $1, clears out of your way, ' +
-          'and comes back in the deck next round. You get <b>' + TUNE.furnaceUses + ' burns a round</b> (buy more at the Counter).</p>' +
+          '<h4>Stuck cards: the Wishing Well and Twins</h4>' +
+          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it into the ' +
+          '<b>WISHING WELL</b> beside the waste. It always pays <b>rank x ' + TUNE.wellChipsPerRank + ' Chips</b>, and then the well ' +
+          'rolls for something else: cash, a free reshuffle, +3 Mult for the rest of the round, a X3 blessing on your ' +
+          'next foundation play, more wishes — or it hands the card back with a <b>new mark permanently printed on it</b>, ' +
+          'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
+          'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
           '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +
@@ -4986,34 +5241,48 @@ const Overlays = (() => {
 
   function hint() {
     if (G.phase !== 'play') return;
+    UI.rushFx();
     const h = Game.hint();
-    if (!h) { Sfx.error(); UI.toast('Nothing left. Cash out.'); return; }
-    Sfx.click();
-    if (h.src.zone === 'stock') { flashNode($('#stock')); return; }
-    const srcNode = h.src.zone === 'waste'
-      ? document.querySelector('#waste .card:last-of-type')
-      : (h.src.zone === 'tableau'
-        ? UI.$$('#tableau .tab-pile')[h.src.col].querySelector('[data-index="' + h.src.index + '"]')
-        : null);
-    flashNode(srcNode);
-    if (h.dst) {
-      const dstNode = h.dst.zone === 'foundation'
-        ? $('#f-' + (h.dst.suit || Engine.foundationTargetFor(G.board, cardOf(h.src))))
-        : UI.$$('#tableau .tab-pile')[h.dst.col];
-      flashNode(dstNode);
+    if (!h) {
+      Sfx.error();
+      UI.toast('Nothing left to do — cash out.');
+      return;
     }
+    Sfx.click();
+    UI.clearHints();
+
+    /* the source: look the card up by id, which survives any re-render */
+    let srcNode = null;
+    if (h.cardId) srcNode = document.querySelector('[data-id="' + h.cardId + '"]');
+    else if (h.src.zone === 'stock') srcNode = $('#stock');
+    else if (h.src.zone === 'reshuffle') srcNode = $('#reshuffle-bar');
+
+    /* the destination */
+    let dstNode = null;
+    if (h.dst) {
+      if (h.dst.zone === 'foundation') {
+        const card = cardOf(h);
+        const suit = h.dst.suit ||
+          (card && (Engine.foundationTargetFor(G.board, card) || Engine.twinTargetFor(G.board, card)));
+        if (suit) dstNode = $('#f-' + suit);
+      } else if (h.dst.zone === 'tableau') {
+        dstNode = UI.$$('#tableau .tab-pile')[h.dst.col];
+      } else if (h.dst.zone === 'well') {
+        dstNode = $('#well');
+      }
+    }
+
+    UI.showHint(srcNode, dstNode, h.label);
   }
 
-  function cardOf(src) {
-    if (src.zone === 'waste') return G.board.waste[G.board.waste.length - 1];
-    if (src.zone === 'tableau') return G.board.tableau[src.col][src.index];
+  /* the actual card a hint refers to */
+  function cardOf(h) {
+    if (h.cardId) {
+      const b = G.board;
+      for (const c of b.waste) if (c.id === h.cardId) return c;
+      for (const pile of b.tableau) for (const c of pile) if (c.id === h.cardId) return c;
+    }
     return null;
-  }
-
-  function flashNode(n) {
-    if (!n) return;
-    n.classList.add('hinted');
-    setTimeout(() => n.classList.remove('hinted'), 1400);
   }
 
   function auto() {

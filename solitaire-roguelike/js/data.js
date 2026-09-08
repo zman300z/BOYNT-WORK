@@ -35,9 +35,9 @@ const TUNE = {
   banditBase: 5,            // first pull of the lever each shop
   banditStep: 4,            // each extra pull
   whimsFromAnte: 2,         // the table starts getting opinions at this ante
-  furnaceUses: 3,           // cards you can burn per round
-  furnaceChipsPerRank: 20,  // burn value = rank x this
-  furnaceFlat: 40,
+  wellUses: 3,              // wishes you can make per round
+  wellChipsPerRank: 18,     // a wish always pays rank x this...
+  wellFlat: 40,             // ...plus this, before the wish itself lands
   reshuffleCash: 3,         // first paid reshuffle of a round
   reshuffleCashStep: 3,
   reshufflePoints: 250,     // ...or pay in score, which starts cheap
@@ -284,9 +284,13 @@ const CURIOS = [
     mods: { reshuffles: 1 },
     hooks: { score: c => c.addMult(2) } },
 
-  { id: 'stoker', name: 'The Stoker', icon: 'candle', rarity: 'uncommon', cost: 7,
-    text: '+2 Furnace burns per round, and burning pays double.',
-    mods: { furnaceUses: 2, furnaceDouble: true } },
+  { id: 'well_witch', name: 'The Well Witch', icon: 'moon', rarity: 'uncommon', cost: 8,
+    text: '+2 wishes per round, and the Well pays double Chips.',
+    mods: { wellUses: 2, wellDouble: true } },
+
+  { id: 'wishbone', name: 'Wishbone', icon: 'clover', rarity: 'rare', cost: 9,
+    text: 'Every wish rolls twice and you keep the better one.',
+    mods: { wishRerolls: 1 } },
 
   { id: 'rubber_chicken', name: 'Rubber Chicken', icon: 'chicken', rarity: 'uncommon', cost: 6,
     text: 'X1.4 Mult. But 1 in 8 scores, it panics and does nothing at all.',
@@ -549,9 +553,9 @@ const COUNTER_ITEMS = [
     text: '+1 Undo every round, forever.',
     apply: run => { run.bonusUndos++; } },
 
-  { id: 'c_burn', name: 'Furnace Capacity', icon: 'candle', base: 7, step: 5,
-    text: '+1 card you can burn in the Furnace each round.',
-    apply: run => { run.bonusFurnace++; } },
+  { id: 'c_wish', name: 'Deeper Well', icon: 'coin', base: 7, step: 5,
+    text: '+1 wish at the Wishing Well each round.',
+    apply: run => { run.bonusWishes++; } },
 
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
     text: '+1 free stock reshuffle every round, forever.',
@@ -656,3 +660,57 @@ const WHIMS = [
 ];
 const WHIM_BY_ID = {};
 WHIMS.forEach(w => { WHIM_BY_ID[w.id] = w; });
+
+
+/* =========================================================
+   THE WISHING WELL -- toss in a card you will never place.
+   It always pays chips, then the well decides what else you get.
+   ========================================================= */
+const WISHES = [
+  { id: 'coins', w: 20, name: 'A HANDFUL OF COINS', cls: 'good',
+    text: 'The well spits your money back, with interest.',
+    apply: (G) => { G.run.money += 3; G.round.money += 3; return '+$3'; } },
+
+  { id: 'polish', w: 16, name: 'IT COMES BACK CHANGED', cls: 'great',
+    text: 'The card surfaces with something new printed on it.',
+    apply: (G, card) => {
+      const marks = ['gilded', 'voltaic', 'lucky', 'steel', 'bullion', 'riffle'];
+      const pick = marks[Math.floor(Math.random() * marks.length)];
+      const inDeck = G.run.deck.find(c => c.id === card.id);
+      if (!inDeck) return 'but the deck has already forgotten it';
+      inDeck.enhancement = pick;
+      return 'your ' + RANK_NAMES[card.rank] + SUITS[card.suit].sym + ' is now ' + ENHANCEMENTS[pick].name;
+    } },
+
+  { id: 'churn', w: 14, name: 'THE WATERS CHURN', cls: 'good',
+    text: 'Something stirs down there and the stock rearranges itself.',
+    apply: (G) => { G.board.freeReshuffles++; return '+1 free reshuffle'; } },
+
+  { id: 'echo', w: 14, name: 'AN ECHO ANSWERS', cls: 'great',
+    text: 'Every score for the rest of the round rings a little louder.',
+    apply: (G) => { G.round.wellMult = (G.round.wellMult || 0) + 3; return '+3 Mult on every score this round (now +' + G.round.wellMult + ')'; } },
+
+  { id: 'blessing', w: 12, name: 'A BLESSING', cls: 'great',
+    text: 'The next card you send home is touched by something.',
+    apply: (G) => { G.round.blessing = 3; return 'your next foundation play scores X3'; } },
+
+  { id: 'downpour', w: 10, name: 'DOWNPOUR', cls: 'good',
+    text: 'The well fills back up.',
+    apply: (G) => { G.board.wishesLeft += 2; return '+2 wishes'; } },
+
+  { id: 'frog', w: 10, name: 'JUST A FROG', cls: 'meh',
+    text: 'It looks at you. You look at it. It keeps the card.',
+    apply: (G) => { G.run.money += 1; G.round.money += 1; return 'ribbit (+$1)' ; } },
+
+  { id: 'overflow', w: 4, name: 'THE WELL OVERFLOWS', cls: 'jackpot',
+    text: 'You should not have been able to do that.',
+    apply: (G) => { G.run.money += 12; G.round.wellMult = (G.round.wellMult || 0) + 6; return '+$12 and +6 Mult for the round'; } }
+];
+
+function rollWish() {
+  let total = 0;
+  WISHES.forEach(w => { total += w.w; });
+  let x = Math.random() * total;
+  for (const w of WISHES) { x -= w.w; if (x <= 0) return w; }
+  return WISHES[0];
+}

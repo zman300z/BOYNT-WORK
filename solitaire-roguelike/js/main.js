@@ -50,34 +50,48 @@
 
   function hint() {
     if (G.phase !== 'play') return;
+    UI.rushFx();
     const h = Game.hint();
-    if (!h) { Sfx.error(); UI.toast('Nothing left. Cash out.'); return; }
-    Sfx.click();
-    if (h.src.zone === 'stock') { flashNode($('#stock')); return; }
-    const srcNode = h.src.zone === 'waste'
-      ? document.querySelector('#waste .card:last-of-type')
-      : (h.src.zone === 'tableau'
-        ? UI.$$('#tableau .tab-pile')[h.src.col].querySelector('[data-index="' + h.src.index + '"]')
-        : null);
-    flashNode(srcNode);
-    if (h.dst) {
-      const dstNode = h.dst.zone === 'foundation'
-        ? $('#f-' + (h.dst.suit || Engine.foundationTargetFor(G.board, cardOf(h.src))))
-        : UI.$$('#tableau .tab-pile')[h.dst.col];
-      flashNode(dstNode);
+    if (!h) {
+      Sfx.error();
+      UI.toast('Nothing left to do — cash out.');
+      return;
     }
+    Sfx.click();
+    UI.clearHints();
+
+    /* the source: look the card up by id, which survives any re-render */
+    let srcNode = null;
+    if (h.cardId) srcNode = document.querySelector('[data-id="' + h.cardId + '"]');
+    else if (h.src.zone === 'stock') srcNode = $('#stock');
+    else if (h.src.zone === 'reshuffle') srcNode = $('#reshuffle-bar');
+
+    /* the destination */
+    let dstNode = null;
+    if (h.dst) {
+      if (h.dst.zone === 'foundation') {
+        const card = cardOf(h);
+        const suit = h.dst.suit ||
+          (card && (Engine.foundationTargetFor(G.board, card) || Engine.twinTargetFor(G.board, card)));
+        if (suit) dstNode = $('#f-' + suit);
+      } else if (h.dst.zone === 'tableau') {
+        dstNode = UI.$$('#tableau .tab-pile')[h.dst.col];
+      } else if (h.dst.zone === 'well') {
+        dstNode = $('#well');
+      }
+    }
+
+    UI.showHint(srcNode, dstNode, h.label);
   }
 
-  function cardOf(src) {
-    if (src.zone === 'waste') return G.board.waste[G.board.waste.length - 1];
-    if (src.zone === 'tableau') return G.board.tableau[src.col][src.index];
+  /* the actual card a hint refers to */
+  function cardOf(h) {
+    if (h.cardId) {
+      const b = G.board;
+      for (const c of b.waste) if (c.id === h.cardId) return c;
+      for (const pile of b.tableau) for (const c of pile) if (c.id === h.cardId) return c;
+    }
     return null;
-  }
-
-  function flashNode(n) {
-    if (!n) return;
-    n.classList.add('hinted');
-    setTimeout(() => n.classList.remove('hinted'), 1400);
   }
 
   function auto() {

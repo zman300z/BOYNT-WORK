@@ -512,10 +512,13 @@ const Overlays = (() => {
             'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
 
-          '<h4>Stuck cards: the Furnace and Twins</h4>' +
-          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it onto the ' +
-          '<b>FURNACE</b> beside the waste pile. It burns for <b>rank x ' + TUNE.furnaceChipsPerRank + ' Chips</b> plus $1, clears out of your way, ' +
-          'and comes back in the deck next round. You get <b>' + TUNE.furnaceUses + ' burns a round</b> (buy more at the Counter).</p>' +
+          '<h4>Stuck cards: the Wishing Well and Twins</h4>' +
+          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it into the ' +
+          '<b>WISHING WELL</b> beside the waste. It always pays <b>rank x ' + TUNE.wellChipsPerRank + ' Chips</b>, and then the well ' +
+          'rolls for something else: cash, a free reshuffle, +3 Mult for the rest of the round, a X3 blessing on your ' +
+          'next foundation play, more wishes — or it hands the card back with a <b>new mark permanently printed on it</b>, ' +
+          'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
+          'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
 
           '<h4>Reshuffling the stock</h4>' +
           '<p>A reshuffle throws the waste back in with the stock and shuffles the lot <b>without spending a pass</b> — ' +

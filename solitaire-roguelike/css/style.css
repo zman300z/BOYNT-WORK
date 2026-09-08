@@ -153,7 +153,7 @@ body::before{
 .stock-pile:hover{ border-color:var(--gold); }
 .drop-ok{ box-shadow:0 0 0 3px var(--lime), 0 0 26px rgba(126,231,135,.6) !important; border-color:var(--lime) !important; }
 .drop-no{ box-shadow:0 0 0 3px var(--hot) !important; border-color:var(--hot) !important; }
-.hinted{ animation:hintPulse 1.4s ease; box-shadow:0 0 0 3px var(--gold), 0 0 30px rgba(255,209,102,.7); border-radius:9px; }
+
 @keyframes hintPulse{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.5) } }
 
 #tableau{
@@ -848,19 +848,14 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 /* ============================================================
    the furnace
    ============================================================ */
-.furnace-pile{
-  border:2px dashed rgba(255,122,47,.5) !important;
-  background:radial-gradient(circle at 50% 120%, rgba(255,122,47,.28), transparent 65%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-  cursor:pointer;
-}
-.furnace-pile:hover{ border-color:#ff9a4f !important; box-shadow:0 0 22px rgba(255,122,47,.4); }
-.furnace-label{ font-family:var(--display); font-size:8px; letter-spacing:.12em; color:#ff9a4f; opacity:.85; }
-.furnace-uses{ font-size:8px; opacity:.6; }
-.furnace-uses b{ font-family:var(--display); font-size:13px; color:#ff9a4f; }
-.furnace-pile.spent{ opacity:.4; filter:grayscale(.6); }
-.furnace-pile .card.burnt{ filter:brightness(.5) sepia(.6) hue-rotate(-20deg); transform:rotate(-6deg) scale(.92); }
-.furnace-pile.drop-ok{ box-shadow:0 0 0 3px #ff9a4f, 0 0 30px rgba(255,122,47,.7) !important; }
+
+
+
+
+
+
+
+
 
 /* ============================================================
    reshuffle bar
@@ -895,5 +890,72 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .enh-riffle{ background:linear-gradient(150deg,#d8f0ff,#a9d8f5); border-color:#3f8fc4; box-shadow:0 0 14px rgba(76,201,240,.5); }
 
 /* keep the furnace counter readable once something is burning in it */
-.furnace-label, .furnace-uses{ position:relative; z-index:5; text-shadow:0 2px 4px #000, 0 0 8px #000; }
+
 .furnace-pile .card.burnt{ position:absolute; inset:auto 0 4px 0; margin:0 auto; z-index:1; opacity:.55; }
+
+/* ============================================================
+   the wishing well
+   ============================================================ */
+.well-pile{
+  border:2px dashed rgba(76,201,240,.5) !important; cursor:pointer;
+  background:radial-gradient(circle at 50% 130%, rgba(76,201,240,.3), transparent 62%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  overflow:hidden;
+}
+.well-pile::after{
+  content:''; position:absolute; inset:auto -20% -30% -20%; height:60%;
+  background:radial-gradient(ellipse at 50% 0%, rgba(76,201,240,.35), transparent 70%);
+  animation:wellShimmer 3.5s ease-in-out infinite alternate; pointer-events:none;
+}
+@keyframes wellShimmer{ to{ transform:translateY(-4px) scale(1.06); opacity:.7 } }
+.well-pile:hover{ border-color:var(--cool) !important; box-shadow:0 0 24px rgba(76,201,240,.45); }
+.well-label{ position:relative; z-index:5; font-family:var(--display); font-size:8px; line-height:1.15;
+  letter-spacing:.1em; color:var(--cool); text-align:center; text-shadow:0 2px 4px #000; }
+.well-uses{ position:relative; z-index:5; font-size:8px; opacity:.75; text-shadow:0 2px 4px #000; }
+.well-uses b{ font-family:var(--display); font-size:13px; color:var(--cool); }
+.well-pile.spent{ opacity:.4; filter:grayscale(.6); }
+.well-pile .card.sunk{
+  position:absolute; inset:auto 0 -18% 0; margin:0 auto; z-index:1; opacity:.4;
+  filter:brightness(.6) saturate(.5); transform:scale(.86) rotate(-5deg);
+}
+.well-pile.drop-ok{ box-shadow:0 0 0 3px var(--cool), 0 0 30px rgba(76,201,240,.75) !important; }
+
+.wish-card{
+  position:fixed; left:50%; top:34%; transform:translate(-50%,-50%);
+  width:290px; padding:16px 18px; border-radius:14px; text-align:center; z-index:5200;
+  background:linear-gradient(165deg,#12233a,#0a121c); border:2px solid var(--cool);
+  box-shadow:0 0 46px rgba(76,201,240,.5), 0 24px 50px rgba(0,0,0,.7);
+  animation:wishIn .45s cubic-bezier(.2,1.5,.3,1);
+}
+.wish-card.out{ animation:wishOut .45s ease forwards; }
+@keyframes wishIn{ 0%{ opacity:0; transform:translate(-50%,-30%) scale(.7) rotate(-4deg) } 100%{ opacity:1 } }
+@keyframes wishOut{ to{ opacity:0; transform:translate(-50%,-75%) scale(.94) } }
+.wc-name{ font-family:var(--display); font-size:16px; letter-spacing:.04em; color:var(--cool); margin-bottom:5px; }
+.wc-text{ font-size:11.5px; opacity:.72; line-height:1.45; font-style:italic; }
+.wc-detail{ margin-top:9px; font-family:var(--display); font-size:13px; color:var(--gold); }
+.wish-card.great{ border-color:var(--lime); box-shadow:0 0 50px rgba(126,231,135,.55), 0 24px 50px rgba(0,0,0,.7); }
+.wish-card.great .wc-name{ color:var(--lime); }
+.wish-card.jackpot{ border-color:var(--violet); box-shadow:0 0 60px rgba(176,124,255,.7), 0 24px 50px rgba(0,0,0,.7); }
+.wish-card.jackpot .wc-name{ color:#fff; text-shadow:0 0 20px var(--violet); font-size:19px; }
+.wish-card.meh{ border-color:#6d7f8c; box-shadow:0 18px 40px rgba(0,0,0,.7); }
+.wish-card.meh .wc-name{ color:#9fb0bd; }
+
+/* ============================================================
+   hints that actually point at something
+   ============================================================ */
+.hinted{
+  box-shadow:0 0 0 3px var(--gold), 0 0 34px rgba(255,209,102,.85) !important;
+  border-radius:9px; z-index:960 !important; animation:hintPulse .8s ease-in-out infinite alternate;
+}
+@keyframes hintPulse{ from{ filter:brightness(1) } to{ filter:brightness(1.4) } }
+.hinted-dst{
+  box-shadow:0 0 0 3px var(--lime), 0 0 30px rgba(126,231,135,.7) !important;
+  border-radius:9px; animation:hintPulse .8s ease-in-out infinite alternate;
+}
+.hint-label{
+  position:fixed; transform:translate(-50%,-100%); z-index:5300; pointer-events:none;
+  font-family:var(--display); font-size:10.5px; letter-spacing:.03em; white-space:nowrap;
+  background:var(--gold); color:#12100f; padding:4px 10px; border-radius:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,.55); animation:hintTag .3s cubic-bezier(.2,1.6,.3,1);
+}
+@keyframes hintTag{ 0%{ opacity:0; transform:translate(-50%,-70%) scale(.8) } 100%{ opacity:1 } }
