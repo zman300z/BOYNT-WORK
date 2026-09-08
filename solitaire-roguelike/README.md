@@ -60,21 +60,21 @@ card, enhancement, finish, seal, combo, then each Curio on your mantel, left to 
 A card only pays once per round, and a column pays its clear bonus once per round, so shuffling
 cards back and forth is a tactic for unblocking — never a score loop.
 
-### Stuck cards: Twins and the Furnace
+### Stuck cards: Twins and the Stash
 
-A duplicate card can never advance a foundation, since the pile only wants the *next* rank. Two exits:
+A duplicate card can never advance a foundation, since the pile only wants the *next* rank. Two answers:
 
 - **Twins** — drop it on top of its match. Any card whose rank its foundation has already passed scores
   in full there (plus +3 Mult) without advancing the pile.
-- **The Wishing Well** — the pool beside the waste. Drag any accessible card in and it always pays
-  **rank × 18 Chips**, then the well rolls for what else you get: cash, a free reshuffle, +3 Mult for the
-  rest of the round, a ×3 blessing on your next foundation play, more wishes, an overflow jackpot — or it
-  hands the card back with a **new mark permanently printed on it**, so the dead Queen resurfaces next
-  round Gilded. Sometimes you just get a frog. Three wishes a round (more from the Counter or The Well
-  Witch; Wishbone rolls twice and keeps the better result).
+- **The Stash** — three slots beside the waste. Drag any face-up card you can reach into it and it's held
+  out of play; it pays a little on the way in and stops clogging your columns. Held cards **survive between
+  rounds and between antes**, and aren't dealt while they sit there. Play one back out **whenever you like** —
+  onto a column, onto a foundation, or double-click to send it home — and it scores **+4 Mult** on top of
+  everything else. The trick is holding a Gilded Ace until your Cascade, Heat and Tempo are all stacked, then
+  dropping it. Spare Queens stop being a problem and become ammunition.
 
-New Cards are also weighted low on purpose — roughly 60% land between Ace and 5, only 8% are face cards —
-and the shop preview shows the *exact* card you'll receive, rolled when the shop was stocked.
+  Curios build on it: **Pickpocket** (+1 slot), **Full Pockets** (+6 Mult per held card), **The Fence** (paid
+  for stashing), **Quick Draw** (stash plays ×3), plus **Bigger Pockets** at the Counter.
 
 ### Tempo
 
@@ -82,25 +82,28 @@ A bar in the header that fills every time you score and drains while you sit sti
 more **every** score is worth — up to ×1.9 at a full bar. It is a bonus only: thinking never costs you
 points, but playing fast pays. It also drives the soundtrack, which speeds up and adds layers as you heat up.
 
-### The Cut — the gamble on the table
+### The Dealer's Dare
 
-Below PASSES there's a **RED / BLACK** call on the next card off the stock. The cards turn over either way,
-but the call has stakes:
+**TAKE A DARE** and the table sets a challenge with a move budget — send 3 cards home in 6 moves, cash a run
+of 4, empty a column, flip 4 face-down cards, score 2,500 in 5. Nothing is hidden and nothing is random: it's
+judged purely on how you play, so there's nothing to memorise and nothing to wait out.
 
-- **Right** — your **HEAT** climbs a level, multiplying *every* score for the rest of the round (×1.5 at one
-  level, ×3 at four). It shows in the combo readout.
-- **Wrong** — the Heat is gone and it costs you a pass through the stock; with no passes left, 200 points.
-- **BANK** — cash the streak straight into score for **Heat² × 250**, giving up the multiplier.
+- **Land it** — usually **HEAT**, which multiplies *every* score for the rest of the round (×1.5 at one level,
+  ×3 at four), plus cash, Mult or a reshuffle depending on the dare.
+- **Miss it** — usually a pass through the stock. ALL IN takes half of what you scored during it.
 
-You never have to call — the normal deal is always there. **The Card Counter** curio shows you the colour in
-advance; **Hot Hand** makes every level of Heat worth more.
+You can take another the moment one resolves, so a hot streak is a chain of dares. **Hot Hand** makes each
+level of Heat worth more, **The Card Counter** buys 3 extra moves on every dare, and **The Daredevil** pays a
+bonus every time you land one.
 
 ### Reshuffling
 
-A reshuffle throws the waste back in with the stock and shuffles it **without spending a pass** — the fix
-for draw-3 burying what you need. The bar next to PASSES offers three ways to pay: a **free** one granted
-by a Curio (The Croupier) or the Counter, **$3** cash, or **250 points** off your round score, each
-escalating within the round. A card stamped with a **Riffle** reshuffles free whenever it scores. Hotkey `R`.
+A reshuffle throws the waste back in with the stock and shuffles it — the fix for draw-3 burying what you
+need. You start each round with **5 passes**, and a reshuffle **spends one**, so passes are the round's real
+currency: work the stock, or re-order it. Out of passes you can still buy one for **300 points taken straight
+off your ANTE total** (this round's score first, then banked rounds) — a genuine sacrifice of quota progress.
+Curios and the Counter grant free reshuffles that cost no pass, and a **Riffle** card reshuffles free whenever
+it scores. Hotkey `R`.
 
 ### The Dealer's Whim
 
