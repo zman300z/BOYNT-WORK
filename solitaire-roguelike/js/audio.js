@@ -186,6 +186,19 @@ const Sfx = (() => {
     musicOn: () => musicOn,
     /* the game tells the music how excited to be (0..1) */
     setIntensity(v) { targetIntensity = Math.max(0, Math.min(1, v || 0)); },
+    /* a sampled one-liner. Returns the element so callers can time off it. */
+    voice(key) {
+      if (!on) return null;
+      const src = (typeof VOICE !== 'undefined') && VOICE[key];
+      if (!src) return null;
+      try {
+        const a = new Audio(src);
+        a.volume = 0.85;
+        const p = a.play();
+        if (p && p.catch) p.catch(() => {});
+        return a;
+      } catch (e) { return null; }
+    },
     stinger() {
       if (!ctx || !musicGain) return;
       const t = ctx.currentTime;

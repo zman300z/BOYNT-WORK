@@ -35,6 +35,7 @@ const Game = (() => {
     G.undoStack = [];
     G.phase = 'play';
     G.payout = null;
+    postBounty();
     save();
   }
 
@@ -147,6 +148,7 @@ const Game = (() => {
       breakCascade();
       G.round.moves++;
       push({ event: 'recycle', label: 'RESHUFFLE', chips: 0, mult: 0, total: 0, triggers: [] });
+      tickBounty();
       save();
       return true;
     }
@@ -162,6 +164,7 @@ const Game = (() => {
     breakCascade();
     G.round.moves++;
     push({ event: 'draw', count: n, cards: turned, chips: 0, mult: 0, total: 0, triggers: [] });
+    tickBounty();
     save();
     return true;
   }
@@ -268,6 +271,7 @@ const Game = (() => {
         push({ event: 'cash', label: 'RIFFLE — STOCK RESHUFFLED', amount: 0,
                anchor: { zone: 'stock' }, chips: 0, mult: 0, total: 0, triggers: [] });
       }
+      collectBounty(card, anchor);
       if (src.zone === 'tableau') settleColumn(src.col);
       if (!twin) checkSuitComplete(suit, anchor);
       afterMove();
@@ -334,6 +338,7 @@ const Game = (() => {
   }
 
   function afterMove() {
+    tickBounty();
     save();
     if (Engine.isWon(G)) {
       G.round.won = true;
@@ -347,120 +352,41 @@ const Game = (() => {
     }
   }
 
-  /* ---------------- THE STASH ----------------
-     Hold cards back out of the deal and play them whenever they help. The Stash
-     survives rounds and antes, so a spare Ace or a Gilded King can be saved for
-     the exact moment your multipliers are highest.                             */
-  function stashCapacity() { return Engine.stashCapacity(G.run); }
-
-  function canStash(src) {
-    if (G.phase !== 'play') return false;
-    if ((G.run.stash || []).length >= stashCapacity()) return false;
-    const b = G.board;
-    if (src.zone === 'waste') {
-      const allowed = Engine.playableWaste(b, Engine.mods(G.run));
-      const idx = src.index != null ? src.index : b.waste.length - 1;
-      return allowed.some(w => w.index === idx);
-    }
-    if (src.zone === 'tableau') {
-      const pile = b.tableau[src.col];
-      return pile.length > 0 && src.index === pile.length - 1 && pile[src.index].faceUp;
-    }
-    return false;
-  }
-
-  function stash(src) {
-    if (!canStash(src)) { illegal(); return false; }
-    const cards = grab(src, Engine.mods(G.run));
-    if (!cards || cards.length !== 1) { illegal(); return false; }
+  /* Put actual money on the wheel. Cash uses honest casino payouts - red or
+     black returns double your stake, the zero returns eighteen times - and
+     losing costs you the stake and nothing else.                              */
+  function spinRouletteCash(colour, stake) {
+    stake = Math.floor(stake || 0);
+    if (G.phase !== 'play' && G.phase !== 'shop') return { ok: false, reason: 'Not now.' };
+    if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
+    if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
+    if (stake > G.run.money) return { ok: false, reason: 'You do not have that much.' };
     snapshot();
-    const card = cards[0];
-    removeFrom(src, 1);
-    if (!G.run.stash) G.run.stash = [];
-    G.run.stash.push(Object.assign({}, card, { faceUp: true, scoredRound: false }));
-    G.round.moves++;
-    bumpMomentum(TUNE.momentumPerMove * 0.5);
-
     const m = Engine.mods(G.run);
-    if (m.stashCash) { G.run.money += m.stashCash; G.round.money += m.stashCash; }
-    scoreEvent({ event: 'stash', card, baseChips: rankChips(card.rank) * TUNE.stashChipsPerRank,
-                 label: 'POCKETED', anchor: { zone: 'stash' } });
-    if (src.zone === 'tableau') settleColumn(src.col);
-    afterMove();
-    return true;
-  }
 
-  /* play a held card back onto the board */
-  function stashPlay(index, dst) {
-    if (G.phase !== 'play') return false;
-    const card = (G.run.stash || [])[index];
-    if (!card) return false;
-    const b = G.board, m = Engine.mods(G.run);
-
-    if (dst.zone === 'foundation') {
-      let suit = dst.suit && Engine.canPlaceOnFoundation(b, card, dst.suit) ? dst.suit : Engine.foundationTargetFor(b, card);
-      let twin = false;
-      if (!suit) { suit = dst.suit && Engine.canTwin(b, card, dst.suit) ? dst.suit : Engine.twinTargetFor(b, card); twin = !!suit; }
-      if (!suit) return illegal();
-      snapshot();
-      G.run.stash.splice(index, 1);
-      const depth = b.foundations[suit].length;
-      if (twin) b.twins[suit].push(card); else b.foundations[suit].push(card);
-      G.round.moves++;
-      G.round.stashPlays++;
-      G.round.scoredCards++;
-      G.round.cascade++;
-      bumpMomentum();
-      const anchor = { zone: 'foundation', suit };
-      card.scoredRound = true;
-      scoreEvent({ event: 'foundation', card, fromZone: 'stash', depth: twin ? Math.max(0, depth - 1) : depth,
-                   anchor, twin, fromStash: true, label: twin ? 'TWIN FROM THE STASH!' : 'FROM THE STASH!' });
-      G.round.blessing = 0;
-      if (!twin) checkSuitComplete(suit, anchor);
-      afterMove();
-      return true;
+    let index = Math.floor(Math.random() * ROULETTE.length);
+    let guaranteed = false;
+    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
+      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
+      index = winners[Math.floor(Math.random() * winners.length)];
+      guaranteed = true;
+      G.round.usedSafeFlip = true;
     }
+    const pocket = ROULETTE[index];
+    const win = pocket.c === colour;
+    const pay = colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven;
 
-    if (dst.zone === 'tableau') {
-      if (!Engine.canPlaceOnColumn(b, dst.col, card, m)) return illegal();
-      snapshot();
-      G.run.stash.splice(index, 1);
-      card.faceUp = true;
-      b.tableau[dst.col].push(card);
-      G.round.moves++;
-      G.round.stashPlays++;
-      breakCascade();
-      bumpMomentum(TUNE.momentumPerMove * 0.5);
-      push({ event: 'cash', label: 'OUT OF THE STASH', amount: 0,
-             anchor: { zone: 'tableau', col: dst.col }, chips: 0, mult: 0, total: 0, triggers: [] });
-      afterMove();
-      return true;
+    G.run.money -= stake;
+    let payout = 0;
+    if (win) {
+      payout = stake * pay;
+      G.run.money += payout;
+      G.round.money += payout - stake;
+      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
     }
-    return illegal();
-  }
-
-  /* ---------------- THE SIDE POT ----------------
-     A slice of every score also drops into a pot in the corner. Cash it whenever
-     you like, or push it: a card is flipped from a freshly shuffled fate deck,
-     so there is no order to memorise. Red doubles it and stokes your HEAT.
-     Black takes the lot and a pass with it.                                     */
-  function addToPot(points) {
-    const cut = Math.round(points * (TUNE.potShare + Engine.mods(G.run).potShare));
-    if (cut <= 0) return;
-    G.round.pot = (G.round.pot || 0) + cut;
-  }
-
-  function cashPot() {
-    const pot = G.round.pot || 0;
-    if (pot <= 0) return { ok: false, reason: 'The pot is empty.' };
-    snapshot();
-    G.round.score += pot;
-    G.round.pot = 0;
-    G.round.potStreak = 0;
-    push({ event: 'pot-cash', amount: pot, chips: 0, mult: 0, total: pot, triggers: [] });
-    bumpMomentum(TUNE.momentumPerMove * 0.5);
     save();
-    return { ok: true, amount: pot };
+    return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
+             staked: stake, payout, money: G.run.money };
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -504,6 +430,101 @@ const Game = (() => {
              pot: G.round.pot, staked: pot, anteHit, heat: G.round.heat };
   }
 
+  /* ---------------- THE BOUNTY ----------------
+     The table always has one card posted WANTED. Send that exact card home from
+     anywhere and it pays out on the spot, then a fresh one goes up. RAISE doubles
+     the payout but starts a clock: miss it and the escape costs you ante score.
+     ------------------------------------------------------------------------- */
+  function bountyPool() {
+    const b = G.board, out = [];
+    if (!b) return out;
+    b.tableau.forEach(pile => pile.forEach(c => out.push(c)));
+    b.waste.forEach(c => out.push(c));
+    b.stock.forEach(c => out.push(c));
+    (G.run.stash || []).forEach(c => out.push(c));
+    return out.filter(c => !c.oddity && !c.scoredRound);
+  }
+
+  function bountyReward(raises) {
+    const m = Engine.mods(G.run);
+    const growth = 1 + TUNE.bountyGrowth * (G.round.bountiesCollected || 0);
+    const base = quota() / TUNE.bountyDivisor;
+    return Math.max(40, Math.round(base * growth * (1 + m.bountyMult) * Math.pow(2, raises || 0)));
+  }
+
+  function postBounty() {
+    if (!G.round) return;
+    const pool = bountyPool();
+    if (!pool.length) { G.round.bounty = null; return; }
+    const c = pool[Math.floor(Math.random() * pool.length)];
+    G.round.bounty = {
+      cardId: c.id, rank: c.rank, suit: c.suit,
+      raises: 0, deadline: null, staked: 0, reward: 0
+    };
+    G.round.bounty.reward = bountyReward(0);
+  }
+
+  function bountyCard() {
+    const bn = G.round && G.round.bounty;
+    if (!bn) return null;
+    return { id: bn.cardId, rank: bn.rank, suit: bn.suit, faceUp: true };
+  }
+
+  /* double the payout and start the clock */
+  function raiseBounty() {
+    const bn = G.round && G.round.bounty;
+    if (G.phase !== 'play' || !bn) return { ok: false, reason: 'Nothing is posted right now.' };
+    if (bn.raises >= TUNE.bountyMaxRaises) return { ok: false, reason: 'The table will not go any higher.' };
+    snapshot();
+    bn.raises++;
+    bn.reward = bountyReward(bn.raises);
+    bn.deadline = TUNE.bountyDeadline;
+    bn.staked = Math.round(bn.reward * TUNE.bountyStake);
+    push({ event: 'cash', label: 'BOUNTY RAISED — ' + TUNE.bountyDeadline + ' MOVES', amount: 0,
+           anchor: { zone: 'bounty' }, chips: 0, mult: 0, total: 0, triggers: [] });
+    save();
+    return { ok: true, bounty: bn };
+  }
+
+  function tickBounty() {
+    const bn = G.round && G.round.bounty;
+    if (!bn || bn.deadline == null) return;
+    bn.deadline--;
+    if (bn.deadline <= 0) bountyEscaped();
+  }
+
+  function bountyEscaped() {
+    const bn = G.round.bounty;
+    const lost = bn.staked || 0;
+    if (lost) spendAnteScore(lost);
+    breakCascade();
+    G.round.bountyEscapes = (G.round.bountyEscapes || 0) + 1;
+    push({ event: 'bust', label: 'THE BOUNTY GOT AWAY  −' + lost, chips: 0, mult: 0, total: 0,
+           triggers: [], anchor: { zone: 'bounty' } });
+    push({ event: 'nudge', label: quip('bountyMiss'), chips: 0, mult: 0, total: 0, triggers: [] });
+    postBounty();
+  }
+
+  function collectBounty(card, anchor) {
+    const bn = G.round && G.round.bounty;
+    if (!bn || !card || card.id !== bn.cardId) return;
+    const m = Engine.mods(G.run);
+    const mult = Math.pow(2, bn.raises);
+    G.round.bountiesCollected = (G.round.bountiesCollected || 0) + 1;
+    G.run.stats.bounties = (G.run.stats.bounties || 0) + 1;
+    const cash = TUNE.bountyCash + (m.bountyBonus ? TUNE.bountyCash : 0);
+    G.run.money += cash;
+    G.round.money += cash;
+    if (m.bountyBonus) G.round.heat = (G.round.heat || 0) + 1;
+    const spot = anchor || { zone: 'bounty' };
+    scoreEvent({ event: 'bounty', card: null, baseChips: bn.reward, anchor: spot,
+                 label: 'BOUNTY COLLECTED' + (mult > 1 ? '  x' + mult : '') });
+    push({ event: 'cash', label: 'BOUNTY — $' + cash, amount: cash, anchor: spot,
+           chips: 0, mult: 0, total: 0, triggers: [] });
+    if (Math.random() < 0.5) push({ event: 'nudge', label: quip('bountyGot'), chips: 0, mult: 0, total: 0, triggers: [] });
+    postBounty();
+  }
+
   /* ---------------- THE STASH ----------------
      Hold cards back out of the deal and play them whenever they help. The Stash
      survives rounds and antes, so a spare Ace or a Gilded King can be saved for
@@ -573,6 +594,7 @@ const Game = (() => {
       scoreEvent({ event: 'foundation', card, fromZone: 'stash', depth: twin ? Math.max(0, depth - 1) : depth,
                    anchor, twin, fromStash: true, label: twin ? 'TWIN FROM THE STASH!' : 'FROM THE STASH!' });
       G.round.blessing = 0;
+      collectBounty(card, anchor);
       if (!twin) checkSuitComplete(suit, anchor);
       afterMove();
       return true;
@@ -756,6 +778,26 @@ const Game = (() => {
     const b = G.board, m = Engine.mods(G.run);
     const homeable = c => !!(Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c));
     const waste = Engine.playableWaste(b, m);
+
+    /* 0. the wanted card, if it can go home right now */
+    const bn = G.round && G.round.bounty;
+    if (bn) {
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        if (!pile.length) continue;
+        const top = pile[pile.length - 1];
+        if (top.faceUp && top.id === bn.cardId && homeable(top)) {
+          return { src: { zone: 'tableau', col: c, index: pile.length - 1 }, dst: { zone: 'foundation' },
+                   cardId: top.id, kind: 'bounty', label: 'That is the bounty — collect it' };
+        }
+      }
+      for (const w of waste) {
+        if (w.card.id === bn.cardId && homeable(w.card)) {
+          return { src: { zone: 'waste', index: w.index }, dst: { zone: 'foundation' },
+                   cardId: w.card.id, kind: 'bounty', label: 'That is the bounty — collect it' };
+        }
+      }
+    }
 
     /* 1. anything that can go home */
     for (let c = 0; c < b.tableau.length; c++) {
@@ -1316,7 +1358,8 @@ const Game = (() => {
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
-    cashPot, spinRoulette,
+    cashPot, spinRoulette, spinRouletteCash,
+    raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum
   };
 })();

@@ -552,9 +552,22 @@ const Overlays = (() => {
 
   /* ---------------- THE WHEEL ---------------- */
   const SEG = 360 / ROULETTE.length;
+  let wheelAngle = 0;          // carried between spins so it always turns forward
 
-  function roulette() {
-    const pot = Math.round(G.round.pot || 0);
+  let betMode = 'pot', cashStake = 0;
+
+  function roulette(auto) {
+    /* auto = { colour, mode, stake } when letting a bet ride */
+    if (auto && auto.mode) betMode = auto.mode;
+    const pot = Math.round(G.round ? (G.round.pot || 0) : 0);
+    const money = G.run.money;
+    if (betMode === 'pot' && pot < TUNE.potMinFlip && money > 0) betMode = 'cash';
+    if (auto && auto.stake) cashStake = auto.stake;
+    if (betMode === 'cash') {
+      const max = money;
+      if (cashStake > max || cashStake <= 0) cashStake = Math.min(max, TUNE.cashChips[0]);
+    }
+
     const nums = ROULETTE.map((p, i) =>
       '<div class="rw-num r-' + p.c + '" style="transform:rotate(' + (i * SEG) + 'deg) translateY(-86px) rotate(' + (-i * SEG) + 'deg)">' + p.n + '</div>').join('');
     const stops = ROULETTE.map((p, i) => {
@@ -562,40 +575,70 @@ const Overlays = (() => {
       return c + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
     }).join(',');
 
+    const cash = betMode === 'cash';
+    const stake = cash ? cashStake : pot;
+    const payEven = cash ? TUNE.cashPayEven : TUNE.roulettePayEven;
+    const payGreen = cash ? TUNE.cashPayGreen : TUNE.roulettePayGreen;
+
     const bet = (col) => {
       const o = ROULETTE_ODDS[col];
-      return '<button class="rw-bet rw-' + col + '" data-col="' + col + '">' +
+      const pay = col === 'green' ? payGreen : payEven;
+      const dead = stake <= 0;
+      return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
+        (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
         '<span class="rw-bo">' + o.count + ' in ' + ROULETTE.length + '</span>' +
-        '<span class="rw-bp">pays ' + UI.fmt(pot * o.pay) + '</span></button>';
+        '<span class="rw-bp">' + (cash ? 'pays $' + (stake * pay) : 'pays ' + UI.fmt(stake * pay)) + '</span></button>';
     };
+
+    const chips = TUNE.cashChips.concat([money]).filter((v, i, a2) => v > 0 && v <= money && a2.indexOf(v) === i);
+    const chipRow = cash
+      ? '<div class="rw-chips">' + chips.map(v =>
+          '<button class="rw-chip' + (v === cashStake ? ' on' : '') + '" data-stake="' + v + '">' +
+          (v === money ? 'ALL $' + v : '$' + v) + '</button>').join('') +
+        (money <= 0 ? '<span class="rw-broke">no cash to stake</span>' : '') + '</div>'
+      : '';
 
     open(
       '<div class="panel wheel-panel">' +
         '<div class="panel-flag">THE WHEEL</div>' +
-        '<div class="wheel-stake">Staking the pot: <b>' + UI.fmt(pot) + '</b></div>' +
+        '<div class="rw-modes">' +
+          '<button class="rw-mode' + (cash ? '' : ' on') + (pot < TUNE.potMinFlip ? ' off' : '') + '" data-mode="pot"' +
+            (pot < TUNE.potMinFlip ? ' disabled' : '') + '>STAKE THE POT<span>' + UI.fmt(pot) + ' pts</span></button>' +
+          '<button class="rw-mode' + (cash ? ' on' : '') + (money <= 0 ? ' off' : '') + '" data-mode="cash"' +
+            (money <= 0 ? ' disabled' : '') + '>STAKE CASH<span>$' + money + '</span></button>' +
+        '</div>' +
+        chipRow +
+        '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b></div>' +
         '<div class="wheel-wrap">' +
           '<div class="rw-pointer"></div>' +
-          '<div class="rw-wheel" id="rw-wheel" style="background:conic-gradient(' + stops + ')">' +
+          '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
             '<div class="rw-nums">' + nums + '</div>' +
             '<div class="rw-hub"></div>' +
           '</div>' +
           '<div class="rw-ball" id="rw-ball"></div>' +
         '</div>' +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
-        '<div class="wheel-warn">Lose and the pot is gone — and the same again comes off your <b>ante total</b>.</div>' +
+        '<div class="wheel-warn">' + (cash
+          ? 'Honest table odds: lose and you are simply out the stake.'
+          : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
       '</div>', 'centered');
 
-    $$('.rw-bet').forEach(b => { b.onclick = () => placeBet(b.dataset.col); });
+    $$('.rw-mode').forEach(b2 => { b2.onclick = () => { Sfx.click(); betMode = b2.dataset.mode; roulette(); }; });
+    $$('.rw-chip').forEach(b2 => { b2.onclick = () => { Sfx.click(); cashStake = +b2.dataset.stake; roulette(); }; });
+    $$('.rw-bet').forEach(b2 => { b2.onclick = () => placeBet(b2.dataset.col); });
     $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
+    if (auto && auto.colour) setTimeout(() => placeBet(auto.colour), 60);
   }
 
   function placeBet(colour) {
-    const res = Game.spinRoulette(colour);
+    const cash = betMode === 'cash';
+    const res = cash ? Game.spinRouletteCash(colour, cashStake) : Game.spinRoulette(colour);
     if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
     $$('.rw-bet').forEach(x => { x.disabled = true; x.classList.toggle('chosen', x.dataset.col === colour); });
+    $$('.rw-mode,.rw-chip').forEach(x => { x.disabled = true; });
     $('#rw-close').disabled = true;
     $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
 
@@ -603,9 +646,13 @@ const Overlays = (() => {
     const ball = $('#rw-ball');
     const DUR = 5800;
 
-    /* the wheel: several slow turns easing out across the whole spin */
+    /* the wheel: several slow turns easing out across the whole spin, always
+       continuing forward from wherever the last spin left it */
     const turns = 4 + Math.floor(Math.random() * 2);
-    const target = 360 * turns - res.index * SEG - SEG / 2;
+    const want = (((-res.index * SEG - SEG / 2) % 360) + 360) % 360;
+    let target = wheelAngle + 360 * turns;
+    target += (((want - (target % 360)) % 360) + 360) % 360;
+    wheelAngle = target;
     wheel.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.10,.62,.12,1)';
     wheel.style.transform = 'rotate(' + target + 'deg)';
 
@@ -618,26 +665,24 @@ const Overlays = (() => {
     ball.classList.remove('settled');
     ball.classList.add('live');
 
-    const easeOut = k => 1 - Math.pow(1 - k, 3.6);   // long, soft deceleration
+    const easeOut = k => 1 - Math.pow(1 - k, 3.6);
 
     const frame = now => {
       const k = Math.min(1, (now - t0) / DUR);
       const e = easeOut(k);
-      /* winds down to the top, where the winning pocket comes around to meet it */
       const angle = -(360 * spins) * (1 - e);
 
       let r = R_RIM;
       if (k > 0.60) {
         const f = (k - 0.60) / 0.40;
         const smooth = f * f * (3 - 2 * f);
-        const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;   // a couple of bounces off the frets
+        const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;
         r = R_RIM - (R_RIM - R_POCKET) * smooth + hop;
       }
       const rad = angle * Math.PI / 180;
       ball.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
                              (-Math.cos(rad) * r).toFixed(2) + 'px)';
 
-      /* clicks thin out with the ball, like it is passing fewer frets a second */
       if (now >= nextTick) {
         const speed = Math.max(0.015, 1 - e);
         Sfx.chip(Math.floor(6 * speed));
@@ -656,24 +701,49 @@ const Overlays = (() => {
   function finishWheel(res) {
     const p = res.pocket;
     const box = $('#rw-result');
+    const cash = res.mode === 'cash';
     if (res.win) {
       box.className = 'wheel-result win';
-      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the pot is now <b>' + UI.fmt(res.pot) + '</b>' +
+      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — ' +
+        (cash ? 'you take <b>$' + res.payout + '</b> off the table' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>' +
+        (cash ? '<br><span class="rw-note">You are up $' + (res.payout - res.staked) + ' on the spin</span>'
+              : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
       UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
     } else {
       box.className = 'wheel-result lose';
-      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' + UI.fmt(res.staked) + '</b>' +
-        '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>' +
+      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' +
+        (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
+        (cash ? '' : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
         '<br><span class="quip">' + quip('wheelLose') + '</span>';
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
     const btn = $('#rw-close');
     btn.disabled = false;
-    btn.textContent = res.win ? 'BACK TO THE TABLE' : 'THAT IS GAMBLING';
+    btn.textContent = res.win ? 'TAKE IT AND GO' : 'THAT IS GAMBLING';
+
+    /* won, and the winnings are big enough to put straight back on the table */
+    const rideStake = cash ? Math.min(res.payout, G.run.money) : (G.round.pot || 0);
+    const rideOk = res.win && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
+    if (rideOk) {
+      const pay = cash ? (res.colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven) : roulettePay(res.colour);
+      const shown = cash ? '$' + rideStake : UI.fmt(rideStake);
+      const becomes = cash ? '$' + (rideStake * pay) : UI.fmt(rideStake * pay);
+      const ride = el('button', 'btn ride-btn', 'LET IT RIDE');
+      ride.title = 'Put the whole ' + shown + ' back on ' + ROULETTE_ODDS[res.colour].label;
+      ride.onclick = () => {
+        ride.disabled = true;
+        Sfx.voice('letItRide');
+        UI.flashScreen(0.18, '#ffd166');
+        setTimeout(() => roulette({ colour: res.colour, mode: res.mode === 'cash' ? 'cash' : 'pot', stake: rideStake }), 620);
+      };
+      btn.parentNode.insertBefore(ride, btn);
+      const note = el('div', 'ride-note',
+        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.');
+      btn.parentNode.insertBefore(note, btn);
+    }
     UI.renderHud();
   }
 
@@ -687,6 +757,7 @@ const Overlays = (() => {
     { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
     { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
+    { id: 'bounty',  name: 'THE BOUNTY', sub: 'the wanted card, and the clock you can start' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -794,6 +865,21 @@ const Overlays = (() => {
         'The pot takes a much bigger cut of every score.', '');
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
+    } else if (almanacTab === 'bounty') {
+      html += almEntry('magnifier', 'One card is always WANTED', 'automatic',
+        'The table posts a card at the start of every round. Send that exact card to a foundation and it pays out on the spot, then a new face goes straight up.',
+        'The wanted card can be anywhere — buried in the tableau, sitting in the stock, or held in your Stash. Playing it from the Stash counts, which is what the Stash is for.');
+      html += almEntry('coinstack', 'What it pays', 'quota / ' + TUNE.bountyDivisor,
+        'A bounty is worth your current quota divided by ' + TUNE.bountyDivisor + ' in Chips, plus $' + TUNE.bountyCash + ' cash. It runs through the full Chips x Mult pipeline, so Heat and Tempo apply.',
+        'Every bounty you collect in a round makes the next one ' + Math.round(TUNE.bountyGrowth * 100) + '% richer. Chaining four in one round is where the round is actually won.');
+      html += almEntry('dice', 'RAISE', 'the table gamble',
+        'Doubles the purse but starts a ' + TUNE.bountyDeadline + '-move clock. You can raise up to ' + TUNE.bountyMaxRaises + ' times.',
+        'Let a raised bounty escape and ' + Math.round(TUNE.bountyStake * 100) + '% of the purse comes straight off your ante bar — this round first, then your banked rounds — and your cascade breaks. Drawing counts as a move, so raising with the card still face-down in the stock is a real bet.');
+      html += almEntry('magnifier', 'The Bounty Hunter', 'curio',
+        'Every bounty is worth 60% more.', 'Stacks on top of the per-collection growth, so it is at its best in a round where you chain several.');
+      html += almEntry('tag', 'The Wanted Poster', 'curio',
+        'Collecting a bounty also pays double cash and raises HEAT by one.',
+        'Heat multiplies everything for the rest of the round, so a poster turns the bounty chase into your main multiplier engine.');
     } else if (almanacTab === 'bandit') {
       Object.keys(BANDIT_PRIZES).forEach(sym => {
         const p = BANDIT_PRIZES[sym];
@@ -849,6 +935,15 @@ const Overlays = (() => {
             '<i>again on every single card</i> as you dismantle it upward, with the Cascade stacking on top. ' +
             'Building tall and cashing the whole ladder is how big rounds happen.</li>' +
           '</ul>' +
+
+          '<h4>The Bounty</h4>' +
+          '<p>The table always has one card posted <b>WANTED</b> — the poster sits beside the Stash. Send that ' +
+          'exact card to a foundation from anywhere (the tableau, the waste, or straight out of the Stash) and it pays ' +
+          '<b>quota / ' + TUNE.bountyDivisor + ' in Chips</b> plus <b>$' + TUNE.bountyCash + '</b> on the spot, then a new face goes straight up. Every ' +
+          'bounty you collect in a round makes the next one <b>' + Math.round(TUNE.bountyGrowth * 100) + '% richer</b>, so chaining them is where big rounds come from.</p>' +
+          '<p><b>RAISE</b> is the table\'s own gamble: it doubles the purse but starts a <b>' + TUNE.bountyDeadline + '-move clock</b>. ' +
+          'Drawing counts as a move. Bring the card in before the clock runs out and you take the doubled purse; let it escape and ' +
+          '<b>' + Math.round(TUNE.bountyStake * 100) + '% of the purse comes off your ante bar</b> and your cascade breaks. You can raise twice.</p>' +
 
           '<h4>Stuck cards: the Wishing Well and Twins</h4>' +
           '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it into the ' +

@@ -8,7 +8,7 @@ import os
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-JS_ORDER = ['icons', 'data', 'engine', 'score', 'game', 'audio', 'ui', 'overlays', 'main']
+JS_ORDER = ['voice', 'icons', 'data', 'engine', 'score', 'game', 'audio', 'ui', 'overlays', 'main']
 OUT = 'piledriver-standalone.html'
 
 

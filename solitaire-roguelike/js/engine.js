@@ -90,7 +90,8 @@ const Engine = (() => {
       twinMult: 1, noRevealScore: false, banditLuck: false,
       reshuffles: 0, heatPer: 0,
       stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareBonus: false, firstFlipSafe: false,
-      potShare: 0
+      potShare: 0,
+      bountyMult: 0, bountyBonus: false
     };
     const merge = src => {
       if (!src) return;
@@ -201,6 +202,8 @@ const Engine = (() => {
         usedSafeFlip: false,
         cuts: 0,
         cutsHit: 0,
+        bounty: null,
+        bountiesCollected: 0,
         over: false,
         won: false
       }

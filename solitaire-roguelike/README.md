@@ -71,6 +71,9 @@ The shop sells cards that were never in a deck of 52, each with its own face and
 | **Report Card** | +40 Chips for every card you've sent home this round. Graded on a curve |
 | **Loyalty Card** | Gains +30 Chips permanently every time it's scored, forever |
 | **Bus Transfer** | +1 pass through the stock |
+| **Scratch Card** | Scratched the moment it scores — anywhere from $1 to $14 |
+| **Lottery Ticket** | 1 in 6 it's worth **+2500 Chips**. The other five times it's a scrap of paper |
+| **Fortune Cookie** | Cracks open for a random blessing that lasts the rest of the round |
 | **Coupon** · **Credit Card** · **Business Card** · **Birthday Card** · **Punch Card** · **Get Out Of Jail Free** | cash, huge chips, mult per curio, a board-wide flip… |
 
 Oddities stack onto anything in the tableau, and can be laid on any started foundation to cash their ability
@@ -102,6 +105,24 @@ A bar in the header that fills every time you score and drains while you sit sti
 more **every** score is worth — up to ×1.9 at a full bar. It is a bonus only: thinking never costs you
 points, but playing fast pays. It also drives the soundtrack, which speeds up and adds layers as you heat up.
 
+### The Bounty
+
+One card is always posted **WANTED** on a poster beside the Stash. Send that exact card to a foundation
+— off the tableau, out of the waste, or straight out of your Stash — and it pays **quota ÷ 10 in Chips**
+plus **$3**, then a new face goes up immediately. The payout runs through the full Chips × Mult pipeline,
+so Heat and Tempo apply to it.
+
+Every bounty you collect in a round makes the next one **30% richer**, so chaining them is where a big
+round actually comes from.
+
+**RAISE** is the table's own gamble. It doubles the purse but starts a **12-move clock** — and drawing
+counts as a move, so raising while the card is still face-down in the stock is a real bet. Bring it in
+and you take the doubled purse; let it escape and **half the purse comes straight off your ante bar**
+and your cascade breaks. You can raise twice, for a 4× purse.
+
+**Bounty Hunter** makes every bounty worth 60% more. **Wanted Poster** doubles the cash and raises HEAT
+on every collection, which turns the bounty chase into your main multiplier engine.
+
 ### The Side Pot and the Wheel
 
 Every score drops **12%** of itself into a pot in the bottom-right corner (it costs you nothing — the points
@@ -114,6 +135,11 @@ still land on your score as normal). Then it's your call:
 - **If it misses**, the pot is gone *and the same amount again comes off your ante total* — this round's score
   first, then your banked rounds. The real stake is double the pot, so only take a big one to the wheel when
   you can afford to lose twice its size.
+
+You can also put **actual money** on the same wheel. Switch the panel to **CASH**, pick a $5/$10/$25 stake
+and a colour: red or black returns **2×** your stake, the green 0 returns **18×**, and a loss costs you the
+stake and nothing else — honest casino odds, no ante bar involved. Win either way and a **LET IT RIDE**
+button appears, which puts the whole payout back on the same colour.
 
 **The Card Counter** makes your first spin each round unloseable, **The Daredevil** pays $5 a win, and
 **The Skimmer** nearly doubles how fast the pot fills.

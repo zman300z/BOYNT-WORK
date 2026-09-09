@@ -1302,3 +1302,90 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .quip{ font-size:10.5px; opacity:.55; font-style:italic; }
 .panel-quip{ margin:-8px 0 14px; }
 #toast .quip{ opacity:.7; }
+
+/* LET IT RIDE */
+.ride-btn{
+  display:block; margin:0 auto 6px;
+  background:linear-gradient(180deg,#ff8f3f,#c9541a); color:#fff;
+  box-shadow:0 4px 0 #7d3410, 0 0 26px rgba(255,143,63,.55);
+  animation:rideGlow .9s infinite alternate;
+}
+@keyframes rideGlow{ to{ box-shadow:0 4px 0 #7d3410, 0 0 38px rgba(255,143,63,.95) } }
+.ride-btn:disabled{ animation:none; opacity:.6; }
+.ride-note{ font-size:10.5px; opacity:.6; margin-bottom:10px; }
+
+/* wheel: pot vs cash */
+.rw-modes{ display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+.rw-mode{
+  flex:1; display:flex; flex-direction:column; gap:1px; align-items:center; cursor:pointer;
+  font-family:var(--display); font-size:10px; padding:6px 8px; border-radius:9px;
+  border:2px solid var(--line); background:rgba(255,255,255,.05); color:var(--paper);
+}
+.rw-mode span{ font-family:var(--font); font-size:11px; opacity:.6; }
+.rw-mode:hover:not(:disabled){ background:rgba(255,255,255,.12); }
+.rw-mode.on{ border-color:var(--gold); background:rgba(255,209,102,.16); color:var(--gold); }
+.rw-mode.on span{ opacity:.9; color:var(--paper); }
+.rw-mode:disabled{ opacity:.32; cursor:not-allowed; }
+.rw-chips{ display:flex; gap:6px; justify-content:center; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.rw-chip{
+  font-family:var(--display); font-size:10px; cursor:pointer;
+  padding:4px 10px; border-radius:14px; border:2px solid var(--line);
+  background:rgba(255,255,255,.05); color:var(--paper);
+}
+.rw-chip:hover{ background:rgba(255,255,255,.14); }
+.rw-chip.on{ border-color:var(--gold); background:var(--gold); color:#12100f; }
+.rw-broke{ font-size:10px; opacity:.5; }
+.rw-bet.off{ opacity:.3; cursor:not-allowed; }
+.odd-scratch{ background:linear-gradient(165deg,#fff1cf,#ffd98a); border-color:#a8730b; }
+.odd-scratch .odd-art, .odd-scratch .odd-head span, .odd-scratch .odd-mini{ color:#6d4a06; }
+.odd-lottery{ background:linear-gradient(165deg,#ffe6ee,#ffbcd2); border-color:#c2185b; }
+.odd-lottery .odd-art, .odd-lottery .odd-head span, .odd-lottery .odd-mini{ color:#8c0f42; }
+.odd-cookie{ background:linear-gradient(165deg,#fff3e0,#ffddb0); border-color:#a86a1b; }
+.odd-cookie .odd-art, .odd-cookie .odd-head span, .odd-cookie .odd-mini{ color:#734813; }
+
+/* ---------------- THE BOUNTY ----------------
+   A wanted poster nailed to the table. Always one card posted, always worth
+   chasing, and RAISE turns it into a bet against a twelve-move clock.        */
+.bounty{
+  position:relative; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:5px 7px 6px; border-radius:4px; min-width:96px; min-height:var(--ch);
+  border:2px solid rgba(214,171,106,.55);
+  background:
+    linear-gradient(165deg, rgba(214,171,106,.16), rgba(30,20,10,.55)),
+    repeating-linear-gradient(92deg, rgba(255,255,255,.02) 0 3px, transparent 3px 7px);
+  box-shadow:inset 0 0 20px rgba(0,0,0,.5);
+}
+.bounty::before,.bounty::after{
+  content:''; position:absolute; top:4px; width:5px; height:5px; border-radius:50%;
+  background:#d6ab6a; box-shadow:0 1px 2px #000;
+}
+.bounty::before{ left:5px; } .bounty::after{ right:5px; }
+.bounty.hot{ border-color:var(--hot); animation:bountyPulse .8s ease-in-out infinite; }
+@keyframes bountyPulse{
+  0%,100%{ box-shadow:inset 0 0 20px rgba(0,0,0,.5), 0 0 0 rgba(255,90,90,0); }
+  50%{ box-shadow:inset 0 0 20px rgba(0,0,0,.5), 0 0 26px rgba(255,90,90,.55); }
+}
+.bnt-title{
+  font-family:var(--display); font-size:10px; letter-spacing:.22em; color:#e8c489;
+  text-shadow:0 1px 0 #000;
+}
+.bnt-face{
+  width:38px; height:52px; border-radius:5px; background:#f4efe2; color:#111;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:var(--display); line-height:1; box-shadow:0 2px 6px rgba(0,0,0,.6);
+  filter:sepia(.35) contrast(1.05);
+}
+.bnt-face .r{ font-size:17px; font-weight:800; }
+.bnt-face .s{ font-size:15px; }
+.bnt-face.red{ color:#a3202a; }
+.bnt-reward{ font-size:10px; font-weight:800; color:var(--gold); letter-spacing:.04em; }
+.bnt-clock{ font-size:9px; font-weight:800; color:var(--hot); letter-spacing:.1em; }
+.bnt-raise{
+  font-family:var(--display); font-size:8px; letter-spacing:.14em; padding:2px 7px;
+  border-radius:5px; cursor:pointer; color:#1a1206;
+  background:linear-gradient(180deg,#f0c674,#c99a3d); border:none;
+  box-shadow:0 2px 0 #7d5c1c;
+}
+.bnt-raise:hover{ filter:brightness(1.12); }
+.bnt-raise:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+.bnt-empty{ font-size:9px; opacity:.5; text-align:center; padding-top:14px; }

@@ -199,6 +199,7 @@ const Score = (() => {
     if (ev.event === 'clear')  base = { chips: TUNE.clearChips, mult: TUNE.clearMult };
     if (ev.event === 'suit')   base = { chips: TUNE.suitDoneChips, mult: TUNE.suitDoneMult };
     if (ev.event === 'stash')  base = { chips: ev.baseChips || 0, mult: 1 };
+    if (ev.event === 'bounty') base = { chips: ev.baseChips || 0, mult: 1 };
     ctx.chips = base.chips;
     ctx.mult = base.mult;
 

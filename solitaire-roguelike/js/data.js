@@ -52,6 +52,15 @@ const TUNE = {
   potMinFlip: 200,          // the pot must hold at least this to take it to the wheel
   roulettePayEven: 3,       // red or black pays the pot times this
   roulettePayGreen: 20,     // the zero pays this
+  cashPayEven: 2,           // cash bets use honest casino odds instead
+  cashPayGreen: 18,
+  cashChips: [5, 10, 25],   // quick stake buttons
+  bountyDivisor: 10,        // a bounty's base Chips are quota / this
+  bountyGrowth: 0.3,        // each one you collect makes the next richer
+  bountyCash: 3,            // and pays this in cash
+  bountyDeadline: 12,       // moves you get once you RAISE
+  bountyMaxRaises: 2,       // each raise doubles the payout
+  bountyStake: 0.5,         // a raised bounty that escapes costs this much of it
   startingMantelSlots: 3,
   maxMantelSlots: 5,
   startingStockPasses: 5,   // reshuffling spends one, so passes are the real currency now
@@ -342,6 +351,16 @@ const CURIOS = [
   { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
     text: 'Every winning Side Pot flip also pays you $5.',
     mods: { dareBonus: true } },
+
+  { id: 'bounty_hunter', name: 'Bounty Hunter', icon: 'magnifier', rarity: 'uncommon', cost: 8,
+    text: 'Bounties are worth 60% more.',
+    long: 'The table posts a bounty on one card at all times. This makes chasing it down considerably more worthwhile.',
+    mods: { bountyMult: 0.6 } },
+
+  { id: 'wanted_poster', name: 'Wanted Poster', icon: 'tag', rarity: 'uncommon', cost: 7,
+    text: 'Collecting a bounty pays double cash and gives +1 HEAT.',
+    long: 'Bounty cash goes from $3 to $6, and every collection raises Heat by one — which multiplies every score you make for the rest of the round. Chase bounties with this on the mantel and the multiplier looks after itself.',
+    mods: { bountyBonus: true } },
 
   { id: 'the_skimmer', name: 'The Skimmer', icon: 'coinstack', rarity: 'uncommon', cost: 8,
     text: 'The Side Pot takes a bigger cut of every score.',
@@ -790,6 +809,38 @@ const ODDITIES = {
     text: '+10 Mult, and +$1 for every card in your Stash.',
     score: c => { c.addMult(10); const n = (c.run.stash || []).length; if (n) c.money(n); }
   },
+  scratch: {
+    name: 'Scratch Card', icon: 'coin', tint: 'odd-scratch', chips: 25,
+    text: 'Scratch it when scored: anywhere from nothing to $14.',
+    long: 'Rolls a random cash prize the moment it scores. Most of the time it is a couple of dollars; occasionally it is a very good afternoon.',
+    score: c => {
+      const r = Math.random();
+      const prize = r < 0.35 ? 1 : r < 0.7 ? 3 : r < 0.9 ? 6 : r < 0.98 ? 10 : 14;
+      c.money(prize);
+      c.flash();
+    }
+  },
+  lottery: {
+    name: 'Lottery Ticket', icon: 'dice', tint: 'odd-lottery', chips: 20,
+    text: '1 in 6 it is worth +2500 Chips. Otherwise it is worth almost nothing.',
+    long: 'A genuine lottery ticket. Five times out of six it is a scrap of paper worth 20 Chips; the sixth time it is the biggest single Chip source in the game.',
+    score: c => { if (c.chance(6)) { c.addChips(2500); c.flash(); } }
+  },
+  cookie: {
+    name: 'Fortune Cookie', icon: 'shell', tint: 'odd-cookie', chips: 30,
+    text: 'Cracks open for a random blessing that lasts the rest of the round.',
+    long: 'Rolls one of: +6 Mult on everything, a free reshuffle, +2 Heat, a X3 blessing on your next foundation play, or a handful of cash.',
+    score: c => {
+      const r = Math.floor(Math.random() * 5);
+      if (r === 0) { c.round.wellMult = (c.round.wellMult || 0) + 6; }
+      else if (r === 1) { c.board.freeReshuffles++; }
+      else if (r === 2) { c.round.heat += 2; }
+      else if (r === 3) { c.round.blessing = 3; }
+      else { c.money(8); }
+      c.round.cookieRoll = r;
+      c.flash();
+    }
+  },
   punch: {
     name: 'Punch Card', icon: 'ladder', tint: 'odd-punch', chips: 30,
     text: 'X1.4 Mult, and X0.2 more for every time it has already been scored this run.',
@@ -861,6 +912,20 @@ const QUIPS = {
     'Two out of three. The machine calls that generous.',
     'A consolation, delivered with a shrug.',
     'Nearly. Nearly is the whole business model.'
+  ],
+  bountyMiss: [
+    'The bounty slipped out the back. Nobody saw a thing.',
+    'Gone. The poster is already yellowing.',
+    'It made the border. You made a donation.',
+    'Somewhere a wanted card is ordering a drink with your money.',
+    'You had twelve moves. It only needed one door.',
+    'The sheriff is writing a very disappointed letter.'
+  ],
+  bountyGot: [
+    'Dead or alive. Mostly filed.',
+    'The table pays out and posts another before you can blink.',
+    'One down. There is always another face on the wall.',
+    'They never look at the tableau. That is how they get caught.'
   ],
   banditJackpot: [
     'The machine makes a noise it has never made before.',

@@ -86,7 +86,65 @@ const UI = (() => {
     renderMantel();
     renderBoard();
     renderControls();
+    renderBounty();
     renderMomentum(true);
+  }
+
+  /* ---------------- THE BOUNTY ----------------
+     One card is always posted WANTED. Send that exact card home from anywhere and
+     it pays on the spot. RAISE doubles the purse but starts a clock — miss it and
+     the escape comes straight off your ante bar.                                */
+  function renderBounty() {
+    const box = $('#bounty');
+    if (!box) return;
+    const bn = G.round && G.round.bounty;
+    if (!bn) { box.className = 'bounty'; box.innerHTML = '<div class="bnt-empty">NO BOUNTY<br>POSTED</div>'; return; }
+    const red = bn.suit === 'H' || bn.suit === 'D';
+    const hot = bn.deadline != null;
+    box.className = 'bounty' + (hot ? ' hot' : '');
+    box.innerHTML =
+      '<div class="bnt-title">WANTED</div>' +
+      '<div class="bnt-face' + (red ? ' red' : '') + '">' +
+        '<span class="r">' + RANK_NAMES[bn.rank] + '</span>' +
+        '<span class="s">' + SUITS[bn.suit].sym + '</span>' +
+      '</div>' +
+      '<div class="bnt-reward">' + fmt(bn.reward) + ' pts</div>' +
+      (hot ? '<div class="bnt-clock">' + bn.deadline + ' MOVES</div>' : '');
+    const canRaise = bn.raises < TUNE.bountyMaxRaises;
+    const btn = el('button', 'bnt-raise', canRaise ? 'RAISE x2' : 'MAXED');
+    btn.disabled = !canRaise;
+    btn.onclick = () => {
+      const res = Game.raiseBounty();
+      if (!res.ok) { Sfx.error(); toast(res.reason); return; }
+      Sfx.mult();
+      flashScreen(0.14, '#f0c674');
+      screenShake(5);
+      render();
+      drainFx();
+    };
+    box.appendChild(btn);
+    box.addEventListener('pointerenter', e => showTip(e.currentTarget, bountyTip(bn)));
+    box.addEventListener('pointerleave', hideTip);
+  }
+
+  function bountyTip(bn) {
+    const stake = bn.staked || Math.round(bountyStakePreview(bn) );
+    return '<div class="tip-title">THE BOUNTY</div>' +
+      '<div class="tip-text">The table keeps one card posted at all times. Send <b>' +
+      RANK_NAMES[bn.rank] + SUITS[bn.suit].sym + '</b> home — off the tableau, out of the waste, ' +
+      'or straight from the Stash — and it pays <b>' + fmt(bn.reward) + ' Chips</b> plus <b>$' +
+      TUNE.bountyCash + '</b>, then a new face goes up immediately.</div>' +
+      '<div class="tip-text">Each bounty you collect this round makes the next one <b>' +
+      Math.round(TUNE.bountyGrowth * 100) + '% richer</b>.</div>' +
+      '<div class="tip-text"><b>RAISE</b> doubles the purse but gives you only <b>' +
+      TUNE.bountyDeadline + ' moves</b> to bring it in. Let it escape and you lose <b>' +
+      fmt(stake) + ' points</b> off your ante bar and your cascade breaks.' +
+      (bn.deadline != null ? ' <b style="color:var(--hot)">The clock is running: ' + bn.deadline + ' moves.</b>' : '') +
+      '</div>';
+  }
+
+  function bountyStakePreview(bn) {
+    return (bn.raises ? bn.reward : bn.reward * 2) * TUNE.bountyStake;
   }
 
   function renderHud() {
@@ -815,6 +873,18 @@ const UI = (() => {
       setTimeout(done, 130 * spd());
       return;
     }
+    if (p.event === 'bust') {
+      const a = anchorEl(p.anchor);
+      Sfx.lose();
+      bannerText(p.label);
+      floatText(a, p.label, 'fx-shatter');
+      flashScreen(0.22, '#ff5a5a');
+      screenShake(9);
+      renderHud();
+      renderBounty();
+      setTimeout(done, 320 * spd());
+      return;
+    }
     if (p.event === 'recycle') { Sfx.deal(); flashScreen(0.10, '#4cc9f0'); done(); return; }
     if (p.event === 'draw') {
       Sfx.deal();
@@ -890,6 +960,7 @@ const UI = (() => {
   function anchorEl(a) {
     if (!a) return $('#scorebox');
     if (a.zone === 'stash') return $('#stash') || $('#scorebox');
+    if (a.zone === 'bounty') return $('#bounty') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
