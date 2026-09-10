@@ -988,6 +988,14 @@ const Overlays = (() => {
           'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
           'whenever it scores. (Hotkey: R)</p>' +
 
+          '<h4>The AUTO button</h4>' +
+          '<p><b>AUTO</b> is a toggle, not a one-shot. It plays the board a move at a time, in the order a decent ' +
+          'player would take them — collect the bounty, free the aces, dig out face-down cards, build with the waste, ' +
+          'send home only what nothing can still need, open a column, then turn the stock — and it flies each card ' +
+          'across so you can watch the move happen. Press it again, or just touch the board yourself, to stop. ' +
+          'It stops on its own when the round ends or when it runs out of good moves, and it will never spend a ' +
+          'pass or your ante score for you. (Hotkey: A)</p>' +
+
           '<h4>Duplicate cards and Twins</h4>' +
           '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
           'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +

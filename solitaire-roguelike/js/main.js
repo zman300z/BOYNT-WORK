@@ -35,7 +35,11 @@
   }
 
   function cashOut() {
+    /* the board can finish itself -- if the round is already over, just show the
+       summary rather than doing nothing at all */
+    if (G.phase === 'roundEnd') { Sfx.click(); Overlays.roundEnd(); return; }
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     Sfx.click();
     Game.endRound(false);
@@ -44,6 +48,7 @@
 
   function draw() {
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     if (Game.drawStock()) { Sfx.deal(); UI.clearSelection(); UI.render(); UI.drainFx(); UI.checkStuck(); }
     else { Sfx.error(); UI.shake($('#stock')); }
@@ -95,16 +100,17 @@
     return null;
   }
 
+  /* AUTO is a toggle: it plays the board a move at a time until you stop it,
+     the round ends, or it genuinely runs out of things to do. */
   function auto() {
-    if (G.phase !== 'play') return;
-    UI.rushFx();
-    const n = Game.autoCollect();
-    if (n) { UI.render(); UI.drainFx(); }
-    else { Sfx.error(); UI.toast('Nothing can go home right now.'); }
+    if (G.phase !== 'play' && !UI.autoRunning()) { UI.checkStuck(); return; }
+    Sfx.click();
+    UI.toggleAuto();
   }
 
   function undo() {
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     if (Game.undo()) { Sfx.flip(); UI.clearSelection(); UI.resetDisplayScore(); UI.render(); }
     else { Sfx.error(); UI.toast('No undos left.'); }

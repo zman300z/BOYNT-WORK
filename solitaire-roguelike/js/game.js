@@ -748,6 +748,159 @@ const Game = (() => {
     save();
   }
 
+  /* ---------------- AUTOPLAY ----------------
+     autoPlan picks the single best move a decent Klondike player would make and
+     hands it back WITHOUT playing it, so the UI can animate the card travelling.
+     The order is: collect the bounty, free the aces, dig out face-down cards,
+     build with the waste, send home what is safe to send, open a column for a
+     King, and only then turn the stock. It never spends a pass or ante score on
+     your behalf, and it never offers a move that changes nothing.
+     ------------------------------------------------------------------------- */
+
+  /* A card is safe to send home when nothing left on the board could still need
+     it: both opposite-colour foundations have already passed the rank below it. */
+  function safeToSendHome(card) {
+    const b = G.board;
+    if (card.oddity) return true;
+    if (card.rank <= 2) return true;
+    const buried = b.tableau.some(p => p.some(c => !c.faceUp));
+    if (!buried && !b.stock.length && !b.waste.length) return true;
+    const opp = Engine.isRed(card) ? ['S', 'C'] : ['H', 'D'];
+    const low = Math.min(b.foundations[opp[0]].length, b.foundations[opp[1]].length);
+    return card.rank <= low + 1;
+  }
+
+  /* a stable fingerprint of the board, so autoplay can notice it is going in circles */
+  function boardKey() {
+    const b = G.board;
+    return b.tableau.map(p => p.map(c => (c.faceUp ? '' : 'x') + c.id).join(',')).join('|') +
+           '#' + SUIT_KEYS.map(s => b.foundations[s].length + '/' + (b.twins ? b.twins[s].length : 0)).join(',') +
+           '#' + b.waste.map(c => c.id).join(',') + '#' + b.stock.length;
+  }
+
+  function autoPlan(opts) {
+    if (G.phase !== 'play') return null;
+    const b = G.board, m = Engine.mods(G.run);
+    const relaxed = !!(opts && opts.relaxed);
+    const homeable = c => !!(Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c));
+    const waste = Engine.playableWaste(b, m);
+    const tops = [];
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      if (!pile.length) continue;
+      const top = pile[pile.length - 1];
+      if (top.faceUp) tops.push({ card: top, src: { zone: 'tableau', col: c, index: pile.length - 1 } });
+    }
+    const home = (src, card, label, kind) =>
+      ({ kind: kind || 'home', label, cardId: card.id, src, dst: { zone: 'foundation' } });
+
+    /* 1. the wanted card, if it can go home right now -- always worth it */
+    const bn = G.round.bounty;
+    if (bn) {
+      for (const t of tops) if (t.card.id === bn.cardId && homeable(t.card)) return home(t.src, t.card, 'Collecting the bounty', 'bounty');
+      for (const w of waste) if (w.card.id === bn.cardId && homeable(w.card))
+        return home({ zone: 'waste', index: w.index }, w.card, 'Collecting the bounty', 'bounty');
+      for (let i = 0; i < (G.run.stash || []).length; i++) {
+        const c = G.run.stash[i];
+        if (c.id === bn.cardId && homeable(c))
+          return { kind: 'bounty', label: 'Collecting the bounty from the Stash', cardId: c.id,
+                   src: { zone: 'stash', index: i }, dst: { zone: 'foundation' } };
+      }
+    }
+
+    /* 2. aces and twos always go home */
+    for (const t of tops) if (t.card.rank <= 2 && homeable(t.card)) return home(t.src, t.card, 'Aces first');
+    for (const w of waste) if (w.card.rank <= 2 && homeable(w.card))
+      return home({ zone: 'waste', index: w.index }, w.card, 'Aces first');
+
+    /* 3. tableau moves that turn a face-down card over -- the whole game, really */
+    let dig = null;
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        if (i === 0 || pile[i - 1].faceUp) continue;          // nothing buried underneath
+        const buried = pile.slice(0, i).filter(x => !x.faceUp).length;
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c || !b.tableau[d].length) continue;      // empty columns are handled below
+          if (!Engine.canPlaceOnColumn(b, d, pile[i], m)) continue;
+          const score = buried * 10 + Engine.runLength(b, d, m);
+          if (!dig || score > dig.score) {
+            dig = { score, plan: { kind: 'dig', label: 'Uncovers a face-down card', cardId: pile[i].id,
+                                   src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d } } };
+          }
+        }
+      }
+    }
+    if (dig) return dig.plan;
+
+    /* 4. the waste card onto the tableau -- prefer landing on the longest run */
+    let build = null;
+    for (const w of waste) {
+      for (let d = 0; d < b.tableau.length; d++) {
+        if (!b.tableau[d].length) continue;
+        if (!Engine.canPlaceOnColumn(b, d, w.card, m)) continue;
+        const score = Engine.runLength(b, d, m);
+        if (!build || score > build.score) {
+          build = { score, plan: { kind: 'build', label: 'Builds a column run', cardId: w.card.id,
+                                   src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: d } } };
+        }
+      }
+    }
+    if (build) return build.plan;
+
+    /* 5. send home whatever is safe to send. A card is only held back while
+          something on the board could still need it to build on. */
+    for (const t of tops) {
+      if (!homeable(t.card)) continue;
+      if (relaxed || safeToSendHome(t.card)) return home(t.src, t.card, 'Sends it home');
+    }
+    for (const w of waste) {
+      if (!homeable(w.card)) continue;
+      if (relaxed || safeToSendHome(w.card)) return home({ zone: 'waste', index: w.index }, w.card, 'Sends it home');
+    }
+
+    /* 6. fill an empty column -- only with something that frees a card or the waste */
+    const empty = b.tableau.findIndex(p => !p.length);
+    if (empty >= 0) {
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        for (let i = 0; i < pile.length; i++) {
+          if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+          if (i === 0 || pile[i - 1].faceUp) continue;        // moving a whole column gains nothing
+          if (!Engine.canPlaceOnColumn(b, empty, pile[i], m)) continue;
+          return { kind: 'dig', label: 'Opens the column and frees a card', cardId: pile[i].id,
+                   src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: empty } };
+        }
+      }
+      for (const w of waste) {
+        if (!Engine.canPlaceOnColumn(b, empty, w.card, m)) continue;
+        return { kind: 'build', label: 'Fills the empty column', cardId: w.card.id,
+                 src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: empty } };
+      }
+    }
+
+    /* 7. nothing on the felt -- turn the stock */
+    if (b.stock.length) return { kind: 'draw', label: 'Turning the stock' };
+    if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return { kind: 'draw', label: 'Running the stock again' };
+
+    /* 8. out of ideas while still holding a safety rule -- drop it and try again */
+    if (!relaxed) return autoPlan({ relaxed: true });
+
+    /* 9. a free reshuffle costs nothing, so it is worth taking before giving up */
+    if (b.freeReshuffles > 0 && (b.stock.length || b.waste.length)) return { kind: 'reshuffle', label: 'Free reshuffle' };
+    return null;
+  }
+
+  /* Play one planned move. The UI calls autoPlan first so it can animate. */
+  function autoPlay(plan) {
+    if (!plan || G.phase !== 'play') return false;
+    if (plan.kind === 'draw') return drawStock();
+    if (plan.kind === 'reshuffle') return reshuffle('free').ok;
+    if (plan.src.zone === 'stash') return stashPlay(plan.src.index, plan.dst);
+    return tryMove(plan.src, plan.dst);
+  }
+
   /* auto-play every card that can go straight home */
   function autoCollect() {
     let moved = 0, guard = 0;
@@ -1358,6 +1511,7 @@ const Game = (() => {
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
+    autoPlan, autoPlay, boardKey,
     cashPot, spinRoulette, spinRouletteCash,
     raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum

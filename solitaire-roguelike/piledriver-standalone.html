@@ -1398,6 +1398,28 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .bnt-raise:disabled{ opacity:.4; cursor:default; box-shadow:none; }
 .bnt-empty{ font-size:9px; opacity:.5; text-align:center; padding-top:14px; }
 
+/* ---------------- AUTOPLAY ----------------
+   The card slides in from wherever it just came from, so you can actually see
+   the move rather than the board teleporting between states.                  */
+.card.autofly{
+  animation:autoFly .32s cubic-bezier(.22,.9,.28,1) backwards;
+  z-index:400;
+}
+@keyframes autoFly{
+  0%{ transform:translate(var(--dx), var(--dy)) scale(1.05); box-shadow:0 14px 26px rgba(0,0,0,.6); }
+  70%{ box-shadow:0 8px 18px rgba(0,0,0,.45); }
+  100%{ transform:none; }
+}
+#btn-collect.running{
+  background:linear-gradient(180deg,#ff8a5c,#e0562c);
+  color:#fff; border-color:#ff8a5c; box-shadow:0 3px 0 #8a2f12;
+  animation:autoPulse .9s ease-in-out infinite;
+}
+@keyframes autoPulse{
+  0%,100%{ filter:brightness(1); }
+  50%{ filter:brightness(1.22); }
+}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -4203,6 +4225,159 @@ const Game = (() => {
     save();
   }
 
+  /* ---------------- AUTOPLAY ----------------
+     autoPlan picks the single best move a decent Klondike player would make and
+     hands it back WITHOUT playing it, so the UI can animate the card travelling.
+     The order is: collect the bounty, free the aces, dig out face-down cards,
+     build with the waste, send home what is safe to send, open a column for a
+     King, and only then turn the stock. It never spends a pass or ante score on
+     your behalf, and it never offers a move that changes nothing.
+     ------------------------------------------------------------------------- */
+
+  /* A card is safe to send home when nothing left on the board could still need
+     it: both opposite-colour foundations have already passed the rank below it. */
+  function safeToSendHome(card) {
+    const b = G.board;
+    if (card.oddity) return true;
+    if (card.rank <= 2) return true;
+    const buried = b.tableau.some(p => p.some(c => !c.faceUp));
+    if (!buried && !b.stock.length && !b.waste.length) return true;
+    const opp = Engine.isRed(card) ? ['S', 'C'] : ['H', 'D'];
+    const low = Math.min(b.foundations[opp[0]].length, b.foundations[opp[1]].length);
+    return card.rank <= low + 1;
+  }
+
+  /* a stable fingerprint of the board, so autoplay can notice it is going in circles */
+  function boardKey() {
+    const b = G.board;
+    return b.tableau.map(p => p.map(c => (c.faceUp ? '' : 'x') + c.id).join(',')).join('|') +
+           '#' + SUIT_KEYS.map(s => b.foundations[s].length + '/' + (b.twins ? b.twins[s].length : 0)).join(',') +
+           '#' + b.waste.map(c => c.id).join(',') + '#' + b.stock.length;
+  }
+
+  function autoPlan(opts) {
+    if (G.phase !== 'play') return null;
+    const b = G.board, m = Engine.mods(G.run);
+    const relaxed = !!(opts && opts.relaxed);
+    const homeable = c => !!(Engine.foundationTargetFor(b, c) || Engine.twinTargetFor(b, c));
+    const waste = Engine.playableWaste(b, m);
+    const tops = [];
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      if (!pile.length) continue;
+      const top = pile[pile.length - 1];
+      if (top.faceUp) tops.push({ card: top, src: { zone: 'tableau', col: c, index: pile.length - 1 } });
+    }
+    const home = (src, card, label, kind) =>
+      ({ kind: kind || 'home', label, cardId: card.id, src, dst: { zone: 'foundation' } });
+
+    /* 1. the wanted card, if it can go home right now -- always worth it */
+    const bn = G.round.bounty;
+    if (bn) {
+      for (const t of tops) if (t.card.id === bn.cardId && homeable(t.card)) return home(t.src, t.card, 'Collecting the bounty', 'bounty');
+      for (const w of waste) if (w.card.id === bn.cardId && homeable(w.card))
+        return home({ zone: 'waste', index: w.index }, w.card, 'Collecting the bounty', 'bounty');
+      for (let i = 0; i < (G.run.stash || []).length; i++) {
+        const c = G.run.stash[i];
+        if (c.id === bn.cardId && homeable(c))
+          return { kind: 'bounty', label: 'Collecting the bounty from the Stash', cardId: c.id,
+                   src: { zone: 'stash', index: i }, dst: { zone: 'foundation' } };
+      }
+    }
+
+    /* 2. aces and twos always go home */
+    for (const t of tops) if (t.card.rank <= 2 && homeable(t.card)) return home(t.src, t.card, 'Aces first');
+    for (const w of waste) if (w.card.rank <= 2 && homeable(w.card))
+      return home({ zone: 'waste', index: w.index }, w.card, 'Aces first');
+
+    /* 3. tableau moves that turn a face-down card over -- the whole game, really */
+    let dig = null;
+    for (let c = 0; c < b.tableau.length; c++) {
+      const pile = b.tableau[c];
+      for (let i = 0; i < pile.length; i++) {
+        if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+        if (i === 0 || pile[i - 1].faceUp) continue;          // nothing buried underneath
+        const buried = pile.slice(0, i).filter(x => !x.faceUp).length;
+        for (let d = 0; d < b.tableau.length; d++) {
+          if (d === c || !b.tableau[d].length) continue;      // empty columns are handled below
+          if (!Engine.canPlaceOnColumn(b, d, pile[i], m)) continue;
+          const score = buried * 10 + Engine.runLength(b, d, m);
+          if (!dig || score > dig.score) {
+            dig = { score, plan: { kind: 'dig', label: 'Uncovers a face-down card', cardId: pile[i].id,
+                                   src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: d } } };
+          }
+        }
+      }
+    }
+    if (dig) return dig.plan;
+
+    /* 4. the waste card onto the tableau -- prefer landing on the longest run */
+    let build = null;
+    for (const w of waste) {
+      for (let d = 0; d < b.tableau.length; d++) {
+        if (!b.tableau[d].length) continue;
+        if (!Engine.canPlaceOnColumn(b, d, w.card, m)) continue;
+        const score = Engine.runLength(b, d, m);
+        if (!build || score > build.score) {
+          build = { score, plan: { kind: 'build', label: 'Builds a column run', cardId: w.card.id,
+                                   src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: d } } };
+        }
+      }
+    }
+    if (build) return build.plan;
+
+    /* 5. send home whatever is safe to send. A card is only held back while
+          something on the board could still need it to build on. */
+    for (const t of tops) {
+      if (!homeable(t.card)) continue;
+      if (relaxed || safeToSendHome(t.card)) return home(t.src, t.card, 'Sends it home');
+    }
+    for (const w of waste) {
+      if (!homeable(w.card)) continue;
+      if (relaxed || safeToSendHome(w.card)) return home({ zone: 'waste', index: w.index }, w.card, 'Sends it home');
+    }
+
+    /* 6. fill an empty column -- only with something that frees a card or the waste */
+    const empty = b.tableau.findIndex(p => !p.length);
+    if (empty >= 0) {
+      for (let c = 0; c < b.tableau.length; c++) {
+        const pile = b.tableau[c];
+        for (let i = 0; i < pile.length; i++) {
+          if (!pile[i].faceUp || !Engine.isRunFrom(b, c, i, m)) continue;
+          if (i === 0 || pile[i - 1].faceUp) continue;        // moving a whole column gains nothing
+          if (!Engine.canPlaceOnColumn(b, empty, pile[i], m)) continue;
+          return { kind: 'dig', label: 'Opens the column and frees a card', cardId: pile[i].id,
+                   src: { zone: 'tableau', col: c, index: i }, dst: { zone: 'tableau', col: empty } };
+        }
+      }
+      for (const w of waste) {
+        if (!Engine.canPlaceOnColumn(b, empty, w.card, m)) continue;
+        return { kind: 'build', label: 'Fills the empty column', cardId: w.card.id,
+                 src: { zone: 'waste', index: w.index }, dst: { zone: 'tableau', col: empty } };
+      }
+    }
+
+    /* 7. nothing on the felt -- turn the stock */
+    if (b.stock.length) return { kind: 'draw', label: 'Turning the stock' };
+    if (b.waste.length && (b.passesLeft > 0 || m.infinitePasses)) return { kind: 'draw', label: 'Running the stock again' };
+
+    /* 8. out of ideas while still holding a safety rule -- drop it and try again */
+    if (!relaxed) return autoPlan({ relaxed: true });
+
+    /* 9. a free reshuffle costs nothing, so it is worth taking before giving up */
+    if (b.freeReshuffles > 0 && (b.stock.length || b.waste.length)) return { kind: 'reshuffle', label: 'Free reshuffle' };
+    return null;
+  }
+
+  /* Play one planned move. The UI calls autoPlan first so it can animate. */
+  function autoPlay(plan) {
+    if (!plan || G.phase !== 'play') return false;
+    if (plan.kind === 'draw') return drawStock();
+    if (plan.kind === 'reshuffle') return reshuffle('free').ok;
+    if (plan.src.zone === 'stash') return stashPlay(plan.src.index, plan.dst);
+    return tryMove(plan.src, plan.dst);
+  }
+
   /* auto-play every card that can go straight home */
   function autoCollect() {
     let moved = 0, guard = 0;
@@ -4813,6 +4988,7 @@ const Game = (() => {
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
+    autoPlan, autoPlay, boardKey,
     cashPot, spinRoulette, spinRouletteCash,
     raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum
@@ -5576,6 +5752,7 @@ const UI = (() => {
 
   let landedId = null;
   function doMove(src, dst) {
+    stopAuto();                       // a hand on the table always wins
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
       if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
@@ -5853,7 +6030,7 @@ const UI = (() => {
   function drainFx() {
     if (fxBusy) return;
     const q = G.fx.splice(0, G.fx.length);
-    if (!q.length) { syncScore(); return; }
+    if (!q.length) { syncScore(); checkStuck(); return; }
     fxBusy = true;
     runPackets(q, 0);
   }
@@ -6204,7 +6381,107 @@ const UI = (() => {
 
   function afterFx() {
     render();
-    if (G.phase === 'play') checkStuck();
+    checkStuck();
+  }
+
+  /* ---------------- AUTOPLAY ----------------
+     AUTO plays the board a move at a time, taking whatever a decent player would
+     take next and flying the card across so you can see it happen. Press it again
+     to stop. It stops by itself when the round ends, when the board starts
+     repeating, or when there is genuinely nothing left to do.                    */
+  let autoTimer = null, autoSeen = null, autoWait = 0, autoMoves = 0;
+
+  function autoRunning() { return autoTimer !== null; }
+
+  function autoLabel() {
+    const btn = $('#btn-collect');
+    if (!btn) return;
+    btn.textContent = autoRunning() ? 'STOP' : 'AUTO';
+    btn.classList.toggle('running', autoRunning());
+  }
+
+  function stopAuto(msg) {
+    if (autoTimer === null && autoSeen === null) return;   // was not running
+    clearTimeout(autoTimer);
+    autoTimer = null;
+    autoSeen = null;
+    autoLabel();
+    if (msg) toast(msg);
+    checkStuck();
+  }
+
+  function toggleAuto() {
+    if (autoRunning()) { stopAuto(); return; }
+    if (G.phase !== 'play') { checkStuck(); return; }
+    autoSeen = new Set();
+    autoWait = 0;
+    autoMoves = 0;
+    autoTimer = setTimeout(autoTick, 40);
+    autoLabel();
+  }
+
+  function autoTick() {
+    autoTimer = null;
+    if (G.phase !== 'play' || Overlays.isOpen()) { stopAuto(); return; }
+
+    /* let the fireworks land, but do not sit through them forever */
+    if (fxBusy) {
+      autoWait += 90;
+      if (autoWait > 600) rushFx();
+      autoTimer = setTimeout(autoTick, 90);
+      autoLabel();
+      return;
+    }
+    autoWait = 0;
+
+    const plan = Game.autoPlan();
+    if (!plan) {
+      if (!autoMoves) stopAuto('Nothing can be played right now.');
+      else if (Engine.anyMoveAvailable(G, G.run)) stopAuto('Autoplay is out of good moves — the rest is your call.');
+      else stopAuto('Nothing left to play — cash out.');
+      return;
+    }
+
+    /* the same move on the same board twice means it is chasing its own tail */
+    const key = plan.kind + ':' + (plan.cardId || '') + ':' + Game.boardKey();
+    if (autoSeen.has(key)) { stopAuto('That is as far as autoplay can take it — over to you.'); return; }
+    autoSeen.add(key);
+
+    const node = plan.cardId ? document.querySelector('[data-id="' + plan.cardId + '"]') : $('#stock');
+    const from = node ? node.getBoundingClientRect() : null;
+
+    if (!Game.autoPlay(plan)) { stopAuto('Autoplay hit a move it could not make.'); return; }
+    autoMoves++;
+    if (plan.kind === 'draw') Sfx.deal(); else Sfx.place();
+    clearSelection();
+    render();
+    if (plan.cardId && from) flyCard(plan.cardId, from);
+    drainFx();
+
+    if (G.phase !== 'play') { stopAuto(); return; }
+    autoTimer = setTimeout(autoTick, plan.kind === 'draw' ? 190 : 250);
+    autoLabel();
+  }
+
+  /* slide a card in from wherever it just came from -- and bring its run with it */
+  function flyCard(id, from) {
+    const head = document.querySelector('[data-id="' + id + '"]');
+    if (!head) return;
+    const r = head.getBoundingClientRect();
+    const dx = Math.round(from.left - r.left), dy = Math.round(from.top - r.top);
+    if (!dx && !dy) return;
+    const nodes = [head];
+    let n = head.nextElementSibling;
+    while (n && n.classList && n.classList.contains('card')) { nodes.push(n); n = n.nextElementSibling; }
+    nodes.forEach((el2, i) => {
+      el2.style.setProperty('--dx', dx + 'px');
+      el2.style.setProperty('--dy', dy + 'px');
+      el2.classList.remove('autofly');
+      void el2.offsetWidth;
+      el2.style.animationDelay = (i * 18) + 'ms';
+      el2.classList.add('autofly');
+      setTimeout(() => { el2.classList.remove('autofly'); el2.style.animationDelay = ''; }, 340 + i * 18);
+    });
   }
 
   function checkStuck() {
@@ -6404,6 +6681,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
+    toggleAuto, autoRunning, stopAuto,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
     startMomentumLoop, renderMomentum, momentumMult, dealAnimation,
@@ -7402,6 +7680,14 @@ const Overlays = (() => {
           'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
           'whenever it scores. (Hotkey: R)</p>' +
 
+          '<h4>The AUTO button</h4>' +
+          '<p><b>AUTO</b> is a toggle, not a one-shot. It plays the board a move at a time, in the order a decent ' +
+          'player would take them — collect the bounty, free the aces, dig out face-down cards, build with the waste, ' +
+          'send home only what nothing can still need, open a column, then turn the stock — and it flies each card ' +
+          'across so you can watch the move happen. Press it again, or just touch the board yourself, to stop. ' +
+          'It stops on its own when the round ends or when it runs out of good moves, and it will never spend a ' +
+          'pass or your ante score for you. (Hotkey: A)</p>' +
+
           '<h4>Duplicate cards and Twins</h4>' +
           '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
           'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
@@ -7544,7 +7830,11 @@ const Overlays = (() => {
   }
 
   function cashOut() {
+    /* the board can finish itself -- if the round is already over, just show the
+       summary rather than doing nothing at all */
+    if (G.phase === 'roundEnd') { Sfx.click(); Overlays.roundEnd(); return; }
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     Sfx.click();
     Game.endRound(false);
@@ -7553,6 +7843,7 @@ const Overlays = (() => {
 
   function draw() {
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     if (Game.drawStock()) { Sfx.deal(); UI.clearSelection(); UI.render(); UI.drainFx(); UI.checkStuck(); }
     else { Sfx.error(); UI.shake($('#stock')); }
@@ -7604,16 +7895,17 @@ const Overlays = (() => {
     return null;
   }
 
+  /* AUTO is a toggle: it plays the board a move at a time until you stop it,
+     the round ends, or it genuinely runs out of things to do. */
   function auto() {
-    if (G.phase !== 'play') return;
-    UI.rushFx();
-    const n = Game.autoCollect();
-    if (n) { UI.render(); UI.drainFx(); }
-    else { Sfx.error(); UI.toast('Nothing can go home right now.'); }
+    if (G.phase !== 'play' && !UI.autoRunning()) { UI.checkStuck(); return; }
+    Sfx.click();
+    UI.toggleAuto();
   }
 
   function undo() {
     if (G.phase !== 'play') return;
+    UI.stopAuto();
     UI.rushFx();
     if (Game.undo()) { Sfx.flip(); UI.clearSelection(); UI.resetDisplayScore(); UI.render(); }
     else { Sfx.error(); UI.toast('No undos left.'); }

@@ -195,7 +195,15 @@ House Rule, Whim, Well outcome and Bandit payout in the game, whether you own it
 Drag a card or a sequence, or click one and click where it goes. Double-click sends a
 card home. **HINT** ranks every option — a card that can go home, a move that uncovers a face-down card,
 a build that lengthens a run, a deal, a reshuffle, or a wish when nothing else moves — then lights the
-card and its destination and tells you why. `Space` deal · `R` reshuffle · `A` auto-collect · `U` undo · `H` hint · `D` deck · `Esc` menu.
+card and its destination and tells you why.
+
+**AUTO** is a toggle, not a one-shot. It plays the board a move at a time — collect the bounty, free the
+aces, dig out face-down cards, build with the waste, send home only what nothing can still need, open a
+column, turn the stock — and flies each card across so you can watch it happen. Press it again (or touch
+the board yourself) to stop. It stops on its own when the round ends or when it runs out of good moves,
+and it never spends a pass or your ante score on your behalf.
+
+`Space` deal · `R` reshuffle · `A` autoplay · `U` undo · `H` hint · `D` deck · `Esc` menu.
 There's a generated lounge soundtrack — the ♪ button in the header mutes it, 🔊 mutes effects.
 Acting during a score animation fast-forwards it rather than being ignored.
 

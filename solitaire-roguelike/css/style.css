@@ -1389,3 +1389,25 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .bnt-raise:hover{ filter:brightness(1.12); }
 .bnt-raise:disabled{ opacity:.4; cursor:default; box-shadow:none; }
 .bnt-empty{ font-size:9px; opacity:.5; text-align:center; padding-top:14px; }
+
+/* ---------------- AUTOPLAY ----------------
+   The card slides in from wherever it just came from, so you can actually see
+   the move rather than the board teleporting between states.                  */
+.card.autofly{
+  animation:autoFly .32s cubic-bezier(.22,.9,.28,1) backwards;
+  z-index:400;
+}
+@keyframes autoFly{
+  0%{ transform:translate(var(--dx), var(--dy)) scale(1.05); box-shadow:0 14px 26px rgba(0,0,0,.6); }
+  70%{ box-shadow:0 8px 18px rgba(0,0,0,.45); }
+  100%{ transform:none; }
+}
+#btn-collect.running{
+  background:linear-gradient(180deg,#ff8a5c,#e0562c);
+  color:#fff; border-color:#ff8a5c; box-shadow:0 3px 0 #8a2f12;
+  animation:autoPulse .9s ease-in-out infinite;
+}
+@keyframes autoPulse{
+  0%,100%{ filter:brightness(1); }
+  50%{ filter:brightness(1.22); }
+}

@@ -523,6 +523,7 @@ const UI = (() => {
 
   let landedId = null;
   function doMove(src, dst) {
+    stopAuto();                       // a hand on the table always wins
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
       if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
@@ -800,7 +801,7 @@ const UI = (() => {
   function drainFx() {
     if (fxBusy) return;
     const q = G.fx.splice(0, G.fx.length);
-    if (!q.length) { syncScore(); return; }
+    if (!q.length) { syncScore(); checkStuck(); return; }
     fxBusy = true;
     runPackets(q, 0);
   }
@@ -1151,7 +1152,107 @@ const UI = (() => {
 
   function afterFx() {
     render();
-    if (G.phase === 'play') checkStuck();
+    checkStuck();
+  }
+
+  /* ---------------- AUTOPLAY ----------------
+     AUTO plays the board a move at a time, taking whatever a decent player would
+     take next and flying the card across so you can see it happen. Press it again
+     to stop. It stops by itself when the round ends, when the board starts
+     repeating, or when there is genuinely nothing left to do.                    */
+  let autoTimer = null, autoSeen = null, autoWait = 0, autoMoves = 0;
+
+  function autoRunning() { return autoTimer !== null; }
+
+  function autoLabel() {
+    const btn = $('#btn-collect');
+    if (!btn) return;
+    btn.textContent = autoRunning() ? 'STOP' : 'AUTO';
+    btn.classList.toggle('running', autoRunning());
+  }
+
+  function stopAuto(msg) {
+    if (autoTimer === null && autoSeen === null) return;   // was not running
+    clearTimeout(autoTimer);
+    autoTimer = null;
+    autoSeen = null;
+    autoLabel();
+    if (msg) toast(msg);
+    checkStuck();
+  }
+
+  function toggleAuto() {
+    if (autoRunning()) { stopAuto(); return; }
+    if (G.phase !== 'play') { checkStuck(); return; }
+    autoSeen = new Set();
+    autoWait = 0;
+    autoMoves = 0;
+    autoTimer = setTimeout(autoTick, 40);
+    autoLabel();
+  }
+
+  function autoTick() {
+    autoTimer = null;
+    if (G.phase !== 'play' || Overlays.isOpen()) { stopAuto(); return; }
+
+    /* let the fireworks land, but do not sit through them forever */
+    if (fxBusy) {
+      autoWait += 90;
+      if (autoWait > 600) rushFx();
+      autoTimer = setTimeout(autoTick, 90);
+      autoLabel();
+      return;
+    }
+    autoWait = 0;
+
+    const plan = Game.autoPlan();
+    if (!plan) {
+      if (!autoMoves) stopAuto('Nothing can be played right now.');
+      else if (Engine.anyMoveAvailable(G, G.run)) stopAuto('Autoplay is out of good moves — the rest is your call.');
+      else stopAuto('Nothing left to play — cash out.');
+      return;
+    }
+
+    /* the same move on the same board twice means it is chasing its own tail */
+    const key = plan.kind + ':' + (plan.cardId || '') + ':' + Game.boardKey();
+    if (autoSeen.has(key)) { stopAuto('That is as far as autoplay can take it — over to you.'); return; }
+    autoSeen.add(key);
+
+    const node = plan.cardId ? document.querySelector('[data-id="' + plan.cardId + '"]') : $('#stock');
+    const from = node ? node.getBoundingClientRect() : null;
+
+    if (!Game.autoPlay(plan)) { stopAuto('Autoplay hit a move it could not make.'); return; }
+    autoMoves++;
+    if (plan.kind === 'draw') Sfx.deal(); else Sfx.place();
+    clearSelection();
+    render();
+    if (plan.cardId && from) flyCard(plan.cardId, from);
+    drainFx();
+
+    if (G.phase !== 'play') { stopAuto(); return; }
+    autoTimer = setTimeout(autoTick, plan.kind === 'draw' ? 190 : 250);
+    autoLabel();
+  }
+
+  /* slide a card in from wherever it just came from -- and bring its run with it */
+  function flyCard(id, from) {
+    const head = document.querySelector('[data-id="' + id + '"]');
+    if (!head) return;
+    const r = head.getBoundingClientRect();
+    const dx = Math.round(from.left - r.left), dy = Math.round(from.top - r.top);
+    if (!dx && !dy) return;
+    const nodes = [head];
+    let n = head.nextElementSibling;
+    while (n && n.classList && n.classList.contains('card')) { nodes.push(n); n = n.nextElementSibling; }
+    nodes.forEach((el2, i) => {
+      el2.style.setProperty('--dx', dx + 'px');
+      el2.style.setProperty('--dy', dy + 'px');
+      el2.classList.remove('autofly');
+      void el2.offsetWidth;
+      el2.style.animationDelay = (i * 18) + 'ms';
+      el2.classList.add('autofly');
+      setTimeout(() => { el2.classList.remove('autofly'); el2.style.animationDelay = ''; }, 340 + i * 18);
+    });
   }
 
   function checkStuck() {
@@ -1351,6 +1452,7 @@ const UI = (() => {
     render, renderHud, renderMantel, renderBoard, renderControls, cardEl, el, $, $$,
     drainFx, toast, shake, screenShake, burst, fmt, clearSelection, bindPileTargets,
     showTip, hideTip, resetDisplayScore, checkStuck, doMove, floatText, bannerText,
+    toggleAuto, autoRunning, stopAuto,
     renderCombo, flashScreen, confetti, rushFx, renderReshuffle, showHint, clearHints,
     installDragHandlers, cancelDrag, sweepGhosts, attachInspect, renderCut,
     startMomentumLoop, renderMomentum, momentumMult, dealAnimation,
