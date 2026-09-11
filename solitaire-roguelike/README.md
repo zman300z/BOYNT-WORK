@@ -131,7 +131,8 @@ still land on your score as normal). Then it's your call:
 - **CASH IT** — the whole pot goes straight onto your round score. Safe.
 - **SPIN THE WHEEL** — takes the pot to roulette. Nineteen pockets: nine red, nine black, one green zero.
   Back **RED** or **BLACK** (9 in 19) and the pot pays **3×**; back the green **0** (1 in 19) and it pays **20×**.
-  Winning also raises your **HEAT**, which multiplies every score for the rest of the round.
+  Winning also raises your **HEAT**, which multiplies every score for the rest of the round — cash bets
+  heat the table up exactly the same way (+1 on a colour, +3 on the zero), and a miss resets it.
 - **If it misses**, the pot is gone *and the same amount again comes off your ante total* — this round's score
   first, then your banked rounds. The real stake is double the pot, so only take a big one to the wheel when
   you can afford to lose twice its size.
@@ -156,6 +157,19 @@ currency: work the stock, or re-order it. Out of passes you can still buy one fo
 off your ANTE total** (this round's score first, then banked rounds) — a genuine sacrifice of quota progress.
 Curios and the Counter grant free reshuffles that cost no pass, and a **Riffle** card reshuffles free whenever
 it scores. Hotkey `R`.
+
+### The House Edge
+
+Up to Ante 3 the casino takes nothing. From **Ante 4** it skims a percentage off the top of *every score
+you make*, before it reaches your round total — **6%**, then another 6 points every ante, to a ceiling of
+**30%** at Ante 8. A badge in the header shows the current rate; hover it to see how much has gone this
+round.
+
+It only touches points. Your money and your CASH OUT purse are never skimmed, and the **Side Pot takes its
+share off the full score before the edge bites** — so running the pot is how you claw some of it back.
+One Curio, **The Inside Man**, halves the edge for the rest of the run, and nothing else in the game
+touches it. Since it is a flat percentage, the answer is never to play safe: it is to make the rest of a
+much bigger number.
 
 ### The Dealer's Whim
 

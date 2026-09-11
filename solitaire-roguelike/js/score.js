@@ -217,12 +217,23 @@ const Score = (() => {
     }
 
     ctx.mult = Math.max(0, ctx.mult);
-    const total = Math.round(ctx.chips * ctx.mult);
+    let total = Math.round(ctx.chips * ctx.mult);
+
+    /* the house takes its cut off the top of every score at the high antes */
+    const edge = Engine.houseEdge(G.run);
+    let skim = 0;
+    if (edge > 0 && total > 0) {
+      skim = Math.round(total * edge);
+      total -= skim;
+      G.round.skimmed = (G.round.skimmed || 0) + skim;
+    }
+
     G.round.score += total;
     G.run.stats.best = Math.max(G.run.stats.best, total);
 
     return {
       event: ev.event,
+      skim, edge,
       label: ev.label || labelFor(ev),
       card: ev.card || null,
       chips: Math.round(ctx.chips),

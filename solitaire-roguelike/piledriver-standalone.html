@@ -168,7 +168,8 @@ body::before{
   flex:1; display:grid; gap:10px; justify-content:center; align-content:start;
   grid-template-columns:repeat(var(--cols,7), var(--cw)); min-height:0;
 }
-.tab-pile{ height:100%; min-height:var(--ch); border-radius:9px; border:2px dashed rgba(255,255,255,.09); }
+.tab-pile{ height:100%; min-height:var(--ch); border-radius:9px; border:2px dashed rgba(255,255,255,.09);
+  transform-origin:top center; }
 
 /* ---------------- CARDS ---------------- */
 .card{
@@ -742,7 +743,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 }
 
 .badge.whim{ display:flex; align-items:center; gap:5px; cursor:help; font-family:var(--display); font-size:10px; }
-.badge.whim .whim-ico{ width:15px; height:15px; }
+.badge .whim-ico{ width:15px; height:15px; flex:0 0 auto; }
 .badge.whim.mood-good{ border-color:var(--lime); color:var(--lime); background:rgba(126,231,135,.12); }
 .badge.whim.mood-bad{ border-color:var(--hot); color:var(--hot); background:rgba(255,77,109,.12); }
 .badge.whim.mood-mixed{ border-color:var(--gold); color:var(--gold); background:rgba(255,209,102,.12); }
@@ -1440,6 +1441,24 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 }
 .rw-purse b{ color:var(--gold); opacity:1; }
 
+/* ---------------- THE HOUSE EDGE ----------------
+   The one number that only ever moves against you. It gets its own badge so the
+   top antes never feel like the maths quietly changed underneath you.         */
+.badge.edge{
+  display:flex; align-items:center; gap:5px; cursor:help;
+  border-color:rgba(255,77,109,.45); background:rgba(255,77,109,.1); color:#ffb3c0;
+}
+.badge.edge.steep{
+  border-color:var(--hot); color:#fff;
+  background:rgba(255,77,109,.2); animation:edgeThrob 2.4s ease-in-out infinite;
+}
+@keyframes edgeThrob{
+  0%,100%{ box-shadow:0 0 0 rgba(255,77,109,0); }
+  50%{ box-shadow:0 0 18px rgba(255,77,109,.45); }
+}
+.tip-kind.edge-kind{ color:var(--hot); }
+.fx-skim{ color:var(--hot); font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.8); }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -1452,6 +1471,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
       <div class="badge ante">ANTE <b id="ante-num">1</b></div>
       <div class="badge round">ROUND <b id="round-num">1/3</b></div>
       <div class="badge whim" id="whim-badge" style="display:none"></div>
+      <div class="badge edge" id="edge-badge" style="display:none"></div>
     </div>
 
     <div class="tempo" id="tempo" title="TEMPO - play fast and every score is worth more">
@@ -1751,6 +1771,8 @@ const VOICE = {
 
 const ICONS = {
   /* --- generic --- */
+  mask: '<path class="f" d="M3.6 6.5c2.9-1 5.7-1.5 8.4-1.5s5.5.5 8.4 1.5c.2 3.6-.5 6.9-2.2 9.7A6.5 6.5 0 0 1 12 19a6.5 6.5 0 0 1-6.2-3.3C4.1 13.4 3.4 10.1 3.6 6.5z"/><path d="M3.6 6.5c2.9-1 5.7-1.5 8.4-1.5s5.5.5 8.4 1.5c.2 3.6-.5 6.9-2.2 9.7A6.5 6.5 0 0 1 12 19a6.5 6.5 0 0 1-6.2-3.3C4.1 13.4 3.4 10.1 3.6 6.5z"/><path d="M6.6 9.6c1.2-.9 2.6-.9 3.8 0-1.2 1.1-2.6 1.1-3.8 0zM13.6 9.6c1.2-.9 2.6-.9 3.8 0-1.2 1.1-2.6 1.1-3.8 0z"/><path d="M9.8 14.6c1.5.8 2.9.8 4.4 0"/>',
+  skim: '<path d="M4 7.5h16"/><path class="f" d="M5.5 7.5h13l-1.4 10a2 2 0 0 1-2 1.7H8.9a2 2 0 0 1-2-1.7z"/><path d="M9.4 7.5V5.8A1.8 1.8 0 0 1 11.2 4h1.6a1.8 1.8 0 0 1 1.8 1.8v1.7"/><path d="M10 11.5v4M14 11.5v4"/>',
   unknown: '<circle cx="12" cy="12" r="8"/><path d="M12 16v.01M12 8a2.4 2.4 0 0 1 1.6 4.2c-.9.7-1.6 1-1.6 1.8"/>',
 
   /* --- curios --- */
@@ -1914,6 +1936,9 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  houseEdgeFromAnte: 4,     // the casino starts taking a cut here
+  houseEdgePer: 0.06,       // and another 6% of every score per ante after
+  houseEdgeCap: 0.30,
   bountyDivisor: 10,        // a bounty's base Chips are quota / this
   bountyGrowth: 0.3,        // each one you collect makes the next richer
   bountyCash: 3,            // and pays this in cash
@@ -2210,6 +2235,13 @@ const CURIOS = [
   { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
     text: 'Every winning Side Pot flip also pays you $5.',
     mods: { dareBonus: true } },
+
+  { id: 'inside_man', name: 'The Inside Man', icon: 'mask', rarity: 'rare', cost: 11,
+    text: 'The House Edge takes half as much.',
+    long: 'From Ante ' + 4 + ' the house skims a percentage off every score you make, and it climbs every ante. ' +
+          'Somebody on the inside halves that skim for the rest of the run. At the top antes this is the difference ' +
+          'between a quota you can reach and one you cannot.',
+    mods: { edgeCut: 0.5 } },
 
   { id: 'bounty_hunter', name: 'Bounty Hunter', icon: 'magnifier', rarity: 'uncommon', cost: 8,
     text: 'Bounties are worth 60% more.',
@@ -2938,7 +2970,8 @@ const Engine = (() => {
       reshuffles: 0, heatPer: 0,
       stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareBonus: false, firstFlipSafe: false,
       potShare: 0,
-      bountyMult: 0, bountyBonus: false
+      bountyMult: 0, bountyBonus: false,
+      edgeCut: 0
     };
     const merge = src => {
       if (!src) return;
@@ -3017,6 +3050,17 @@ const Engine = (() => {
     };
   }
 
+  /* THE HOUSE EDGE. From Ante 4 the casino takes a percentage off every score
+     you make, and another 6% of it every ante after that. It is the one thing
+     that scales purely against you -- a Curio can halve it, nothing removes it. */
+  function houseEdge(run) {
+    if (!run || run.ante < TUNE.houseEdgeFromAnte) return 0;
+    const steps = run.ante - TUNE.houseEdgeFromAnte + 1;
+    const raw = Math.min(TUNE.houseEdgeCap, steps * TUNE.houseEdgePer);
+    const cut = Math.min(0.9, mods(run).edgeCut || 0);
+    return +(raw * (1 - cut)).toFixed(4);
+  }
+
   function newRound(run) {
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
@@ -3052,6 +3096,7 @@ const Engine = (() => {
         bounty: null,
         bountiesCollected: 0,
         cashSwing: 0,
+        skimmed: 0,
         over: false,
         won: false
       }
@@ -3189,7 +3234,7 @@ const Engine = (() => {
   }
 
   return {
-    newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
+    newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,
@@ -3417,12 +3462,23 @@ const Score = (() => {
     }
 
     ctx.mult = Math.max(0, ctx.mult);
-    const total = Math.round(ctx.chips * ctx.mult);
+    let total = Math.round(ctx.chips * ctx.mult);
+
+    /* the house takes its cut off the top of every score at the high antes */
+    const edge = Engine.houseEdge(G.run);
+    let skim = 0;
+    if (edge > 0 && total > 0) {
+      skim = Math.round(total * edge);
+      total -= skim;
+      G.round.skimmed = (G.round.skimmed || 0) + skim;
+    }
+
     G.round.score += total;
     G.run.stats.best = Math.max(G.run.stats.best, total);
 
     return {
       event: ev.event,
+      skim, edge,
       label: ev.label || labelFor(ev),
       card: ev.card || null,
       chips: Math.round(ctx.chips),
@@ -3592,7 +3648,10 @@ const Game = (() => {
 
   function scoreEvent(ev) {
     const packet = Score.event(G, ev);
-    if (packet.total > 0) addToPot(packet.total);
+    /* the pot takes its share off the FULL score, before the house edge bites --
+       which is what makes the Side Pot worth running at the top antes */
+    const gross = packet.total + (packet.skim || 0);
+    if (gross > 0) addToPot(gross);
     push(packet);
     if (ev.card && ev.card.enhancement === 'glass' && Math.random() < (G.run.luck || 1) / 5) {
       shatter(ev.card);
@@ -3895,13 +3954,18 @@ const Game = (() => {
     if (win) {
       payout = stake * pay;
       G.round.cashSwing += payout - stake;
+      /* a win at the wheel is a win at the wheel -- it heats the table up the
+         same way a pot flip does, and the zero runs hot */
+      G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) G.round.cashSwing += 5;
+      bumpMomentum();
     } else {
       G.round.cashSwing -= stake;
+      G.round.heat = 0;
     }
     save();
     return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, before: purse, purse: roundPurse() };
+             staked: stake, payout, before: purse, purse: roundPurse(), heat: G.round.heat };
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -5283,6 +5347,26 @@ const UI = (() => {
   }
 
   let displayScore = 0;
+  /* how a tableau column fans out, and how far it is allowed to close up */
+  const FAN_UP = 30, FAN_DOWN = 15, FAN_FLOOR = 0.42, BADGE_ROOM = 44;
+  let cardHCache = 0, cardHWidth = 0;
+  /* the real gap between the top of the tableau and the controls -- measured off
+     the controls rather than trusting a flex height that may not have settled */
+  function tableauRoom(t) {
+    const top = t.getBoundingClientRect().top;
+    const ctl = $('#controls');
+    const floor = ctl ? ctl.getBoundingClientRect().top : window.innerHeight;
+    return Math.min(t.clientHeight || 420, Math.max(120, floor - top));
+  }
+
+  function cardH() {
+    if (!cardHCache || cardHWidth !== window.innerWidth) {
+      cardHCache = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
+      cardHWidth = window.innerWidth;
+    }
+    return cardHCache;
+  }
+
   let fxBusy = false;
   let rush = false;          // player acted mid-animation: burn through what's left
   let selection = null;      // {zone, col, index, suit}
@@ -5351,9 +5435,11 @@ const UI = (() => {
     else sweepGhosts();
     renderHud();
     renderMantel();
-    renderBoard();
-    renderControls();
+    /* everything that owns space around the tableau is laid out first, so when a
+       column measures the room it has left it gets the settled answer */
     renderBounty();
+    renderControls();
+    renderBoard();
     renderMomentum(true);
   }
 
@@ -5438,6 +5524,28 @@ const UI = (() => {
           '<div class="tip-kind whim-kind">THE DEALER\'S WHIM — this round only</div>' +
           '<div class="tip-text">' + w.text + '</div>');
         wb.onpointerleave = hideTip;
+      }
+    }
+    const eb = $('#edge-badge');
+    if (eb) {
+      const edge = Engine.houseEdge(run);
+      eb.style.display = edge > 0 ? '' : 'none';
+      if (edge > 0) {
+        const cut = Engine.mods(run).edgeCut;
+        eb.className = 'badge edge' + (edge >= 0.2 ? ' steep' : '');
+        eb.innerHTML = icon('skim', 'whim-ico') + '<span>HOUSE \u2212' + Math.round(edge * 100) + '%</span>';
+        eb.onpointerenter = e => showTip(e.currentTarget,
+          '<div class="tip-title">' + icon('skim', 'tip-ico') + ' THE HOUSE EDGE</div>' +
+          '<div class="tip-kind edge-kind">PERMANENT \u2014 from Ante ' + TUNE.houseEdgeFromAnte + '</div>' +
+          '<div class="tip-text">The casino takes <b>' + Math.round(edge * 100) + '%</b> off the top of every score you make, ' +
+          'before it reaches your round total. It grows by ' + Math.round(TUNE.houseEdgePer * 100) +
+          ' points every Ante, to a ceiling of ' + Math.round(TUNE.houseEdgeCap * 100) + '%.</div>' +
+          (cut ? '<div class="tip-text">The Inside Man is halving it — it would be ' +
+                 Math.round(Math.min(TUNE.houseEdgeCap, (run.ante - TUNE.houseEdgeFromAnte + 1) * TUNE.houseEdgePer) * 100) +
+                 '% without him.</div>' : '') +
+          '<div class="tip-rows"><div class="tip-row"><span>Taken this round</span><i>' +
+          fmt(Math.round((G.round && G.round.skimmed) || 0)) + '</i></div></div>');
+        eb.onpointerleave = hideTip;
       }
     }
     $('#round-score').textContent = fmt(Math.round(displayScore));
@@ -5706,9 +5814,20 @@ const UI = (() => {
       p.dataset.zone = 'tableau';
       p.dataset.col = col;
       if (!pile.length) p.appendChild(el('div', 'pile-ghost', 'K'));
-      const avail = Math.max(260, t.clientHeight || 420) - 20;
-      const need = pile.reduce((a, c) => a + (c.faceUp ? 30 : 15), 0);
-      const squeeze = need > avail ? avail / need : 1;
+      /* A column has to fit between the top row and the controls. The fan closes
+         up first -- down to FAN_FLOOR, where the rank corner is still readable --
+         and only a genuinely absurd pile then scales the whole column down, which
+         reads as depth rather than as cards falling off the table. */
+      const ch = cardH();
+      const avail = Math.max(ch + 30, tableauRoom(t) - BADGE_ROOM);
+      const steps = pile.slice(0, -1).reduce((a, c) => a + (c.faceUp ? FAN_UP : FAN_DOWN), 0);
+      let squeeze = 1, scale = 1;
+      if (steps > 0 && steps + ch > avail) {
+        squeeze = Math.max(FAN_FLOOR, (avail - ch) / steps);
+        const tall = steps * squeeze + ch;
+        if (tall > avail) scale = Math.max(0.5, avail / tall);
+      }
+      p.style.transform = scale === 1 ? '' : 'scale(' + scale.toFixed(3) + ')';
       let y = 0, lastTop = 0;
       let lastDownIdx = -1;
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
@@ -5720,7 +5839,7 @@ const UI = (() => {
         n.style.zIndex = i;
         n.dataset.col = col;
         n.dataset.index = i;
-        y += (c.faceUp ? 30 : 15) * squeeze;
+        y += (c.faceUp ? FAN_UP : FAN_DOWN) * squeeze;
         if (c.faceUp) { attachDrag(n, { zone: 'tableau', col, index: i }); attachInspect(n, c); }
         p.appendChild(n);
       });
@@ -5730,8 +5849,7 @@ const UI = (() => {
         if (only.faceUp && (Engine.foundationTargetFor(b, only) || Engine.twinTargetFor(b, only))) {
           const badge = el('div', 'run-badge ready solo',
             '<span class="rb-go">SEND IT HOME</span>');
-          const ch2 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
-          badge.style.top = Math.round(lastTop + ch2 + 5) + 'px';
+          badge.style.top = Math.round(lastTop + ch + 5) + 'px';
           p.appendChild(badge);
         }
       }
@@ -5745,7 +5863,6 @@ const UI = (() => {
         const badge = el('div', 'run-badge' + (ready ? ' ready' : ''),
           '<span class="rb-n">RUN ' + runLen + '</span>' +
           (ready ? '<span class="rb-go">CASH IN</span>' : ''));
-        const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
         badge.style.top = Math.round(lastTop + ch + 5) + 'px';
         const cardName = RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym;
         badge.addEventListener('pointerenter', e => showTip(e.currentTarget,
@@ -6205,7 +6322,14 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 170 * spd());
+          /* and then the house reaches over and takes its cut */
+          if (p.skim > 0) {
+            setTimeout(() => {
+              floatText($('#edge-badge') || box, '\u2212' + fmt(p.skim) + ' TO THE HOUSE', 'fx-skim');
+              Sfx.error();
+            }, 110 * spd());
+          }
+          setTimeout(() => { box.classList.remove('live'); done(); }, (p.skim > 0 ? 280 : 170) * spd());
         }, 45 * spd());
         return;
       }
@@ -7366,7 +7490,7 @@ const Overlays = (() => {
         '</div>' +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
         '<div class="wheel-warn">' + (cash
-          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b>; a loss comes off it. Your banked cash is never touched.'
+          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b> and raises <b>HEAT</b>; a loss comes off the purse and cools the table. Your banked cash is never touched.'
           : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
@@ -7454,7 +7578,7 @@ const Overlays = (() => {
         (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
         (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
-                '</b> — up $' + (res.purse - res.before) + ' on the spin</span>'
+                '</b> — up $' + (res.purse - res.before) + ', and HEAT is now X' + Game.heatMult() + '</span>'
               : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
@@ -7508,6 +7632,7 @@ const Overlays = (() => {
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
     { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
     { id: 'bounty',  name: 'THE BOUNTY', sub: 'the wanted card, and the clock you can start' },
+    { id: 'edge',    name: 'HOUSE EDGE', sub: 'what the casino takes at the high antes' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -7615,6 +7740,27 @@ const Overlays = (() => {
         'The pot takes a much bigger cut of every score.', '');
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
+    } else if (almanacTab === 'edge') {
+      const steps = [];
+      for (let a = TUNE.houseEdgeFromAnte; a <= TUNE.finalAnte; a++) {
+        steps.push('Ante ' + a + ': <b>' + Math.round(Math.min(TUNE.houseEdgeCap,
+          (a - TUNE.houseEdgeFromAnte + 1) * TUNE.houseEdgePer) * 100) + '%</b>');
+      }
+      html += almEntry('skim', 'The house takes a cut', 'from Ante ' + TUNE.houseEdgeFromAnte,
+        'Every score you make is skimmed before it reaches your round total. Up to Ante ' +
+        (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing; after that it takes more every ante.',
+        steps.join(' &nbsp;·&nbsp; '));
+      html += almEntry('coinstack', 'It comes off the score, not the cash',
+        'chips only',
+        'The skim reduces the points added to your round score. It never touches your money or your CASH OUT purse — and the Side Pot takes its share off the FULL score, before the house edge bites.',
+        'That last part matters: at the top antes the pot is the one thing still being fed the whole number, so running the pot and cashing it is how you get those points back.');
+      html += almEntry('mask', 'The Inside Man', 'curio',
+        'Halves the House Edge for the rest of the run.',
+        'The only thing in the game that touches it. At the top antes it is worth more than most multipliers.');
+      html += almEntry('twinflame', 'What actually beats it', 'strategy',
+        'HEAT, Tempo and the Bounty all scale with how hard you play, and none of them are skimmed at a higher rate.',
+        'The edge is a flat percentage, so the answer is never to play safe — it is to make the remaining ' +
+        (100 - Math.round(TUNE.houseEdgeCap * 100)) + '% of a much bigger number.');
     } else if (almanacTab === 'bounty') {
       html += almEntry('magnifier', 'One card is always WANTED', 'automatic',
         'The table posts a card at the start of every round. Send that exact card to a foundation and it pays out on the spot, then a new face goes straight up.',
@@ -7737,6 +7883,17 @@ const Overlays = (() => {
           'this round first, then your banked rounds — which is a genuine sacrifice of quota progress. ' +
           'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
           'whenever it scores. (Hotkey: R)</p>' +
+
+          '<h4>The House Edge</h4>' +
+          '<p>Up to Ante ' + (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing. From <b>Ante ' + TUNE.houseEdgeFromAnte + '</b> ' +
+          'it skims a percentage off the top of <i>every score you make</i>, before it reaches your round total — ' +
+          Math.round(TUNE.houseEdgePer * 100) + '% at first, and another ' + Math.round(TUNE.houseEdgePer * 100) + ' points every ante after, ' +
+          'up to ' + Math.round(TUNE.houseEdgeCap * 100) + '%. The badge in the header always shows the current rate, and hovering it ' +
+          'tells you how much has gone that round.</p>' +
+          '<p>It only touches points. Your money and your CASH OUT purse are never skimmed, and the <b>Side Pot ' +
+          'takes its share off the full score before the house edge bites</b> — so running the pot is how you claw some of it back. ' +
+          'One Curio — <b>The Inside Man</b> — halves it, and nothing else in the game touches it. Since it is a flat ' +
+          'percentage, the answer is never to play safe: it is to make the rest of a much bigger number.</p>' +
 
           '<h4>The AUTO button</h4>' +
           '<p><b>AUTO</b> is a toggle, not a one-shot. It plays the board a move at a time, in the order a decent ' +

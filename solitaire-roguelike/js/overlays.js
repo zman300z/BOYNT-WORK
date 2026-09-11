@@ -621,7 +621,7 @@ const Overlays = (() => {
         '</div>' +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
         '<div class="wheel-warn">' + (cash
-          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b>; a loss comes off it. Your banked cash is never touched.'
+          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b> and raises <b>HEAT</b>; a loss comes off the purse and cools the table. Your banked cash is never touched.'
           : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
@@ -709,7 +709,7 @@ const Overlays = (() => {
         (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
         (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
-                '</b> — up $' + (res.purse - res.before) + ' on the spin</span>'
+                '</b> — up $' + (res.purse - res.before) + ', and HEAT is now X' + Game.heatMult() + '</span>'
               : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
@@ -763,6 +763,7 @@ const Overlays = (() => {
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
     { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
     { id: 'bounty',  name: 'THE BOUNTY', sub: 'the wanted card, and the clock you can start' },
+    { id: 'edge',    name: 'HOUSE EDGE', sub: 'what the casino takes at the high antes' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -870,6 +871,27 @@ const Overlays = (() => {
         'The pot takes a much bigger cut of every score.', '');
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
+    } else if (almanacTab === 'edge') {
+      const steps = [];
+      for (let a = TUNE.houseEdgeFromAnte; a <= TUNE.finalAnte; a++) {
+        steps.push('Ante ' + a + ': <b>' + Math.round(Math.min(TUNE.houseEdgeCap,
+          (a - TUNE.houseEdgeFromAnte + 1) * TUNE.houseEdgePer) * 100) + '%</b>');
+      }
+      html += almEntry('skim', 'The house takes a cut', 'from Ante ' + TUNE.houseEdgeFromAnte,
+        'Every score you make is skimmed before it reaches your round total. Up to Ante ' +
+        (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing; after that it takes more every ante.',
+        steps.join(' &nbsp;·&nbsp; '));
+      html += almEntry('coinstack', 'It comes off the score, not the cash',
+        'chips only',
+        'The skim reduces the points added to your round score. It never touches your money or your CASH OUT purse — and the Side Pot takes its share off the FULL score, before the house edge bites.',
+        'That last part matters: at the top antes the pot is the one thing still being fed the whole number, so running the pot and cashing it is how you get those points back.');
+      html += almEntry('mask', 'The Inside Man', 'curio',
+        'Halves the House Edge for the rest of the run.',
+        'The only thing in the game that touches it. At the top antes it is worth more than most multipliers.');
+      html += almEntry('twinflame', 'What actually beats it', 'strategy',
+        'HEAT, Tempo and the Bounty all scale with how hard you play, and none of them are skimmed at a higher rate.',
+        'The edge is a flat percentage, so the answer is never to play safe — it is to make the remaining ' +
+        (100 - Math.round(TUNE.houseEdgeCap * 100)) + '% of a much bigger number.');
     } else if (almanacTab === 'bounty') {
       html += almEntry('magnifier', 'One card is always WANTED', 'automatic',
         'The table posts a card at the start of every round. Send that exact card to a foundation and it pays out on the spot, then a new face goes straight up.',
@@ -992,6 +1014,17 @@ const Overlays = (() => {
           'this round first, then your banked rounds — which is a genuine sacrifice of quota progress. ' +
           'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
           'whenever it scores. (Hotkey: R)</p>' +
+
+          '<h4>The House Edge</h4>' +
+          '<p>Up to Ante ' + (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing. From <b>Ante ' + TUNE.houseEdgeFromAnte + '</b> ' +
+          'it skims a percentage off the top of <i>every score you make</i>, before it reaches your round total — ' +
+          Math.round(TUNE.houseEdgePer * 100) + '% at first, and another ' + Math.round(TUNE.houseEdgePer * 100) + ' points every ante after, ' +
+          'up to ' + Math.round(TUNE.houseEdgeCap * 100) + '%. The badge in the header always shows the current rate, and hovering it ' +
+          'tells you how much has gone that round.</p>' +
+          '<p>It only touches points. Your money and your CASH OUT purse are never skimmed, and the <b>Side Pot ' +
+          'takes its share off the full score before the house edge bites</b> — so running the pot is how you claw some of it back. ' +
+          'One Curio — <b>The Inside Man</b> — halves it, and nothing else in the game touches it. Since it is a flat ' +
+          'percentage, the answer is never to play safe: it is to make the rest of a much bigger number.</p>' +
 
           '<h4>The AUTO button</h4>' +
           '<p><b>AUTO</b> is a toggle, not a one-shot. It plays the board a move at a time, in the order a decent ' +

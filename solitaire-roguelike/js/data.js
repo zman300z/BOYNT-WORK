@@ -55,6 +55,9 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  houseEdgeFromAnte: 4,     // the casino starts taking a cut here
+  houseEdgePer: 0.06,       // and another 6% of every score per ante after
+  houseEdgeCap: 0.30,
   bountyDivisor: 10,        // a bounty's base Chips are quota / this
   bountyGrowth: 0.3,        // each one you collect makes the next richer
   bountyCash: 3,            // and pays this in cash
@@ -351,6 +354,13 @@ const CURIOS = [
   { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
     text: 'Every winning Side Pot flip also pays you $5.',
     mods: { dareBonus: true } },
+
+  { id: 'inside_man', name: 'The Inside Man', icon: 'mask', rarity: 'rare', cost: 11,
+    text: 'The House Edge takes half as much.',
+    long: 'From Ante ' + 4 + ' the house skims a percentage off every score you make, and it climbs every ante. ' +
+          'Somebody on the inside halves that skim for the rest of the run. At the top antes this is the difference ' +
+          'between a quota you can reach and one you cannot.',
+    mods: { edgeCut: 0.5 } },
 
   { id: 'bounty_hunter', name: 'Bounty Hunter', icon: 'magnifier', rarity: 'uncommon', cost: 8,
     text: 'Bounties are worth 60% more.',

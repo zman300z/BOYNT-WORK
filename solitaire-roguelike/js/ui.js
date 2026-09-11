@@ -16,6 +16,26 @@ const UI = (() => {
   }
 
   let displayScore = 0;
+  /* how a tableau column fans out, and how far it is allowed to close up */
+  const FAN_UP = 30, FAN_DOWN = 15, FAN_FLOOR = 0.42, BADGE_ROOM = 44;
+  let cardHCache = 0, cardHWidth = 0;
+  /* the real gap between the top of the tableau and the controls -- measured off
+     the controls rather than trusting a flex height that may not have settled */
+  function tableauRoom(t) {
+    const top = t.getBoundingClientRect().top;
+    const ctl = $('#controls');
+    const floor = ctl ? ctl.getBoundingClientRect().top : window.innerHeight;
+    return Math.min(t.clientHeight || 420, Math.max(120, floor - top));
+  }
+
+  function cardH() {
+    if (!cardHCache || cardHWidth !== window.innerWidth) {
+      cardHCache = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
+      cardHWidth = window.innerWidth;
+    }
+    return cardHCache;
+  }
+
   let fxBusy = false;
   let rush = false;          // player acted mid-animation: burn through what's left
   let selection = null;      // {zone, col, index, suit}
@@ -84,9 +104,11 @@ const UI = (() => {
     else sweepGhosts();
     renderHud();
     renderMantel();
-    renderBoard();
-    renderControls();
+    /* everything that owns space around the tableau is laid out first, so when a
+       column measures the room it has left it gets the settled answer */
     renderBounty();
+    renderControls();
+    renderBoard();
     renderMomentum(true);
   }
 
@@ -171,6 +193,28 @@ const UI = (() => {
           '<div class="tip-kind whim-kind">THE DEALER\'S WHIM — this round only</div>' +
           '<div class="tip-text">' + w.text + '</div>');
         wb.onpointerleave = hideTip;
+      }
+    }
+    const eb = $('#edge-badge');
+    if (eb) {
+      const edge = Engine.houseEdge(run);
+      eb.style.display = edge > 0 ? '' : 'none';
+      if (edge > 0) {
+        const cut = Engine.mods(run).edgeCut;
+        eb.className = 'badge edge' + (edge >= 0.2 ? ' steep' : '');
+        eb.innerHTML = icon('skim', 'whim-ico') + '<span>HOUSE \u2212' + Math.round(edge * 100) + '%</span>';
+        eb.onpointerenter = e => showTip(e.currentTarget,
+          '<div class="tip-title">' + icon('skim', 'tip-ico') + ' THE HOUSE EDGE</div>' +
+          '<div class="tip-kind edge-kind">PERMANENT \u2014 from Ante ' + TUNE.houseEdgeFromAnte + '</div>' +
+          '<div class="tip-text">The casino takes <b>' + Math.round(edge * 100) + '%</b> off the top of every score you make, ' +
+          'before it reaches your round total. It grows by ' + Math.round(TUNE.houseEdgePer * 100) +
+          ' points every Ante, to a ceiling of ' + Math.round(TUNE.houseEdgeCap * 100) + '%.</div>' +
+          (cut ? '<div class="tip-text">The Inside Man is halving it — it would be ' +
+                 Math.round(Math.min(TUNE.houseEdgeCap, (run.ante - TUNE.houseEdgeFromAnte + 1) * TUNE.houseEdgePer) * 100) +
+                 '% without him.</div>' : '') +
+          '<div class="tip-rows"><div class="tip-row"><span>Taken this round</span><i>' +
+          fmt(Math.round((G.round && G.round.skimmed) || 0)) + '</i></div></div>');
+        eb.onpointerleave = hideTip;
       }
     }
     $('#round-score').textContent = fmt(Math.round(displayScore));
@@ -439,9 +483,20 @@ const UI = (() => {
       p.dataset.zone = 'tableau';
       p.dataset.col = col;
       if (!pile.length) p.appendChild(el('div', 'pile-ghost', 'K'));
-      const avail = Math.max(260, t.clientHeight || 420) - 20;
-      const need = pile.reduce((a, c) => a + (c.faceUp ? 30 : 15), 0);
-      const squeeze = need > avail ? avail / need : 1;
+      /* A column has to fit between the top row and the controls. The fan closes
+         up first -- down to FAN_FLOOR, where the rank corner is still readable --
+         and only a genuinely absurd pile then scales the whole column down, which
+         reads as depth rather than as cards falling off the table. */
+      const ch = cardH();
+      const avail = Math.max(ch + 30, tableauRoom(t) - BADGE_ROOM);
+      const steps = pile.slice(0, -1).reduce((a, c) => a + (c.faceUp ? FAN_UP : FAN_DOWN), 0);
+      let squeeze = 1, scale = 1;
+      if (steps > 0 && steps + ch > avail) {
+        squeeze = Math.max(FAN_FLOOR, (avail - ch) / steps);
+        const tall = steps * squeeze + ch;
+        if (tall > avail) scale = Math.max(0.5, avail / tall);
+      }
+      p.style.transform = scale === 1 ? '' : 'scale(' + scale.toFixed(3) + ')';
       let y = 0, lastTop = 0;
       let lastDownIdx = -1;
       pile.forEach((c, i) => { if (!c.faceUp) lastDownIdx = i; });
@@ -453,7 +508,7 @@ const UI = (() => {
         n.style.zIndex = i;
         n.dataset.col = col;
         n.dataset.index = i;
-        y += (c.faceUp ? 30 : 15) * squeeze;
+        y += (c.faceUp ? FAN_UP : FAN_DOWN) * squeeze;
         if (c.faceUp) { attachDrag(n, { zone: 'tableau', col, index: i }); attachInspect(n, c); }
         p.appendChild(n);
       });
@@ -463,8 +518,7 @@ const UI = (() => {
         if (only.faceUp && (Engine.foundationTargetFor(b, only) || Engine.twinTargetFor(b, only))) {
           const badge = el('div', 'run-badge ready solo',
             '<span class="rb-go">SEND IT HOME</span>');
-          const ch2 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
-          badge.style.top = Math.round(lastTop + ch2 + 5) + 'px';
+          badge.style.top = Math.round(lastTop + ch + 5) + 'px';
           p.appendChild(badge);
         }
       }
@@ -478,7 +532,6 @@ const UI = (() => {
         const badge = el('div', 'run-badge' + (ready ? ' ready' : ''),
           '<span class="rb-n">RUN ' + runLen + '</span>' +
           (ready ? '<span class="rb-go">CASH IN</span>' : ''));
-        const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch')) || 106;
         badge.style.top = Math.round(lastTop + ch + 5) + 'px';
         const cardName = RANK_NAMES[cashCard.rank] + SUITS[cashCard.suit].sym;
         badge.addEventListener('pointerenter', e => showTip(e.currentTarget,
@@ -938,7 +991,14 @@ const UI = (() => {
         setScoreBox(p.chips, p.mult);
         setTimeout(() => {
           slam(p);
-          setTimeout(() => { box.classList.remove('live'); done(); }, 170 * spd());
+          /* and then the house reaches over and takes its cut */
+          if (p.skim > 0) {
+            setTimeout(() => {
+              floatText($('#edge-badge') || box, '\u2212' + fmt(p.skim) + ' TO THE HOUSE', 'fx-skim');
+              Sfx.error();
+            }, 110 * spd());
+          }
+          setTimeout(() => { box.classList.remove('live'); done(); }, (p.skim > 0 ? 280 : 170) * spd());
         }, 45 * spd());
         return;
       }

@@ -91,7 +91,8 @@ const Engine = (() => {
       reshuffles: 0, heatPer: 0,
       stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareBonus: false, firstFlipSafe: false,
       potShare: 0,
-      bountyMult: 0, bountyBonus: false
+      bountyMult: 0, bountyBonus: false,
+      edgeCut: 0
     };
     const merge = src => {
       if (!src) return;
@@ -170,6 +171,17 @@ const Engine = (() => {
     };
   }
 
+  /* THE HOUSE EDGE. From Ante 4 the casino takes a percentage off every score
+     you make, and another 6% of it every ante after that. It is the one thing
+     that scales purely against you -- a Curio can halve it, nothing removes it. */
+  function houseEdge(run) {
+    if (!run || run.ante < TUNE.houseEdgeFromAnte) return 0;
+    const steps = run.ante - TUNE.houseEdgeFromAnte + 1;
+    const raw = Math.min(TUNE.houseEdgeCap, steps * TUNE.houseEdgePer);
+    const cut = Math.min(0.9, mods(run).edgeCut || 0);
+    return +(raw * (1 - cut)).toFixed(4);
+  }
+
   function newRound(run) {
     run.mantel.forEach(inst => {
       const def = CURIO_BY_ID[inst.id];
@@ -205,6 +217,7 @@ const Engine = (() => {
         bounty: null,
         bountiesCollected: 0,
         cashSwing: 0,
+        skimmed: 0,
         over: false,
         won: false
       }
@@ -342,7 +355,7 @@ const Engine = (() => {
   }
 
   return {
-    newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound,
+    newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,

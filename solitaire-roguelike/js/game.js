@@ -87,7 +87,10 @@ const Game = (() => {
 
   function scoreEvent(ev) {
     const packet = Score.event(G, ev);
-    if (packet.total > 0) addToPot(packet.total);
+    /* the pot takes its share off the FULL score, before the house edge bites --
+       which is what makes the Side Pot worth running at the top antes */
+    const gross = packet.total + (packet.skim || 0);
+    if (gross > 0) addToPot(gross);
     push(packet);
     if (ev.card && ev.card.enhancement === 'glass' && Math.random() < (G.run.luck || 1) / 5) {
       shatter(ev.card);
@@ -390,13 +393,18 @@ const Game = (() => {
     if (win) {
       payout = stake * pay;
       G.round.cashSwing += payout - stake;
+      /* a win at the wheel is a win at the wheel -- it heats the table up the
+         same way a pot flip does, and the zero runs hot */
+      G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) G.round.cashSwing += 5;
+      bumpMomentum();
     } else {
       G.round.cashSwing -= stake;
+      G.round.heat = 0;
     }
     save();
     return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, before: purse, purse: roundPurse() };
+             staked: stake, payout, before: purse, purse: roundPurse(), heat: G.round.heat };
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
