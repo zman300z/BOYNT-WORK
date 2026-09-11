@@ -204,6 +204,7 @@ const Engine = (() => {
         cutsHit: 0,
         bounty: null,
         bountiesCollected: 0,
+        cashSwing: 0,
         over: false,
         won: false
       }

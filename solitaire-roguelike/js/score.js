@@ -289,7 +289,14 @@ const Score = (() => {
       if (interest > 0) { lines.push({ label: 'Interest ($1 per $' + TUNE.interestPer + ')', amount: interest }); total += interest; }
     }
 
-    return { lines, total };
+    /* the wheel is staked out of this purse, so it settles inside it too */
+    const swing = Math.round(G.round.cashSwing || 0);
+    if (swing) {
+      lines.push({ label: swing > 0 ? 'The Wheel' : 'The Wheel (the house won)', amount: swing, big: swing > 0 });
+      total += swing;
+    }
+
+    return { lines, total: Math.max(0, total) };
   }
 
   return { event, payout };

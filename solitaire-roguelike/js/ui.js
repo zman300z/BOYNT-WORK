@@ -247,8 +247,23 @@ const UI = (() => {
     if (pv && G.phase === 'play') {
       const p = Game.payoutPreview();
       pv.textContent = '$' + p.total;
-      $('#btn-cash').dataset.breakdown = p.lines.map(l => l.label + '  +$' + l.amount).join('\n');
+      const btn = $('#btn-cash');
+      btn.onpointerenter = e => showTip(e.currentTarget, purseTip(p));
+      btn.onpointerleave = hideTip;
     }
+  }
+
+  /* the CASH OUT button is the round's purse -- show what is actually in it */
+  function purseTip(p) {
+    let s = '<div class="tip-title">THIS ROUND\'S PURSE</div>';
+    s += '<div class="tip-text">What <b>CASH OUT</b> pays into your wallet the moment you bank this round — ' +
+         'and the money you stake at the wheel. Nothing here is yours until you bank it.</div>';
+    s += '<div class="purse-lines">' + (p.lines.length
+      ? p.lines.map(l => '<div class="pl' + (l.amount < 0 ? ' down' : '') + '"><span>' + l.label + '</span><b>' +
+          (l.amount < 0 ? '\u2212$' + Math.abs(l.amount) : '+$' + l.amount) + '</b></div>').join('')
+      : '<div class="pl"><span>nothing yet</span><b>$0</b></div>') + '</div>';
+    s += '<div class="purse-total"><span>CASH OUT</span><b>$' + p.total + '</b></div>';
+    return s;
   }
 
   function renderReshuffle() {

@@ -1420,6 +1420,26 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   50%{ filter:brightness(1.22); }
 }
 
+/* ---------------- the round purse ----------------
+   CASH OUT is the money you are playing for, and the money you stake at the
+   wheel, so it is worth being able to see exactly what is in it.            */
+.purse-lines{ margin:7px 0 0; border-top:1px solid var(--line); padding-top:6px; }
+.purse-lines .pl{
+  display:flex; justify-content:space-between; gap:14px; font-size:11px;
+  padding:2px 0; opacity:.85;
+}
+.purse-lines .pl b{ color:var(--lime); white-space:nowrap; }
+.purse-lines .pl.down b{ color:var(--hot); }
+.purse-total{
+  display:flex; justify-content:space-between; gap:14px; margin-top:6px; padding-top:6px;
+  border-top:1px solid var(--line); font-family:var(--display); font-size:12px;
+}
+.purse-total b{ color:var(--gold); }
+.rw-purse{
+  font-size:10px; opacity:.7; text-align:center; margin:-2px 0 6px;
+}
+.rw-purse b{ color:var(--gold); opacity:1; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -3031,6 +3051,7 @@ const Engine = (() => {
         cutsHit: 0,
         bounty: null,
         bountiesCollected: 0,
+        cashSwing: 0,
         over: false,
         won: false
       }
@@ -3468,7 +3489,14 @@ const Score = (() => {
       if (interest > 0) { lines.push({ label: 'Interest ($1 per $' + TUNE.interestPer + ')', amount: interest }); total += interest; }
     }
 
-    return { lines, total };
+    /* the wheel is staked out of this purse, so it settles inside it too */
+    const swing = Math.round(G.round.cashSwing || 0);
+    if (swing) {
+      lines.push({ label: swing > 0 ? 'The Wheel' : 'The Wheel (the house won)', amount: swing, big: swing > 0 });
+      total += swing;
+    }
+
+    return { lines, total: Math.max(0, total) };
   }
 
   return { event, payout };
@@ -3829,15 +3857,25 @@ const Game = (() => {
     }
   }
 
-  /* Put actual money on the wheel. Cash uses honest casino payouts - red or
-     black returns double your stake, the zero returns eighteen times - and
-     losing costs you the stake and nothing else.                              */
+  /* what CASH OUT would pay right now -- the round's purse, and the thing you
+     actually stake at the wheel */
+  function roundPurse() {
+    if (!G.board || !G.round) return 0;
+    return Math.max(0, Score.payout(G).total);
+  }
+
+  /* Put cash on the wheel. The stake comes out of the round's CASH OUT purse and
+     the result settles back into it, so a win is money you carry to the shop and
+     a loss is money this round never pays you. Honest casino payouts: red or
+     black returns double, the zero returns eighteen times, and a loss costs the
+     stake and nothing else.                                                    */
   function spinRouletteCash(colour, stake) {
     stake = Math.floor(stake || 0);
-    if (G.phase !== 'play' && G.phase !== 'shop') return { ok: false, reason: 'Not now.' };
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
     if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
-    if (stake > G.run.money) return { ok: false, reason: 'You do not have that much.' };
+    const purse = roundPurse();
+    if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
     snapshot();
     const m = Engine.mods(G.run);
 
@@ -3853,17 +3891,17 @@ const Game = (() => {
     const win = pocket.c === colour;
     const pay = colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven;
 
-    G.run.money -= stake;
     let payout = 0;
     if (win) {
       payout = stake * pay;
-      G.run.money += payout;
-      G.round.money += payout - stake;
-      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      G.round.cashSwing += payout - stake;
+      if (m.dareBonus) G.round.cashSwing += 5;
+    } else {
+      G.round.cashSwing -= stake;
     }
     save();
     return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, money: G.run.money };
+             staked: stake, payout, before: purse, purse: roundPurse() };
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -4989,7 +5027,7 @@ const Game = (() => {
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
     autoPlan, autoPlay, boardKey,
-    cashPot, spinRoulette, spinRouletteCash,
+    cashPot, spinRoulette, spinRouletteCash, roundPurse,
     raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum
   };
@@ -5476,8 +5514,23 @@ const UI = (() => {
     if (pv && G.phase === 'play') {
       const p = Game.payoutPreview();
       pv.textContent = '$' + p.total;
-      $('#btn-cash').dataset.breakdown = p.lines.map(l => l.label + '  +$' + l.amount).join('\n');
+      const btn = $('#btn-cash');
+      btn.onpointerenter = e => showTip(e.currentTarget, purseTip(p));
+      btn.onpointerleave = hideTip;
     }
+  }
+
+  /* the CASH OUT button is the round's purse -- show what is actually in it */
+  function purseTip(p) {
+    let s = '<div class="tip-title">THIS ROUND\'S PURSE</div>';
+    s += '<div class="tip-text">What <b>CASH OUT</b> pays into your wallet the moment you bank this round — ' +
+         'and the money you stake at the wheel. Nothing here is yours until you bank it.</div>';
+    s += '<div class="purse-lines">' + (p.lines.length
+      ? p.lines.map(l => '<div class="pl' + (l.amount < 0 ? ' down' : '') + '"><span>' + l.label + '</span><b>' +
+          (l.amount < 0 ? '\u2212$' + Math.abs(l.amount) : '+$' + l.amount) + '</b></div>').join('')
+      : '<div class="pl"><span>nothing yet</span><b>$0</b></div>') + '</div>';
+    s += '<div class="purse-total"><span>CASH OUT</span><b>$' + p.total + '</b></div>';
+    return s;
   }
 
   function renderReshuffle() {
@@ -7252,12 +7305,11 @@ const Overlays = (() => {
     /* auto = { colour, mode, stake } when letting a bet ride */
     if (auto && auto.mode) betMode = auto.mode;
     const pot = Math.round(G.round ? (G.round.pot || 0) : 0);
-    const money = G.run.money;
-    if (betMode === 'pot' && pot < TUNE.potMinFlip && money > 0) betMode = 'cash';
+    const purse = Game.roundPurse();          // cash is staked out of your CASH OUT
+    if (betMode === 'pot' && pot < TUNE.potMinFlip && purse > 0) betMode = 'cash';
     if (auto && auto.stake) cashStake = auto.stake;
     if (betMode === 'cash') {
-      const max = money;
-      if (cashStake > max || cashStake <= 0) cashStake = Math.min(max, TUNE.cashChips[0]);
+      if (cashStake > purse || cashStake <= 0) cashStake = Math.min(purse, TUNE.cashChips[0]);
     }
 
     const nums = ROULETTE.map((p, i) =>
@@ -7283,12 +7335,14 @@ const Overlays = (() => {
         '<span class="rw-bp">' + (cash ? 'pays $' + (stake * pay) : 'pays ' + UI.fmt(stake * pay)) + '</span></button>';
     };
 
-    const chips = TUNE.cashChips.concat([money]).filter((v, i, a2) => v > 0 && v <= money && a2.indexOf(v) === i);
+    const chips = TUNE.cashChips.concat([purse]).filter((v, i, a2) => v > 0 && v <= purse && a2.indexOf(v) === i);
     const chipRow = cash
       ? '<div class="rw-chips">' + chips.map(v =>
           '<button class="rw-chip' + (v === cashStake ? ' on' : '') + '" data-stake="' + v + '">' +
-          (v === money ? 'ALL $' + v : '$' + v) + '</button>').join('') +
-        (money <= 0 ? '<span class="rw-broke">no cash to stake</span>' : '') + '</div>'
+          (v === purse ? 'ALL $' + v : '$' + v) + '</button>').join('') +
+        (purse <= 0 ? '<span class="rw-broke">this round has not earned anything yet</span>' : '') + '</div>' +
+        '<div class="rw-purse">staked out of your <b>CASH OUT</b> — $' + purse +
+        ' &rarr; <b>$' + Math.max(0, purse - cashStake) + '</b> while it spins</div>'
       : '';
 
     open(
@@ -7297,8 +7351,8 @@ const Overlays = (() => {
         '<div class="rw-modes">' +
           '<button class="rw-mode' + (cash ? '' : ' on') + (pot < TUNE.potMinFlip ? ' off' : '') + '" data-mode="pot"' +
             (pot < TUNE.potMinFlip ? ' disabled' : '') + '>STAKE THE POT<span>' + UI.fmt(pot) + ' pts</span></button>' +
-          '<button class="rw-mode' + (cash ? ' on' : '') + (money <= 0 ? ' off' : '') + '" data-mode="cash"' +
-            (money <= 0 ? ' disabled' : '') + '>STAKE CASH<span>$' + money + '</span></button>' +
+          '<button class="rw-mode' + (cash ? ' on' : '') + (purse <= 0 ? ' off' : '') + '" data-mode="cash"' +
+            (purse <= 0 ? ' disabled' : '') + '>STAKE YOUR CASH OUT<span>$' + purse + '</span></button>' +
         '</div>' +
         chipRow +
         '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b></div>' +
@@ -7312,7 +7366,7 @@ const Overlays = (() => {
         '</div>' +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
         '<div class="wheel-warn">' + (cash
-          ? 'Honest table odds: lose and you are simply out the stake.'
+          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b>; a loss comes off it. Your banked cash is never touched.'
           : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
@@ -7397,9 +7451,10 @@ const Overlays = (() => {
     if (res.win) {
       box.className = 'wheel-result win';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — ' +
-        (cash ? 'you take <b>$' + res.payout + '</b> off the table' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
+        (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        (cash ? '<br><span class="rw-note">You are up $' + (res.payout - res.staked) + ' on the spin</span>'
+        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
+                '</b> — up $' + (res.purse - res.before) + ' on the spin</span>'
               : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
@@ -7408,7 +7463,8 @@ const Overlays = (() => {
       box.className = 'wheel-result lose';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' +
         (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
-        (cash ? '' : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
+        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse + '</b></span>'
+              : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
         '<br><span class="quip">' + quip('wheelLose') + '</span>';
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
@@ -7417,7 +7473,7 @@ const Overlays = (() => {
     btn.textContent = res.win ? 'TAKE IT AND GO' : 'THAT IS GAMBLING';
 
     /* won, and the winnings are big enough to put straight back on the table */
-    const rideStake = cash ? Math.min(res.payout, G.run.money) : (G.round.pot || 0);
+    const rideStake = cash ? Math.min(res.payout, Game.roundPurse()) : (G.round.pot || 0);
     const rideOk = res.win && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
     if (rideOk) {
       const pay = cash ? (res.colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven) : roulettePay(res.colour);
@@ -7433,10 +7489,12 @@ const Overlays = (() => {
       };
       btn.parentNode.insertBefore(ride, btn);
       const note = el('div', 'ride-note',
-        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.');
+        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.' +
+        (cash ? ' Lose and your cash out drops to $' + Math.max(0, Game.roundPurse() - rideStake) + '.' : ''));
       btn.parentNode.insertBefore(note, btn);
     }
     UI.renderHud();
+    UI.renderControls();
   }
 
   /* ---------------- the almanac: every ability in the game ---------------- */
@@ -7722,6 +7780,10 @@ const Overlays = (() => {
           '</ul>' +
           '<p>Cards and Curios pay out mid-round too — anything Gold-Sealed or Bullion, and Curios like ' +
           'Midas Touch or Shop Vac. Those land the instant they trigger.</p>' +
+          '<p><b>Hover the CASH OUT button</b> to see the purse itemised, line by line. Nothing in it is ' +
+          'yours until you bank it — which is exactly why the wheel will let you stake it. A cash bet ' +
+          'comes out of this purse and settles back into it: win and CASH OUT climbs, lose and it drops. ' +
+          'Your banked wallet is never touched by the wheel.</p>' +
 
           '<h4>The quota</h4>' +
           '<p>' + TUNE.roundsPerAnte + ' rounds per Ante, and your scores <b>add up across all ' + TUNE.roundsPerAnte + '</b>. Beat the quota by the end of ' +

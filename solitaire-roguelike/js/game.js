@@ -352,15 +352,25 @@ const Game = (() => {
     }
   }
 
-  /* Put actual money on the wheel. Cash uses honest casino payouts - red or
-     black returns double your stake, the zero returns eighteen times - and
-     losing costs you the stake and nothing else.                              */
+  /* what CASH OUT would pay right now -- the round's purse, and the thing you
+     actually stake at the wheel */
+  function roundPurse() {
+    if (!G.board || !G.round) return 0;
+    return Math.max(0, Score.payout(G).total);
+  }
+
+  /* Put cash on the wheel. The stake comes out of the round's CASH OUT purse and
+     the result settles back into it, so a win is money you carry to the shop and
+     a loss is money this round never pays you. Honest casino payouts: red or
+     black returns double, the zero returns eighteen times, and a loss costs the
+     stake and nothing else.                                                    */
   function spinRouletteCash(colour, stake) {
     stake = Math.floor(stake || 0);
-    if (G.phase !== 'play' && G.phase !== 'shop') return { ok: false, reason: 'Not now.' };
+    if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
     if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
-    if (stake > G.run.money) return { ok: false, reason: 'You do not have that much.' };
+    const purse = roundPurse();
+    if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
     snapshot();
     const m = Engine.mods(G.run);
 
@@ -376,17 +386,17 @@ const Game = (() => {
     const win = pocket.c === colour;
     const pay = colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven;
 
-    G.run.money -= stake;
     let payout = 0;
     if (win) {
       payout = stake * pay;
-      G.run.money += payout;
-      G.round.money += payout - stake;
-      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      G.round.cashSwing += payout - stake;
+      if (m.dareBonus) G.round.cashSwing += 5;
+    } else {
+      G.round.cashSwing -= stake;
     }
     save();
     return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, money: G.run.money };
+             staked: stake, payout, before: purse, purse: roundPurse() };
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -1512,7 +1522,7 @@ const Game = (() => {
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
     autoPlan, autoPlay, boardKey,
-    cashPot, spinRoulette, spinRouletteCash,
+    cashPot, spinRoulette, spinRouletteCash, roundPurse,
     raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum
   };

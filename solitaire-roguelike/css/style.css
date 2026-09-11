@@ -1411,3 +1411,23 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   0%,100%{ filter:brightness(1); }
   50%{ filter:brightness(1.22); }
 }
+
+/* ---------------- the round purse ----------------
+   CASH OUT is the money you are playing for, and the money you stake at the
+   wheel, so it is worth being able to see exactly what is in it.            */
+.purse-lines{ margin:7px 0 0; border-top:1px solid var(--line); padding-top:6px; }
+.purse-lines .pl{
+  display:flex; justify-content:space-between; gap:14px; font-size:11px;
+  padding:2px 0; opacity:.85;
+}
+.purse-lines .pl b{ color:var(--lime); white-space:nowrap; }
+.purse-lines .pl.down b{ color:var(--hot); }
+.purse-total{
+  display:flex; justify-content:space-between; gap:14px; margin-top:6px; padding-top:6px;
+  border-top:1px solid var(--line); font-family:var(--display); font-size:12px;
+}
+.purse-total b{ color:var(--gold); }
+.rw-purse{
+  font-size:10px; opacity:.7; text-align:center; margin:-2px 0 6px;
+}
+.rw-purse b{ color:var(--gold); opacity:1; }

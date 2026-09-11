@@ -136,10 +136,14 @@ still land on your score as normal). Then it's your call:
   first, then your banked rounds. The real stake is double the pot, so only take a big one to the wheel when
   you can afford to lose twice its size.
 
-You can also put **actual money** on the same wheel. Switch the panel to **CASH**, pick a $5/$10/$25 stake
-and a colour: red or black returns **2×** your stake, the green 0 returns **18×**, and a loss costs you the
-stake and nothing else — honest casino odds, no ante bar involved. Win either way and a **LET IT RIDE**
-button appears, which puts the whole payout back on the same colour.
+You can also put **cash** on the same wheel, staked out of **this round's purse** — the number on the
+CASH OUT button. Switch the panel to **STAKE YOUR CASH OUT**, pick a $5/$10/$25/ALL stake and a colour:
+red or black returns **2×**, the green 0 returns **18×**, and the result settles straight back into the
+purse. Win and CASH OUT goes up; lose and it comes down. Your banked wallet is never touched, so a bad
+spin costs you money this round was going to pay you, not money you already have. Win either way and a
+**LET IT RIDE** button appears, which puts the whole payout back on the same colour.
+
+Hover the **CASH OUT** button at any time to see the purse itemised, line by line.
 
 **The Card Counter** makes your first spin each round unloseable, **The Daredevil** pays $5 a win, and
 **The Skimmer** nearly doubles how fast the pot fills.

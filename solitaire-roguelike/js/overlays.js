@@ -560,12 +560,11 @@ const Overlays = (() => {
     /* auto = { colour, mode, stake } when letting a bet ride */
     if (auto && auto.mode) betMode = auto.mode;
     const pot = Math.round(G.round ? (G.round.pot || 0) : 0);
-    const money = G.run.money;
-    if (betMode === 'pot' && pot < TUNE.potMinFlip && money > 0) betMode = 'cash';
+    const purse = Game.roundPurse();          // cash is staked out of your CASH OUT
+    if (betMode === 'pot' && pot < TUNE.potMinFlip && purse > 0) betMode = 'cash';
     if (auto && auto.stake) cashStake = auto.stake;
     if (betMode === 'cash') {
-      const max = money;
-      if (cashStake > max || cashStake <= 0) cashStake = Math.min(max, TUNE.cashChips[0]);
+      if (cashStake > purse || cashStake <= 0) cashStake = Math.min(purse, TUNE.cashChips[0]);
     }
 
     const nums = ROULETTE.map((p, i) =>
@@ -591,12 +590,14 @@ const Overlays = (() => {
         '<span class="rw-bp">' + (cash ? 'pays $' + (stake * pay) : 'pays ' + UI.fmt(stake * pay)) + '</span></button>';
     };
 
-    const chips = TUNE.cashChips.concat([money]).filter((v, i, a2) => v > 0 && v <= money && a2.indexOf(v) === i);
+    const chips = TUNE.cashChips.concat([purse]).filter((v, i, a2) => v > 0 && v <= purse && a2.indexOf(v) === i);
     const chipRow = cash
       ? '<div class="rw-chips">' + chips.map(v =>
           '<button class="rw-chip' + (v === cashStake ? ' on' : '') + '" data-stake="' + v + '">' +
-          (v === money ? 'ALL $' + v : '$' + v) + '</button>').join('') +
-        (money <= 0 ? '<span class="rw-broke">no cash to stake</span>' : '') + '</div>'
+          (v === purse ? 'ALL $' + v : '$' + v) + '</button>').join('') +
+        (purse <= 0 ? '<span class="rw-broke">this round has not earned anything yet</span>' : '') + '</div>' +
+        '<div class="rw-purse">staked out of your <b>CASH OUT</b> — $' + purse +
+        ' &rarr; <b>$' + Math.max(0, purse - cashStake) + '</b> while it spins</div>'
       : '';
 
     open(
@@ -605,8 +606,8 @@ const Overlays = (() => {
         '<div class="rw-modes">' +
           '<button class="rw-mode' + (cash ? '' : ' on') + (pot < TUNE.potMinFlip ? ' off' : '') + '" data-mode="pot"' +
             (pot < TUNE.potMinFlip ? ' disabled' : '') + '>STAKE THE POT<span>' + UI.fmt(pot) + ' pts</span></button>' +
-          '<button class="rw-mode' + (cash ? ' on' : '') + (money <= 0 ? ' off' : '') + '" data-mode="cash"' +
-            (money <= 0 ? ' disabled' : '') + '>STAKE CASH<span>$' + money + '</span></button>' +
+          '<button class="rw-mode' + (cash ? ' on' : '') + (purse <= 0 ? ' off' : '') + '" data-mode="cash"' +
+            (purse <= 0 ? ' disabled' : '') + '>STAKE YOUR CASH OUT<span>$' + purse + '</span></button>' +
         '</div>' +
         chipRow +
         '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b></div>' +
@@ -620,7 +621,7 @@ const Overlays = (() => {
         '</div>' +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
         '<div class="wheel-warn">' + (cash
-          ? 'Honest table odds: lose and you are simply out the stake.'
+          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b>; a loss comes off it. Your banked cash is never touched.'
           : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
@@ -705,9 +706,10 @@ const Overlays = (() => {
     if (res.win) {
       box.className = 'wheel-result win';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — ' +
-        (cash ? 'you take <b>$' + res.payout + '</b> off the table' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
+        (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        (cash ? '<br><span class="rw-note">You are up $' + (res.payout - res.staked) + ' on the spin</span>'
+        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
+                '</b> — up $' + (res.purse - res.before) + ' on the spin</span>'
               : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
@@ -716,7 +718,8 @@ const Overlays = (() => {
       box.className = 'wheel-result lose';
       box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' +
         (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
-        (cash ? '' : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
+        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse + '</b></span>'
+              : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
         '<br><span class="quip">' + quip('wheelLose') + '</span>';
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
@@ -725,7 +728,7 @@ const Overlays = (() => {
     btn.textContent = res.win ? 'TAKE IT AND GO' : 'THAT IS GAMBLING';
 
     /* won, and the winnings are big enough to put straight back on the table */
-    const rideStake = cash ? Math.min(res.payout, G.run.money) : (G.round.pot || 0);
+    const rideStake = cash ? Math.min(res.payout, Game.roundPurse()) : (G.round.pot || 0);
     const rideOk = res.win && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
     if (rideOk) {
       const pay = cash ? (res.colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven) : roulettePay(res.colour);
@@ -741,10 +744,12 @@ const Overlays = (() => {
       };
       btn.parentNode.insertBefore(ride, btn);
       const note = el('div', 'ride-note',
-        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.');
+        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.' +
+        (cash ? ' Lose and your cash out drops to $' + Math.max(0, Game.roundPurse() - rideStake) + '.' : ''));
       btn.parentNode.insertBefore(note, btn);
     }
     UI.renderHud();
+    UI.renderControls();
   }
 
   /* ---------------- the almanac: every ability in the game ---------------- */
@@ -1030,6 +1035,10 @@ const Overlays = (() => {
           '</ul>' +
           '<p>Cards and Curios pay out mid-round too — anything Gold-Sealed or Bullion, and Curios like ' +
           'Midas Touch or Shop Vac. Those land the instant they trigger.</p>' +
+          '<p><b>Hover the CASH OUT button</b> to see the purse itemised, line by line. Nothing in it is ' +
+          'yours until you bank it — which is exactly why the wheel will let you stake it. A cash bet ' +
+          'comes out of this purse and settles back into it: win and CASH OUT climbs, lose and it drops. ' +
+          'Your banked wallet is never touched by the wheel.</p>' +
 
           '<h4>The quota</h4>' +
           '<p>' + TUNE.roundsPerAnte + ' rounds per Ante, and your scores <b>add up across all ' + TUNE.roundsPerAnte + '</b>. Beat the quota by the end of ' +
