@@ -359,9 +359,11 @@ const UI = (() => {
       if (!res.ok) { Sfx.error(); toast(res.reason); return; }
       render(); drainFx();
     };
-    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' off'), 'SPIN THE WHEEL');
+    /* the wheel is always open -- a short pot just means the cash tab is the live
+       one, and you can still swap balls around while you are there */
+    const flip = el('button', 'sp-btn sp-flip' + (canFlip ? '' : ' dim'), 'SPIN THE WHEEL');
     flip.onclick = () => {
-      if (!canFlip) { Sfx.error(); toast('The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.'); return; }
+      stopAuto();
       Sfx.click();
       Overlays.roulette();
     };

@@ -35,6 +35,7 @@ const Game = (() => {
     G.undoStack = [];
     G.phase = 'play';
     G.payout = null;
+    ensureBalls();
     postBounty();
     save();
   }
@@ -1304,22 +1305,21 @@ const Game = (() => {
                    rank: pick.rank, suit: pick.suit,
                    cost: 3 + Math.ceil(rankChips(pick.rank) / 3) });
     }
-    /* two balls, never one you already own, never past the case's capacity */
-    const held = new Set(G.run.balls || ['house']);
+    /* two balls, never one already in your collection. There is no cap on how
+       many you can own -- only on how many the case can throw at once. */
+    const held = new Set(G.run.ballBag || G.run.balls || ['house']);
     const ballPool = BALLS.filter(b => !b.free && !held.has(b.id));
     const balls = [];
-    if ((G.run.balls || []).length < TUNE.maxBalls) {
-      const seenB = new Set();
-      for (let i = 0; i < 2; i++) {
-        const pool = ballPool.filter(b => !seenB.has(b.id));
-        if (!pool.length) break;
-        let total = 0;
-        pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
-        let r = Math.random() * total, pick = pool[0];
-        for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
-        seenB.add(pick.id);
-        balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
-      }
+    const seenB = new Set();
+    for (let i = 0; i < 2; i++) {
+      const pool = ballPool.filter(b => !seenB.has(b.id));
+      if (!pool.length) break;
+      let total = 0;
+      pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
+      let r = Math.random() * total, pick = pool[0];
+      for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
+      seenB.add(pick.id);
+      balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
     }
     return {
       curios,
@@ -1380,14 +1380,16 @@ const Game = (() => {
     }
 
     if (item.type === 'ball') {
-      G.run.balls = G.run.balls || ['house'];
-      if (G.run.balls.length >= TUNE.maxBalls) return { ok: false, reason: 'The ball case is full.' };
-      if (G.run.balls.includes(item.id)) return { ok: false, reason: 'You already own that one.' };
+      ensureBalls();
+      if (G.run.ballBag.includes(item.id)) return { ok: false, reason: 'You already own that one.' };
       G.run.money -= price;
-      G.run.balls.push(item.id);
+      G.run.ballBag.push(item.id);
+      /* it goes straight into the case if there is a seat, otherwise onto the bench */
+      const loaded = G.run.balls.length < Engine.ballSlots(G.run);
+      if (loaded) G.run.balls.push(item.id);
       item.bought = true;
       save();
-      return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id] };
+      return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id], loaded };
     }
 
     if (item.type === 'plain') {
@@ -1465,14 +1467,61 @@ const Game = (() => {
 
   function cancelPending() { G.pending = null; }
 
-  /* balls sell for half, and the house ball is not for sale */
-  function sellBall(index) {
-    const balls = G.run.balls || ['house'];
-    const def = BALL_BY_ID[balls[index]];
+  /* older saves predate the bag, so fold the loaded case into it on first touch */
+  function ensureBalls() {
+    const run = G.run;
+    run.balls = run.balls || ['house'];
+    if (!run.ballBag || !run.ballBag.length) run.ballBag = run.balls.slice();
+    run.balls.forEach(id => { if (!run.ballBag.includes(id)) run.ballBag.push(id); });
+    if (!run.ballSlots) run.ballSlots = TUNE.startingBallSlots;
+    /* a case that lost seats sheds the overflow back onto the bench */
+    if (run.balls.length > Engine.ballSlots(run)) run.balls = run.balls.slice(0, Engine.ballSlots(run));
+    if (!run.balls.length) run.balls = ['house'];
+  }
+
+  /* put a ball you own into the case */
+  function loadBall(id) {
+    ensureBalls();
+    const run = G.run;
+    if (!run.ballBag.includes(id)) return { ok: false, reason: 'You do not own that ball.' };
+    if (run.balls.includes(id)) return { ok: false, reason: 'That one is already in the case.' };
+    if (run.balls.length >= Engine.ballSlots(run)) {
+      return { ok: false, reason: 'The case only seats ' + Engine.ballSlots(run) + '. Take one out first.' };
+    }
+    run.balls.push(id);
+    save();
+    return { ok: true, balls: run.balls.slice() };
+  }
+
+  /* take one back out. The case is never left empty. */
+  function unloadBall(id) {
+    ensureBalls();
+    const run = G.run;
+    const i = run.balls.indexOf(id);
+    if (i < 0) return { ok: false, reason: 'That one is not in the case.' };
+    if (run.balls.length <= 1) return { ok: false, reason: 'The wheel needs at least one ball.' };
+    run.balls.splice(i, 1);
+    save();
+    return { ok: true, balls: run.balls.slice() };
+  }
+
+  function toggleBall(id) {
+    ensureBalls();
+    return G.run.balls.includes(id) ? unloadBall(id) : loadBall(id);
+  }
+
+  /* balls sell for half, out of the collection, and the house ball is not for sale */
+  function sellBall(id) {
+    ensureBalls();
+    const run = G.run;
+    const def = BALL_BY_ID[id];
     if (!def || def.free) return 0;
+    if (!run.ballBag.includes(id)) return 0;
     const value = Math.max(1, Math.floor(def.cost / 2));
-    balls.splice(index, 1);
-    G.run.money += value;
+    run.ballBag = run.ballBag.filter(b => b !== id);
+    run.balls = run.balls.filter(b => b !== id);
+    if (!run.balls.length) run.balls = ['house'];
+    run.money += value;
     save();
     return value;
   }
@@ -1636,7 +1685,7 @@ const Game = (() => {
   return {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
-    sellCurio, sellBall, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
+    sellCurio, sellBall, loadBall, unloadBall, toggleBall, ensureBalls, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,

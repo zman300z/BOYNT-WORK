@@ -181,7 +181,15 @@ bet won or lost**:
 
 The jewel balls genuinely rewrite the wheel: the green zero is the house's own and is never repainted, at
 most 8 pockets can ever be painted, and **a colour pays less the more of the wheel wears it**. Painting
-buys a wheel that lands your colour, not a bigger multiple. The case holds 5 and a ball sells back for half.
+buys a wheel that lands your colour, not a bigger multiple.
+
+**You can own as many balls as you like** — only the ones *in the case* are thrown. The case seats **3** to
+start; the Counter sells **Wider Ball Case** for another seat, over and over, with no ceiling worth hitting.
+Swap your collection in and out at the wheel itself (click a ball to load or bench it), or from the shop
+shelf, where the price tag sells it back for half.
+
+The wheel is **open all round** — hit `W` or the THE WHEEL button any time. A short Side Pot just means the
+cash tab is the live one, and you can still rearrange the case while you're standing there.
 
 ### The House Edge
 
@@ -246,7 +254,7 @@ column, turn the stock — and flies each card across so you can watch it happen
 the board yourself) to stop. It stops on its own when the round ends or when it runs out of good moves,
 and it never spends a pass or your ante score on your behalf.
 
-`Space` deal · `R` reshuffle · `A` autoplay · `U` undo · `H` hint · `D` deck · `Esc` menu.
+`Space` deal · `R` reshuffle · `A` autoplay · `W` the wheel · `U` undo · `H` hint · `D` deck · `Esc` menu.
 There's a generated lounge soundtrack — the ♪ button in the header mutes it, 🔊 mutes effects.
 Acting during a score animation fast-forwards it rather than being ignored.
 

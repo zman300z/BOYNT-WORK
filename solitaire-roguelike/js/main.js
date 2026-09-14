@@ -108,6 +108,15 @@
     UI.toggleAuto();
   }
 
+  /* the wheel is always open for business -- you can walk up to it any time during
+     a round, whether or not the Side Pot has enough in it to stake */
+  function wheel() {
+    if (G.phase !== 'play') return;
+    UI.stopAuto();
+    Sfx.click();
+    Overlays.roulette();
+  }
+
   function undo() {
     if (G.phase !== 'play') return;
     UI.stopAuto();
@@ -125,6 +134,7 @@
     $('#btn-cash').onclick = cashOut;
     $('#btn-hint').onclick = hint;
     $('#btn-collect').onclick = auto;
+    $('#btn-wheel').onclick = wheel;
     $('#btn-undo').onclick = undo;
     $('#btn-deck').onclick = () => { if (G.run) { Sfx.click(); Overlays.deckView(); } };
     $('#btn-menu').onclick = () => { if (G.run) { Sfx.click(); Overlays.menu(); } };
@@ -156,6 +166,7 @@
       else if (k === 'd') { if (G.run) Overlays.deckView(); }
       else if (k === 'k') Overlays.almanac();
       else if (k === 'c') cashOut();
+      else if (k === 'w') wheel();
       else if (k === 'r') {
         const c = Game.reshuffleCost();
         const res = Game.reshuffle(c.free > 0 ? 'free' : (c.passes > 0 ? 'pass' : 'points'));

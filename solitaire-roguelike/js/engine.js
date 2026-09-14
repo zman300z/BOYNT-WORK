@@ -60,7 +60,9 @@ const Engine = (() => {
       permaMult: 0,
       whim: null,
       banditPulls: 0,
-      balls: ['house'],
+      balls: ['house'],          // loaded in the case, thrown every spin
+      ballBag: ['house'],        // everything you own, however much that is
+      ballSlots: TUNE.startingBallSlots,
       wheelPaint: {},
       finalAnte: TUNE.finalAnte,
       shop: null,
@@ -224,10 +226,24 @@ const Engine = (() => {
     return true;
   }
 
-  /* ---------------- THE BALL CASE ---------------- */
+  /* ---------------- THE BALL CASE ----------------
+     You own as many balls as you care to buy, but only the ones LOADED in the
+     case are thrown. The case starts at three seats and the Counter sells more.
+     ------------------------------------------------------------------------- */
+  function ballSlots(run) {
+    return Math.max(1, (run && run.ballSlots) || TUNE.startingBallSlots);
+  }
+
+  /* every ball you own, loaded or benched */
+  function ballBag(run) {
+    const ids = (run && run.ballBag && run.ballBag.length) ? run.ballBag : ['house'];
+    return ids.map(id => BALL_BY_ID[id]).filter(Boolean);
+  }
+
+  /* the ones actually in the case, never more than it seats */
   function ballsOf(run) {
     const ids = (run && run.balls && run.balls.length) ? run.balls : ['house'];
-    return ids.map(id => BALL_BY_ID[id]).filter(Boolean);
+    return ids.slice(0, ballSlots(run)).map(id => BALL_BY_ID[id]).filter(Boolean);
   }
 
   /* Ghost balls are bonus throws -- they can hit for you but never raise the bar. */
@@ -478,7 +494,7 @@ const Engine = (() => {
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
     wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket,
-    ballsOf, ballsCounted, ballThreshold, ballPayMult, ballWinChance, betRate,
+    ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballPayMult, ballWinChance, betRate,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,

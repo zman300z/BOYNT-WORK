@@ -55,7 +55,8 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
-  maxBalls: 5,              // the ball case only holds so many
+  startingBallSlots: 3,     // how many balls the case can hold at the start
+  maxBallSlots: 12,         // the counter sells more, and keeps selling them
   ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
   ballPayFloor: 0.3,
   ballPayCeil: 1.6,
@@ -654,6 +655,11 @@ const COUNTER_ITEMS = [
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
     text: '+1 reshuffle each round that costs you no pass.',
     apply: run => { run.bonusReshuffles++; } },
+
+  { id: 'c_ball', name: 'Wider Ball Case', icon: 'dice', base: 12, step: 9,
+    text: '+1 ball spun on every trip to the wheel. The case never stops taking them.',
+    soldOut: run => (run.ballSlots || TUNE.startingBallSlots) >= TUNE.maxBallSlots,
+    apply: run => { run.ballSlots = Math.min(TUNE.maxBallSlots, (run.ballSlots || TUNE.startingBallSlots) + 1); } },
 
   { id: 'c_column', name: 'Extra Column', icon: 'expand', base: 20, step: 18,
     text: '+1 tableau column dealt every round. More room, more runs to build.',

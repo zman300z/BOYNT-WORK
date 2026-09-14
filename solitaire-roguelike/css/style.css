@@ -1534,3 +1534,23 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .si-badge.ball{ background:rgba(176,124,255,.18); color:#d6bcff; }
 .tip-kind.ball-kind{ background:rgba(176,124,255,.16); color:#d6bcff; }
 .tip-text.dim{ opacity:.62; font-size:11px; }
+
+/* the wheel is open all round, and the case can be rearranged while you are there */
+.wheel-btn{ border-color:rgba(255,209,102,.4); color:var(--gold); }
+.wheel-btn:hover{ background:rgba(255,209,102,.14); }
+.sp-btn.dim{ opacity:.55; }
+.rw-case{ flex-wrap:wrap; }
+.rw-case-cap{ font-size:9px; letter-spacing:.12em; opacity:.6; }
+.rw-case-cap b{ color:var(--gold); opacity:1; }
+.rw-ballchip{ border:none; padding:0; position:relative; }
+.rw-ballchip.out{ opacity:.34; filter:grayscale(.6); }
+.rw-ballchip.in{ box-shadow:0 0 0 2px var(--gold), 0 1px 3px rgba(0,0,0,.6); }
+.rw-ballchip:hover{ transform:scale(1.25); opacity:1; filter:none; }
+.rw-swap-hint{ font-size:9px; opacity:.45; text-align:center; margin:-2px 0 4px; }
+.wheel-dead{ font-size:10px; color:var(--gold); opacity:.8; text-align:center; margin:4px 0 2px; }
+.case-ball.out{ opacity:.5; }
+.case-ball.out .cb-orb{ filter:grayscale(.7); }
+.cb-state{ font-size:8px; letter-spacing:.1em; opacity:.55; }
+.case-ball.in .cb-state{ color:var(--lime); opacity:1; }
+.cb-sell{ border:1px solid var(--line); border-radius:6px; padding:1px 5px; }
+.cb-sell:hover{ border-color:var(--gold); color:var(--gold); }

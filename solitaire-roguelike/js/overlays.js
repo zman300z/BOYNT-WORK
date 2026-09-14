@@ -116,8 +116,9 @@ const Overlays = (() => {
           '<div class="shelf-row plain-row" id="shelf-plain"></div>' +
         '</section>' +
         '<section class="shelf sh-ball">' +
-          '<div class="shelf-head"><h3>THE BALL CASE</h3><span>every ball you own is thrown on every spin · ' +
-          'you need half of them (rounded up) on your colour · click a ball in the case to sell it</span></div>' +
+          '<div class="shelf-head"><h3>THE BALL CASE</h3><span>only the balls IN the case are thrown · ' +
+          'you need half of those (rounded up) on your colour · click to load or bench, click the price to sell · ' +
+          'the Counter sells more seats</span></div>' +
           '<div class="ball-case" id="ball-case"></div>' +
           '<div class="shelf-row ball-row" id="shelf-ball"></div>' +
         '</section>' +
@@ -183,42 +184,52 @@ const Overlays = (() => {
     if (bp) bp.innerHTML = 'PULL THE LEVER $<b>' + Game.banditPrice() + '</b>';
   }
 
-  /* the balls you already own, sellable for half */
+  /* every ball you own: click to load or bench it, shift-click to sell */
   function renderBallCase() {
     const row = $('#ball-case');
     if (!row) return;
-    const balls = Engine.ballsOf(G.run);
+    Game.ensureBalls();
+    const bag = Engine.ballBag(G.run);
+    const loadedIds = Engine.ballsOf(G.run).map(b => b.id);
+    const slots = Engine.ballSlots(G.run);
     const need = Engine.ballThreshold(G.run);
-    const mult = Engine.ballPayMult(G.run);
+    const mult = Engine.ballPayMult(G.run, 'red');
     row.innerHTML = '';
-    balls.forEach((def, i) => {
-      const n = el('div', 'case-ball ' + def.tint + (def.free ? ' fixed' : ''));
+    bag.forEach(def => {
+      const inCase = loadedIds.includes(def.id);
+      const n = el('div', 'case-ball ' + def.tint + (def.free ? ' fixed' : '') + (inCase ? ' in' : ' out'));
       const value = def.free ? 0 : Math.max(1, Math.floor(def.cost / 2));
       n.innerHTML = '<span class="cb-orb"></span><span class="cb-name">' + def.name.replace(/^The /, '') + '</span>' +
-        (def.free ? '<span class="cb-sell">HOUSE</span>' : '<span class="cb-sell">SELL $' + value + '</span>');
+        '<span class="cb-state">' + (inCase ? 'IN' : 'BENCH') + '</span>' +
+        (def.free ? '' : '<span class="cb-sell" data-sell="' + def.id + '">$' + value + '</span>');
       n.onpointerenter = e => UI.showTip(e.currentTarget,
         '<div class="tip-title">' + def.name + '</div>' +
-        '<div class="tip-kind ball-kind">BALL — thrown on every spin</div>' +
+        '<div class="tip-kind ball-kind">' + (inCase ? 'IN THE CASE — thrown every spin' : 'ON THE BENCH — not thrown') + '</div>' +
         '<div class="tip-text">' + def.text + '</div>' +
         (def.long ? '<div class="tip-text dim">' + def.long + '</div>' : '') +
-        (def.free ? '' : '<div class="tip-foot">click to sell for $' + value + '</div>'));
+        '<div class="tip-foot">click to ' + (inCase ? 'bench it' : 'load it') +
+        (def.free ? '' : ' · the $' + value + ' tag sells it') + '</div>');
       n.onpointerleave = UI.hideTip;
-      if (!def.free) {
-        n.onclick = () => {
-          const v = Game.sellBall(i);
+      n.onclick = e => {
+        if (e.target.dataset && e.target.dataset.sell) {
+          const v = Game.sellBall(def.id);
           if (v) { Sfx.money(); UI.hideTip(); UI.toast('Sold the ' + def.name.replace(/^The /, '') + ' for <b>$' + v + '</b>'); refreshShop(); }
-        };
-      }
+          return;
+        }
+        const res = Game.toggleBall(def.id);
+        if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(n); return; }
+        Sfx.click(); UI.hideTip(); refreshShop();
+      };
       row.appendChild(n);
     });
-    for (let i = balls.length; i < TUNE.maxBalls; i++) {
-      row.appendChild(el('div', 'case-ball empty', '<span class="cb-orb"></span>'));
+    for (let i = loadedIds.length; i < slots; i++) {
+      row.appendChild(el('div', 'case-ball empty', '<span class="cb-orb"></span><span class="cb-name">empty seat</span>'));
     }
     row.appendChild(el('div', 'case-note',
-      balls.length > 1
-        ? '<b>' + need + ' of ' + balls.length + '</b> must land on your colour' +
-          (mult < 1 ? '<br>payouts <b>x' + mult.toFixed(2) + '</b>' : '')
-        : 'one ball, one pocket<br><span class="dim">a second ball nearly doubles your win rate</span>'));
+      '<b>' + loadedIds.length + ' of ' + slots + '</b> seats filled' +
+      (loadedIds.length > 1
+        ? '<br><b>' + need + '</b> must land on your colour' + (mult < 1 ? ' · payouts <b>x' + mult.toFixed(2) + '</b>' : '')
+        : '<br><span class="dim">a second ball nearly doubles your win rate</span>')));
   }
 
   function renderCounter() {
@@ -340,14 +351,14 @@ const Overlays = (() => {
     if (shelf === 'ball') {
       const defB = BALL_BY_ID[item.id];
       const priceB = Game.priceOf(item);
-      const full = (run.balls || []).length >= TUNE.maxBalls;
+      const benched = (run.balls || []).length >= Engine.ballSlots(run);
       const nB = el('div', 'shop-item sh-ball' + (item.bought ? ' bought' : '') +
-                    (run.money < priceB || full ? ' broke' : ''));
+                    (run.money < priceB ? ' broke' : ''));
       nB.innerHTML =
         '<div class="si-preview"><span class="case-orb ' + defB.tint + '"></span></div>' +
         '<div class="si-name r-' + defB.rarity + '">' + defB.name + '</div>' +
         '<div class="si-text">' + defB.text + '</div>' +
-        '<div class="si-badge ball">+1 BALL ON EVERY SPIN</div>' +
+        '<div class="si-badge ball">' + (benched ? 'GOES ON THE BENCH — CASE IS FULL' : '+1 BALL ON EVERY SPIN') + '</div>' +
         '<div class="si-price">' + (item.bought ? 'SOLD' : '$' + priceB) + '</div>';
       nB.onpointerenter = e => UI.showTip(e.currentTarget,
         '<div class="tip-title r-' + defB.rarity + '">' + defB.name + '</div>' +
@@ -355,15 +366,17 @@ const Overlays = (() => {
         '<div class="tip-text">' + defB.text + '</div>' +
         (defB.long ? '<div class="tip-text dim">' + defB.long + '</div>' : '') +
         '<div class="tip-foot">' + defB.rarity.toUpperCase() +
-        (full ? ' • THE CASE IS FULL — sell one first' : '') + '</div>');
+        (benched ? ' • the case is full, so it waits on the bench until you swap it in' : '') + '</div>');
       nB.onpointerleave = UI.hideTip;
       if (!item.bought) {
         nB.onclick = () => {
           const res = Game.buy('ball', index);
           if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(nB); return; }
           Sfx.money(); UI.burst(nB, 14, '#b07cff'); UI.hideTip();
-          UI.toast(defB.name + ' goes in the case — <b>' + Engine.ballThreshold(G.run) + ' of ' +
-                   Engine.ballsOf(G.run).length + '</b> must land on your colour now');
+          UI.toast(res.loaded
+            ? defB.name + ' goes in the case — <b>' + Engine.ballThreshold(G.run) + ' of ' +
+              Engine.ballsOf(G.run).length + '</b> must land on your colour now'
+            : defB.name + ' is yours, but the case is full — swap it in from the case above');
           refreshShop(); UI.render();
         };
       }
@@ -677,17 +690,24 @@ const Overlays = (() => {
                                        : 'pays ' + UI.fmt(Math.round(stake * rate))) + '</span></button>';
     };
 
-    /* the case itself, and what it is asking of you */
+    /* the case: every ball you own, click to load or bench it */
+    const bag = Engine.ballBag(G.run);
+    const slots = Engine.ballSlots(G.run);
+    const loaded = balls.map(b => b.id);
     const caseRow =
       '<div class="rw-case">' +
-        '<div class="rw-case-balls">' + balls.map(b =>
-          '<span class="rw-ballchip ' + b.tint + '" data-ball="' + b.id + '" title="' + b.name + '"></span>').join('') +
+        '<div class="rw-case-cap">CASE <b>' + balls.length + '/' + slots + '</b></div>' +
+        '<div class="rw-case-balls">' + bag.map(b =>
+          '<button class="rw-ballchip ' + b.tint + (loaded.includes(b.id) ? ' in' : ' out') +
+          '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (balls.length > 1
-          ? '<b>' + need + ' of ' + balls.length + '</b> balls must land on your colour' +
-            (ballMult < 1 ? ' &nbsp;·&nbsp; payouts x' + ballMult.toFixed(2) : '')
+          ? '<b>' + need + ' of ' + balls.length + '</b> on your colour' +
+            (ballMult < 1 ? ' · payouts x' + ballMult.toFixed(2) : '')
           : 'one ball, one pocket') + '</div>' +
-      '</div>';
+      '</div>' +
+      (bag.length > balls.length || slots > balls.length
+        ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '');
 
     const chips = TUNE.cashChips.concat([purse]).filter((v, i, a2) => v > 0 && v <= purse && a2.indexOf(v) === i);
     const chipRow = cash
@@ -721,6 +741,10 @@ const Overlays = (() => {
         '</div>' +
         caseRow +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
+        (stake <= 0
+          ? '<div class="wheel-dead">Nothing to stake yet — the pot needs ' + UI.fmt(TUNE.potMinFlip) +
+            ' and your CASH OUT is $' + purse + '. Swap your balls around while you are here.</div>'
+          : '') +
         '<div class="wheel-warn">' + (cash
           ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b> and raises <b>HEAT</b>; a loss comes off the purse and cools the table. Your banked cash is never touched.'
           : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
@@ -733,12 +757,21 @@ const Overlays = (() => {
     $$('.rw-bet').forEach(b2 => { b2.onclick = () => placeBet(b2.dataset.col); });
     $$('.rw-ballchip').forEach(chip => {
       const def = BALL_BY_ID[chip.dataset.ball];
+      const inCase = chip.classList.contains('in');
       chip.onpointerenter = e => UI.showTip(e.currentTarget,
         '<div class="tip-title">' + def.name + '</div>' +
-        '<div class="tip-kind ball-kind">BALL — thrown on every spin</div>' +
+        '<div class="tip-kind ball-kind">' + (inCase ? 'IN THE CASE — thrown every spin' : 'ON THE BENCH — not thrown') + '</div>' +
         '<div class="tip-text">' + def.text + '</div>' +
-        (def.long ? '<div class="tip-text dim">' + def.long + '</div>' : ''));
+        (def.long ? '<div class="tip-text dim">' + def.long + '</div>' : '') +
+        '<div class="tip-foot">click to ' + (inCase ? 'take it out' : 'put it in the case') + '</div>');
       chip.onpointerleave = UI.hideTip;
+      chip.onclick = () => {
+        const res = Game.toggleBall(def.id);
+        if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
+        Sfx.click();
+        UI.hideTip();
+        roulette({ mode: betMode, stake: cashStake });
+      };
     });
     $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
     if (auto && auto.colour) setTimeout(() => placeBet(auto.colour), 60);
@@ -1030,7 +1063,9 @@ const Overlays = (() => {
     } else if (almanacTab === 'balls') {
       html += almEntry('dice', 'Every ball you own is thrown', 'how it works',
         'A spin drops the whole case at once. You win it by landing <b>half your balls, rounded up</b>, on the colour you backed — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5.',
-        'So the second ball is an enormous jump and the third is a step sideways: the case likes even numbers. The table knows the odds and prices the payout against them, so a bigger case wins more often for less — you still keep an edge, but you are buying consistency, not free money. The reason to own balls is what they DO when they land.');
+        'Only the balls IN THE CASE count — it seats ' + TUNE.startingBallSlots + ' to start and the Counter sells more, ' +
+        'and you can swap your collection in and out from the wheel screen at any time. ' +
+        'The second ball is an enormous jump and the third is a step sideways: the case likes even numbers. The table knows the odds and prices the payout against them, so a bigger case wins more often for less — you still keep an edge, but you are buying consistency, not free money. The reason to own balls is what they DO when they land.');
       html += almEntry('coinstack', 'Abilities fire win or lose', 'the real point',
         'A ball\'s ability runs on the pocket it landed in, whether the bet came in or not.',
         'The Iron Ball paying $3 on black does not care that you backed red and lost. That is what makes a full case worth spinning even on a bet you expect to drop.');
@@ -1197,7 +1232,9 @@ const Overlays = (() => {
           '<p>The actual reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
           '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red. The jewel balls go ' +
           'further and <b>repaint the pocket they land in for the rest of the run</b>, though a colour pays less the more of ' +
-          'the wheel wears it. The case holds ' + TUNE.maxBalls + ', and you can sell one back for half.</p>' +
+          'the wheel wears it. You can own as many balls as you like, but only the ones <b>in the case</b> are thrown — ' +
+          'it seats ' + TUNE.startingBallSlots + ' to start, the Counter sells more seats and never runs out of them, and you can ' +
+          'swap balls in and out at the wheel itself. A ball sells back for half.</p>' +
 
           '<h4>The House Edge</h4>' +
           '<p>Up to Ante ' + (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing. From <b>Ante ' + TUNE.houseEdgeFromAnte + '</b> ' +
