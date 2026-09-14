@@ -1459,6 +1459,90 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .tip-kind.edge-kind{ color:var(--hot); }
 .fx-skim{ color:var(--hot); font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.8); }
 
+/* ---------------- THE BALL CASE ----------------
+   Every ball you own is thrown on every spin, so they need to read at a glance
+   both in the case and mid-flight on the rim.                                 */
+.b-ivory  { --ball:#f2ece0; --ball2:#c9c0ae; }
+.b-green  { --ball:#5ce08a; --ball2:#1f9d55; }
+.b-red    { --ball:#ff6b81; --ball2:#c62b45; }
+.b-black  { --ball:#5c6270; --ball2:#1b1c22; }
+.b-iron   { --ball:#aeb6c2; --ball2:#6b7280; }
+.b-brass  { --ball:#e08a4a; --ball2:#8a4a12; }
+.b-gold   { --ball:#fff3c4; --ball2:#d4a017; }
+.b-violet { --ball:#c8a4ff; --ball2:#6a37c9; }
+.b-clay   { --ball:#e3a878; --ball2:#a0602f; }
+.b-ghost  { --ball:#dff3ff; --ball2:#7fb9d6; }
+.b-cool   { --ball:#7fe3ff; --ball2:#2b8fb0; }
+
+.rw-balls{ position:absolute; inset:0; pointer-events:none; }
+.rw-ball{
+  position:absolute; left:50%; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px;
+  border-radius:50%; z-index:9;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 4px rgba(0,0,0,.7);
+}
+.rw-ball.live{ box-shadow:0 0 10px rgba(255,255,255,.5), 0 1px 4px rgba(0,0,0,.7); }
+.rw-ball.settled{ transition:none; }
+.rw-ball.hit{ box-shadow:0 0 0 2px var(--lime), 0 0 14px rgba(126,231,135,.8); }
+
+/* the case strip under the wheel */
+.rw-case{ display:flex; align-items:center; gap:10px; justify-content:center; margin:6px 0 2px; }
+.rw-case-balls{ display:flex; gap:5px; }
+.rw-ballchip{
+  width:14px; height:14px; border-radius:50%; display:inline-block; cursor:help;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.rw-ballchip:hover{ transform:scale(1.2); }
+.rw-case-need{ font-size:10px; opacity:.75; }
+.rw-case-need b{ color:var(--gold); opacity:1; }
+.rw-num.painted{ text-decoration:underline; text-underline-offset:2px; font-weight:800; }
+
+/* what each ball did, printed under the result */
+.ball-report{ margin-top:8px; border-top:1px solid var(--line); padding-top:6px; text-align:left; }
+.rb-head{ font-size:11px; opacity:.8; margin-bottom:5px; text-align:center; }
+.rb-head b{ color:var(--gold); }
+.rb-row{ display:flex; align-items:center; gap:7px; font-size:10px; padding:2px 0; opacity:.6; }
+.rb-row.hit{ opacity:1; }
+.rb-row.ghost .rb-name{ font-style:italic; }
+.rb-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%); }
+.rb-name{ flex:0 0 92px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rb-pocket{ flex:0 0 22px; text-align:center; font-weight:800; border-radius:4px; padding:0 3px; }
+.rb-pocket.r-red{ background:rgba(198,43,69,.5); color:#ffd9df; }
+.rb-pocket.r-black{ background:rgba(27,28,34,.9); color:#c9ced8; }
+.rb-pocket.r-green{ background:rgba(31,157,85,.6); color:#d9ffe8; }
+.rb-fx{ flex:1; color:var(--lime); }
+.rb-row:not(.hit) .rb-fx{ color:var(--gold); }
+.rb-note{ margin-top:5px; font-size:10px; color:var(--violet); text-align:center; }
+
+/* the shop shelf */
+.shelf.sh-ball .shelf-head h3{ color:var(--violet); }
+.ball-case{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 10px 4px; }
+.case-ball{
+  display:flex; align-items:center; gap:6px; padding:5px 9px 5px 6px; border-radius:20px;
+  border:1px solid var(--line); background:rgba(255,255,255,.05); cursor:pointer; font-size:10px;
+}
+.case-ball:hover{ border-color:var(--violet); background:rgba(176,124,255,.14); }
+.case-ball.fixed{ cursor:help; opacity:.7; }
+.case-ball.empty{ opacity:.25; cursor:default; padding:5px 8px; }
+.case-ball.empty:hover{ border-color:var(--line); background:rgba(255,255,255,.05); }
+.cb-orb, .case-orb{
+  width:16px; height:16px; border-radius:50%; display:inline-block; flex:0 0 auto;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+.case-ball.empty .cb-orb{ background:none; border:1px dashed var(--line); box-shadow:none; }
+.cb-name{ font-weight:700; letter-spacing:.04em; }
+.cb-sell{ font-size:8px; opacity:.6; letter-spacing:.1em; }
+.case-ball:hover .cb-sell{ color:var(--gold); opacity:1; }
+.case-note{ margin-left:auto; font-size:10px; opacity:.7; text-align:right; line-height:1.5; }
+.case-note b{ color:var(--gold); opacity:1; }
+.case-orb{ width:34px; height:34px; }
+.si-badge.ball{ background:rgba(176,124,255,.18); color:#d6bcff; }
+.tip-kind.ball-kind{ background:rgba(176,124,255,.16); color:#d6bcff; }
+.tip-text.dim{ opacity:.62; font-size:11px; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -1936,6 +2020,11 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  maxBalls: 5,              // the ball case only holds so many
+  ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
+  ballPayFloor: 0.3,
+  ballPayCeil: 1.6,
+  maxPainted: 8,            // and only so many pockets can ever be repainted
   houseEdgeFromAnte: 4,     // the casino starts taking a cut here
   houseEdgePer: 0.06,       // and another 6% of every score per ante after
   houseEdgeCap: 0.30,
@@ -2762,6 +2851,73 @@ const ROULETTE_ODDS = {
   black: { count: 9, pay: 3,  label: 'BLACK' },
   green: { count: 1, pay: 20, label: 'GREEN 0' }
 };
+
+/* ============================================================
+   THE BALL CASE
+   Every spin drops every ball you own. You need HALF of them
+   (rounded up) to land on your colour, so a second ball is a
+   huge jump and a third is a step back -- buy in pairs. Each
+   extra ball also shaves the payout, so the case trades size
+   for certainty. The abilities fire on where each ball LANDS,
+   win or lose, which is the real reason to own them.
+   ============================================================ */
+const BALLS = [
+  { id: 'house', name: 'The House Ball', tint: 'b-ivory', cost: 0, rarity: 'common', free: true,
+    text: 'An ordinary ivory ball. No tricks.',
+    long: 'The ball the table came with. You always have it, you cannot sell it, and it does exactly nothing beyond landing somewhere.' },
+
+  { id: 'emerald', name: 'The Emerald', tint: 'b-green', cost: 13, rarity: 'rare',
+    text: 'Where it lands has a ' + 5 + '% chance to turn GREEN for the rest of the run.',
+    long: 'Slowly repaints the wheel in your favour. Green pays the most, so more green pockets means the zero bet starts landing — but the table pays the zero less the more of them there are, so this is a build, not a printer.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('green')) c.note('THE EMERALD BITES — that pocket is green now'); } } },
+
+  { id: 'garnet', name: 'The Garnet', tint: 'b-red', cost: 9, rarity: 'uncommon',
+    text: 'Where it lands has a ' + 5 + '% chance to turn RED for the rest of the run.',
+    long: 'Repaints the wheel red a pocket at a time. Red pays less the more red there is, so this is about landing your colour more often, not about the multiple.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('red')) c.note('THE GARNET STAINS THAT POCKET RED'); } } },
+
+  { id: 'onyx', name: 'The Onyx', tint: 'b-black', cost: 9, rarity: 'uncommon',
+    text: 'Where it lands has a ' + 5 + '% chance to turn BLACK for the rest of the run.',
+    long: 'The same deal as the Garnet, in the other direction. Pairs with anything that likes a predictable wheel.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('black')) c.note('THE ONYX TURNS THAT POCKET BLACK'); } } },
+
+  { id: 'iron', name: 'The Iron Ball', tint: 'b-iron', cost: 7, rarity: 'common',
+    text: 'Lands on black: <b>+$3</b>. Win or lose.',
+    long: 'Roughly a coin flip to pay every single spin, whatever the bet was doing. The cheapest way to make a losing wheel still worth spinning.',
+    hooks: { land: c => { if (c.pocket.c === 'black') { c.money(3); c.note('IRON ON BLACK — $3'); } } } },
+
+  { id: 'brass', name: 'The Brass Ball', tint: 'b-brass', cost: 8, rarity: 'common',
+    text: 'Lands on red: <b>+300 Chips</b> straight onto your round score. Win or lose.',
+    long: 'The other half of the Iron Ball. It scores through the full pipeline, so Heat and Tempo are already applied to it by the time it lands.',
+    hooks: { land: c => { if (c.pocket.c === 'red') { c.addChips(300); c.note('BRASS ON RED — 300 CHIPS'); } } } },
+
+  { id: 'zero', name: 'The Zero Ball', tint: 'b-gold', cost: 12, rarity: 'rare',
+    text: 'Lands on a green pocket: <b>+2 HEAT and $12</b>. Win or lose.',
+    long: 'Rare on a stock wheel — one pocket in nineteen — and absurd on a wheel the Emerald has been working on. Heat multiplies every score for the rest of the round.',
+    hooks: { land: c => { if (c.pocket.c === 'green') { c.heat(2); c.money(12); c.note('THE ZERO BALL HITS — +2 HEAT, $12'); } } } },
+
+  { id: 'loaded', name: 'The Loaded Ball', tint: 'b-violet', cost: 14, rarity: 'rare',
+    text: 'If it misses your colour it is thrown again, once.',
+    long: 'A second bite at every spin. It does not change how many balls you need — it just makes this one much more likely to be one of them.',
+    reroll: true },
+
+  { id: 'clay', name: 'The Clay Ball', tint: 'b-clay', cost: 10, rarity: 'uncommon',
+    text: 'When it lands on your colour it counts as <b>two</b> balls.',
+    long: 'It still raises the number you need like any other ball, so on its own it is a wash — paired with a second ball it wins the spin by itself.',
+    double: true },
+
+  { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
+    text: 'Never counts toward how many balls you need — but can still land on your colour.',
+    long: 'Pure upside, and priced like it. Every other ball you buy makes the target harder; this one does not, and it can still be the ball that gets you there.',
+    ghost: true },
+
+  { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',
+    text: 'Lands on your colour <b>20% more often</b> than it should.',
+    long: 'A quietly rigged ball. It does not guarantee anything, it just leans on the odds every single time it is thrown.',
+    bias: 0.2 }
+];
+const BALL_BY_ID = {};
+BALLS.forEach(b => { BALL_BY_ID[b.id] = b; });
 function roulettePay(colour) {
   return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
 }
@@ -2939,6 +3095,8 @@ const Engine = (() => {
       permaMult: 0,
       whim: null,
       banditPulls: 0,
+      balls: ['house'],
+      wheelPaint: {},
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -3048,6 +3206,125 @@ const Engine = (() => {
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
+  }
+
+  /* ---------------- THE WHEEL ----------------
+     Pockets can be repainted permanently by the jewel balls, so nothing may read
+     ROULETTE directly any more -- odds, payouts and the wheel itself all come
+     from here. A payout is scaled by how common its colour has become, so
+     painting the wheel buys you consistency rather than free money.
+     ------------------------------------------------------------------------- */
+  function wheelPockets(run) {
+    const paint = (run && run.wheelPaint) || null;
+    if (!paint) return ROULETTE;
+    return ROULETTE.map((p, i) => (paint[i] ? { n: p.n, c: paint[i], painted: true } : p));
+  }
+
+  function wheelCounts(run) {
+    const out = { red: 0, black: 0, green: 0 };
+    wheelPockets(run).forEach(p => { out[p.c]++; });
+    return out;
+  }
+
+  /* what a colour pays right now, given how much of the wheel wears it */
+  function wheelPay(run, colour, cash) {
+    const base = colour === 'green'
+      ? (cash ? TUNE.cashPayGreen : TUNE.roulettePayGreen)
+      : (cash ? TUNE.cashPayEven : TUNE.roulettePayEven);
+    const was = ROULETTE_ODDS[colour].count;
+    const now = wheelCounts(run)[colour];
+    if (!now) return base;
+    const floor = colour === 'green' ? 3 : 2;
+    return Math.max(floor, Math.round(base * was / now));
+  }
+
+  function wheelOdds(run) {
+    const counts = wheelCounts(run);
+    const out = {};
+    Object.keys(ROULETTE_ODDS).forEach(c => {
+      out[c] = { count: counts[c], label: ROULETTE_ODDS[c].label, pay: wheelPay(run, c, false) };
+    });
+    return out;
+  }
+
+  /* paint one pocket for the rest of the run. The zero is the house's own and is
+     never repainted, and the wheel only ever takes so much paint. */
+  function paintPocket(run, index, colour) {
+    if (index === 0) return false;
+    run.wheelPaint = run.wheelPaint || {};
+    if (run.wheelPaint[index]) return false;
+    if (Object.keys(run.wheelPaint).length >= TUNE.maxPainted) return false;
+    if (ROULETTE[index].c === colour) return false;      // already that colour
+    run.wheelPaint[index] = colour;
+    return true;
+  }
+
+  /* ---------------- THE BALL CASE ---------------- */
+  function ballsOf(run) {
+    const ids = (run && run.balls && run.balls.length) ? run.balls : ['house'];
+    return ids.map(id => BALL_BY_ID[id]).filter(Boolean);
+  }
+
+  /* Ghost balls are bonus throws -- they can hit for you but never raise the bar. */
+  function ballsCounted(run) {
+    return ballsOf(run).filter(b => !b.ghost).length;
+  }
+
+  function ballThreshold(run) {
+    return Math.max(1, Math.ceil(ballsCounted(run) / 2));
+  }
+
+  /* How likely each ball is to land on a given colour, on its own. */
+  function ballHitChance(def, p) {
+    if (def.bias) return def.bias + (1 - def.bias) * p;   // the Magnet leans on the roll
+    if (def.reroll) return 1 - (1 - p) * (1 - p);          // the Loaded Ball gets thrown twice
+    return p;
+  }
+
+  /* Exact odds of the whole case clearing its threshold, by walking the hit
+     distribution ball by ball. Ghost balls add hits without raising the bar and
+     the Clay Ball is worth two, so this handles every combination honestly. */
+  function ballWinChance(run, colour) {
+    const counts = wheelCounts(run);
+    const total = wheelPockets(run).length;
+    const p = counts[colour] / total;
+    const balls = ballsOf(run);
+    const need = ballThreshold(run);
+    let dist = [1];
+    balls.forEach(def => {
+      const hp = ballHitChance(def, p);
+      const worth = def.double ? 2 : 1;
+      const next = new Array(dist.length + worth).fill(0);
+      dist.forEach((prob, hits) => {
+        if (!prob) return;
+        next[hits] += prob * (1 - hp);
+        next[hits + worth] += prob * hp;
+      });
+      dist = next;
+    });
+    let win = 0;
+    for (let h = need; h < dist.length; h++) win += dist[h];
+    return { p, win, need };
+  }
+
+  /* The table prices your certainty. A bigger case wins more often and is paid
+     proportionally less for it -- but only to the power of ballPayFairness, so
+     buying balls still leaves you a real edge rather than a wash. */
+  function ballPayMult(run, colour) {
+    const balls = ballsOf(run);
+    if (balls.length <= 1) return 1;
+    const { p, win } = ballWinChance(run, colour || 'red');
+    if (!win || !p) return 1;
+    /* not clamped at 1: an odd-numbered case actually wins LESS often than a
+       single ball, and the table pays it a little more for the privilege */
+    const ratio = p / win;
+    return Math.max(TUNE.ballPayFloor, Math.min(TUNE.ballPayCeil, Math.pow(ratio, TUNE.ballPayFairness)));
+  }
+
+  /* the headline rate for a bet, balls and paint included. A float on purpose --
+     rounding it to an integer used to wipe the ball damper out entirely. */
+  function betRate(run, colour, cash) {
+    return wheelPay(run, colour, cash) * ballPayMult(run, colour);
   }
 
   /* THE HOUSE EDGE. From Ante 4 the casino takes a percentage off every score
@@ -3235,6 +3512,8 @@ const Engine = (() => {
 
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
+    wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket,
+    ballsOf, ballsCounted, ballThreshold, ballPayMult, ballWinChance, betRate,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,
@@ -3916,6 +4195,72 @@ const Game = (() => {
     }
   }
 
+  /* ---------------- THE BALL CASE ----------------
+     One throw drops every ball you own. Each lands in its own pocket, each runs
+     its own ability on where it landed whether the spin won or lost, and the
+     spin itself is won by landing HALF of them (rounded up) on your colour.
+     ------------------------------------------------------------------------- */
+  function throwBalls(colour, guaranteeFirst) {
+    const run = G.run;
+    const pockets = Engine.wheelPockets(run);
+    const balls = Engine.ballsOf(run);
+    const winners = pockets.map((p, i) => i).filter(i => pockets[i].c === colour);
+    const rollOne = bias => {
+      if (winners.length && bias && Math.random() < bias) return winners[Math.floor(Math.random() * winners.length)];
+      return Math.floor(Math.random() * pockets.length);
+    };
+
+    const thrown = [];
+    let hits = 0, guaranteed = false;
+
+    balls.forEach((def, k) => {
+      let index;
+      if (k === 0 && guaranteeFirst && winners.length) {
+        index = winners[Math.floor(Math.random() * winners.length)];
+        guaranteed = true;
+      } else {
+        index = rollOne(def.bias || 0);
+        /* the Loaded Ball gets thrown again if the first throw missed */
+        if (def.reroll && pockets[index].c !== colour) index = rollOne(def.bias || 0);
+      }
+      const pocket = pockets[index];
+      const hit = pocket.c === colour;
+      if (hit) hits += def.double ? 2 : 1;
+      thrown.push({ id: def.id, name: def.name, tint: def.tint, index, pocket, hit,
+                    ghost: !!def.ghost, doubled: !!(def.double && hit), notes: [] });
+    });
+
+    return { thrown, hits, guaranteed, need: Engine.ballThreshold(run) };
+  }
+
+  /* run every ball's ability on where it landed. Kept separate from the throw so
+     nothing fires until the wheel has actually stopped and the bet is settled. */
+  function settleBalls(res, colour) {
+    const run = G.run;
+    res.thrown.forEach(t => {
+      const def = BALL_BY_ID[t.id];
+      if (!def || !def.hooks || !def.hooks.land) return;
+      const ctx = {
+        run, round: G.round, pocket: t.pocket, index: t.index, bet: colour, hit: t.hit,
+        note: msg => t.notes.push(msg),
+        money: n => { run.money += n; G.round.money += n; t.cash = (t.cash || 0) + n; },
+        heat: n => { G.round.heat = (G.round.heat || 0) + n; t.heat = (t.heat || 0) + n; },
+        addChips: n => {
+          t.chips = (t.chips || 0) + n;
+          scoreEvent({ event: 'stash', card: null, baseChips: n, label: def.name.toUpperCase(),
+                       anchor: { zone: 'sidepot' } });
+        },
+        paint: to => {
+          const ok = Engine.paintPocket(run, t.index, to);
+          if (ok) { t.painted = to; res.painted = (res.painted || 0) + 1; }
+          return ok;
+        }
+      };
+      def.hooks.land(ctx);
+    });
+    return res;
+  }
+
   /* what CASH OUT would pay right now -- the round's purse, and the thing you
      actually stake at the wheel */
   function roundPurse() {
@@ -3938,21 +4283,19 @@ const Game = (() => {
     snapshot();
     const m = Engine.mods(G.run);
 
-    let index = Math.floor(Math.random() * ROULETTE.length);
-    let guaranteed = false;
-    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
-      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
-      index = winners[Math.floor(Math.random() * winners.length)];
-      guaranteed = true;
-      G.round.usedSafeFlip = true;
-    }
-    const pocket = ROULETTE[index];
-    const win = pocket.c === colour;
-    const pay = colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven;
+    const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
+    if (safe) G.round.usedSafeFlip = true;
+    const roll = throwBalls(colour, safe);
+    const guaranteed = roll.guaranteed && roll.hits >= roll.need;
+    const win = roll.hits >= roll.need;
+    const pocket = roll.thrown[0].pocket;
+    const index = roll.thrown[0].index;
+    const rate = Engine.betRate(G.run, colour, true);
+    const pay = +rate.toFixed(2);
 
     let payout = 0;
     if (win) {
-      payout = stake * pay;
+      payout = Math.max(1, Math.round(stake * rate));
       G.round.cashSwing += payout - stake;
       /* a win at the wheel is a win at the wheel -- it heats the table up the
          same way a pot flip does, and the zero runs hot */
@@ -3963,9 +4306,13 @@ const Game = (() => {
       G.round.cashSwing -= stake;
       G.round.heat = 0;
     }
+    const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
+                  staked: stake, payout, before: purse, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+    settleBalls(out, colour);
+    out.purse = roundPurse();
     save();
-    return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, before: purse, purse: roundPurse(), heat: G.round.heat };
+    return out;
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -3978,21 +4325,19 @@ const Game = (() => {
     snapshot();
     const m = Engine.mods(G.run);
 
-    let index = Math.floor(Math.random() * ROULETTE.length);
-    let guaranteed = false;
-    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
-      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
-      index = winners[Math.floor(Math.random() * winners.length)];
-      guaranteed = true;
-      G.round.usedSafeFlip = true;
-    }
-    const pocket = ROULETTE[index];
-    const win = pocket.c === colour;
-    const pay = roulettePay(colour);
+    const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
+    if (safe) G.round.usedSafeFlip = true;
+    const roll = throwBalls(colour, safe);
+    const guaranteed = roll.guaranteed && roll.hits >= roll.need;
+    const win = roll.hits >= roll.need;
+    const pocket = roll.thrown[0].pocket;
+    const index = roll.thrown[0].index;
+    const rate = Engine.betRate(G.run, colour, false);
+    const pay = +rate.toFixed(2);
 
     let anteHit = 0;
     if (win) {
-      G.round.pot = pot * pay;
+      G.round.pot = Math.round(pot * rate);
       G.round.potStreak = (G.round.potStreak || 0) + 1;
       G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
@@ -4004,9 +4349,12 @@ const Game = (() => {
       anteHit = pot;
       spendAnteScore(pot);          /* this round's score first, then banked rounds */
     }
+    const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
+                  pot: G.round.pot, staked: pot, anteHit, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+    settleBalls(out, colour);
     save();
-    return { ok: true, win, guaranteed, pocket, index, colour, pay,
-             pot: G.round.pot, staked: pot, anteHit, heat: G.round.heat };
+    return out;
   }
 
   /* ---------------- THE BOUNTY ----------------
@@ -4709,7 +5057,7 @@ const Game = (() => {
        mods    -> permanently mark a card you already own
        cards   -> add a brand new card to the deck
        houses  -> permanent run rules, no seat needed              */
-  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', plain: 'plain', house: 'houses' };
+  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', plain: 'plain', house: 'houses', ball: 'balls' };
 
   function weightedCurio(exclude) {
     const pool = CURIOS.filter(c => !exclude.has(c.id));
@@ -4734,6 +5082,7 @@ const Game = (() => {
     const base = item.type === 'house' ? HOUSE_BY_ID[item.id].cost
                : item.type === 'curio' ? CURIO_BY_ID[item.id].cost
                : item.type === 'plain' ? item.cost
+               : item.type === 'ball' ? BALL_BY_ID[item.id].cost
                : SHOP_BY_ID[item.id].cost;
     let p = base;
     if (item.finish && item.finish !== 'none') p += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
@@ -4795,19 +5144,37 @@ const Game = (() => {
                    rank: pick.rank, suit: pick.suit,
                    cost: 3 + Math.ceil(rankChips(pick.rank) / 3) });
     }
+    /* two balls, never one you already own, never past the case's capacity */
+    const held = new Set(G.run.balls || ['house']);
+    const ballPool = BALLS.filter(b => !b.free && !held.has(b.id));
+    const balls = [];
+    if ((G.run.balls || []).length < TUNE.maxBalls) {
+      const seenB = new Set();
+      for (let i = 0; i < 2; i++) {
+        const pool = ballPool.filter(b => !seenB.has(b.id));
+        if (!pool.length) break;
+        let total = 0;
+        pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
+        let r = Math.random() * total, pick = pool[0];
+        for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
+        seenB.add(pick.id);
+        balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
+      }
+    }
     return {
       curios,
       mods: pickN(CARD_MODS, 2, 'mod'),
       cards: pickCards(2),
       plain,
-      houses: pickN(avail, 2, 'house')
+      houses: pickN(avail, 2, 'house'),
+      balls
     };
   }
 
   function openShop(anteCleared) {
     const r = rollShopItems();
     G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, plain: r.plain,
-                   houses: r.houses, rerolls: 0, pulls: 0 };
+                   houses: r.houses, balls: r.balls, rerolls: 0, pulls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -4824,7 +5191,7 @@ const Game = (() => {
     const r = rollShopItems();
     const shop = G.run.shop;
     /* keep anything already bought marked as sold so the shelf reads honestly */
-    ['curios', 'mods', 'cards', 'plain', 'houses'].forEach(k => { shop[k] = r[k]; });
+    ['curios', 'mods', 'cards', 'plain', 'houses', 'balls'].forEach(k => { shop[k] = r[k]; });
     shop.rerolls++;
     save();
     return true;
@@ -4850,6 +5217,17 @@ const Game = (() => {
       item.bought = true;
       save();
       return { ok: true, kind: 'curio' };
+    }
+
+    if (item.type === 'ball') {
+      G.run.balls = G.run.balls || ['house'];
+      if (G.run.balls.length >= TUNE.maxBalls) return { ok: false, reason: 'The ball case is full.' };
+      if (G.run.balls.includes(item.id)) return { ok: false, reason: 'You already own that one.' };
+      G.run.money -= price;
+      G.run.balls.push(item.id);
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id] };
     }
 
     if (item.type === 'plain') {
@@ -4926,6 +5304,18 @@ const Game = (() => {
   }
 
   function cancelPending() { G.pending = null; }
+
+  /* balls sell for half, and the house ball is not for sale */
+  function sellBall(index) {
+    const balls = G.run.balls || ['house'];
+    const def = BALL_BY_ID[balls[index]];
+    if (!def || def.free) return 0;
+    const value = Math.max(1, Math.floor(def.cost / 2));
+    balls.splice(index, 1);
+    G.run.money += value;
+    save();
+    return value;
+  }
 
   function sellCurio(index) {
     const inst = G.run.mantel[index];
@@ -5086,7 +5476,7 @@ const Game = (() => {
   return {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
-    sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
+    sellCurio, sellBall, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
@@ -6368,6 +6758,7 @@ const UI = (() => {
     if (!a) return $('#scorebox');
     if (a.zone === 'stash') return $('#stash') || $('#scorebox');
     if (a.zone === 'bounty') return $('#bounty') || $('#scorebox');
+    if (a.zone === 'sidepot') return $('#sidepot') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');
@@ -6984,6 +7375,12 @@ const Overlays = (() => {
           '<div class="shelf-head"><h3>' + SHELF_META.plain.title + '</h3><span>' + SHELF_META.plain.sub + '</span></div>' +
           '<div class="shelf-row plain-row" id="shelf-plain"></div>' +
         '</section>' +
+        '<section class="shelf sh-ball">' +
+          '<div class="shelf-head"><h3>THE BALL CASE</h3><span>every ball you own is thrown on every spin · ' +
+          'you need half of them (rounded up) on your colour · click a ball in the case to sell it</span></div>' +
+          '<div class="ball-case" id="ball-case"></div>' +
+          '<div class="shelf-row ball-row" id="shelf-ball"></div>' +
+        '</section>' +
         '<section class="shelf sh-counter">' +
           '<div class="shelf-head"><h3>THE COUNTER</h3><span>always in stock · permanent · the price climbs every time you buy</span></div>' +
           '<div class="counter-row" id="counter-row"></div>' +
@@ -7033,7 +7430,8 @@ const Overlays = (() => {
     const rr = $('#shop-reroll');
     if (rr) rr.innerHTML = 'REROLL $<b>' + Game.rerollCost() + '</b>';
 
-    ['curio', 'mod', 'card', 'plain', 'house'].forEach(shelf => {
+    renderBallCase();
+    ['curio', 'mod', 'card', 'plain', 'house', 'ball'].forEach(shelf => {
       const row = $('#shelf-' + shelf);
       row.innerHTML = '';
       (run.shop[Game.SHELVES[shelf]] || []).forEach((item, i) => row.appendChild(shopCard(item, i, shelf)));
@@ -7043,6 +7441,44 @@ const Overlays = (() => {
     renderCounter();
     const bp = $('#bandit-pull');
     if (bp) bp.innerHTML = 'PULL THE LEVER $<b>' + Game.banditPrice() + '</b>';
+  }
+
+  /* the balls you already own, sellable for half */
+  function renderBallCase() {
+    const row = $('#ball-case');
+    if (!row) return;
+    const balls = Engine.ballsOf(G.run);
+    const need = Engine.ballThreshold(G.run);
+    const mult = Engine.ballPayMult(G.run);
+    row.innerHTML = '';
+    balls.forEach((def, i) => {
+      const n = el('div', 'case-ball ' + def.tint + (def.free ? ' fixed' : ''));
+      const value = def.free ? 0 : Math.max(1, Math.floor(def.cost / 2));
+      n.innerHTML = '<span class="cb-orb"></span><span class="cb-name">' + def.name.replace(/^The /, '') + '</span>' +
+        (def.free ? '<span class="cb-sell">HOUSE</span>' : '<span class="cb-sell">SELL $' + value + '</span>');
+      n.onpointerenter = e => UI.showTip(e.currentTarget,
+        '<div class="tip-title">' + def.name + '</div>' +
+        '<div class="tip-kind ball-kind">BALL — thrown on every spin</div>' +
+        '<div class="tip-text">' + def.text + '</div>' +
+        (def.long ? '<div class="tip-text dim">' + def.long + '</div>' : '') +
+        (def.free ? '' : '<div class="tip-foot">click to sell for $' + value + '</div>'));
+      n.onpointerleave = UI.hideTip;
+      if (!def.free) {
+        n.onclick = () => {
+          const v = Game.sellBall(i);
+          if (v) { Sfx.money(); UI.hideTip(); UI.toast('Sold the ' + def.name.replace(/^The /, '') + ' for <b>$' + v + '</b>'); refreshShop(); }
+        };
+      }
+      row.appendChild(n);
+    });
+    for (let i = balls.length; i < TUNE.maxBalls; i++) {
+      row.appendChild(el('div', 'case-ball empty', '<span class="cb-orb"></span>'));
+    }
+    row.appendChild(el('div', 'case-note',
+      balls.length > 1
+        ? '<b>' + need + ' of ' + balls.length + '</b> must land on your colour' +
+          (mult < 1 ? '<br>payouts <b>x' + mult.toFixed(2) + '</b>' : '')
+        : 'one ball, one pocket<br><span class="dim">a second ball nearly doubles your win rate</span>'));
   }
 
   function renderCounter() {
@@ -7159,6 +7595,39 @@ const Overlays = (() => {
         };
       }
       return n0;
+    }
+
+    if (shelf === 'ball') {
+      const defB = BALL_BY_ID[item.id];
+      const priceB = Game.priceOf(item);
+      const full = (run.balls || []).length >= TUNE.maxBalls;
+      const nB = el('div', 'shop-item sh-ball' + (item.bought ? ' bought' : '') +
+                    (run.money < priceB || full ? ' broke' : ''));
+      nB.innerHTML =
+        '<div class="si-preview"><span class="case-orb ' + defB.tint + '"></span></div>' +
+        '<div class="si-name r-' + defB.rarity + '">' + defB.name + '</div>' +
+        '<div class="si-text">' + defB.text + '</div>' +
+        '<div class="si-badge ball">+1 BALL ON EVERY SPIN</div>' +
+        '<div class="si-price">' + (item.bought ? 'SOLD' : '$' + priceB) + '</div>';
+      nB.onpointerenter = e => UI.showTip(e.currentTarget,
+        '<div class="tip-title r-' + defB.rarity + '">' + defB.name + '</div>' +
+        '<div class="tip-kind ball-kind">BALL — thrown on every spin</div>' +
+        '<div class="tip-text">' + defB.text + '</div>' +
+        (defB.long ? '<div class="tip-text dim">' + defB.long + '</div>' : '') +
+        '<div class="tip-foot">' + defB.rarity.toUpperCase() +
+        (full ? ' • THE CASE IS FULL — sell one first' : '') + '</div>');
+      nB.onpointerleave = UI.hideTip;
+      if (!item.bought) {
+        nB.onclick = () => {
+          const res = Game.buy('ball', index);
+          if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(nB); return; }
+          Sfx.money(); UI.burst(nB, 14, '#b07cff'); UI.hideTip();
+          UI.toast(defB.name + ' goes in the case — <b>' + Engine.ballThreshold(G.run) + ' of ' +
+                   Engine.ballsOf(G.run).length + '</b> must land on your colour now');
+          refreshShop(); UI.render();
+        };
+      }
+      return nB;
     }
 
     if (shelf === 'curio') {
@@ -7436,28 +7905,49 @@ const Overlays = (() => {
       if (cashStake > purse || cashStake <= 0) cashStake = Math.min(purse, TUNE.cashChips[0]);
     }
 
-    const nums = ROULETTE.map((p, i) =>
-      '<div class="rw-num r-' + p.c + '" style="transform:rotate(' + (i * SEG) + 'deg) translateY(-86px) rotate(' + (-i * SEG) + 'deg)">' + p.n + '</div>').join('');
-    const stops = ROULETTE.map((p, i) => {
+    /* the wheel is whatever the jewel balls have made of it */
+    const pockets = Engine.wheelPockets(G.run);
+    const counts = Engine.wheelCounts(G.run);
+    const nums = pockets.map((p, i) =>
+      '<div class="rw-num r-' + p.c + (p.painted ? ' painted' : '') + '" style="transform:rotate(' + (i * SEG) +
+      'deg) translateY(-86px) rotate(' + (-i * SEG) + 'deg)">' + p.n + '</div>').join('');
+    const stops = pockets.map((p, i) => {
       const c = p.c === 'green' ? '#1f9d55' : (p.c === 'red' ? '#c62b45' : '#1b1c22');
       return c + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
     }).join(',');
 
     const cash = betMode === 'cash';
     const stake = cash ? cashStake : pot;
-    const payEven = cash ? TUNE.cashPayEven : TUNE.roulettePayEven;
-    const payGreen = cash ? TUNE.cashPayGreen : TUNE.roulettePayGreen;
+    const balls = Engine.ballsOf(G.run);
+    const ballMult = Engine.ballPayMult(G.run, 'red');
+    const need = Engine.ballThreshold(G.run);
 
     const bet = (col) => {
       const o = ROULETTE_ODDS[col];
-      const pay = col === 'green' ? payGreen : payEven;
+      const rate = Engine.betRate(G.run, col, cash);
+      const odds = Engine.ballWinChance(G.run, col);
       const dead = stake <= 0;
       return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
         (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
-        '<span class="rw-bo">' + o.count + ' in ' + ROULETTE.length + '</span>' +
-        '<span class="rw-bp">' + (cash ? 'pays $' + (stake * pay) : 'pays ' + UI.fmt(stake * pay)) + '</span></button>';
+        '<span class="rw-bo">' + (balls.length > 1
+            ? Math.round(odds.win * 100) + '% to clear'
+            : counts[col] + ' in ' + pockets.length) + '</span>' +
+        '<span class="rw-bp">' + (cash ? 'pays $' + Math.max(1, Math.round(stake * rate))
+                                       : 'pays ' + UI.fmt(Math.round(stake * rate))) + '</span></button>';
     };
+
+    /* the case itself, and what it is asking of you */
+    const caseRow =
+      '<div class="rw-case">' +
+        '<div class="rw-case-balls">' + balls.map(b =>
+          '<span class="rw-ballchip ' + b.tint + '" data-ball="' + b.id + '" title="' + b.name + '"></span>').join('') +
+        '</div>' +
+        '<div class="rw-case-need">' + (balls.length > 1
+          ? '<b>' + need + ' of ' + balls.length + '</b> balls must land on your colour' +
+            (ballMult < 1 ? ' &nbsp;·&nbsp; payouts x' + ballMult.toFixed(2) : '')
+          : 'one ball, one pocket') + '</div>' +
+      '</div>';
 
     const chips = TUNE.cashChips.concat([purse]).filter((v, i, a2) => v > 0 && v <= purse && a2.indexOf(v) === i);
     const chipRow = cash
@@ -7486,8 +7976,10 @@ const Overlays = (() => {
             '<div class="rw-nums">' + nums + '</div>' +
             '<div class="rw-hub"></div>' +
           '</div>' +
-          '<div class="rw-ball" id="rw-ball"></div>' +
+          '<div class="rw-balls" id="rw-balls">' + balls.map((b, k) =>
+            '<div class="rw-ball ' + b.tint + '" id="rw-ball-' + k + '"></div>').join('') + '</div>' +
         '</div>' +
+        caseRow +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
         '<div class="wheel-warn">' + (cash
           ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b> and raises <b>HEAT</b>; a loss comes off the purse and cools the table. Your banked cash is never touched.'
@@ -7499,6 +7991,15 @@ const Overlays = (() => {
     $$('.rw-mode').forEach(b2 => { b2.onclick = () => { Sfx.click(); betMode = b2.dataset.mode; roulette(); }; });
     $$('.rw-chip').forEach(b2 => { b2.onclick = () => { Sfx.click(); cashStake = +b2.dataset.stake; roulette(); }; });
     $$('.rw-bet').forEach(b2 => { b2.onclick = () => placeBet(b2.dataset.col); });
+    $$('.rw-ballchip').forEach(chip => {
+      const def = BALL_BY_ID[chip.dataset.ball];
+      chip.onpointerenter = e => UI.showTip(e.currentTarget,
+        '<div class="tip-title">' + def.name + '</div>' +
+        '<div class="tip-kind ball-kind">BALL — thrown on every spin</div>' +
+        '<div class="tip-text">' + def.text + '</div>' +
+        (def.long ? '<div class="tip-text dim">' + def.long + '</div>' : ''));
+      chip.onpointerleave = UI.hideTip;
+    });
     $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
     if (auto && auto.colour) setTimeout(() => placeBet(auto.colour), 60);
   }
@@ -7513,45 +8014,55 @@ const Overlays = (() => {
     $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
 
     const wheel = $('#rw-wheel');
-    const ball = $('#rw-ball');
+    const thrown = res.thrown || [{ index: res.index, hit: res.win }];
+    const nodes = thrown.map((t, k) => $('#rw-ball-' + k)).filter(Boolean);
     const DUR = 5800;
 
     /* the wheel: several slow turns easing out across the whole spin, always
-       continuing forward from wherever the last spin left it */
+       continuing forward from wherever the last spin left it. It settles so the
+       FIRST ball's pocket sits under the pointer -- the rest land where they land. */
     const turns = 4 + Math.floor(Math.random() * 2);
-    const want = (((-res.index * SEG - SEG / 2) % 360) + 360) % 360;
+    const want = (((-thrown[0].index * SEG - SEG / 2) % 360) + 360) % 360;
     let target = wheelAngle + 360 * turns;
     target += (((want - (target % 360)) % 360) + 360) % 360;
     wheelAngle = target;
     wheel.style.transition = 'transform ' + DUR + 'ms cubic-bezier(.10,.62,.12,1)';
     wheel.style.transform = 'rotate(' + target + 'deg)';
 
-    /* the ball: orbits the other way, bleeds off speed, and only drops from the
-       rim into the pocket once it is genuinely slow */
+    /* each ball orbits the other way, bleeds off speed, and only drops from the
+       rim into its own pocket once it is genuinely slow. Ball 0 finishes at the
+       top under the pointer; every other ball finishes at its pocket's angle in
+       the wheel's final frame, so they visibly spread around the rim. */
     const R_RIM = 96, R_POCKET = 73;
-    const spins = 8 + Math.random() * 2;
     const t0 = performance.now();
     let nextTick = 0;
-    ball.classList.remove('settled');
-    ball.classList.add('live');
+    const seeds = thrown.map((t, k) => ({
+      final: (((target + t.index * SEG + SEG / 2) % 360) + 360) % 360,
+      spins: 8 + Math.random() * 2 + k * 0.6,
+      radius: R_POCKET - k * 0.5
+    }));
+    nodes.forEach(n => { n.classList.remove('settled'); n.classList.add('live'); });
 
     const easeOut = k => 1 - Math.pow(1 - k, 3.6);
 
     const frame = now => {
       const k = Math.min(1, (now - t0) / DUR);
       const e = easeOut(k);
-      const angle = -(360 * spins) * (1 - e);
 
-      let r = R_RIM;
-      if (k > 0.60) {
-        const f = (k - 0.60) / 0.40;
-        const smooth = f * f * (3 - 2 * f);
-        const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;
-        r = R_RIM - (R_RIM - R_POCKET) * smooth + hop;
-      }
-      const rad = angle * Math.PI / 180;
-      ball.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
-                             (-Math.cos(rad) * r).toFixed(2) + 'px)';
+      nodes.forEach((node, i) => {
+        const sd = seeds[i];
+        const angle = sd.final - (360 * sd.spins) * (1 - e);
+        let r = R_RIM;
+        if (k > 0.60) {
+          const f = (k - 0.60) / 0.40;
+          const smooth = f * f * (3 - 2 * f);
+          const hop = Math.sin(f * Math.PI * 2.4) * (1 - f) * 6;
+          r = R_RIM - (R_RIM - sd.radius) * smooth + hop;
+        }
+        const rad = angle * Math.PI / 180;
+        node.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
+                               (-Math.cos(rad) * r).toFixed(2) + 'px)';
+      });
 
       if (now >= nextTick) {
         const speed = Math.max(0.015, 1 - e);
@@ -7560,36 +8071,71 @@ const Overlays = (() => {
       }
       if (k < 1) requestAnimationFrame(frame);
       else {
-        ball.classList.remove('live');
-        ball.classList.add('settled');
+        nodes.forEach((n, i) => {
+          n.classList.remove('live');
+          n.classList.add('settled');
+          if (thrown[i] && thrown[i].hit) n.classList.add('hit');
+        });
         setTimeout(() => finishWheel(res), 300);
       }
     };
     requestAnimationFrame(frame);
   }
 
+  /* what every ball did, whether the bet came in or not */
+  function ballReport(res) {
+    const thrown = res.thrown;
+    if (!thrown || thrown.length < 1) return '';
+    const rows = thrown.map(t => {
+      const def = BALL_BY_ID[t.id] || {};
+      const bits = [];
+      if (t.doubled) bits.push('counts double');
+      if (t.chips) bits.push('+' + UI.fmt(t.chips) + ' Chips');
+      if (t.cash) bits.push('+$' + t.cash);
+      if (t.heat) bits.push('+' + t.heat + ' HEAT');
+      if (t.painted) bits.push('pocket painted ' + t.painted.toUpperCase() + ' for the run');
+      return '<div class="rb-row' + (t.hit ? ' hit' : '') + (t.ghost ? ' ghost' : '') + '">' +
+        '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
+        '<span class="rb-name">' + (def.name || t.id) + '</span>' +
+        '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>' +
+        '<span class="rb-fx">' + (bits.length ? bits.join(' · ') : (t.hit ? 'on your colour' : '')) + '</span>' +
+      '</div>';
+    }).join('');
+    const head = thrown.length > 1
+      ? '<div class="rb-head"><b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' + res.need + '</b></div>'
+      : '';
+    const notes = thrown.reduce((a, t) => a.concat(t.notes || []), []);
+    return '<div class="ball-report">' + head + rows +
+      (notes.length ? '<div class="rb-note">' + notes.join('<br>') + '</div>' : '') + '</div>';
+  }
+
   function finishWheel(res) {
     const p = res.pocket;
     const box = $('#rw-result');
     const cash = res.mode === 'cash';
+    const many = res.thrown && res.thrown.length > 1;
+    const where = many ? '<b>' + res.hits + '/' + res.thrown.length + ' ON ' + res.colour.toUpperCase() + '</b>'
+                       : '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b>';
     if (res.win) {
       box.className = 'wheel-result win';
-      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — ' +
+      box.innerHTML = where + ' — ' +
         (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
         (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
                 '</b> — up $' + (res.purse - res.before) + ', and HEAT is now X' + Game.heatMult() + '</span>'
               : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
-        '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>';
+        '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>' +
+        ballReport(res);
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
       UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
     } else {
       box.className = 'wheel-result lose';
-      box.innerHTML = '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b> — the house takes <b>' +
+      box.innerHTML = where + ' — the house takes <b>' +
         (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
         (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse + '</b></span>'
               : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
-        '<br><span class="quip">' + quip('wheelLose') + '</span>';
+        '<br><span class="quip">' + quip('wheelLose') + '</span>' +
+        ballReport(res);
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
     }
     const btn = $('#rw-close');
@@ -7600,9 +8146,9 @@ const Overlays = (() => {
     const rideStake = cash ? Math.min(res.payout, Game.roundPurse()) : (G.round.pot || 0);
     const rideOk = res.win && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
     if (rideOk) {
-      const pay = cash ? (res.colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven) : roulettePay(res.colour);
+      const rate2 = Engine.betRate(G.run, res.colour, cash);
       const shown = cash ? '$' + rideStake : UI.fmt(rideStake);
-      const becomes = cash ? '$' + (rideStake * pay) : UI.fmt(rideStake * pay);
+      const becomes = cash ? '$' + Math.round(rideStake * rate2) : UI.fmt(Math.round(rideStake * rate2));
       const ride = el('button', 'btn ride-btn', 'LET IT RIDE');
       ride.title = 'Put the whole ' + shown + ' back on ' + ROULETTE_ODDS[res.colour].label;
       ride.onclick = () => {
@@ -7633,6 +8179,7 @@ const Overlays = (() => {
     { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
     { id: 'bounty',  name: 'THE BOUNTY', sub: 'the wanted card, and the clock you can start' },
     { id: 'edge',    name: 'HOUSE EDGE', sub: 'what the casino takes at the high antes' },
+    { id: 'balls',   name: 'THE BALLS',  sub: 'every ball is thrown on every spin' },
     { id: 'bandit',  name: 'THE BANDIT', sub: 'slot machine payouts' }
   ];
   let almanacTab = 'curios';
@@ -7740,6 +8287,24 @@ const Overlays = (() => {
         'The pot takes a much bigger cut of every score.', '');
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
+    } else if (almanacTab === 'balls') {
+      html += almEntry('dice', 'Every ball you own is thrown', 'how it works',
+        'A spin drops the whole case at once. You win it by landing <b>half your balls, rounded up</b>, on the colour you backed — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5.',
+        'So the second ball is an enormous jump and the third is a step sideways: the case likes even numbers. The table knows the odds and prices the payout against them, so a bigger case wins more often for less — you still keep an edge, but you are buying consistency, not free money. The reason to own balls is what they DO when they land.');
+      html += almEntry('coinstack', 'Abilities fire win or lose', 'the real point',
+        'A ball\'s ability runs on the pocket it landed in, whether the bet came in or not.',
+        'The Iron Ball paying $3 on black does not care that you backed red and lost. That is what makes a full case worth spinning even on a bet you expect to drop.');
+      BALLS.forEach(def => {
+        html += '<div class="alm-entry"><div class="alm-ico"><span class="case-orb ' + def.tint + '"></span></div>' +
+          '<div class="alm-body"><div class="alm-title">' + def.name +
+          '<span class="alm-tag">' + (def.free ? 'ALWAYS OWNED' : '$' + def.cost + ' · ' + def.rarity) + '</span></div>' +
+          '<div class="alm-short">' + def.text + '</div>' +
+          (def.long ? '<div class="alm-long">' + def.long + '</div>' : '') +
+          '</div></div>';
+      });
+      html += almEntry('sparkle', 'Painting the wheel', 'permanent',
+        'The jewel balls repaint the pocket they land in, for the rest of the run. The green zero is the house\'s own and is never repainted, and at most ' + TUNE.maxPainted + ' pockets can ever be painted.',
+        'A colour pays less the more of the wheel wears it — paint half the wheel red and red stops paying 3x. Painting buys you a wheel that lands your colour, not a bigger multiple.');
     } else if (almanacTab === 'edge') {
       const steps = [];
       for (let a = TUNE.houseEdgeFromAnte; a <= TUNE.finalAnte; a++) {
@@ -7883,6 +8448,16 @@ const Overlays = (() => {
           'this round first, then your banked rounds — which is a genuine sacrifice of quota progress. ' +
           'Curios and the Counter grant free reshuffles that cost no pass, and a <b>Riffle</b> card reshuffles free ' +
           'whenever it scores. (Hotkey: R)</p>' +
+
+          '<h4>The Ball Case</h4>' +
+          '<p>The shop sells <b>balls</b>, and every ball you own is thrown on every spin of the wheel. You win a spin by ' +
+          'landing <b>half your balls, rounded up</b>, on your colour — 1 of 2, 2 of 3, 2 of 4, 3 of 5 — so the case likes ' +
+          'even numbers. The table prices the payout against your real odds, so a bigger case wins more often for less. ' +
+          'You are buying consistency, and a small edge, not free money.</p>' +
+          '<p>The actual reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
+          '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red. The jewel balls go ' +
+          'further and <b>repaint the pocket they land in for the rest of the run</b>, though a colour pays less the more of ' +
+          'the wheel wears it. The case holds ' + TUNE.maxBalls + ', and you can sell one back for half.</p>' +
 
           '<h4>The House Edge</h4>' +
           '<p>Up to Ante ' + (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing. From <b>Ante ' + TUNE.houseEdgeFromAnte + '</b> ' +

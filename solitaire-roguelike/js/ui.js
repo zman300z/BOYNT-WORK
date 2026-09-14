@@ -1037,6 +1037,7 @@ const UI = (() => {
     if (!a) return $('#scorebox');
     if (a.zone === 'stash') return $('#stash') || $('#scorebox');
     if (a.zone === 'bounty') return $('#bounty') || $('#scorebox');
+    if (a.zone === 'sidepot') return $('#sidepot') || $('#scorebox');
     if (a.zone === 'stock') return $('#stock') || $('#scorebox');
     if (a.zone === 'foundation') return $('#f-' + a.suit);
     if (a.zone === 'tableau') return $$('#tableau .tab-pile')[a.col] || $('#scorebox');

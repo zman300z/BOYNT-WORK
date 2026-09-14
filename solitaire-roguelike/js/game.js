@@ -355,6 +355,72 @@ const Game = (() => {
     }
   }
 
+  /* ---------------- THE BALL CASE ----------------
+     One throw drops every ball you own. Each lands in its own pocket, each runs
+     its own ability on where it landed whether the spin won or lost, and the
+     spin itself is won by landing HALF of them (rounded up) on your colour.
+     ------------------------------------------------------------------------- */
+  function throwBalls(colour, guaranteeFirst) {
+    const run = G.run;
+    const pockets = Engine.wheelPockets(run);
+    const balls = Engine.ballsOf(run);
+    const winners = pockets.map((p, i) => i).filter(i => pockets[i].c === colour);
+    const rollOne = bias => {
+      if (winners.length && bias && Math.random() < bias) return winners[Math.floor(Math.random() * winners.length)];
+      return Math.floor(Math.random() * pockets.length);
+    };
+
+    const thrown = [];
+    let hits = 0, guaranteed = false;
+
+    balls.forEach((def, k) => {
+      let index;
+      if (k === 0 && guaranteeFirst && winners.length) {
+        index = winners[Math.floor(Math.random() * winners.length)];
+        guaranteed = true;
+      } else {
+        index = rollOne(def.bias || 0);
+        /* the Loaded Ball gets thrown again if the first throw missed */
+        if (def.reroll && pockets[index].c !== colour) index = rollOne(def.bias || 0);
+      }
+      const pocket = pockets[index];
+      const hit = pocket.c === colour;
+      if (hit) hits += def.double ? 2 : 1;
+      thrown.push({ id: def.id, name: def.name, tint: def.tint, index, pocket, hit,
+                    ghost: !!def.ghost, doubled: !!(def.double && hit), notes: [] });
+    });
+
+    return { thrown, hits, guaranteed, need: Engine.ballThreshold(run) };
+  }
+
+  /* run every ball's ability on where it landed. Kept separate from the throw so
+     nothing fires until the wheel has actually stopped and the bet is settled. */
+  function settleBalls(res, colour) {
+    const run = G.run;
+    res.thrown.forEach(t => {
+      const def = BALL_BY_ID[t.id];
+      if (!def || !def.hooks || !def.hooks.land) return;
+      const ctx = {
+        run, round: G.round, pocket: t.pocket, index: t.index, bet: colour, hit: t.hit,
+        note: msg => t.notes.push(msg),
+        money: n => { run.money += n; G.round.money += n; t.cash = (t.cash || 0) + n; },
+        heat: n => { G.round.heat = (G.round.heat || 0) + n; t.heat = (t.heat || 0) + n; },
+        addChips: n => {
+          t.chips = (t.chips || 0) + n;
+          scoreEvent({ event: 'stash', card: null, baseChips: n, label: def.name.toUpperCase(),
+                       anchor: { zone: 'sidepot' } });
+        },
+        paint: to => {
+          const ok = Engine.paintPocket(run, t.index, to);
+          if (ok) { t.painted = to; res.painted = (res.painted || 0) + 1; }
+          return ok;
+        }
+      };
+      def.hooks.land(ctx);
+    });
+    return res;
+  }
+
   /* what CASH OUT would pay right now -- the round's purse, and the thing you
      actually stake at the wheel */
   function roundPurse() {
@@ -377,21 +443,19 @@ const Game = (() => {
     snapshot();
     const m = Engine.mods(G.run);
 
-    let index = Math.floor(Math.random() * ROULETTE.length);
-    let guaranteed = false;
-    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
-      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
-      index = winners[Math.floor(Math.random() * winners.length)];
-      guaranteed = true;
-      G.round.usedSafeFlip = true;
-    }
-    const pocket = ROULETTE[index];
-    const win = pocket.c === colour;
-    const pay = colour === 'green' ? TUNE.cashPayGreen : TUNE.cashPayEven;
+    const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
+    if (safe) G.round.usedSafeFlip = true;
+    const roll = throwBalls(colour, safe);
+    const guaranteed = roll.guaranteed && roll.hits >= roll.need;
+    const win = roll.hits >= roll.need;
+    const pocket = roll.thrown[0].pocket;
+    const index = roll.thrown[0].index;
+    const rate = Engine.betRate(G.run, colour, true);
+    const pay = +rate.toFixed(2);
 
     let payout = 0;
     if (win) {
-      payout = stake * pay;
+      payout = Math.max(1, Math.round(stake * rate));
       G.round.cashSwing += payout - stake;
       /* a win at the wheel is a win at the wheel -- it heats the table up the
          same way a pot flip does, and the zero runs hot */
@@ -402,9 +466,13 @@ const Game = (() => {
       G.round.cashSwing -= stake;
       G.round.heat = 0;
     }
+    const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
+                  staked: stake, payout, before: purse, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+    settleBalls(out, colour);
+    out.purse = roundPurse();
     save();
-    return { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-             staked: stake, payout, before: purse, purse: roundPurse(), heat: G.round.heat };
+    return out;
   }
 
   /* Take the pot to the wheel. Red or black triples it, the zero pays twenty.
@@ -417,21 +485,19 @@ const Game = (() => {
     snapshot();
     const m = Engine.mods(G.run);
 
-    let index = Math.floor(Math.random() * ROULETTE.length);
-    let guaranteed = false;
-    if (m.firstFlipSafe && !G.round.usedSafeFlip) {
-      const winners = ROULETTE.map((p, i) => i).filter(i => ROULETTE[i].c === colour);
-      index = winners[Math.floor(Math.random() * winners.length)];
-      guaranteed = true;
-      G.round.usedSafeFlip = true;
-    }
-    const pocket = ROULETTE[index];
-    const win = pocket.c === colour;
-    const pay = roulettePay(colour);
+    const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
+    if (safe) G.round.usedSafeFlip = true;
+    const roll = throwBalls(colour, safe);
+    const guaranteed = roll.guaranteed && roll.hits >= roll.need;
+    const win = roll.hits >= roll.need;
+    const pocket = roll.thrown[0].pocket;
+    const index = roll.thrown[0].index;
+    const rate = Engine.betRate(G.run, colour, false);
+    const pay = +rate.toFixed(2);
 
     let anteHit = 0;
     if (win) {
-      G.round.pot = pot * pay;
+      G.round.pot = Math.round(pot * rate);
       G.round.potStreak = (G.round.potStreak || 0) + 1;
       G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
@@ -443,9 +509,12 @@ const Game = (() => {
       anteHit = pot;
       spendAnteScore(pot);          /* this round's score first, then banked rounds */
     }
+    const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
+                  pot: G.round.pot, staked: pot, anteHit, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+    settleBalls(out, colour);
     save();
-    return { ok: true, win, guaranteed, pocket, index, colour, pay,
-             pot: G.round.pot, staked: pot, anteHit, heat: G.round.heat };
+    return out;
   }
 
   /* ---------------- THE BOUNTY ----------------
@@ -1148,7 +1217,7 @@ const Game = (() => {
        mods    -> permanently mark a card you already own
        cards   -> add a brand new card to the deck
        houses  -> permanent run rules, no seat needed              */
-  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', plain: 'plain', house: 'houses' };
+  const SHELVES = { curio: 'curios', mod: 'mods', card: 'cards', plain: 'plain', house: 'houses', ball: 'balls' };
 
   function weightedCurio(exclude) {
     const pool = CURIOS.filter(c => !exclude.has(c.id));
@@ -1173,6 +1242,7 @@ const Game = (() => {
     const base = item.type === 'house' ? HOUSE_BY_ID[item.id].cost
                : item.type === 'curio' ? CURIO_BY_ID[item.id].cost
                : item.type === 'plain' ? item.cost
+               : item.type === 'ball' ? BALL_BY_ID[item.id].cost
                : SHOP_BY_ID[item.id].cost;
     let p = base;
     if (item.finish && item.finish !== 'none') p += { foil: 3, holo: 4, poly: 6, neg: 8 }[item.finish];
@@ -1234,19 +1304,37 @@ const Game = (() => {
                    rank: pick.rank, suit: pick.suit,
                    cost: 3 + Math.ceil(rankChips(pick.rank) / 3) });
     }
+    /* two balls, never one you already own, never past the case's capacity */
+    const held = new Set(G.run.balls || ['house']);
+    const ballPool = BALLS.filter(b => !b.free && !held.has(b.id));
+    const balls = [];
+    if ((G.run.balls || []).length < TUNE.maxBalls) {
+      const seenB = new Set();
+      for (let i = 0; i < 2; i++) {
+        const pool = ballPool.filter(b => !seenB.has(b.id));
+        if (!pool.length) break;
+        let total = 0;
+        pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
+        let r = Math.random() * total, pick = pool[0];
+        for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
+        seenB.add(pick.id);
+        balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
+      }
+    }
     return {
       curios,
       mods: pickN(CARD_MODS, 2, 'mod'),
       cards: pickCards(2),
       plain,
-      houses: pickN(avail, 2, 'house')
+      houses: pickN(avail, 2, 'house'),
+      balls
     };
   }
 
   function openShop(anteCleared) {
     const r = rollShopItems();
     G.run.shop = { curios: r.curios, mods: r.mods, cards: r.cards, plain: r.plain,
-                   houses: r.houses, rerolls: 0, pulls: 0 };
+                   houses: r.houses, balls: r.balls, rerolls: 0, pulls: 0 };
     G.run.anteCleared = !!anteCleared;
     G.phase = 'shop';
     save();
@@ -1263,7 +1351,7 @@ const Game = (() => {
     const r = rollShopItems();
     const shop = G.run.shop;
     /* keep anything already bought marked as sold so the shelf reads honestly */
-    ['curios', 'mods', 'cards', 'plain', 'houses'].forEach(k => { shop[k] = r[k]; });
+    ['curios', 'mods', 'cards', 'plain', 'houses', 'balls'].forEach(k => { shop[k] = r[k]; });
     shop.rerolls++;
     save();
     return true;
@@ -1289,6 +1377,17 @@ const Game = (() => {
       item.bought = true;
       save();
       return { ok: true, kind: 'curio' };
+    }
+
+    if (item.type === 'ball') {
+      G.run.balls = G.run.balls || ['house'];
+      if (G.run.balls.length >= TUNE.maxBalls) return { ok: false, reason: 'The ball case is full.' };
+      if (G.run.balls.includes(item.id)) return { ok: false, reason: 'You already own that one.' };
+      G.run.money -= price;
+      G.run.balls.push(item.id);
+      item.bought = true;
+      save();
+      return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id] };
     }
 
     if (item.type === 'plain') {
@@ -1365,6 +1464,18 @@ const Game = (() => {
   }
 
   function cancelPending() { G.pending = null; }
+
+  /* balls sell for half, and the house ball is not for sale */
+  function sellBall(index) {
+    const balls = G.run.balls || ['house'];
+    const def = BALL_BY_ID[balls[index]];
+    if (!def || def.free) return 0;
+    const value = Math.max(1, Math.floor(def.cost / 2));
+    balls.splice(index, 1);
+    G.run.money += value;
+    save();
+    return value;
+  }
 
   function sellCurio(index) {
     const inst = G.run.mantel[index];
@@ -1525,7 +1636,7 @@ const Game = (() => {
   return {
     G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
-    sellCurio, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
+    sellCurio, sellBall, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,

@@ -1450,3 +1450,87 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 }
 .tip-kind.edge-kind{ color:var(--hot); }
 .fx-skim{ color:var(--hot); font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.8); }
+
+/* ---------------- THE BALL CASE ----------------
+   Every ball you own is thrown on every spin, so they need to read at a glance
+   both in the case and mid-flight on the rim.                                 */
+.b-ivory  { --ball:#f2ece0; --ball2:#c9c0ae; }
+.b-green  { --ball:#5ce08a; --ball2:#1f9d55; }
+.b-red    { --ball:#ff6b81; --ball2:#c62b45; }
+.b-black  { --ball:#5c6270; --ball2:#1b1c22; }
+.b-iron   { --ball:#aeb6c2; --ball2:#6b7280; }
+.b-brass  { --ball:#e08a4a; --ball2:#8a4a12; }
+.b-gold   { --ball:#fff3c4; --ball2:#d4a017; }
+.b-violet { --ball:#c8a4ff; --ball2:#6a37c9; }
+.b-clay   { --ball:#e3a878; --ball2:#a0602f; }
+.b-ghost  { --ball:#dff3ff; --ball2:#7fb9d6; }
+.b-cool   { --ball:#7fe3ff; --ball2:#2b8fb0; }
+
+.rw-balls{ position:absolute; inset:0; pointer-events:none; }
+.rw-ball{
+  position:absolute; left:50%; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px;
+  border-radius:50%; z-index:9;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 4px rgba(0,0,0,.7);
+}
+.rw-ball.live{ box-shadow:0 0 10px rgba(255,255,255,.5), 0 1px 4px rgba(0,0,0,.7); }
+.rw-ball.settled{ transition:none; }
+.rw-ball.hit{ box-shadow:0 0 0 2px var(--lime), 0 0 14px rgba(126,231,135,.8); }
+
+/* the case strip under the wheel */
+.rw-case{ display:flex; align-items:center; gap:10px; justify-content:center; margin:6px 0 2px; }
+.rw-case-balls{ display:flex; gap:5px; }
+.rw-ballchip{
+  width:14px; height:14px; border-radius:50%; display:inline-block; cursor:help;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.rw-ballchip:hover{ transform:scale(1.2); }
+.rw-case-need{ font-size:10px; opacity:.75; }
+.rw-case-need b{ color:var(--gold); opacity:1; }
+.rw-num.painted{ text-decoration:underline; text-underline-offset:2px; font-weight:800; }
+
+/* what each ball did, printed under the result */
+.ball-report{ margin-top:8px; border-top:1px solid var(--line); padding-top:6px; text-align:left; }
+.rb-head{ font-size:11px; opacity:.8; margin-bottom:5px; text-align:center; }
+.rb-head b{ color:var(--gold); }
+.rb-row{ display:flex; align-items:center; gap:7px; font-size:10px; padding:2px 0; opacity:.6; }
+.rb-row.hit{ opacity:1; }
+.rb-row.ghost .rb-name{ font-style:italic; }
+.rb-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%); }
+.rb-name{ flex:0 0 92px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rb-pocket{ flex:0 0 22px; text-align:center; font-weight:800; border-radius:4px; padding:0 3px; }
+.rb-pocket.r-red{ background:rgba(198,43,69,.5); color:#ffd9df; }
+.rb-pocket.r-black{ background:rgba(27,28,34,.9); color:#c9ced8; }
+.rb-pocket.r-green{ background:rgba(31,157,85,.6); color:#d9ffe8; }
+.rb-fx{ flex:1; color:var(--lime); }
+.rb-row:not(.hit) .rb-fx{ color:var(--gold); }
+.rb-note{ margin-top:5px; font-size:10px; color:var(--violet); text-align:center; }
+
+/* the shop shelf */
+.shelf.sh-ball .shelf-head h3{ color:var(--violet); }
+.ball-case{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 10px 4px; }
+.case-ball{
+  display:flex; align-items:center; gap:6px; padding:5px 9px 5px 6px; border-radius:20px;
+  border:1px solid var(--line); background:rgba(255,255,255,.05); cursor:pointer; font-size:10px;
+}
+.case-ball:hover{ border-color:var(--violet); background:rgba(176,124,255,.14); }
+.case-ball.fixed{ cursor:help; opacity:.7; }
+.case-ball.empty{ opacity:.25; cursor:default; padding:5px 8px; }
+.case-ball.empty:hover{ border-color:var(--line); background:rgba(255,255,255,.05); }
+.cb-orb, .case-orb{
+  width:16px; height:16px; border-radius:50%; display:inline-block; flex:0 0 auto;
+  background:radial-gradient(circle at 32% 30%, var(--ball,#fff), var(--ball2,#9aa0aa) 72%);
+  box-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+.case-ball.empty .cb-orb{ background:none; border:1px dashed var(--line); box-shadow:none; }
+.cb-name{ font-weight:700; letter-spacing:.04em; }
+.cb-sell{ font-size:8px; opacity:.6; letter-spacing:.1em; }
+.case-ball:hover .cb-sell{ color:var(--gold); opacity:1; }
+.case-note{ margin-left:auto; font-size:10px; opacity:.7; text-align:right; line-height:1.5; }
+.case-note b{ color:var(--gold); opacity:1; }
+.case-orb{ width:34px; height:34px; }
+.si-badge.ball{ background:rgba(176,124,255,.18); color:#d6bcff; }
+.tip-kind.ball-kind{ background:rgba(176,124,255,.16); color:#d6bcff; }
+.tip-text.dim{ opacity:.62; font-size:11px; }

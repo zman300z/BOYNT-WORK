@@ -60,6 +60,8 @@ const Engine = (() => {
       permaMult: 0,
       whim: null,
       banditPulls: 0,
+      balls: ['house'],
+      wheelPaint: {},
       finalAnte: TUNE.finalAnte,
       shop: null,
       rerollCount: 0,
@@ -169,6 +171,125 @@ const Engine = (() => {
       freeReshuffles: (run.bonusReshuffles || 0) + m.reshuffles,
       paidReshuffles: 0
     };
+  }
+
+  /* ---------------- THE WHEEL ----------------
+     Pockets can be repainted permanently by the jewel balls, so nothing may read
+     ROULETTE directly any more -- odds, payouts and the wheel itself all come
+     from here. A payout is scaled by how common its colour has become, so
+     painting the wheel buys you consistency rather than free money.
+     ------------------------------------------------------------------------- */
+  function wheelPockets(run) {
+    const paint = (run && run.wheelPaint) || null;
+    if (!paint) return ROULETTE;
+    return ROULETTE.map((p, i) => (paint[i] ? { n: p.n, c: paint[i], painted: true } : p));
+  }
+
+  function wheelCounts(run) {
+    const out = { red: 0, black: 0, green: 0 };
+    wheelPockets(run).forEach(p => { out[p.c]++; });
+    return out;
+  }
+
+  /* what a colour pays right now, given how much of the wheel wears it */
+  function wheelPay(run, colour, cash) {
+    const base = colour === 'green'
+      ? (cash ? TUNE.cashPayGreen : TUNE.roulettePayGreen)
+      : (cash ? TUNE.cashPayEven : TUNE.roulettePayEven);
+    const was = ROULETTE_ODDS[colour].count;
+    const now = wheelCounts(run)[colour];
+    if (!now) return base;
+    const floor = colour === 'green' ? 3 : 2;
+    return Math.max(floor, Math.round(base * was / now));
+  }
+
+  function wheelOdds(run) {
+    const counts = wheelCounts(run);
+    const out = {};
+    Object.keys(ROULETTE_ODDS).forEach(c => {
+      out[c] = { count: counts[c], label: ROULETTE_ODDS[c].label, pay: wheelPay(run, c, false) };
+    });
+    return out;
+  }
+
+  /* paint one pocket for the rest of the run. The zero is the house's own and is
+     never repainted, and the wheel only ever takes so much paint. */
+  function paintPocket(run, index, colour) {
+    if (index === 0) return false;
+    run.wheelPaint = run.wheelPaint || {};
+    if (run.wheelPaint[index]) return false;
+    if (Object.keys(run.wheelPaint).length >= TUNE.maxPainted) return false;
+    if (ROULETTE[index].c === colour) return false;      // already that colour
+    run.wheelPaint[index] = colour;
+    return true;
+  }
+
+  /* ---------------- THE BALL CASE ---------------- */
+  function ballsOf(run) {
+    const ids = (run && run.balls && run.balls.length) ? run.balls : ['house'];
+    return ids.map(id => BALL_BY_ID[id]).filter(Boolean);
+  }
+
+  /* Ghost balls are bonus throws -- they can hit for you but never raise the bar. */
+  function ballsCounted(run) {
+    return ballsOf(run).filter(b => !b.ghost).length;
+  }
+
+  function ballThreshold(run) {
+    return Math.max(1, Math.ceil(ballsCounted(run) / 2));
+  }
+
+  /* How likely each ball is to land on a given colour, on its own. */
+  function ballHitChance(def, p) {
+    if (def.bias) return def.bias + (1 - def.bias) * p;   // the Magnet leans on the roll
+    if (def.reroll) return 1 - (1 - p) * (1 - p);          // the Loaded Ball gets thrown twice
+    return p;
+  }
+
+  /* Exact odds of the whole case clearing its threshold, by walking the hit
+     distribution ball by ball. Ghost balls add hits without raising the bar and
+     the Clay Ball is worth two, so this handles every combination honestly. */
+  function ballWinChance(run, colour) {
+    const counts = wheelCounts(run);
+    const total = wheelPockets(run).length;
+    const p = counts[colour] / total;
+    const balls = ballsOf(run);
+    const need = ballThreshold(run);
+    let dist = [1];
+    balls.forEach(def => {
+      const hp = ballHitChance(def, p);
+      const worth = def.double ? 2 : 1;
+      const next = new Array(dist.length + worth).fill(0);
+      dist.forEach((prob, hits) => {
+        if (!prob) return;
+        next[hits] += prob * (1 - hp);
+        next[hits + worth] += prob * hp;
+      });
+      dist = next;
+    });
+    let win = 0;
+    for (let h = need; h < dist.length; h++) win += dist[h];
+    return { p, win, need };
+  }
+
+  /* The table prices your certainty. A bigger case wins more often and is paid
+     proportionally less for it -- but only to the power of ballPayFairness, so
+     buying balls still leaves you a real edge rather than a wash. */
+  function ballPayMult(run, colour) {
+    const balls = ballsOf(run);
+    if (balls.length <= 1) return 1;
+    const { p, win } = ballWinChance(run, colour || 'red');
+    if (!win || !p) return 1;
+    /* not clamped at 1: an odd-numbered case actually wins LESS often than a
+       single ball, and the table pays it a little more for the privilege */
+    const ratio = p / win;
+    return Math.max(TUNE.ballPayFloor, Math.min(TUNE.ballPayCeil, Math.pow(ratio, TUNE.ballPayFairness)));
+  }
+
+  /* the headline rate for a bet, balls and paint included. A float on purpose --
+     rounding it to an integer used to wipe the ball damper out entirely. */
+  function betRate(run, colour, cash) {
+    return wheelPay(run, colour, cash) * ballPayMult(run, colour);
   }
 
   /* THE HOUSE EDGE. From Ante 4 the casino takes a percentage off every score
@@ -356,6 +477,8 @@ const Engine = (() => {
 
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
+    wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket,
+    ballsOf, ballsCounted, ballThreshold, ballPayMult, ballWinChance, betRate,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,

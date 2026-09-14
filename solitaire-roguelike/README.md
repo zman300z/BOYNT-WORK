@@ -158,6 +158,31 @@ off your ANTE total** (this round's score first, then banked rounds) — a genui
 Curios and the Counter grant free reshuffles that cost no pass, and a **Riffle** card reshuffles free whenever
 it scores. Hotkey `R`.
 
+### The Ball Case
+
+The shop sells **balls**, and every ball you own is thrown on every spin of the wheel. You win a spin by
+landing **half your balls, rounded up**, on your colour — 1 of 2, 2 of 3, 2 of 4, 3 of 5 — so the case
+likes even numbers. The table prices the payout against your real odds, so a bigger case wins more often
+for less; you're buying consistency and a small edge, not free money.
+
+The reason to own balls is what they *do*. A ball's ability fires on the pocket it lands in **whether the
+bet won or lost**:
+
+| | |
+|---|---|
+| **Iron Ball** | Lands on black: **+$3** |
+| **Brass Ball** | Lands on red: **+300 Chips** onto your round score |
+| **Zero Ball** | Lands on a green pocket: **+2 HEAT and $12** |
+| **Emerald** · **Garnet** · **Onyx** | 5% chance the pocket it lands in turns that colour **for the rest of the run** |
+| **Loaded Ball** | Thrown again if it misses your colour |
+| **Clay Ball** | Counts as two balls when it lands on your colour |
+| **Ghost Ball** | Never raises the number you need — but can still be one of them |
+| **Magnet** | Lands on your colour 20% more often than it should |
+
+The jewel balls genuinely rewrite the wheel: the green zero is the house's own and is never repainted, at
+most 8 pockets can ever be painted, and **a colour pays less the more of the wheel wears it**. Painting
+buys a wheel that lands your colour, not a bigger multiple. The case holds 5 and a ball sells back for half.
+
 ### The House Edge
 
 Up to Ante 3 the casino takes nothing. From **Ante 4** it skims a percentage off the top of *every score

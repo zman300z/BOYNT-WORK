@@ -55,6 +55,11 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  maxBalls: 5,              // the ball case only holds so many
+  ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
+  ballPayFloor: 0.3,
+  ballPayCeil: 1.6,
+  maxPainted: 8,            // and only so many pockets can ever be repainted
   houseEdgeFromAnte: 4,     // the casino starts taking a cut here
   houseEdgePer: 0.06,       // and another 6% of every score per ante after
   houseEdgeCap: 0.30,
@@ -881,6 +886,73 @@ const ROULETTE_ODDS = {
   black: { count: 9, pay: 3,  label: 'BLACK' },
   green: { count: 1, pay: 20, label: 'GREEN 0' }
 };
+
+/* ============================================================
+   THE BALL CASE
+   Every spin drops every ball you own. You need HALF of them
+   (rounded up) to land on your colour, so a second ball is a
+   huge jump and a third is a step back -- buy in pairs. Each
+   extra ball also shaves the payout, so the case trades size
+   for certainty. The abilities fire on where each ball LANDS,
+   win or lose, which is the real reason to own them.
+   ============================================================ */
+const BALLS = [
+  { id: 'house', name: 'The House Ball', tint: 'b-ivory', cost: 0, rarity: 'common', free: true,
+    text: 'An ordinary ivory ball. No tricks.',
+    long: 'The ball the table came with. You always have it, you cannot sell it, and it does exactly nothing beyond landing somewhere.' },
+
+  { id: 'emerald', name: 'The Emerald', tint: 'b-green', cost: 13, rarity: 'rare',
+    text: 'Where it lands has a ' + 5 + '% chance to turn GREEN for the rest of the run.',
+    long: 'Slowly repaints the wheel in your favour. Green pays the most, so more green pockets means the zero bet starts landing — but the table pays the zero less the more of them there are, so this is a build, not a printer.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('green')) c.note('THE EMERALD BITES — that pocket is green now'); } } },
+
+  { id: 'garnet', name: 'The Garnet', tint: 'b-red', cost: 9, rarity: 'uncommon',
+    text: 'Where it lands has a ' + 5 + '% chance to turn RED for the rest of the run.',
+    long: 'Repaints the wheel red a pocket at a time. Red pays less the more red there is, so this is about landing your colour more often, not about the multiple.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('red')) c.note('THE GARNET STAINS THAT POCKET RED'); } } },
+
+  { id: 'onyx', name: 'The Onyx', tint: 'b-black', cost: 9, rarity: 'uncommon',
+    text: 'Where it lands has a ' + 5 + '% chance to turn BLACK for the rest of the run.',
+    long: 'The same deal as the Garnet, in the other direction. Pairs with anything that likes a predictable wheel.',
+    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('black')) c.note('THE ONYX TURNS THAT POCKET BLACK'); } } },
+
+  { id: 'iron', name: 'The Iron Ball', tint: 'b-iron', cost: 7, rarity: 'common',
+    text: 'Lands on black: <b>+$3</b>. Win or lose.',
+    long: 'Roughly a coin flip to pay every single spin, whatever the bet was doing. The cheapest way to make a losing wheel still worth spinning.',
+    hooks: { land: c => { if (c.pocket.c === 'black') { c.money(3); c.note('IRON ON BLACK — $3'); } } } },
+
+  { id: 'brass', name: 'The Brass Ball', tint: 'b-brass', cost: 8, rarity: 'common',
+    text: 'Lands on red: <b>+300 Chips</b> straight onto your round score. Win or lose.',
+    long: 'The other half of the Iron Ball. It scores through the full pipeline, so Heat and Tempo are already applied to it by the time it lands.',
+    hooks: { land: c => { if (c.pocket.c === 'red') { c.addChips(300); c.note('BRASS ON RED — 300 CHIPS'); } } } },
+
+  { id: 'zero', name: 'The Zero Ball', tint: 'b-gold', cost: 12, rarity: 'rare',
+    text: 'Lands on a green pocket: <b>+2 HEAT and $12</b>. Win or lose.',
+    long: 'Rare on a stock wheel — one pocket in nineteen — and absurd on a wheel the Emerald has been working on. Heat multiplies every score for the rest of the round.',
+    hooks: { land: c => { if (c.pocket.c === 'green') { c.heat(2); c.money(12); c.note('THE ZERO BALL HITS — +2 HEAT, $12'); } } } },
+
+  { id: 'loaded', name: 'The Loaded Ball', tint: 'b-violet', cost: 14, rarity: 'rare',
+    text: 'If it misses your colour it is thrown again, once.',
+    long: 'A second bite at every spin. It does not change how many balls you need — it just makes this one much more likely to be one of them.',
+    reroll: true },
+
+  { id: 'clay', name: 'The Clay Ball', tint: 'b-clay', cost: 10, rarity: 'uncommon',
+    text: 'When it lands on your colour it counts as <b>two</b> balls.',
+    long: 'It still raises the number you need like any other ball, so on its own it is a wash — paired with a second ball it wins the spin by itself.',
+    double: true },
+
+  { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
+    text: 'Never counts toward how many balls you need — but can still land on your colour.',
+    long: 'Pure upside, and priced like it. Every other ball you buy makes the target harder; this one does not, and it can still be the ball that gets you there.',
+    ghost: true },
+
+  { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',
+    text: 'Lands on your colour <b>20% more often</b> than it should.',
+    long: 'A quietly rigged ball. It does not guarantee anything, it just leans on the odds every single time it is thrown.',
+    bias: 0.2 }
+];
+const BALL_BY_ID = {};
+BALLS.forEach(b => { BALL_BY_ID[b.id] = b; });
 function roulettePay(colour) {
   return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
 }
