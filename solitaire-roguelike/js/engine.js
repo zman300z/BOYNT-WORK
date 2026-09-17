@@ -60,6 +60,7 @@ const Engine = (() => {
       permaMult: 0,
       whim: null,
       banditPulls: 0,
+      bonusSpins: 0,
       balls: ['house'],          // loaded in the case, thrown every spin
       ballBag: ['house'],        // everything you own, however much that is
       ballSlots: TUNE.startingBallSlots,
@@ -96,7 +97,7 @@ const Engine = (() => {
       stashSlots: 0, stashCash: 0, stashPlayMult: 0, dareBonus: false, firstFlipSafe: false,
       potShare: 0,
       bountyMult: 0, bountyBonus: false,
-      edgeCut: 0
+      edgeCut: 0, bonusSpins: 0
     };
     const merge = src => {
       if (!src) return;
@@ -288,24 +289,29 @@ const Engine = (() => {
     return { p, win, need };
   }
 
-  /* The table prices your certainty. A bigger case wins more often and is paid
-     proportionally less for it -- but only to the power of ballPayFairness, so
-     buying balls still leaves you a real edge rather than a wash. */
-  function ballPayMult(run, colour) {
-    const balls = ballsOf(run);
-    if (balls.length <= 1) return 1;
-    const { p, win } = ballWinChance(run, colour || 'red');
-    if (!win || !p) return 1;
-    /* not clamped at 1: an odd-numbered case actually wins LESS often than a
-       single ball, and the table pays it a little more for the privilege */
-    const ratio = p / win;
-    return Math.max(TUNE.ballPayFloor, Math.min(TUNE.ballPayCeil, Math.pow(ratio, TUNE.ballPayFairness)));
+  /* The stake is split evenly across the balls in the case and each one rides its
+     own share, so RED and BLACK pay a true 1:1 and the zero its full multiple no
+     matter how many balls you own. More balls does not buy you a better price --
+     it buys you far less variance, and the abilities. */
+  /* how many trips to the wheel a round allows */
+  function spinsAllowed(run) {
+    return TUNE.spinsPerRound + ((run && run.bonusSpins) || 0) + (mods(run).bonusSpins || 0);
   }
 
-  /* the headline rate for a bet, balls and paint included. A float on purpose --
-     rounding it to an integer used to wipe the ball damper out entirely. */
+  function ballShares(run, stake) {
+    const n = ballsOf(run).length || 1;
+    /* floor the shares and hand the remainder out a penny at a time, so they
+       always sum to exactly the stake and none of them can go negative */
+    const base = Math.floor(stake / n);
+    let rem = stake - base * n;
+    const shares = [];
+    for (let i = 0; i < n; i++) shares.push(base + (rem-- > 0 ? 1 : 0));
+    return shares;
+  }
+
+  /* the rate a bet pays, paint included. Balls no longer touch it. */
   function betRate(run, colour, cash) {
-    return wheelPay(run, colour, cash) * ballPayMult(run, colour);
+    return wheelPay(run, colour, cash);
   }
 
   /* THE HOUSE EDGE. From Ante 4 the casino takes a percentage off every score
@@ -355,6 +361,7 @@ const Engine = (() => {
         bountiesCollected: 0,
         cashSwing: 0,
         skimmed: 0,
+        spins: 0,
         over: false,
         won: false
       }
@@ -494,7 +501,7 @@ const Engine = (() => {
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
     wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket,
-    ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballPayMult, ballWinChance, betRate,
+    ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,

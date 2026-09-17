@@ -160,10 +160,16 @@ it scores. Hotkey `R`.
 
 ### The Ball Case
 
-The shop sells **balls**, and every ball you own is thrown on every spin of the wheel. You win a spin by
-landing **half your balls, rounded up**, on your colour — 1 of 2, 2 of 3, 2 of 4, 3 of 5 — so the case
-likes even numbers. The table prices the payout against your real odds, so a bigger case wins more often
-for less; you're buying consistency and a small edge, not free money.
+The shop sells **balls**, and every ball in your case is thrown on every spin. Your stake is **split evenly
+between them** and each ball rides its own share, so **RED and BLACK always pay 1 to 1** and the zero always
+pays its full multiple, however many balls you own. What lands is paid in full, what misses is gone — a
+bigger case doesn't buy a better price, it buys far less variance.
+
+Landing **half your balls, rounded up**, on your colour **wins the spin** — 1 of 2, 2 of 3, 2 of 4, 3 of 5.
+That's a separate thing from the money: it's what raises **HEAT**, extends your streak and unlocks
+**LET IT RIDE**.
+
+The table allows **3 spins a round** (LET IT RIDE spends one); the Counter sells **Another Spin**, forever.
 
 The reason to own balls is what they *do*. A ball's ability fires on the pocket it lands in **whether the
 bet won or lost**, and everything the wheel pays — bets, ball abilities, the Daredevil — settles into your

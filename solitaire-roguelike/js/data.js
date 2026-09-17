@@ -55,6 +55,7 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
   ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
@@ -655,6 +656,10 @@ const COUNTER_ITEMS = [
   { id: 'c_shuffle', name: 'Free Reshuffle', icon: 'refresh', base: 10, step: 8,
     text: '+1 reshuffle each round that costs you no pass.',
     apply: run => { run.bonusReshuffles++; } },
+
+  { id: 'c_spin', name: 'Another Spin', icon: 'refresh', base: 10, step: 8,
+    text: '+1 trip to the wheel every round. The table only lets you spin so often.',
+    apply: run => { run.bonusSpins = (run.bonusSpins || 0) + 1; } },
 
   { id: 'c_ball', name: 'Wider Ball Case', icon: 'dice', base: 12, step: 9,
     text: '+1 ball spun on every trip to the wheel. The case never stops taking them.',

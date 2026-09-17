@@ -193,7 +193,7 @@ const Overlays = (() => {
     const loadedIds = Engine.ballsOf(G.run).map(b => b.id);
     const slots = Engine.ballSlots(G.run);
     const need = Engine.ballThreshold(G.run);
-    const mult = Engine.ballPayMult(G.run, 'red');
+
     row.innerHTML = '';
     bag.forEach(def => {
       const inCase = loadedIds.includes(def.id);
@@ -228,8 +228,8 @@ const Overlays = (() => {
     row.appendChild(el('div', 'case-note',
       '<b>' + loadedIds.length + ' of ' + slots + '</b> seats filled' +
       (loadedIds.length > 1
-        ? '<br><b>' + need + '</b> must land on your colour' + (mult < 1 ? ' · payouts <b>x' + mult.toFixed(2) + '</b>' : '')
-        : '<br><span class="dim">a second ball nearly doubles your win rate</span>')));
+        ? '<br>the stake splits <b>' + loadedIds.length + '</b> ways · <b>' + need + '</b> landing wins the spin'
+        : '<br><span class="dim">a second ball halves your variance</span>')));
   }
 
   function renderCounter() {
@@ -672,22 +672,25 @@ const Overlays = (() => {
     const cash = betMode === 'cash';
     const stake = cash ? cashStake : pot;
     const balls = Engine.ballsOf(G.run);
-    const ballMult = Engine.ballPayMult(G.run, 'red');
+    const spinsLeft = Game.spinsLeft();
+    const shares = Engine.ballShares(G.run, stake);
     const need = Engine.ballThreshold(G.run);
 
     const bet = (col) => {
       const o = ROULETTE_ODDS[col];
       const rate = Engine.betRate(G.run, col, cash);
       const odds = Engine.ballWinChance(G.run, col);
-      const dead = stake <= 0;
+      const dead = stake <= 0 || spinsLeft <= 0;
+      const per = shares.length ? Math.round(shares[0] * rate) : 0;
       return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
         (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
-        '<span class="rw-bo">' + (balls.length > 1
-            ? Math.round(odds.win * 100) + '% to clear'
-            : counts[col] + ' in ' + pockets.length) + '</span>' +
-        '<span class="rw-bp">' + (cash ? 'pays $' + Math.max(1, Math.round(stake * rate))
-                                       : 'pays ' + UI.fmt(Math.round(stake * rate))) + '</span></button>';
+        '<span class="rw-bo">' + counts[col] + ' in ' + pockets.length +
+          (col === 'green' ? '' : ' · pays 1 to 1') + '</span>' +
+        '<span class="rw-bp">' + (balls.length > 1
+            ? (cash ? '$' + per : UI.fmt(per)) + ' per ball that lands'
+            : 'pays ' + (cash ? '$' + Math.round(stake * rate) : UI.fmt(Math.round(stake * rate)))) +
+        '</span></button>';
     };
 
     /* the case: every ball you own, click to load or bench it */
@@ -702,9 +705,10 @@ const Overlays = (() => {
           '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (balls.length > 1
-          ? '<b>' + need + ' of ' + balls.length + '</b> on your colour' +
-            (ballMult < 1 ? ' · payouts x' + ballMult.toFixed(2) : '')
+          ? 'the stake splits <b>' + balls.length + ' ways</b> · <b>' + need +
+            '</b> landing wins the spin'
           : 'one ball, one pocket') + '</div>' +
+        '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
       (bag.length > balls.length || slots > balls.length
         ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '');
@@ -729,7 +733,10 @@ const Overlays = (() => {
             (purse <= 0 ? ' disabled' : '') + '>STAKE YOUR CASH OUT<span>$' + purse + '</span></button>' +
         '</div>' +
         chipRow +
-        '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b></div>' +
+        '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b>' +
+          (balls.length > 1 ? '<span class="ws-split"> — ' +
+            (cash ? '$' + shares[0] : UI.fmt(shares[0])) + ' riding each of your ' + balls.length +
+            ' balls</span>' : '') + '</div>' +
         '<div class="wheel-wrap">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
@@ -741,13 +748,15 @@ const Overlays = (() => {
         '</div>' +
         caseRow +
         '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
-        (stake <= 0
+        (spinsLeft <= 0
+          ? '<div class="wheel-dead">The table is done with you this round. Swap your balls around and come back next round.</div>'
+          : stake <= 0
           ? '<div class="wheel-dead">Nothing to stake yet — the pot needs ' + UI.fmt(TUNE.potMinFlip) +
             ' and your CASH OUT is $' + purse + '. Swap your balls around while you are here.</div>'
           : '') +
         '<div class="wheel-warn">' + (cash
-          ? 'Honest table odds. A win lands straight on your <b>CASH OUT</b> and raises <b>HEAT</b>; a loss comes off the purse and cools the table. Your banked cash is never touched.'
-          : 'Lose and the pot is gone — and the same again comes off your <b>ante total</b>.') + '</div>' +
+          ? 'Every ball rides its own share at the table\'s honest price. What lands comes back onto your <b>CASH OUT</b>; what misses is gone.'
+          : 'Every ball rides its own share of the pot. What lands is paid in full; what misses is gone — <b>and the same again comes off your ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
       '</div>', 'centered');
@@ -868,6 +877,10 @@ const Overlays = (() => {
       if (t.cash) bits.push('+$' + t.cash);
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
+      const cashMode = res.mode === 'cash';
+      const money = t.share == null ? '' : (t.hit
+        ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
+        : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
       const mark = t.hit
         ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
         : '<span class="rb-miss">' + (t.ghost ? 'ghost' : 'miss') + '</span>';
@@ -875,16 +888,25 @@ const Overlays = (() => {
         '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
         '<span class="rb-name">' + (def.name || t.id) + '</span>' +
         '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>' +
-        mark +
+        mark + money +
         '<span class="rb-fx">' + bits.join(' · ') + '</span>' +
       '</div>';
     }).join('');
+    const cashMode = res.mode === 'cash';
     const head = thrown.length > 1
-      ? '<div class="rb-head"><b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' + res.need + '</b></div>'
+      ? '<div class="rb-head"><b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' +
+        res.need + '</b> to win the spin</div>'
       : '';
 
     /* and a bottom line, so there is never a doubt about what the spin paid */
     const tot = [];
+    if (thrown.length > 1) {
+      const back = cashMode ? res.payout : res.kept;
+      const gone = res.lost || 0;
+      if (back != null) tot.push('<b>' + (cashMode ? '$' + back : UI.fmt(back)) + '</b> back of ' +
+        (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + ' staked' +
+        (gone ? ' · <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> lost' : ''));
+    }
     if (res.cash) tot.push('<b>+$' + res.cash + '</b> from the balls');
     if (res.chips) tot.push('<b>+' + UI.fmt(res.chips) + ' Chips</b> scored');
     if (res.heatGain) tot.push('<b>+' + res.heatGain + ' HEAT</b>');
@@ -931,7 +953,7 @@ const Overlays = (() => {
 
     /* won, and the winnings are big enough to put straight back on the table */
     const rideStake = cash ? Math.min(res.payout, Game.roundPurse()) : (G.round.pot || 0);
-    const rideOk = res.win && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
+    const rideOk = res.win && Game.spinsLeft() > 0 && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
     if (rideOk) {
       const rate2 = Engine.betRate(G.run, res.colour, cash);
       const shown = cash ? '$' + rideStake : UI.fmt(rideStake);
@@ -959,6 +981,12 @@ const Overlays = (() => {
     if (potTab) potTab.textContent = UI.fmt(Math.round(G.round.pot || 0)) + ' pts';
     const purseNote = $('.rw-purse');
     if (purseNote) purseNote.innerHTML = 'your <b>CASH OUT</b> is now <b>$' + purseNow + '</b>';
+    const spinBox = $('.rw-spins');
+    if (spinBox) {
+      const left = Game.spinsLeft();
+      spinBox.innerHTML = 'SPINS LEFT <b>' + left + '</b>';
+      spinBox.classList.toggle('out', left <= 0);
+    }
 
     UI.renderHud();
     UI.renderControls();
@@ -1085,11 +1113,17 @@ const Overlays = (() => {
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
     } else if (almanacTab === 'balls') {
+      html += almEntry('coin', 'Your stake splits across the balls', 'the price never changes',
+        'RED and BLACK always pay <b>1 to 1</b> and the zero always pays its full multiple, however many balls you own. The stake is divided evenly between them and each ball rides its own share: what lands is paid in full, what misses is gone.',
+        'So a bigger case does not buy a better price — it buys far less variance. One ball is all or nothing; four balls means a bad spin usually still hands some of the stake back. The house edge is identical at every count, which is why the balls are worth owning for what they DO rather than for the odds.');
       html += almEntry('dice', 'Every ball you own is thrown', 'how it works',
-        'A spin drops the whole case at once. You win it by landing <b>half your balls, rounded up</b>, on the colour you backed — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5.',
-        'Only the balls IN THE CASE count — it seats ' + TUNE.startingBallSlots + ' to start and the Counter sells more, ' +
+        'A spin drops the whole case at once. Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b> — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5 — which is what raises HEAT, extends your streak and unlocks LET IT RIDE.',
+        'Only the balls IN THE CASE are thrown — it seats ' + TUNE.startingBallSlots + ' to start, the Counter sells more, ' +
         'and you can swap your collection in and out from the wheel screen at any time. ' +
-        'The second ball is an enormous jump and the third is a step sideways: the case likes even numbers. The table knows the odds and prices the payout against them, so a bigger case wins more often for less — you still keep an edge, but you are buying consistency, not free money. The reason to own balls is what they DO when they land.');
+        'Winning the spin is a separate thing from the money: the money settles ball by ball whatever the threshold does.');
+      html += almEntry('refresh', 'The table only spins so often', TUNE.spinsPerRound + ' a round',
+        'You get <b>' + TUNE.spinsPerRound + ' trips to the wheel per round</b>, and LET IT RIDE spends one of them.',
+        'The Counter sells Another Spin, permanently, as often as you care to buy it. The budget is what stops the wheel being a grind — each spin is meant to be an event.');
       html += almEntry('coinstack', 'Abilities fire win or lose', 'the real point',
         'A ball\'s ability runs on the pocket it landed in, whether the bet came in or not.',
         'The Iron Ball paying $3 on black does not care that you backed red and lost. That is what makes a full case worth spinning even on a bet you expect to drop.');
@@ -1249,16 +1283,18 @@ const Overlays = (() => {
           'whenever it scores. (Hotkey: R)</p>' +
 
           '<h4>The Ball Case</h4>' +
-          '<p>The shop sells <b>balls</b>, and every ball you own is thrown on every spin of the wheel. You win a spin by ' +
-          'landing <b>half your balls, rounded up</b>, on your colour — 1 of 2, 2 of 3, 2 of 4, 3 of 5 — so the case likes ' +
-          'even numbers. The table prices the payout against your real odds, so a bigger case wins more often for less. ' +
-          'You are buying consistency, and a small edge, not free money.</p>' +
-          '<p>The actual reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
-          '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red. The jewel balls go ' +
-          'further and <b>repaint the pocket they land in for the rest of the run</b>, though a colour pays less the more of ' +
-          'the wheel wears it. You can own as many balls as you like, but only the ones <b>in the case</b> are thrown — ' +
-          'it seats ' + TUNE.startingBallSlots + ' to start, the Counter sells more seats and never runs out of them, and you can ' +
-          'swap balls in and out at the wheel itself. A ball sells back for half.</p>' +
+          '<p>The shop sells <b>balls</b>, and every ball in your case is thrown on every spin. Your stake is ' +
+          '<b>split evenly between them</b> and each ball rides its own share, so <b>RED and BLACK always pay 1 to 1</b> ' +
+          'and the zero always pays its full multiple, however many balls you own. What lands is paid in full, what misses ' +
+          'is gone. A bigger case does not buy a better price — it buys far less variance.</p>' +
+          '<p>Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b>, which is a separate thing ' +
+          'from the money: it is what raises <b>HEAT</b>, extends your streak and unlocks <b>LET IT RIDE</b>.</p>' +
+          '<p>The real reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
+          '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red and it cost you its ' +
+          'share. The jewel balls go further and <b>repaint the pocket they land in for the rest of the run</b>, though a ' +
+          'colour pays less the more of the wheel wears it. The case seats ' + TUNE.startingBallSlots + ' to start and the ' +
+          'Counter sells more seats; you can own as many balls as you like and swap them at the wheel.</p>' +
+          '<p>The table allows <b>' + TUNE.spinsPerRound + ' spins a round</b> (LET IT RIDE spends one). The Counter sells more of those too.</p>' +
 
           '<h4>The House Edge</h4>' +
           '<p>Up to Ante ' + (TUNE.houseEdgeFromAnte - 1) + ' the casino takes nothing. From <b>Ante ' + TUNE.houseEdgeFromAnte + '</b> ' +

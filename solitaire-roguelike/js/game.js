@@ -427,6 +427,11 @@ const Game = (() => {
     return res;
   }
 
+  function spinsLeft() {
+    if (!G.round) return 0;
+    return Math.max(0, Engine.spinsAllowed(G.run) - (G.round.spins || 0));
+  }
+
   /* what CASH OUT would pay right now -- the round's purse, and the thing you
      actually stake at the wheel */
   function roundPurse() {
@@ -446,7 +451,9 @@ const Game = (() => {
     if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
     const purse = roundPurse();
     if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
+    if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
     snapshot();
+    G.round.spins = (G.round.spins || 0) + 1;
     const m = Engine.mods(G.run);
 
     const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
@@ -459,21 +466,27 @@ const Game = (() => {
     const rate = Engine.betRate(G.run, colour, true);
     const pay = +rate.toFixed(2);
 
-    let payout = 0;
+    /* the stake rides the balls, a share each, at the table's honest price */
+    const shares = Engine.ballShares(G.run, stake);
+    let payout = 0, lost = 0;
+    roll.thrown.forEach((t, i) => {
+      t.share = shares[i] || 0;
+      t.won = t.hit ? Math.round(t.share * rate) : 0;
+      if (t.hit) payout += t.won; else lost += t.share;
+    });
+    G.round.cashSwing += payout - stake;
+
     if (win) {
-      payout = Math.max(1, Math.round(stake * rate));
-      G.round.cashSwing += payout - stake;
       /* a win at the wheel is a win at the wheel -- it heats the table up the
          same way a pot flip does, and the zero runs hot */
       G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) G.round.cashSwing += 5;
       bumpMomentum();
     } else {
-      G.round.cashSwing -= stake;
       G.round.heat = 0;
     }
     const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-                  staked: stake, payout, before: purse, thrown: roll.thrown,
+                  staked: stake, payout, lost, before: purse, thrown: roll.thrown,
                   hits: roll.hits, need: roll.need, heat: G.round.heat };
     settleBalls(out, colour);
     out.purse = roundPurse();
@@ -489,7 +502,9 @@ const Game = (() => {
     const pot = Math.round(G.round.pot || 0);
     if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
+    if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
     snapshot();
+    G.round.spins = (G.round.spins || 0) + 1;
     const m = Engine.mods(G.run);
 
     const safe = m.firstFlipSafe && !G.round.usedSafeFlip;
@@ -502,22 +517,31 @@ const Game = (() => {
     const rate = Engine.betRate(G.run, colour, false);
     const pay = +rate.toFixed(2);
 
-    let anteHit = 0;
+    /* the pot is split across the balls too: each share that lands is paid at the
+       full rate, each that misses is gone and costs the same again off the ante */
+    const shares = Engine.ballShares(G.run, pot);
+    let kept = 0, lost = 0;
+    roll.thrown.forEach((t, i) => {
+      t.share = shares[i] || 0;
+      t.won = t.hit ? Math.round(t.share * rate) : 0;
+      if (t.hit) kept += t.won; else lost += t.share;
+    });
+
+    G.round.pot = kept;
+    const anteHit = lost;
+    if (lost > 0) spendAnteScore(lost);   /* this round's score first, then banked rounds */
+
     if (win) {
-      G.round.pot = Math.round(pot * rate);
       G.round.potStreak = (G.round.potStreak || 0) + 1;
       G.round.heat += (colour === 'green' ? 3 : 1);
       if (m.dareBonus) { G.round.cashSwing += 5; G.round.money += 5; }
       bumpMomentum();
     } else {
-      G.round.pot = 0;
       G.round.potStreak = 0;
       G.round.heat = 0;
-      anteHit = pot;
-      spendAnteScore(pot);          /* this round's score first, then banked rounds */
     }
     const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
-                  pot: G.round.pot, staked: pot, anteHit, thrown: roll.thrown,
+                  pot: G.round.pot, staked: pot, anteHit, lost, kept, thrown: roll.thrown,
                   hits: roll.hits, need: roll.need, heat: G.round.heat, before: roundPurse() };
     settleBalls(out, colour);
     out.purse = roundPurse();
@@ -1698,7 +1722,7 @@ const Game = (() => {
     reshuffle, reshuffleCost, anteTotalAvailable, heatMult,
     canStash, stash, stashPlay, stashCapacity,
     autoPlan, autoPlay, boardKey,
-    cashPot, spinRoulette, spinRouletteCash, roundPurse,
+    cashPot, spinRoulette, spinRouletteCash, roundPurse, spinsLeft,
     raiseBounty, bountyCard, bountyReward, postBounty,
     bumpMomentum, decayMomentum
   };
