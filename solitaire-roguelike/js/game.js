@@ -404,10 +404,15 @@ const Game = (() => {
       const ctx = {
         run, round: G.round, pocket: t.pocket, index: t.index, bet: colour, hit: t.hit,
         note: msg => t.notes.push(msg),
-        money: n => { run.money += n; G.round.money += n; t.cash = (t.cash || 0) + n; },
-        heat: n => { G.round.heat = (G.round.heat || 0) + n; t.heat = (t.heat || 0) + n; },
+        /* everything the wheel pays lands in the same place the bet settles -- the
+           round's CASH OUT purse -- so one spin has one ledger to watch */
+        money: n => { G.round.cashSwing += n; G.round.money += n; t.cash = (t.cash || 0) + n;
+                      res.cash = (res.cash || 0) + n; },
+        heat: n => { G.round.heat = (G.round.heat || 0) + n; t.heat = (t.heat || 0) + n;
+                     res.heatGain = (res.heatGain || 0) + n; },
         addChips: n => {
           t.chips = (t.chips || 0) + n;
+          res.chips = (res.chips || 0) + n;
           scoreEvent({ event: 'stash', card: null, baseChips: n, label: def.name.toUpperCase(),
                        anchor: { zone: 'sidepot' } });
         },
@@ -472,6 +477,7 @@ const Game = (() => {
                   hits: roll.hits, need: roll.need, heat: G.round.heat };
     settleBalls(out, colour);
     out.purse = roundPurse();
+    out.heat = G.round.heat;
     save();
     return out;
   }
@@ -501,7 +507,7 @@ const Game = (() => {
       G.round.pot = Math.round(pot * rate);
       G.round.potStreak = (G.round.potStreak || 0) + 1;
       G.round.heat += (colour === 'green' ? 3 : 1);
-      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      if (m.dareBonus) { G.round.cashSwing += 5; G.round.money += 5; }
       bumpMomentum();
     } else {
       G.round.pot = 0;
@@ -512,8 +518,10 @@ const Game = (() => {
     }
     const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
                   pot: G.round.pot, staked: pot, anteHit, thrown: roll.thrown,
-                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+                  hits: roll.hits, need: roll.need, heat: G.round.heat, before: roundPurse() };
     settleBalls(out, colour);
+    out.purse = roundPurse();
+    out.heat = G.round.heat;
     save();
     return out;
   }
@@ -750,7 +758,7 @@ const Game = (() => {
       G.round.pot = pot * 2;
       G.round.potStreak = (G.round.potStreak || 0) + 1;
       G.round.heat++;
-      if (m.dareBonus) { G.run.money += 5; G.round.money += 5; }
+      if (m.dareBonus) { G.round.cashSwing += 5; G.round.money += 5; }
       bumpMomentum();
     } else {
       G.round.pot = 0;

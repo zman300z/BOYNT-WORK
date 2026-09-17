@@ -166,7 +166,8 @@ likes even numbers. The table prices the payout against your real odds, so a big
 for less; you're buying consistency and a small edge, not free money.
 
 The reason to own balls is what they *do*. A ball's ability fires on the pocket it lands in **whether the
-bet won or lost**:
+bet won or lost**, and everything the wheel pays — bets, ball abilities, the Daredevil — settles into your
+**CASH OUT** purse, so one spin has one ledger:
 
 | | |
 |---|---|

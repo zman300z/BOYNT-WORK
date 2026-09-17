@@ -1554,3 +1554,23 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .case-ball.in .cb-state{ color:var(--lime); opacity:1; }
 .cb-sell{ border:1px solid var(--line); border-radius:6px; padding:1px 5px; }
 .cb-sell:hover{ border-color:var(--gold); color:var(--gold); }
+
+/* the ball report: a hit and a payout are different things, shown separately */
+.rb-name{ flex:0 0 86px; }
+.rb-hit{
+  flex:0 0 40px; text-align:center; font-size:8px; font-weight:800; letter-spacing:.08em;
+  border-radius:4px; padding:1px 0; background:rgba(126,231,135,.2); color:var(--lime);
+}
+.rb-hit.dbl{ background:rgba(255,209,102,.24); color:var(--gold); }
+.rb-miss{ flex:0 0 40px; text-align:center; font-size:8px; letter-spacing:.08em; opacity:.45; }
+.rb-total{
+  margin-top:6px; padding-top:5px; border-top:1px solid var(--line);
+  font-size:11px; text-align:center; color:var(--lime);
+}
+.rb-total b{ color:var(--gold); }
+.rb-purse{
+  margin-top:4px; font-size:11px; text-align:center; font-family:var(--display);
+  letter-spacing:.04em; opacity:.9;
+}
+.rb-purse b{ color:var(--paper); }
+.rb-purse b.to{ color:var(--gold); }

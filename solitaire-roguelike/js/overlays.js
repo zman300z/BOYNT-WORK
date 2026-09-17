@@ -859,26 +859,43 @@ const Overlays = (() => {
   function ballReport(res) {
     const thrown = res.thrown;
     if (!thrown || thrown.length < 1) return '';
+    /* the hit marker and the ability payout are separate columns on purpose: a
+       ball can do both at once, and merging them hid one behind the other */
     const rows = thrown.map(t => {
       const def = BALL_BY_ID[t.id] || {};
       const bits = [];
-      if (t.doubled) bits.push('counts double');
       if (t.chips) bits.push('+' + UI.fmt(t.chips) + ' Chips');
       if (t.cash) bits.push('+$' + t.cash);
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
-      if (t.painted) bits.push('pocket painted ' + t.painted.toUpperCase() + ' for the run');
+      if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
+      const mark = t.hit
+        ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
+        : '<span class="rb-miss">' + (t.ghost ? 'ghost' : 'miss') + '</span>';
       return '<div class="rb-row' + (t.hit ? ' hit' : '') + (t.ghost ? ' ghost' : '') + '">' +
         '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
         '<span class="rb-name">' + (def.name || t.id) + '</span>' +
         '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>' +
-        '<span class="rb-fx">' + (bits.length ? bits.join(' · ') : (t.hit ? 'on your colour' : '')) + '</span>' +
+        mark +
+        '<span class="rb-fx">' + bits.join(' · ') + '</span>' +
       '</div>';
     }).join('');
     const head = thrown.length > 1
       ? '<div class="rb-head"><b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' + res.need + '</b></div>'
       : '';
+
+    /* and a bottom line, so there is never a doubt about what the spin paid */
+    const tot = [];
+    if (res.cash) tot.push('<b>+$' + res.cash + '</b> from the balls');
+    if (res.chips) tot.push('<b>+' + UI.fmt(res.chips) + ' Chips</b> scored');
+    if (res.heatGain) tot.push('<b>+' + res.heatGain + ' HEAT</b>');
+    const purseLine = (res.purse != null && res.before != null && res.purse !== res.before)
+      ? '<div class="rb-purse">CASH OUT <b>$' + res.before + '</b> &rarr; <b class="to">$' + res.purse + '</b>' +
+        (res.purse > res.before ? ' &nbsp;(+$' + (res.purse - res.before) + ')' : '') + '</div>'
+      : '';
+    const foot = tot.length ? '<div class="rb-total">' + tot.join(' &nbsp;·&nbsp; ') + '</div>' : '';
+
     const notes = thrown.reduce((a, t) => a.concat(t.notes || []), []);
-    return '<div class="ball-report">' + head + rows +
+    return '<div class="ball-report">' + head + rows + foot + purseLine +
       (notes.length ? '<div class="rb-note">' + notes.join('<br>') + '</div>' : '') + '</div>';
   }
 
@@ -894,9 +911,7 @@ const Overlays = (() => {
       box.innerHTML = where + ' — ' +
         (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
         (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse +
-                '</b> — up $' + (res.purse - res.before) + ', and HEAT is now X' + Game.heatMult() + '</span>'
-              : '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>') +
+        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>' +
         '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>' +
         ballReport(res);
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
@@ -905,8 +920,7 @@ const Overlays = (() => {
       box.className = 'wheel-result lose';
       box.innerHTML = where + ' — the house takes <b>' +
         (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
-        (cash ? '<br><span class="rw-note">CASH OUT $' + res.before + ' &rarr; <b>$' + res.purse + '</b></span>'
-              : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
+        (cash ? '' : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
         '<br><span class="quip">' + quip('wheelLose') + '</span>' +
         ballReport(res);
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
@@ -936,6 +950,16 @@ const Overlays = (() => {
         (cash ? ' Lose and your cash out drops to $' + Math.max(0, Game.roundPurse() - rideStake) + '.' : ''));
       btn.parentNode.insertBefore(note, btn);
     }
+    /* the panel was built before the spin -- bring the CASH OUT tab up to date so
+       you never have to close it to find out what you are actually holding */
+    const purseNow = Game.roundPurse();
+    const cashTab = $('.rw-mode[data-mode="cash"] span');
+    if (cashTab) cashTab.textContent = '$' + purseNow;
+    const potTab = $('.rw-mode[data-mode="pot"] span');
+    if (potTab) potTab.textContent = UI.fmt(Math.round(G.round.pot || 0)) + ' pts';
+    const purseNote = $('.rw-purse');
+    if (purseNote) purseNote.innerHTML = 'your <b>CASH OUT</b> is now <b>$' + purseNow + '</b>';
+
     UI.renderHud();
     UI.renderControls();
   }
