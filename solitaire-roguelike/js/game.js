@@ -391,7 +391,8 @@ const Game = (() => {
                     ghost: !!def.ghost, doubled: !!(def.double && hit), notes: [] });
     });
 
-    return { thrown, hits, guaranteed, need: Engine.ballThreshold(run) };
+    return { thrown, hits, guaranteed, need: Engine.ballThreshold(run, colour),
+             greens: thrown.filter(t => t.pocket.c === 'green').length };
   }
 
   /* run every ball's ability on where it landed. Kept separate from the throw so
@@ -419,6 +420,20 @@ const Game = (() => {
         paint: to => {
           const ok = Engine.paintPocket(run, t.index, to);
           if (ok) { t.painted = to; res.painted = (res.painted || 0) + 1; }
+          return ok;
+        },
+        /* Only roll when the pocket could actually take the paint. A jewel ball
+           landing on the zero, or on a pocket already wearing its colour, used to
+           burn its chance on nothing -- which is why they so rarely seemed to fire. */
+        tryPaint: to => {
+          if (!Engine.canPaint(run, t.index, to)) { t.noPaint = true; return false; }
+          if (Math.random() >= TUNE.paintChance) return false;
+          const ok = Engine.paintPocket(run, t.index, to);
+          if (ok) {
+            t.painted = to;
+            res.painted = (res.painted || 0) + 1;
+            t.notes.push(def.name.toUpperCase() + ' KEEPS POCKET ' + t.pocket.n + ' — IT IS ' + to.toUpperCase() + ' NOW');
+          }
           return ok;
         }
       };
@@ -465,15 +480,23 @@ const Game = (() => {
     const index = roll.thrown[0].index;
     const rate = Engine.betRate(G.run, colour, true);
     const pay = +rate.toFixed(2);
+    const allIn = Engine.greenIsAllIn(colour);
 
-    /* the stake rides the balls, a share each, at the table's honest price */
-    const shares = Engine.ballShares(G.run, stake);
+    /* The zero does not split. One ball in a green pocket takes the WHOLE stake
+       at the full green price; none of them and the whole stake is gone. Every
+       other colour rides a share per ball at the table's honest price. */
     let payout = 0, lost = 0;
-    roll.thrown.forEach((t, i) => {
-      t.share = shares[i] || 0;
-      t.won = t.hit ? Math.round(t.share * rate) : 0;
-      if (t.hit) payout += t.won; else lost += t.share;
-    });
+    if (allIn) {
+      roll.thrown.forEach(t => { t.share = null; t.won = 0; });
+      if (win) payout = Math.max(1, Math.round(stake * rate)); else lost = stake;
+    } else {
+      const shares = Engine.ballShares(G.run, stake);
+      roll.thrown.forEach((t, i) => {
+        t.share = shares[i] || 0;
+        t.won = t.hit ? Math.round(t.share * rate) : 0;
+        if (t.hit) payout += t.won; else lost += t.share;
+      });
+    }
     G.round.cashSwing += payout - stake;
 
     if (win) {
@@ -486,7 +509,7 @@ const Game = (() => {
       G.round.heat = 0;
     }
     const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-                  staked: stake, payout, lost, before: purse, thrown: roll.thrown,
+                  staked: stake, payout, lost, allIn, before: purse, thrown: roll.thrown,
                   hits: roll.hits, need: roll.need, heat: G.round.heat };
     settleBalls(out, colour);
     out.purse = roundPurse();
@@ -517,15 +540,21 @@ const Game = (() => {
     const rate = Engine.betRate(G.run, colour, false);
     const pay = +rate.toFixed(2);
 
-    /* the pot is split across the balls too: each share that lands is paid at the
-       full rate, each that misses is gone and costs the same again off the ante */
-    const shares = Engine.ballShares(G.run, pot);
+    /* the pot splits across the balls the same way -- except on the zero, which is
+       all or nothing on a single ball */
+    const allIn = Engine.greenIsAllIn(colour);
     let kept = 0, lost = 0;
-    roll.thrown.forEach((t, i) => {
-      t.share = shares[i] || 0;
-      t.won = t.hit ? Math.round(t.share * rate) : 0;
-      if (t.hit) kept += t.won; else lost += t.share;
-    });
+    if (allIn) {
+      roll.thrown.forEach(t => { t.share = null; t.won = 0; });
+      if (win) kept = Math.round(pot * rate); else lost = pot;
+    } else {
+      const shares = Engine.ballShares(G.run, pot);
+      roll.thrown.forEach((t, i) => {
+        t.share = shares[i] || 0;
+        t.won = t.hit ? Math.round(t.share * rate) : 0;
+        if (t.hit) kept += t.won; else lost += t.share;
+      });
+    }
 
     G.round.pot = kept;
     const anteHit = lost;
@@ -541,7 +570,7 @@ const Game = (() => {
       G.round.heat = 0;
     }
     const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
-                  pot: G.round.pot, staked: pot, anteHit, lost, kept, thrown: roll.thrown,
+                  pot: G.round.pot, staked: pot, anteHit, lost, kept, allIn, thrown: roll.thrown,
                   hits: roll.hits, need: roll.need, heat: G.round.heat, before: roundPurse() };
     settleBalls(out, colour);
     out.purse = roundPurse();

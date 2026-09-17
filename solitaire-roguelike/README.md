@@ -169,6 +169,10 @@ Landing **half your balls, rounded up**, on your colour **wins the spin** — 1 
 That's a separate thing from the money: it's what raises **HEAT**, extends your streak and unlocks
 **LET IT RIDE**.
 
+**The zero is the exception.** A green bet doesn't split and doesn't care how many balls you own: if **any
+one** of them finds a green pocket, the **whole stake** pays the zero in full and the spin is a win. If none
+do, the whole stake is gone. It's the one bet that gets strictly better with every ball you add.
+
 The table allows **3 spins a round** (LET IT RIDE spends one); the Counter sells **Another Spin**, forever.
 
 The reason to own balls is what they *do*. A ball's ability fires on the pocket it lands in **whether the
@@ -180,7 +184,7 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 | **Iron Ball** | Lands on black: **+$3** |
 | **Brass Ball** | Lands on red: **+300 Chips** onto your round score |
 | **Zero Ball** | Lands on a green pocket: **+2 HEAT and $12** |
-| **Emerald** · **Garnet** · **Onyx** | 5% chance the pocket it lands in turns that colour **for the rest of the run** |
+| **Emerald** · **Garnet** · **Onyx** | 14% chance the pocket it lands in turns that colour **for the rest of the run** |
 | **Loaded Ball** | Thrown again if it misses your colour |
 | **Clay Ball** | Counts as two balls when it lands on your colour |
 | **Ghost Ball** | Never raises the number you need — but can still be one of them |

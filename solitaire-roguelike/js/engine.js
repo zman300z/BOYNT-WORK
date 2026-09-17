@@ -215,14 +215,21 @@ const Engine = (() => {
     return out;
   }
 
-  /* paint one pocket for the rest of the run. The zero is the house's own and is
-     never repainted, and the wheel only ever takes so much paint. */
-  function paintPocket(run, index, colour) {
+  /* Can this pocket take paint at all? The zero is the house's own, a pocket is
+     only ever painted once, the wheel takes so much paint and no more, and there
+     is nothing to do to a pocket that already wears the colour. */
+  function canPaint(run, index, colour) {
     if (index === 0) return false;
+    const paint = run.wheelPaint || {};
+    if (paint[index]) return false;
+    if (Object.keys(paint).length >= TUNE.maxPainted) return false;
+    return ROULETTE[index].c !== colour;
+  }
+
+  /* paint one pocket for the rest of the run */
+  function paintPocket(run, index, colour) {
+    if (!canPaint(run, index, colour)) return false;
     run.wheelPaint = run.wheelPaint || {};
-    if (run.wheelPaint[index]) return false;
-    if (Object.keys(run.wheelPaint).length >= TUNE.maxPainted) return false;
-    if (ROULETTE[index].c === colour) return false;      // already that colour
     run.wheelPaint[index] = colour;
     return true;
   }
@@ -252,7 +259,13 @@ const Engine = (() => {
     return ballsOf(run).filter(b => !b.ghost).length;
   }
 
-  function ballThreshold(run) {
+  /* The zero is all-or-nothing and always has been: ONE ball in a green pocket
+     takes the whole stake at the full green price, however many balls you own.
+     Every other colour splits the stake and needs half the case. */
+  function greenIsAllIn(colour) { return colour === 'green'; }
+
+  function ballThreshold(run, colour) {
+    if (greenIsAllIn(colour)) return 1;
     return Math.max(1, Math.ceil(ballsCounted(run) / 2));
   }
 
@@ -271,7 +284,7 @@ const Engine = (() => {
     const total = wheelPockets(run).length;
     const p = counts[colour] / total;
     const balls = ballsOf(run);
-    const need = ballThreshold(run);
+    const need = ballThreshold(run, colour);
     let dist = [1];
     balls.forEach(def => {
       const hp = ballHitChance(def, p);
@@ -500,8 +513,9 @@ const Engine = (() => {
 
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
-    wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket,
+    wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket, canPaint,
     ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
+    greenIsAllIn,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
     drawCount, runStart, runLength, runCards, playableWaste, stashCapacity,

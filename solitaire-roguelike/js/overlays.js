@@ -192,7 +192,7 @@ const Overlays = (() => {
     const bag = Engine.ballBag(G.run);
     const loadedIds = Engine.ballsOf(G.run).map(b => b.id);
     const slots = Engine.ballSlots(G.run);
-    const need = Engine.ballThreshold(G.run);
+    const need = Engine.ballThreshold(G.run, 'red');
 
     row.innerHTML = '';
     bag.forEach(def => {
@@ -374,7 +374,7 @@ const Overlays = (() => {
           if (!res.ok) { Sfx.error(); UI.toast(res.reason); UI.shake(nB); return; }
           Sfx.money(); UI.burst(nB, 14, '#b07cff'); UI.hideTip();
           UI.toast(res.loaded
-            ? defB.name + ' goes in the case — <b>' + Engine.ballThreshold(G.run) + ' of ' +
+            ? defB.name + ' goes in the case — <b>' + Engine.ballThreshold(G.run, 'red') + ' of ' +
               Engine.ballsOf(G.run).length + '</b> must land on your colour now'
             : defB.name + ' is yours, but the case is full — swap it in from the case above');
           refreshShop(); UI.render();
@@ -682,14 +682,16 @@ const Overlays = (() => {
       const odds = Engine.ballWinChance(G.run, col);
       const dead = stake <= 0 || spinsLeft <= 0;
       const per = shares.length ? Math.round(shares[0] * rate) : 0;
+      const green = col === 'green';
+      const whole = Math.round(stake * rate);
       return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
         (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
         '<span class="rw-bo">' + counts[col] + ' in ' + pockets.length +
-          (col === 'green' ? '' : ' · pays 1 to 1') + '</span>' +
-        '<span class="rw-bp">' + (balls.length > 1
-            ? (cash ? '$' + per : UI.fmt(per)) + ' per ball that lands'
-            : 'pays ' + (cash ? '$' + Math.round(stake * rate) : UI.fmt(Math.round(stake * rate)))) +
+          (green ? ' · any ONE ball' : ' · pays 1 to 1') + '</span>' +
+        '<span class="rw-bp">' + (green || balls.length <= 1
+            ? 'pays ' + (cash ? '$' + whole : UI.fmt(whole))
+            : (cash ? '$' + per : UI.fmt(per)) + ' per ball that lands') +
         '</span></button>';
     };
 
@@ -706,7 +708,7 @@ const Overlays = (() => {
         '</div>' +
         '<div class="rw-case-need">' + (balls.length > 1
           ? 'the stake splits <b>' + balls.length + ' ways</b> · <b>' + need +
-            '</b> landing wins the spin'
+            '</b> landing wins the spin · <b>the zero needs only one</b>, and pays on the whole stake'
           : 'one ball, one pocket') + '</div>' +
         '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
@@ -878,7 +880,7 @@ const Overlays = (() => {
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
       const cashMode = res.mode === 'cash';
-      const money = t.share == null ? '' : (t.hit
+      const money = (t.share == null) ? '' : (t.hit
         ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
         : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
       const mark = t.hit
@@ -894,18 +896,27 @@ const Overlays = (() => {
     }).join('');
     const cashMode = res.mode === 'cash';
     const head = thrown.length > 1
-      ? '<div class="rb-head"><b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' +
-        res.need + '</b> to win the spin</div>'
+      ? '<div class="rb-head">' + (res.allIn
+          ? '<b>' + res.hits + '</b> of ' + thrown.length + ' found a green pocket — <b>one</b> is all it takes'
+          : '<b>' + res.hits + '</b> of ' + thrown.length + ' on your colour — you needed <b>' +
+            res.need + '</b> to win the spin') + '</div>'
       : '';
 
     /* and a bottom line, so there is never a doubt about what the spin paid */
     const tot = [];
-    if (thrown.length > 1) {
+    if (thrown.length > 1 || res.allIn) {
       const back = cashMode ? res.payout : res.kept;
       const gone = res.lost || 0;
-      if (back != null) tot.push('<b>' + (cashMode ? '$' + back : UI.fmt(back)) + '</b> back of ' +
-        (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + ' staked' +
-        (gone ? ' · <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> lost' : ''));
+      if (res.allIn) {
+        tot.push(back
+          ? 'the whole <b>' + (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + '</b> pays the zero in full — <b>' +
+            (cashMode ? '$' + back : UI.fmt(back)) + '</b> back'
+          : 'no ball found green — the whole <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> is gone');
+      } else if (back != null) {
+        tot.push('<b>' + (cashMode ? '$' + back : UI.fmt(back)) + '</b> back of ' +
+          (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + ' staked' +
+          (gone ? ' · <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> lost' : ''));
+      }
     }
     if (res.cash) tot.push('<b>+$' + res.cash + '</b> from the balls');
     if (res.chips) tot.push('<b>+' + UI.fmt(res.chips) + ' Chips</b> scored');
@@ -1113,8 +1124,11 @@ const Overlays = (() => {
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every winning flip also pays you $5.', '');
     } else if (almanacTab === 'balls') {
+      html += almEntry('sparkle', 'The zero does not split', 'any ONE ball',
+        'A green bet is all or nothing on a single ball. If <b>any one</b> of your balls finds a green pocket, the <b>whole stake</b> pays the zero in full and the spin counts as a win — however many balls you own. If none of them do, the whole stake is gone.',
+        'That makes the zero the one bet that gets strictly better with every ball you add: four balls is four chances at it, and one hit pays the lot. Every other colour splits the stake and needs half the case.');
       html += almEntry('coin', 'Your stake splits across the balls', 'the price never changes',
-        'RED and BLACK always pay <b>1 to 1</b> and the zero always pays its full multiple, however many balls you own. The stake is divided evenly between them and each ball rides its own share: what lands is paid in full, what misses is gone.',
+        'RED and BLACK always pay <b>1 to 1</b>, however many balls you own. The stake is divided evenly between them and each ball rides its own share: what lands is paid in full, what misses is gone.',
         'So a bigger case does not buy a better price — it buys far less variance. One ball is all or nothing; four balls means a bad spin usually still hands some of the stake back. The house edge is identical at every count, which is why the balls are worth owning for what they DO rather than for the odds.');
       html += almEntry('dice', 'Every ball you own is thrown', 'how it works',
         'A spin drops the whole case at once. Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b> — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5 — which is what raises HEAT, extends your streak and unlocks LET IT RIDE.',
@@ -1289,6 +1303,9 @@ const Overlays = (() => {
           'is gone. A bigger case does not buy a better price — it buys far less variance.</p>' +
           '<p>Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b>, which is a separate thing ' +
           'from the money: it is what raises <b>HEAT</b>, extends your streak and unlocks <b>LET IT RIDE</b>.</p>' +
+          '<p><b>The zero is the exception.</b> A green bet does not split and does not care how many balls you own: if ' +
+          '<b>any one</b> of them finds a green pocket the <b>whole stake</b> pays the zero in full and the spin is a win. ' +
+          'If none do, the whole stake is gone. It is the one bet that gets strictly better with every ball you add.</p>' +
           '<p>The real reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
           '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red and it cost you its ' +
           'share. The jewel balls go further and <b>repaint the pocket they land in for the rest of the run</b>, though a ' +

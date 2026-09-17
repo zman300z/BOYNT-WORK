@@ -55,6 +55,7 @@ const TUNE = {
   cashPayEven: 2,           // cash bets use honest casino odds instead
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
+  paintChance: 0.14,        // a jewel ball's odds of keeping the pocket it lands in
   spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
@@ -913,19 +914,19 @@ const BALLS = [
     long: 'The ball the table came with. You always have it, you cannot sell it, and it does exactly nothing beyond landing somewhere.' },
 
   { id: 'emerald', name: 'The Emerald', tint: 'b-green', cost: 13, rarity: 'rare',
-    text: 'Where it lands has a ' + 5 + '% chance to turn GREEN for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn GREEN for the rest of the run.',
     long: 'Slowly repaints the wheel in your favour. Green pays the most, so more green pockets means the zero bet starts landing — but the table pays the zero less the more of them there are, so this is a build, not a printer.',
-    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('green')) c.note('THE EMERALD BITES — that pocket is green now'); } } },
+    hooks: { land: c => c.tryPaint('green') } },
 
   { id: 'garnet', name: 'The Garnet', tint: 'b-red', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + 5 + '% chance to turn RED for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn RED for the rest of the run.',
     long: 'Repaints the wheel red a pocket at a time. Red pays less the more red there is, so this is about landing your colour more often, not about the multiple.',
-    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('red')) c.note('THE GARNET STAINS THAT POCKET RED'); } } },
+    hooks: { land: c => c.tryPaint('red') } },
 
   { id: 'onyx', name: 'The Onyx', tint: 'b-black', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + 5 + '% chance to turn BLACK for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn BLACK for the rest of the run.',
     long: 'The same deal as the Garnet, in the other direction. Pairs with anything that likes a predictable wheel.',
-    hooks: { land: c => { if (Math.random() < 0.05 && c.paint('black')) c.note('THE ONYX TURNS THAT POCKET BLACK'); } } },
+    hooks: { land: c => c.tryPaint('black') } },
 
   { id: 'iron', name: 'The Iron Ball', tint: 'b-iron', cost: 7, rarity: 'common',
     text: 'Lands on black: <b>+$3</b>. Win or lose.',
