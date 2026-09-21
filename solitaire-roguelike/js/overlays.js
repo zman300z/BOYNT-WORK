@@ -739,7 +739,7 @@ const Overlays = (() => {
           (balls.length > 1 ? '<span class="ws-split"> — ' +
             (cash ? '$' + shares[0] : UI.fmt(shares[0])) + ' riding each of your ' + balls.length +
             ' balls</span>' : '') + '</div>' +
-        '<div class="wheel-wrap">' +
+        '<div class="wheel-wrap' + (Engine.wheelTakenOver(G.run) ? ' taken own-' + Engine.wheelTakenOver(G.run) : '') + '">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
             '<div class="rw-paint" id="rw-paint"></div>' +
@@ -882,7 +882,8 @@ const Overlays = (() => {
     const STEP = 620, HOLD = 900;
     claims.forEach((c, k) => {
       setTimeout(() => {
-        const idx = c.t.index;
+        /* the colour may have bled into a neighbour rather than kept its own pocket */
+        const idx = c.t.paintIndex != null ? c.t.paintIndex : c.t.index;
         const hue = c.t.painted === 'green' ? '#1f9d55' : (c.t.painted === 'red' ? '#c62b45' : '#1b1c22');
         /* one wedge, cut straight out of a conic gradient so it lines up exactly */
         const wedge = el('div', 'rw-wedge');
@@ -904,12 +905,31 @@ const Overlays = (() => {
         Sfx.win();
         UI.flashScreen(0.12, hue);
         UI.screenShake(5);
-        floatOverWheel(idx, c.t.painted.toUpperCase() + '!');
+        floatOverWheel(idx, c.t.spread ? 'IT SPREADS!' : c.t.painted.toUpperCase() + '!');
       }, k * STEP);
     });
 
     /* once the paint is down, fold it into the wheel itself and drop the overlays */
-    const total = (claims.length - 1) * STEP + HOLD;
+    let total = (claims.length - 1) * STEP + HOLD;
+    const owner = Engine.wheelTakenOver(G.run);
+    if (owner) {
+      setTimeout(() => {
+        const wrap = $('.wheel-wrap');
+        if (wrap) {
+          wrap.classList.add('taken', 'own-' + owner);
+          const band = el('div', 'rw-takeover', 'THE WHEEL IS YOURS');
+          wrap.appendChild(band);
+          setTimeout(() => band.remove(), 2600);
+        }
+        Sfx.win();
+        UI.screenShake(16);
+        UI.flashScreen(0.35, owner === 'green' ? '#1f9d55' : (owner === 'red' ? '#c62b45' : '#b07cff'));
+        UI.confetti(wrap || $('#scorebox'), 80, 't4');
+        UI.toast('<b>THE WHEEL IS YOURS</b> — every pocket but the zero is ' + owner.toUpperCase() +
+                 '. That colour lands every single spin now.', 5200);
+      }, total);
+      total += 1600;
+    }
     setTimeout(() => {
       const pockets = Engine.wheelPockets(G.run);
       wheel.style.background = 'conic-gradient(' + pockets.map((p, i) => {
@@ -1217,7 +1237,7 @@ const Overlays = (() => {
           '</div></div>';
       });
       html += almEntry('sparkle', 'Painting the wheel', 'permanent',
-        'The jewel balls repaint the pocket they land in, for the rest of the run. The green zero is the house\'s own and is never repainted, and at most ' + TUNE.maxPainted + ' pockets can ever be painted.',
+        'The jewel balls repaint the pocket they land in, for the rest of the run. The green zero is the house\'s own and is never repainted — but every other pocket on the wheel can be taken, and if you keep at it long enough <b>the whole wheel becomes one colour</b>. A ball landing on a pocket that already wears its colour bleeds into the nearest one that does not, so the last few come to you.',
         'It happens in front of you: the pocket flares and repaints while the balls are still sitting in it, before the result goes up. A colour pays less the more of the wheel wears it — paint half the wheel red and red stops paying 3x. Painting buys you a wheel that lands your colour, not a bigger multiple.');
     } else if (almanacTab === 'edge') {
       const steps = [];

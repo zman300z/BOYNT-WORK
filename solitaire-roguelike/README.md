@@ -192,8 +192,15 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 
 The jewel balls genuinely rewrite the wheel, and you watch it happen — the pocket flares and repaints while
 the balls are still sitting in it, before the result goes up. The green zero is the house's own and is never
-repainted, at most 8 pockets can ever be painted, and **a colour pays less the more of the wheel wears it**. Painting
-buys a wheel that lands your colour, not a bigger multiple.
+repainted, but **every other pocket can be taken**. A ball landing on a pocket that already wears its colour
+bleeds into the nearest one that doesn't, so the last few come to you.
+
+Keep at it and you get **THE WHEEL IS YOURS** — all 18 pockets one colour. That colour then lands on
+essentially every spin, which means the win, the **HEAT** and the streak, every single time. The table isn't
+stupid about it: **a colour pays less the more of the wheel wears it**, and at a full takeover it pays your
+stake back and nothing more. The money goes flat and the guaranteed HEAT becomes the prize. Budget about
+**35 rounds** with one jewel ball — buy *Another Spin* from the Counter if you mean it, and never run two
+jewel balls of different colours, because they'll fight over the same pockets and neither will finish.
 
 **You can own as many balls as you like** — only the ones *in the case* are thrown. The case seats **3** to
 start; the Counter sells **Wider Ball Case** for another seat, over and over, with no ceiling worth hitting.

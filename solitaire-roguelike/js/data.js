@@ -62,7 +62,7 @@ const TUNE = {
   ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
   ballPayFloor: 0.3,
   ballPayCeil: 1.6,
-  maxPainted: 8,            // and only so many pockets can ever be repainted
+  paintSpread: 0.5,         // a ball on a pocket already its colour spreads at this rate
   houseEdgeFromAnte: 4,     // the casino starts taking a cut here
   houseEdgePer: 0.06,       // and another 6% of every score per ante after
   houseEdgeCap: 0.30,

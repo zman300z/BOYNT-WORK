@@ -201,9 +201,17 @@ const Engine = (() => {
       : (cash ? TUNE.cashPayEven : TUNE.roulettePayEven);
     const was = ROULETTE_ODDS[colour].count;
     const now = wheelCounts(run)[colour];
-    if (!now) return base;
-    const floor = colour === 'green' ? 3 : 2;
-    return Math.max(floor, Math.round(base * was / now));
+    if (!now || now === was) return base;
+
+    /* The price follows the odds. A cash bet is settled against the stake, so it
+       scales straight; a pot bet also costs the same again off the ante when it
+       misses, so it is priced on (rate + 1) to keep the same edge. Paint the
+       wheel one colour and the table simply stops paying for it -- which is the
+       honest outcome, and leaves the guaranteed HEAT as the real prize. */
+    const ratio = was / now;
+    const rate = cash ? base * ratio : (base + 1) * ratio - 1;
+    const floor = colour === 'green' ? 1.5 : 1;
+    return Math.max(floor, +rate.toFixed(3));
   }
 
   function wheelOdds(run) {
@@ -219,11 +227,41 @@ const Engine = (() => {
      only ever painted once, the wheel takes so much paint and no more, and there
      is nothing to do to a pocket that already wears the colour. */
   function canPaint(run, index, colour) {
-    if (index === 0) return false;
+    if (index === 0) return false;                       // the zero is the house's own
     const paint = run.wheelPaint || {};
-    if (paint[index]) return false;
-    if (Object.keys(paint).length >= TUNE.maxPainted) return false;
+    if (paint[index]) return false;                      // a pocket is only painted once
     return ROULETTE[index].c !== colour;
+  }
+
+  /* Every pocket but the zero that could still take this colour. */
+  function paintablePockets(run, colour) {
+    const out = [];
+    for (let i = 1; i < ROULETTE.length; i++) if (canPaint(run, i, colour)) out.push(i);
+    return out;
+  }
+
+  /* Is the wheel finished -- every pocket but the zero wearing one colour? */
+  function wheelTakenOver(run) {
+    const counts = wheelCounts(run);
+    for (const c of ['red', 'black']) if (counts[c] >= ROULETTE.length - 1) return c;
+    if (counts.green >= ROULETTE.length) return 'green';
+    return null;
+  }
+
+  /* A ball landing on a pocket that ALREADY wears its colour lets the colour
+     bleed into the nearest pocket that does not. Without this the last few
+     pockets are unreachable: with one left you would have to land on that exact
+     pocket, which is a 1-in-19 shot on top of the paint roll. */
+  function spreadTarget(run, index, colour) {
+    const open = paintablePockets(run, colour);
+    if (!open.length) return -1;
+    let best = -1, bestDist = 1e9;
+    open.forEach(i => {
+      const raw = Math.abs(i - index);
+      const d = Math.min(raw, ROULETTE.length - raw);    // the wheel wraps
+      if (d < bestDist) { bestDist = d; best = i; }
+    });
+    return best;
   }
 
   /* paint one pocket for the rest of the run */
@@ -514,6 +552,7 @@ const Engine = (() => {
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
     wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket, canPaint,
+    paintablePockets, spreadTarget, wheelTakenOver,
     ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
     greenIsAllIn,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,

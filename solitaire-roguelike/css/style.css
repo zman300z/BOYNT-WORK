@@ -1629,3 +1629,32 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   70%{ opacity:1; transform:translate(-50%,-80%) scale(1); }
   100%{ opacity:0; transform:translate(-50%,-140%) scale(.95); }
 }
+
+/* ---------------- THE WHEEL IS YOURS ----------------
+   Every pocket but the zero in one colour. The table stops paying for it, so
+   the prize is that the colour lands every single spin.                     */
+.wheel-wrap.taken .rw-wheel{
+  box-shadow:0 0 0 3px var(--own,#b07cff), 0 0 40px var(--own,#b07cff);
+  animation:ownedPulse 2.8s ease-in-out infinite;
+}
+.wheel-wrap.own-red{ --own:#c62b45; }
+.wheel-wrap.own-black{ --own:#b07cff; }
+.wheel-wrap.own-green{ --own:#1f9d55; }
+@keyframes ownedPulse{
+  0%,100%{ filter:brightness(1); }
+  50%{ filter:brightness(1.12); }
+}
+.rw-takeover{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:40;
+  font-family:var(--display); font-size:12px; letter-spacing:.1em; white-space:nowrap;
+  color:#fff; text-shadow:0 0 18px var(--own,#b07cff), 0 3px 10px #000;
+  background:rgba(0,0,0,.55); padding:5px 10px; border-radius:20px;
+  animation:takeoverIn 2.6s cubic-bezier(.2,.9,.3,1) forwards;
+}
+@keyframes takeoverIn{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(.4); }
+  18%{ opacity:1; transform:translate(-50%,-50%) scale(1.15); }
+  30%{ transform:translate(-50%,-50%) scale(1); }
+  80%{ opacity:1; }
+  100%{ opacity:0; transform:translate(-50%,-160%) scale(.95); }
+}

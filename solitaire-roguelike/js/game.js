@@ -422,17 +422,35 @@ const Game = (() => {
           if (ok) { t.painted = to; res.painted = (res.painted || 0) + 1; }
           return ok;
         },
-        /* Only roll when the pocket could actually take the paint. A jewel ball
-           landing on the zero, or on a pocket already wearing its colour, used to
-           burn its chance on nothing -- which is why they so rarely seemed to fire. */
+        /* Only roll when something can actually come of it. Landing on a pocket
+           that already wears this colour is not a wasted throw -- the colour
+           BLEEDS into the nearest pocket that does not, which is the only way the
+           last few pockets are ever reachable. */
         tryPaint: to => {
-          if (!Engine.canPaint(run, t.index, to)) { t.noPaint = true; return false; }
-          if (Math.random() >= TUNE.paintChance) return false;
-          const ok = Engine.paintPocket(run, t.index, to);
+          let target = t.index, spread = false;
+          if (!Engine.canPaint(run, t.index, to)) {
+            const already = Engine.wheelPockets(run)[t.index].c === to;
+            if (!already) { t.noPaint = true; return false; }     // the zero, or another colour's pocket
+            target = Engine.spreadTarget(run, t.index, to);
+            if (target < 0) { t.noPaint = true; return false; }   // nothing left to take
+            spread = true;
+          }
+          const odds = spread ? TUNE.paintChance * TUNE.paintSpread : TUNE.paintChance;
+          if (Math.random() >= odds) return false;
+          const ok = Engine.paintPocket(run, target, to);
           if (ok) {
             t.painted = to;
+            t.paintIndex = target;
+            t.spread = spread;
             res.painted = (res.painted || 0) + 1;
-            t.notes.push(def.name.toUpperCase() + ' KEEPS POCKET ' + t.pocket.n + ' — IT IS ' + to.toUpperCase() + ' NOW');
+            t.notes.push(def.name.toUpperCase() + (spread
+              ? ' BLEEDS INTO POCKET ' + ROULETTE[target].n
+              : ' KEEPS POCKET ' + t.pocket.n) + ' — IT IS ' + to.toUpperCase() + ' NOW');
+            const owner = Engine.wheelTakenOver(run);
+            if (owner) {
+              res.takeover = owner;
+              t.notes.push('THE WHEEL IS YOURS — EVERY POCKET BUT THE ZERO IS ' + owner.toUpperCase());
+            }
           }
           return ok;
         }
