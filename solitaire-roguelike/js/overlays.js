@@ -742,6 +742,7 @@ const Overlays = (() => {
         '<div class="wheel-wrap">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
+            '<div class="rw-paint" id="rw-paint"></div>' +
             '<div class="rw-nums">' + nums + '</div>' +
             '<div class="rw-hub"></div>' +
           '</div>' +
@@ -860,10 +861,76 @@ const Overlays = (() => {
           n.classList.add('settled');
           if (thrown[i] && thrown[i].hit) n.classList.add('hit');
         });
-        setTimeout(() => finishWheel(res), 300);
+        /* a jewel ball that kept its pocket repaints it in front of you, before
+           the result goes up -- the wheel changing is the whole payoff */
+        const wait = paintAnimation(thrown, nodes);
+        setTimeout(() => finishWheel(res), 300 + wait);
       }
     };
     requestAnimationFrame(frame);
+  }
+
+  /* Repaint the pockets the jewel balls claimed, one at a time, right on the
+     wheel. Returns how long the whole sequence takes so the result can wait. */
+  function paintAnimation(thrown, nodes) {
+    const layer = $('#rw-paint');
+    const wheel = $('#rw-wheel');
+    if (!layer || !wheel) return 0;
+    const claims = thrown.map((t, i) => ({ t, i })).filter(x => x.t.painted);
+    if (!claims.length) return 0;
+
+    const STEP = 620, HOLD = 900;
+    claims.forEach((c, k) => {
+      setTimeout(() => {
+        const idx = c.t.index;
+        const hue = c.t.painted === 'green' ? '#1f9d55' : (c.t.painted === 'red' ? '#c62b45' : '#1b1c22');
+        /* one wedge, cut straight out of a conic gradient so it lines up exactly */
+        const wedge = el('div', 'rw-wedge');
+        wedge.style.background = 'conic-gradient(transparent 0deg ' + (idx * SEG) + 'deg, ' +
+          hue + ' ' + (idx * SEG) + 'deg ' + ((idx + 1) * SEG) + 'deg, transparent ' +
+          ((idx + 1) * SEG) + 'deg 360deg)';
+        wedge.style.setProperty('--glow', hue);
+        layer.appendChild(wedge);
+
+        /* the ball that did it flares, the number under it flips colour */
+        const ball = nodes[c.i];
+        if (ball) { ball.classList.add('painting'); setTimeout(() => ball.classList.remove('painting'), HOLD); }
+        const num = $$('#rw-wheel .rw-num')[idx];
+        if (num) {
+          num.className = 'rw-num r-' + c.t.painted + ' painted just';
+          setTimeout(() => num.classList.remove('just'), HOLD);
+        }
+
+        Sfx.win();
+        UI.flashScreen(0.12, hue);
+        UI.screenShake(5);
+        floatOverWheel(idx, c.t.painted.toUpperCase() + '!');
+      }, k * STEP);
+    });
+
+    /* once the paint is down, fold it into the wheel itself and drop the overlays */
+    const total = (claims.length - 1) * STEP + HOLD;
+    setTimeout(() => {
+      const pockets = Engine.wheelPockets(G.run);
+      wheel.style.background = 'conic-gradient(' + pockets.map((p, i) => {
+        const c2 = p.c === 'green' ? '#1f9d55' : (p.c === 'red' ? '#c62b45' : '#1b1c22');
+        return c2 + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
+      }).join(',') + ')';
+      layer.innerHTML = '';
+    }, total);
+    return total;
+  }
+
+  /* a word thrown out over the pocket that just changed */
+  function floatOverWheel(index, text) {
+    const wrap = $('.wheel-wrap');
+    if (!wrap) return;
+    const angle = (wheelAngle + index * SEG + SEG / 2) * Math.PI / 180;
+    const n = el('div', 'rw-pop', text);
+    n.style.left = 'calc(50% + ' + (Math.sin(angle) * 74).toFixed(1) + 'px)';
+    n.style.top = 'calc(50% - ' + (Math.cos(angle) * 74).toFixed(1) + 'px)';
+    wrap.appendChild(n);
+    setTimeout(() => n.remove(), 1100);
   }
 
   /* what every ball did, whether the bet came in or not */
@@ -1151,7 +1218,7 @@ const Overlays = (() => {
       });
       html += almEntry('sparkle', 'Painting the wheel', 'permanent',
         'The jewel balls repaint the pocket they land in, for the rest of the run. The green zero is the house\'s own and is never repainted, and at most ' + TUNE.maxPainted + ' pockets can ever be painted.',
-        'A colour pays less the more of the wheel wears it — paint half the wheel red and red stops paying 3x. Painting buys you a wheel that lands your colour, not a bigger multiple.');
+        'It happens in front of you: the pocket flares and repaints while the balls are still sitting in it, before the result goes up. A colour pays less the more of the wheel wears it — paint half the wheel red and red stops paying 3x. Painting buys you a wheel that lands your colour, not a bigger multiple.');
     } else if (almanacTab === 'edge') {
       const steps = [];
       for (let a = TUNE.houseEdgeFromAnte; a <= TUNE.finalAnte; a++) {

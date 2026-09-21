@@ -190,8 +190,9 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 | **Ghost Ball** | Never raises the number you need — but can still be one of them |
 | **Magnet** | Lands on your colour 20% more often than it should |
 
-The jewel balls genuinely rewrite the wheel: the green zero is the house's own and is never repainted, at
-most 8 pockets can ever be painted, and **a colour pays less the more of the wheel wears it**. Painting
+The jewel balls genuinely rewrite the wheel, and you watch it happen — the pocket flares and repaints while
+the balls are still sitting in it, before the result goes up. The green zero is the house's own and is never
+repainted, at most 8 pockets can ever be painted, and **a colour pays less the more of the wheel wears it**. Painting
 buys a wheel that lands your colour, not a bigger multiple.
 
 **You can own as many balls as you like** — only the ones *in the case* are thrown. The case seats **3** to

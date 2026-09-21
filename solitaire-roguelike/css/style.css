@@ -1588,3 +1588,44 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 }
 .rw-spins b{ color:var(--gold); font-family:var(--display); font-size:12px; }
 .rw-spins.out b{ color:var(--hot); }
+
+/* ---------------- REPAINTING A POCKET ----------------
+   A jewel ball that keeps its pocket shows you, on the wheel, while the balls
+   are still sitting in it — not silently between one panel and the next.   */
+.rw-paint{ position:absolute; inset:0; border-radius:50%; pointer-events:none; z-index:4; }
+.rw-wedge{
+  position:absolute; inset:0; border-radius:50%;
+  animation:wedgePaint .62s cubic-bezier(.2,.9,.25,1) forwards;
+  filter:drop-shadow(0 0 10px var(--glow));
+}
+@keyframes wedgePaint{
+  0%{ opacity:0; transform:scale(.55) rotate(-8deg); filter:brightness(3) drop-shadow(0 0 22px var(--glow)); }
+  45%{ opacity:1; transform:scale(1.06) rotate(2deg); filter:brightness(2.2) drop-shadow(0 0 26px var(--glow)); }
+  100%{ opacity:1; transform:none; filter:brightness(1) drop-shadow(0 0 8px var(--glow)); }
+}
+.rw-ball.painting{
+  animation:ballFlare .6s ease-out 2;
+  z-index:12;
+}
+@keyframes ballFlare{
+  0%,100%{ box-shadow:0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.7); }
+  50%{ box-shadow:0 0 0 4px #fff, 0 0 22px #fff, 0 1px 4px rgba(0,0,0,.7); }
+}
+.rw-num.just{ animation:numFlip .6s ease-out; font-weight:900; }
+@keyframes numFlip{
+  0%{ transform:var(--t) scale(1); }
+  40%{ filter:brightness(3); }
+  100%{ filter:brightness(1); }
+}
+.rw-pop{
+  position:absolute; transform:translate(-50%,-50%); z-index:30; pointer-events:none;
+  font-family:var(--display); font-size:13px; letter-spacing:.1em; color:#fff;
+  text-shadow:0 0 10px currentColor, 0 2px 6px #000;
+  animation:popOut 1.1s cubic-bezier(.2,.9,.3,1) forwards;
+}
+@keyframes popOut{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(.5); }
+  25%{ opacity:1; transform:translate(-50%,-50%) scale(1.25); }
+  70%{ opacity:1; transform:translate(-50%,-80%) scale(1); }
+  100%{ opacity:0; transform:translate(-50%,-140%) scale(.95); }
+}
