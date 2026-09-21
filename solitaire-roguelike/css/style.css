@@ -1658,3 +1658,4 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   80%{ opacity:1; }
   100%{ opacity:0; transform:translate(-50%,-160%) scale(.95); }
 }
+.rb-cash.free{ color:var(--cool); opacity:.8; font-weight:700; }

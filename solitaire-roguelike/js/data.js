@@ -59,9 +59,6 @@ const TUNE = {
   spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
-  ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
-  ballPayFloor: 0.3,
-  ballPayCeil: 1.6,
   paintSpread: 0.5,         // a ball on a pocket already its colour spreads at this rate
   houseEdgeFromAnte: 4,     // the casino starts taking a cut here
   houseEdgePer: 0.06,       // and another 6% of every score per ante after
@@ -949,13 +946,13 @@ const BALLS = [
     reroll: true },
 
   { id: 'clay', name: 'The Clay Ball', tint: 'b-clay', cost: 10, rarity: 'uncommon',
-    text: 'When it lands on your colour it counts as <b>two</b> balls.',
-    long: 'It still raises the number you need like any other ball, so on its own it is a wash — paired with a second ball it wins the spin by itself.',
+    text: 'Landing on your colour counts as <b>two</b> balls toward winning the spin.',
+    long: 'It bets and is paid like any other ball — the doubling is about clearing the threshold, which is what hands you the win, the HEAT and the streak. In a case of four it can carry the spin on its own.',
     double: true },
 
   { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
-    text: 'Never counts toward how many balls you need — but can still land on your colour.',
-    long: 'Pure upside, and priced like it. Every other ball you buy makes the target harder; this one does not, and it can still be the ball that gets you there.',
+    text: 'Stakes nothing and can never lose. A free throw that still counts as a hit.',
+    long: 'It puts none of your money on the table, so it costs you nothing when it misses — and because it does not raise the number of balls you need, every other ball in the case bets a bigger share. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak. Pure upside, and priced like it.',
     ghost: true },
 
   { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',

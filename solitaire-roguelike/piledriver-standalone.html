@@ -1666,6 +1666,7 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   80%{ opacity:1; }
   100%{ opacity:0; transform:translate(-50%,-160%) scale(.95); }
 }
+.rb-cash.free{ color:var(--cool); opacity:.8; font-weight:700; }
 
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
@@ -2149,9 +2150,6 @@ const TUNE = {
   spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
-  ballPayFairness: 0.75,    // 1 would price extra balls to a perfect wash; below 1 leaves you an edge
-  ballPayFloor: 0.3,
-  ballPayCeil: 1.6,
   paintSpread: 0.5,         // a ball on a pocket already its colour spreads at this rate
   houseEdgeFromAnte: 4,     // the casino starts taking a cut here
   houseEdgePer: 0.06,       // and another 6% of every score per ante after
@@ -3039,13 +3037,13 @@ const BALLS = [
     reroll: true },
 
   { id: 'clay', name: 'The Clay Ball', tint: 'b-clay', cost: 10, rarity: 'uncommon',
-    text: 'When it lands on your colour it counts as <b>two</b> balls.',
-    long: 'It still raises the number you need like any other ball, so on its own it is a wash — paired with a second ball it wins the spin by itself.',
+    text: 'Landing on your colour counts as <b>two</b> balls toward winning the spin.',
+    long: 'It bets and is paid like any other ball — the doubling is about clearing the threshold, which is what hands you the win, the HEAT and the streak. In a case of four it can carry the spin on its own.',
     double: true },
 
   { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
-    text: 'Never counts toward how many balls you need — but can still land on your colour.',
-    long: 'Pure upside, and priced like it. Every other ball you buy makes the target harder; this one does not, and it can still be the ball that gets you there.',
+    text: 'Stakes nothing and can never lose. A free throw that still counts as a hit.',
+    long: 'It puts none of your money on the table, so it costs you nothing when it misses — and because it does not raise the number of balls you need, every other ball in the case bets a bigger share. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak. Pure upside, and priced like it.',
     ghost: true },
 
   { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',
@@ -3521,15 +3519,23 @@ const Engine = (() => {
     return TUNE.spinsPerRound + ((run && run.bonusSpins) || 0) + (mods(run).bonusSpins || 0);
   }
 
+  /* One share per ball, in case order, so a caller can index it by the ball it
+     threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
+     on your colour -- so it takes a share of 0 and the stake splits across the
+     rest. That also means the balls that ARE betting each bet more. */
   function ballShares(run, stake) {
-    const n = ballsOf(run).length || 1;
+    const balls = ballsOf(run);
+    const betting = balls.filter(b => !b.ghost);
+    const list = betting.length ? betting : balls;    // an all-ghost case has to carry it
+    const n = list.length || 1;
     /* floor the shares and hand the remainder out a penny at a time, so they
        always sum to exactly the stake and none of them can go negative */
     const base = Math.floor(stake / n);
     let rem = stake - base * n;
-    const shares = [];
-    for (let i = 0; i < n; i++) shares.push(base + (rem-- > 0 ? 1 : 0));
-    return shares;
+    const pot = [];
+    for (let i = 0; i < n; i++) pot.push(base + (rem-- > 0 ? 1 : 0));
+    let k = 0;
+    return balls.map(b => (betting.length && b.ghost) ? 0 : pot[k++]);
   }
 
   /* the rate a bet pays, paint included. Balls no longer touch it. */
@@ -4565,7 +4571,7 @@ const Game = (() => {
       roll.thrown.forEach((t, i) => {
         t.share = shares[i] || 0;
         t.won = t.hit ? Math.round(t.share * rate) : 0;
-        if (t.hit) payout += t.won; else lost += t.share;
+        if (t.hit) payout += t.won; else lost += t.share;   // a ghost's share is 0 either way
       });
     }
     G.round.cashSwing += payout - stake;
@@ -5632,6 +5638,12 @@ const Game = (() => {
     const i = run.balls.indexOf(id);
     if (i < 0) return { ok: false, reason: 'That one is not in the case.' };
     if (run.balls.length <= 1) return { ok: false, reason: 'The wheel needs at least one ball.' };
+    /* a case of nothing but ghosts has no stake to ride, so the ghost would end
+       up carrying the bet and quietly stop being free */
+    const left = run.balls.filter((id, k) => k !== i);
+    if (!left.some(id => !(BALL_BY_ID[id] || {}).ghost)) {
+      return { ok: false, reason: 'Something has to carry the bet — leave a ball that stakes.' };
+    }
     run.balls.splice(i, 1);
     save();
     return { ok: true, balls: run.balls.slice() };
@@ -8290,7 +8302,9 @@ const Overlays = (() => {
       return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
         (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
-        '<span class="rw-bo">' + counts[col] + ' in ' + pockets.length +
+        '<span class="rw-bo">' + (balls.length > 1
+            ? Math.round(odds.win * 100) + '% to win'
+            : counts[col] + ' in ' + pockets.length) +
           (green ? ' · any ONE ball' : ' · pays 1 to 1') + '</span>' +
         '<span class="rw-bp">' + (green || balls.length <= 1
             ? 'pays ' + (cash ? '$' + whole : UI.fmt(whole))
@@ -8310,8 +8324,9 @@ const Overlays = (() => {
           '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (balls.length > 1
-          ? 'the stake splits <b>' + balls.length + ' ways</b> · <b>' + need +
-            '</b> landing wins the spin · <b>the zero needs only one</b>, and pays on the whole stake'
+          ? 'the stake splits <b>' + Engine.ballsCounted(G.run) + ' ways</b>' +
+            (Engine.ballsCounted(G.run) < balls.length ? ' (the ghost bets nothing)' : '') +
+            ' · <b>' + need + '</b> landing wins the spin · <b>the zero needs only one</b>'
           : 'one ball, one pocket') + '</div>' +
         '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
@@ -8340,8 +8355,8 @@ const Overlays = (() => {
         chipRow +
         '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b>' +
           (balls.length > 1 ? '<span class="ws-split"> — ' +
-            (cash ? '$' + shares[0] : UI.fmt(shares[0])) + ' riding each of your ' + balls.length +
-            ' balls</span>' : '') + '</div>' +
+            (cash ? '$' + Math.max.apply(null, shares) : UI.fmt(Math.max.apply(null, shares))) +
+            ' riding each of your ' + Engine.ballsCounted(G.run) + ' betting balls</span>' : '') + '</div>' +
         '<div class="wheel-wrap' + (Engine.wheelTakenOver(G.run) ? ' taken own-' + Engine.wheelTakenOver(G.run) : '') + '">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
@@ -8570,12 +8585,14 @@ const Overlays = (() => {
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
       const cashMode = res.mode === 'cash';
-      const money = (t.share == null) ? '' : (t.hit
-        ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
-        : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
+      const money = (t.share == null) ? ''
+        : (t.ghost && !t.share) ? '<span class="rb-cash free">free</span>'
+        : (t.hit
+          ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
+          : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
       const mark = t.hit
         ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
-        : '<span class="rb-miss">' + (t.ghost ? 'ghost' : 'miss') + '</span>';
+        : '<span class="rb-miss">miss</span>';
       return '<div class="rb-row' + (t.hit ? ' hit' : '') + (t.ghost ? ' ghost' : '') + '">' +
         '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
         '<span class="rb-name">' + (def.name || t.id) + '</span>' +

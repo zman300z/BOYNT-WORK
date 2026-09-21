@@ -512,7 +512,7 @@ const Game = (() => {
       roll.thrown.forEach((t, i) => {
         t.share = shares[i] || 0;
         t.won = t.hit ? Math.round(t.share * rate) : 0;
-        if (t.hit) payout += t.won; else lost += t.share;
+        if (t.hit) payout += t.won; else lost += t.share;   // a ghost's share is 0 either way
       });
     }
     G.round.cashSwing += payout - stake;
@@ -1579,6 +1579,12 @@ const Game = (() => {
     const i = run.balls.indexOf(id);
     if (i < 0) return { ok: false, reason: 'That one is not in the case.' };
     if (run.balls.length <= 1) return { ok: false, reason: 'The wheel needs at least one ball.' };
+    /* a case of nothing but ghosts has no stake to ride, so the ghost would end
+       up carrying the bet and quietly stop being free */
+    const left = run.balls.filter((id, k) => k !== i);
+    if (!left.some(id => !(BALL_BY_ID[id] || {}).ghost)) {
+      return { ok: false, reason: 'Something has to carry the bet — leave a ball that stakes.' };
+    }
     run.balls.splice(i, 1);
     save();
     return { ok: true, balls: run.balls.slice() };

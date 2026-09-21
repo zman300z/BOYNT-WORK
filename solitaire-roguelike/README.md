@@ -166,6 +166,10 @@ pays its full multiple, however many balls you own. What lands is paid in full, 
 bigger case doesn't buy a better price, it buys far less variance.
 
 Landing **half your balls, rounded up**, on your colour **wins the spin** — 1 of 2, 2 of 3, 2 of 4, 3 of 5.
+The **Ghost Ball** is outside all of that: it puts nothing on the table, so it can never lose, it doesn't raise
+the number you need, and the balls that *are* betting each ride a bigger share. It can still land on your
+colour and be the throw that wins the spin — and on a green bet, where any one ball takes the whole stake, a
+free extra throw at the zero is exactly as good as it sounds.
 That's a separate thing from the money: it's what raises **HEAT**, extends your streak and unlocks
 **LET IT RIDE**.
 
@@ -186,8 +190,8 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 | **Zero Ball** | Lands on a green pocket: **+2 HEAT and $12** |
 | **Emerald** · **Garnet** · **Onyx** | 14% chance the pocket it lands in turns that colour **for the rest of the run** |
 | **Loaded Ball** | Thrown again if it misses your colour |
-| **Clay Ball** | Counts as two balls when it lands on your colour |
-| **Ghost Ball** | Never raises the number you need — but can still be one of them |
+| **Clay Ball** | Landing on your colour counts as two balls toward winning the spin |
+| **Ghost Ball** | **Stakes nothing and can never lose** — a free throw that still counts as a hit |
 | **Magnet** | Lands on your colour 20% more often than it should |
 
 The jewel balls genuinely rewrite the wheel, and you watch it happen — the pocket flares and repaints while

@@ -687,7 +687,9 @@ const Overlays = (() => {
       return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
         (dead ? ' disabled' : '') + '>' +
         '<span class="rw-bl">' + o.label + '</span>' +
-        '<span class="rw-bo">' + counts[col] + ' in ' + pockets.length +
+        '<span class="rw-bo">' + (balls.length > 1
+            ? Math.round(odds.win * 100) + '% to win'
+            : counts[col] + ' in ' + pockets.length) +
           (green ? ' · any ONE ball' : ' · pays 1 to 1') + '</span>' +
         '<span class="rw-bp">' + (green || balls.length <= 1
             ? 'pays ' + (cash ? '$' + whole : UI.fmt(whole))
@@ -707,8 +709,9 @@ const Overlays = (() => {
           '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (balls.length > 1
-          ? 'the stake splits <b>' + balls.length + ' ways</b> · <b>' + need +
-            '</b> landing wins the spin · <b>the zero needs only one</b>, and pays on the whole stake'
+          ? 'the stake splits <b>' + Engine.ballsCounted(G.run) + ' ways</b>' +
+            (Engine.ballsCounted(G.run) < balls.length ? ' (the ghost bets nothing)' : '') +
+            ' · <b>' + need + '</b> landing wins the spin · <b>the zero needs only one</b>'
           : 'one ball, one pocket') + '</div>' +
         '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
@@ -737,8 +740,8 @@ const Overlays = (() => {
         chipRow +
         '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b>' +
           (balls.length > 1 ? '<span class="ws-split"> — ' +
-            (cash ? '$' + shares[0] : UI.fmt(shares[0])) + ' riding each of your ' + balls.length +
-            ' balls</span>' : '') + '</div>' +
+            (cash ? '$' + Math.max.apply(null, shares) : UI.fmt(Math.max.apply(null, shares))) +
+            ' riding each of your ' + Engine.ballsCounted(G.run) + ' betting balls</span>' : '') + '</div>' +
         '<div class="wheel-wrap' + (Engine.wheelTakenOver(G.run) ? ' taken own-' + Engine.wheelTakenOver(G.run) : '') + '">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
@@ -967,12 +970,14 @@ const Overlays = (() => {
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
       const cashMode = res.mode === 'cash';
-      const money = (t.share == null) ? '' : (t.hit
-        ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
-        : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
+      const money = (t.share == null) ? ''
+        : (t.ghost && !t.share) ? '<span class="rb-cash free">free</span>'
+        : (t.hit
+          ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
+          : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
       const mark = t.hit
         ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
-        : '<span class="rb-miss">' + (t.ghost ? 'ghost' : 'miss') + '</span>';
+        : '<span class="rb-miss">miss</span>';
       return '<div class="rb-row' + (t.hit ? ' hit' : '') + (t.ghost ? ' ghost' : '') + '">' +
         '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
         '<span class="rb-name">' + (def.name || t.id) + '</span>' +

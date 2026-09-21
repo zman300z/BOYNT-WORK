@@ -349,15 +349,23 @@ const Engine = (() => {
     return TUNE.spinsPerRound + ((run && run.bonusSpins) || 0) + (mods(run).bonusSpins || 0);
   }
 
+  /* One share per ball, in case order, so a caller can index it by the ball it
+     threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
+     on your colour -- so it takes a share of 0 and the stake splits across the
+     rest. That also means the balls that ARE betting each bet more. */
   function ballShares(run, stake) {
-    const n = ballsOf(run).length || 1;
+    const balls = ballsOf(run);
+    const betting = balls.filter(b => !b.ghost);
+    const list = betting.length ? betting : balls;    // an all-ghost case has to carry it
+    const n = list.length || 1;
     /* floor the shares and hand the remainder out a penny at a time, so they
        always sum to exactly the stake and none of them can go negative */
     const base = Math.floor(stake / n);
     let rem = stake - base * n;
-    const shares = [];
-    for (let i = 0; i < n; i++) shares.push(base + (rem-- > 0 ? 1 : 0));
-    return shares;
+    const pot = [];
+    for (let i = 0; i < n; i++) pot.push(base + (rem-- > 0 ? 1 : 0));
+    let k = 0;
+    return balls.map(b => (betting.length && b.ghost) ? 0 : pot[k++]);
   }
 
   /* the rate a bet pays, paint included. Balls no longer touch it. */
