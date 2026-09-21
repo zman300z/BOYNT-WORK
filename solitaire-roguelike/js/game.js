@@ -375,20 +375,26 @@ const Game = (() => {
     let hits = 0, guaranteed = false;
 
     balls.forEach((def, k) => {
-      let index;
+      let index, first = null;
       if (k === 0 && guaranteeFirst && winners.length) {
         index = winners[Math.floor(Math.random() * winners.length)];
         guaranteed = true;
       } else {
         index = rollOne(def.bias || 0);
-        /* the Loaded Ball gets thrown again if the first throw missed */
-        if (def.reroll && pockets[index].c !== colour) index = rollOne(def.bias || 0);
+        /* the Loaded Ball gets thrown again if the first throw missed. Keep the
+           first pocket -- the wheel needs to show the ball being thrown twice,
+           or the reroll is invisible and looks like it never happened. */
+        if (def.reroll && pockets[index].c !== colour) {
+          first = index;
+          index = rollOne(def.bias || 0);
+        }
       }
       const pocket = pockets[index];
       const hit = pocket.c === colour;
       if (hit) hits += def.double ? 2 : 1;
       thrown.push({ id: def.id, name: def.name, tint: def.tint, index, pocket, hit,
-                    ghost: !!def.ghost, doubled: !!(def.double && hit), notes: [] });
+                    ghost: !!def.ghost, doubled: !!(def.double && hit), notes: [],
+                    firstIndex: first, firstPocket: first != null ? pockets[first] : null });
     });
 
     return { thrown, hits, guaranteed, need: Engine.ballThreshold(run, colour),

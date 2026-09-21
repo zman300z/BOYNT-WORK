@@ -1659,3 +1659,12 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
   100%{ opacity:0; transform:translate(-50%,-160%) scale(.95); }
 }
 .rb-cash.free{ color:var(--cool); opacity:.8; font-weight:700; }
+
+/* the Loaded Ball leaving a pocket it does not like */
+.rw-ball.rethrown{
+  z-index:14;
+  box-shadow:0 0 0 2px #c8a4ff, 0 0 18px rgba(200,164,255,.9), 0 1px 4px rgba(0,0,0,.7);
+}
+.rb-pocket.was{ opacity:.45; text-decoration:line-through; }
+.rb-arrow{ opacity:.5; font-size:9px; margin:0 1px; }
+.rb-row .rb-pocket{ flex:0 0 auto; min-width:22px; }

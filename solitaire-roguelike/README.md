@@ -189,7 +189,7 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 | **Brass Ball** | Lands on red: **+300 Chips** onto your round score |
 | **Zero Ball** | Lands on a green pocket: **+2 HEAT and $12** |
 | **Emerald** · **Garnet** · **Onyx** | 14% chance the pocket it lands in turns that colour **for the rest of the run** |
-| **Loaded Ball** | Thrown again if it misses your colour |
+| **Loaded Ball** | Thrown again if it misses your colour — you watch it kick back out and take another lap |
 | **Clay Ball** | Landing on your colour counts as two balls toward winning the spin |
 | **Ghost Ball** | **Stakes nothing and can never lose** — a free throw that still counts as a hit |
 | **Magnet** | Lands on your colour 20% more often than it should |

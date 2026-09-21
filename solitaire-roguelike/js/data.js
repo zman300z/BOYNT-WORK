@@ -942,7 +942,7 @@ const BALLS = [
 
   { id: 'loaded', name: 'The Loaded Ball', tint: 'b-violet', cost: 14, rarity: 'rare',
     text: 'If it misses your colour it is thrown again, once.',
-    long: 'A second bite at every spin. It does not change how many balls you need — it just makes this one much more likely to be one of them.',
+    long: 'A second bite at every spin: it lands, and if the pocket is the wrong colour it kicks straight back out and takes another lap before settling for good. It does not change how many balls you need — it just makes this one much more likely to be one of them. Two misses in a row is still roughly one spin in four, so a miss does not mean it forgot to try.',
     reroll: true },
 
   { id: 'clay', name: 'The Clay Ball', tint: 'b-clay', cost: 10, rarity: 'uncommon',

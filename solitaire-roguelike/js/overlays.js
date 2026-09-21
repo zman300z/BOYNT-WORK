@@ -825,7 +825,9 @@ const Overlays = (() => {
     const t0 = performance.now();
     let nextTick = 0;
     const seeds = thrown.map((t, k) => ({
-      final: (((target + t.index * SEG + SEG / 2) % 360) + 360) % 360,
+      /* a ball that is thrown twice settles in its FIRST pocket here, and rolls
+         on to the real one in its own beat once everything else has stopped */
+      final: (((target + (t.firstIndex != null ? t.firstIndex : t.index) * SEG + SEG / 2) % 360) + 360) % 360,
       spins: 8 + Math.random() * 2 + k * 0.6,
       radius: R_POCKET - k * 0.5
     }));
@@ -862,15 +864,68 @@ const Overlays = (() => {
         nodes.forEach((n, i) => {
           n.classList.remove('live');
           n.classList.add('settled');
-          if (thrown[i] && thrown[i].hit) n.classList.add('hit');
+          /* a ball still to be re-thrown is not marked yet -- it is sitting in a
+             pocket it is about to leave */
+          if (thrown[i] && thrown[i].hit && thrown[i].firstIndex == null) n.classList.add('hit');
         });
-        /* a jewel ball that kept its pocket repaints it in front of you, before
-           the result goes up -- the wheel changing is the whole payoff */
-        const wait = paintAnimation(thrown, nodes);
-        setTimeout(() => finishWheel(res), 300 + wait);
+        /* the Loaded Ball kicks back out and rolls again, then any jewel ball
+           that kept its pocket repaints it -- both before the result goes up */
+        const again = rerollAnimation(thrown, nodes, target);
+        setTimeout(() => {
+          const wait = paintAnimation(thrown, nodes);
+          setTimeout(() => finishWheel(res), 300 + wait);
+        }, again);
       }
     };
     requestAnimationFrame(frame);
+  }
+
+  /* The Loaded Ball is thrown twice when the first throw misses. It has already
+     settled in that first pocket, so here it visibly kicks back out, takes
+     another lap and drops into the pocket that actually counts. Returns how long
+     that takes so everything after it waits. */
+  function rerollAnimation(thrown, nodes, wheelTarget) {
+    const again = thrown.map((t, i) => ({ t, i })).filter(x => x.t.firstIndex != null);
+    if (!again.length) return 0;
+
+    const R_RIM = 96, R_POCKET = 73, DUR = 1050, LEAD = 380;
+    again.forEach(c => {
+      const node = nodes[c.i];
+      if (!node) return;
+      setTimeout(() => {
+        const from = (((wheelTarget + c.t.firstIndex * SEG + SEG / 2) % 360) + 360) % 360;
+        let to = (((wheelTarget + c.t.index * SEG + SEG / 2) % 360) + 360) % 360;
+        while (to <= from) to += 360;
+        to += 360;                                   // one full lap, so it reads as a throw
+        node.classList.remove('settled');
+        node.classList.add('live', 'rethrown');
+        floatOverWheel(c.t.firstIndex, 'AGAIN!');
+        Sfx.deal();
+
+        const t0 = performance.now();
+        const ease = k => 1 - Math.pow(1 - k, 3);
+        const step = now => {
+          const k = Math.min(1, (now - t0) / DUR);
+          const e = ease(k);
+          const angle = from + (to - from) * e;
+          /* out to the rim, then back down into the pocket */
+          const lift = Math.sin(Math.min(1, k / 0.75) * Math.PI);
+          const r = R_POCKET + (R_RIM - R_POCKET) * lift;
+          const rad = angle * Math.PI / 180;
+          node.style.transform = 'translate(' + (Math.sin(rad) * r).toFixed(2) + 'px,' +
+                                 (-Math.cos(rad) * r).toFixed(2) + 'px)';
+          if (now >= (step.tick || 0)) { Sfx.chip(Math.floor(5 * (1 - e))); step.tick = now + 70 + 200 * e; }
+          if (k < 1) requestAnimationFrame(step);
+          else {
+            node.classList.remove('live', 'rethrown');
+            node.classList.add('settled');
+            if (c.t.hit) node.classList.add('hit');
+          }
+        };
+        requestAnimationFrame(step);
+      }, LEAD);
+    });
+    return LEAD + DUR + 200;
   }
 
   /* Repaint the pockets the jewel balls claimed, one at a time, right on the
@@ -978,10 +1033,16 @@ const Overlays = (() => {
       const mark = t.hit
         ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
         : '<span class="rb-miss">miss</span>';
+      const pocket = t.firstIndex != null
+        ? '<span class="rb-pocket r-' + t.firstPocket.c + ' was">' + t.firstPocket.n + '</span>' +
+          '<span class="rb-arrow">&rarr;</span>' +
+          '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>'
+        : '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>';
+      if (t.firstIndex != null) bits.unshift('thrown again');
       return '<div class="rb-row' + (t.hit ? ' hit' : '') + (t.ghost ? ' ghost' : '') + '">' +
         '<span class="rb-dot ' + (def.tint || '') + '"></span>' +
         '<span class="rb-name">' + (def.name || t.id) + '</span>' +
-        '<span class="rb-pocket r-' + t.pocket.c + '">' + t.pocket.n + '</span>' +
+        pocket +
         mark + money +
         '<span class="rb-fx">' + bits.join(' · ') + '</span>' +
       '</div>';
