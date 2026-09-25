@@ -214,15 +214,6 @@ const Engine = (() => {
     return Math.max(floor, +rate.toFixed(3));
   }
 
-  function wheelOdds(run) {
-    const counts = wheelCounts(run);
-    const out = {};
-    Object.keys(ROULETTE_ODDS).forEach(c => {
-      out[c] = { count: counts[c], label: ROULETTE_ODDS[c].label, pay: wheelPay(run, c, false) };
-    });
-    return out;
-  }
-
   /* Can this pocket take paint at all? The zero is the house's own, a pocket is
      only ever painted once, the wheel takes so much paint and no more, and there
      is nothing to do to a pocket that already wears the colour. */
@@ -559,7 +550,7 @@ const Engine = (() => {
 
   return {
     newCard, standardDeck, shuffle, newRun, quotaFor, mods, deal, newRound, houseEdge,
-    wheelPockets, wheelCounts, wheelPay, wheelOdds, paintPocket, canPaint,
+    wheelPockets, wheelCounts, wheelPay, paintPocket, canPaint,
     paintablePockets, spreadTarget, wheelTakenOver,
     ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
     greenIsAllIn,

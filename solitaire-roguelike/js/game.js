@@ -372,11 +372,15 @@ const Game = (() => {
     };
 
     const thrown = [];
+    const need = Engine.ballThreshold(run, colour);
     let hits = 0, guaranteed = false;
 
     balls.forEach((def, k) => {
       let index, first = null;
-      if (k === 0 && guaranteeFirst && winners.length) {
+      /* The Card Counter promises the spin cannot lose, so it rigs as many balls
+         as the case needs to clear -- not just the first. Forcing one ball used
+         to leave a four-ball case losing about one guaranteed spin in seven. */
+      if (guaranteeFirst && hits < need && winners.length) {
         index = winners[Math.floor(Math.random() * winners.length)];
         guaranteed = true;
       } else {
@@ -397,7 +401,7 @@ const Game = (() => {
                     firstIndex: first, firstPocket: first != null ? pockets[first] : null });
     });
 
-    return { thrown, hits, guaranteed, need: Engine.ballThreshold(run, colour),
+    return { thrown, hits, guaranteed, need,
              greens: thrown.filter(t => t.pocket.c === 'green').length };
   }
 
@@ -491,7 +495,10 @@ const Game = (() => {
     const purse = roundPurse();
     if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
     if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
-    snapshot();
+    /* The house gives no refunds. A spin wipes the undo history -- every undo
+       point still holds a round from BEFORE the bet, so any of them would hand
+       the stake and the spin straight back. */
+    G.undoStack = [];
     G.round.spins = (G.round.spins || 0) + 1;
     const m = Engine.mods(G.run);
 
@@ -550,7 +557,10 @@ const Game = (() => {
     if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to take to the wheel.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
     if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
-    snapshot();
+    /* The house gives no refunds. A spin wipes the undo history -- every undo
+       point still holds a round from BEFORE the bet, so any of them would hand
+       the stake and the spin straight back. */
+    G.undoStack = [];
     G.round.spins = (G.round.spins || 0) + 1;
     const m = Engine.mods(G.run);
 
@@ -815,42 +825,6 @@ const Game = (() => {
     return { ok: true, amount: pot };
   }
 
-  function pushPot() {
-    const pot = G.round.pot || 0;
-    if (pot < TUNE.potMinFlip) return { ok: false, reason: 'The pot needs at least ' + TUNE.potMinFlip + ' to gamble.' };
-    snapshot();
-    const m = Engine.mods(G.run);
-    /* a fresh shuffle every single flip: nothing to count, nothing to wait for */
-    const fate = Engine.newCard(1 + Math.floor(Math.random() * 13), SUIT_KEYS[Math.floor(Math.random() * 4)], { faceUp: true });
-    let win = SUITS[fate.suit].color === 'red';
-    let guaranteed = false;
-    if (!win && m.firstFlipSafe && !G.round.usedSafeFlip) {
-      win = true; guaranteed = true;
-      G.round.usedSafeFlip = true;
-      fate.suit = Math.random() < 0.5 ? 'H' : 'D';
-    }
-
-    let penalty = null;
-    if (win) {
-      G.round.pot = pot * 2;
-      G.round.potStreak = (G.round.potStreak || 0) + 1;
-      G.round.heat++;
-      if (m.dareBonus) { G.round.cashSwing += 5; G.round.money += 5; }
-      bumpMomentum();
-    } else {
-      G.round.pot = 0;
-      G.round.potStreak = 0;
-      G.round.heat = 0;
-      if (G.board.passesLeft > 0) { G.board.passesLeft--; penalty = 'pass'; }
-      else penalty = 'none';
-    }
-    push({ event: 'pot-flip', win, guaranteed, card: fate, pot: G.round.pot,
-           streak: G.round.potStreak, penalty, lost: win ? 0 : pot,
-           chips: 0, mult: 0, total: 0, triggers: [] });
-    save();
-    return { ok: true, win, pot: G.round.pot };
-  }
-
   function heatMult() {
     const per = TUNE.heatMultPer + Engine.mods(G.run).heatPer;
     return +(1 + per * G.round.heat).toFixed(2);
@@ -1072,30 +1046,6 @@ const Game = (() => {
     if (plan.kind === 'reshuffle') return reshuffle('free').ok;
     if (plan.src.zone === 'stash') return stashPlay(plan.src.index, plan.dst);
     return tryMove(plan.src, plan.dst);
-  }
-
-  /* auto-play every card that can go straight home */
-  function autoCollect() {
-    let moved = 0, guard = 0;
-    let again = true;
-    while (again && guard++ < 300) {
-      again = false;
-      const b = G.board;
-      for (let c = 0; c < b.tableau.length; c++) {
-        const pile = b.tableau[c];
-        if (!pile.length) continue;
-        const top = pile[pile.length - 1];
-        if (top.faceUp && (Engine.foundationTargetFor(b, top) || Engine.twinTargetFor(b, top))) {
-          if (tryMove({ zone: 'tableau', col: c, index: pile.length - 1 }, { zone: 'foundation' })) { moved++; again = true; }
-        }
-      }
-      const w = G.board.waste[G.board.waste.length - 1];
-      if (w && (Engine.foundationTargetFor(G.board, w) || Engine.twinTargetFor(G.board, w))) {
-        if (tryMove({ zone: 'waste' }, { zone: 'foundation' })) { moved++; again = true; }
-      }
-      if (G.phase !== 'play') break;
-    }
-    return moved;
   }
 
   /* Ranked advice. Returns { src, dst, cardId, kind, label } or null only when
@@ -1774,7 +1724,7 @@ const Game = (() => {
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
   return {
-    G, startRun, startRound, quota, anteTotal, drawStock, tryMove, autoCollect, hint,
+    G, startRun, startRound, quota, anteTotal, drawStock, tryMove, hint,
     undo, endRound, advance, openShop, reroll, rerollCost, buy, applyPending, cancelPending,
     sellCurio, sellBall, loadBall, unloadBall, toggleBall, ensureBalls, reorderCurio, leaveShop, priceOf, effectiveSlots, save, load, clearSave, snapshot,
     bankAnte, earlyFinishBonus, clearAnte, payoutPreview, SHELVES, buyCounter, banditPrice, pullLever,

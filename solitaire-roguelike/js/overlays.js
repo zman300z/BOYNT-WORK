@@ -761,7 +761,7 @@ const Overlays = (() => {
             ' and your CASH OUT is $' + purse + '. Swap your balls around while you are here.</div>'
           : '') +
         '<div class="wheel-warn">' + (cash
-          ? 'Every ball rides its own share at the table\'s honest price. What lands comes back onto your <b>CASH OUT</b>; what misses is gone.'
+          ? 'Every ball rides its own share at the table\'s honest price. What lands comes back onto your <b>CASH OUT</b>; what misses is gone. <b>A spin is final</b> — no undo.'
           : 'Every ball rides its own share of the pot. What lands is paid in full; what misses is gone — <b>and the same again comes off your ante total</b>.') + '</div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
@@ -1165,7 +1165,7 @@ const Overlays = (() => {
     { id: 'rules',   name: 'HOUSE RULES', sub: 'permanent run upgrades' },
     { id: 'counter', name: 'THE COUNTER', sub: 'always in stock, price climbs' },
     { id: 'whims',   name: "DEALER'S WHIMS", sub: 'random round rules from Ante ' + TUNE.whimsFromAnte },
-    { id: 'pot',     name: 'SIDE POT',   sub: 'the corner gamble, and what it pays' },
+    { id: 'pot',     name: 'THE WHEEL',  sub: 'the Side Pot, cash bets, and what they pay' },
     { id: 'bounty',  name: 'THE BOUNTY', sub: 'the wanted card, and the clock you can start' },
     { id: 'edge',    name: 'HOUSE EDGE', sub: 'what the casino takes at the high antes' },
     { id: 'balls',   name: 'THE BALLS',  sub: 'every ball is thrown on every spin' },
@@ -1262,20 +1262,26 @@ const Overlays = (() => {
         'It costs you nothing — the points still land on your score as normal. The pot is a copy, sitting in the corner waiting for you to decide what to do with it.');
       html += almEntry('coin', 'CASH IT', 'safe',
         'The whole pot is added straight to your round score.', 'No risk, no flip. The pot resets to zero.');
-      html += almEntry('dice', 'SPIN THE WHEEL', 'needs ' + TUNE.potMinFlip + '+',
-        'Nineteen pockets — nine red, nine black, one green zero. Red or black pays ' + TUNE.roulettePayEven +
-        'x the pot, the green 0 pays ' + TUNE.roulettePayGreen + 'x. Winning also raises HEAT.',
-        'Lose and the pot is gone AND the same amount again comes off your ante total, this round first and then your banked rounds. The stake is really double the pot.');
-      html += almEntry('twinflame', 'HEAT', 'from winning flips',
-        'Each winning flip raises Heat by one. Heat multiplies EVERY score for the rest of the round — X'
+      html += almEntry('dice', 'STAKE THE POT', 'needs ' + UI.fmt(TUNE.potMinFlip) + '+',
+        'Take the pot to the wheel. Your balls split it between them: each share that lands pays ' + TUNE.roulettePayEven +
+        'x on red or black, ' + TUNE.roulettePayGreen + 'x on the zero.',
+        'Each share that misses is gone AND the same again comes off your ante total, this round first and then your banked rounds — the one bet at the table that can cost you quota progress.');
+      html += almEntry('coin', 'STAKE YOUR CASH OUT', 'any time',
+        'Bet real money out of this round\'s purse instead, at honest casino odds: 1 to 1 on a colour, ' + TUNE.cashPayGreen + ' to 1 on the zero.',
+        'A miss costs its share of the stake and nothing more. The wheel is open all round from THE WHEEL button or W, whether or not the pot is big enough to stake.');
+      html += almEntry('twinflame', 'HEAT', 'from winning spins',
+        'Each spin you win raises HEAT by one (three on the zero). HEAT multiplies EVERY score for the rest of the round — X'
         + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four.',
-        'A busted flip resets Heat to zero, so a long streak is worth protecting — or cashing.');
+        'A lost spin resets it to zero, so a long streak is worth protecting — or cashing.');
+      html += almEntry('refresh', 'A spin is final', 'no refunds',
+        'Spinning the wheel wipes your undo history for the round.',
+        'Every undo point holds the table as it was before the bet, so letting you step back past a spin would hand the stake straight back.');
       html += almEntry('magnifier', 'The Card Counter', 'curio',
-        'Makes the first flip of each round unloseable.', '');
+        'Your first spin each round cannot lose — it rigs as many balls as the case needs.', '');
       html += almEntry('coinstack', 'The Skimmer', 'curio',
         'The pot takes a much bigger cut of every score.', '');
       html += almEntry('dice', 'The Daredevil', 'curio',
-        'Every winning flip also pays you $5.', '');
+        'Every spin you win also puts $5 on your CASH OUT.', '');
     } else if (almanacTab === 'balls') {
       html += almEntry('sparkle', 'The zero does not split', 'any ONE ball',
         'A green bet is all or nothing on a single ball. If <b>any one</b> of your balls finds a green pocket, the <b>whole stake</b> pays the zero in full and the spin counts as a win — however many balls you own. If none of them do, the whole stake is gone.',
@@ -1406,29 +1412,39 @@ const Overlays = (() => {
           'Drawing counts as a move. Bring the card in before the clock runs out and you take the doubled purse; let it escape and ' +
           '<b>' + Math.round(TUNE.bountyStake * 100) + '% of the purse comes off your ante bar</b> and your cascade breaks. You can raise twice.</p>' +
 
-          '<h4>Stuck cards: the Wishing Well and Twins</h4>' +
-          '<p>Bought a spare card you can never place — a fourth Queen clogging a column? Drag it into the ' +
-          '<b>WISHING WELL</b> beside the waste. It always pays <b>rank x ' + TUNE.wellChipsPerRank + ' Chips</b>, and then the well ' +
-          'rolls for something else: cash, a free reshuffle, +3 Mult for the rest of the round, a X3 blessing on your ' +
-          'next foundation play, more wishes — or it hands the card back with a <b>new mark permanently printed on it</b>, ' +
-          'so the dead Queen returns next round Gilded. Occasionally you just get a frog. ' +
-          'You get <b>' + TUNE.wellUses + ' wishes a round</b> (buy more at the Counter, or take The Well Witch).</p>' +
+          '<h4>The Stash</h4>' +
+          '<p>Three slots beside the waste. Drag any face-up card you can reach into it and it is held out of play — ' +
+          'it pays a little on the way in (<b>rank x ' + TUNE.stashChipsPerRank + ' Chips</b>) and stops clogging your columns. ' +
+          'Held cards <b>survive between rounds and between antes</b>, and are not dealt while they sit there. Play one back ' +
+          'out <b>whenever you like</b> — onto a column, onto a foundation, or double-click to send it home — and it scores ' +
+          '<b>+' + TUNE.stashPlayMult + ' Mult</b> on top of everything else.</p>' +
+          '<p>The trick is holding a Gilded Ace until your Cascade, HEAT and Tempo are all stacked, then dropping it. ' +
+          'A spare Queen stops being a problem and becomes ammunition. The Stash is also the one place a WANTED card ' +
+          'can be kept safe until you are ready to collect it.</p>' +
 
-          '<h4>The Side Pot — the corner gamble</h4>' +
-          '<p>Every score drops a slice of itself into the <b>SIDE POT</b> in the bottom-right corner. It just sits ' +
-          'there getting bigger while you play, and you decide what to do with it:</p>' +
+          '<h4>Duplicate cards and Twins</h4>' +
+          '<p>A foundation only ever wants the <i>next</i> rank, so a second Ace of Spades would be stranded. Instead, ' +
+          'any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
+          'in full (plus +' + TUNE.twinMultBonus + ' Mult) without advancing the pile. Duplicates also <b>stack on each ' +
+          'other in a column</b> — two 2♣ sit together. Spare cards are free points, not dead weight.</p>' +
+
+          '<h4>The Side Pot and the Wheel</h4>' +
+          '<p>Every score drops a slice of itself into the <b>SIDE POT</b> in the bottom-right corner. It costs you ' +
+          'nothing — the points still land on your score — and it waits for you to decide what to do with it:</p>' +
           '<ul>' +
-            '<li><b>CASH IT</b> — the whole pot is added straight to your round score. Safe.</li>' +
-            '<li><b>SPIN THE WHEEL</b> takes the pot to roulette. Nineteen pockets: nine red, nine black and a ' +
-            'single green zero. Back <b>RED</b> or <b>BLACK</b> (9 in 19) and the pot pays <b>' + TUNE.roulettePayEven + 'x</b>; ' +
-            'back the green <b>0</b> (1 in 19) and it pays <b>' + TUNE.roulettePayGreen + 'x</b>. Winning also raises your ' +
-            '<b>HEAT</b>, which multiplies every score for the rest of the round.</li>' +
-            '<li><b>If it misses</b>, the pot is gone <i>and the same amount again comes off your ante total</i> — ' +
-            'this round\'s score first, then your banked rounds. A bad spin costs real quota progress, so only ' +
-            'take a big pot to the wheel when you can afford to lose twice its size.</li>' +
+            '<li><b>CASH IT</b> — the whole pot goes straight onto your round score. Safe.</li>' +
+            '<li><b>STAKE THE POT</b> at the wheel (once it holds ' + UI.fmt(TUNE.potMinFlip) + '+). Your balls split it ' +
+            'between them; each share that lands is paid in full — <b>' + TUNE.roulettePayEven + 'x on red or black, ' +
+            TUNE.roulettePayGreen + 'x on the zero</b> — and each share that misses is gone <i>and costs the same again ' +
+            'off your ante total</i>. A bad spin costs real quota progress.</li>' +
+            '<li><b>STAKE YOUR CASH OUT</b> instead, any time, for honest casino odds: 1 to 1 on a colour, ' +
+            TUNE.cashPayGreen + ' to 1 on the zero, and a miss only costs its share.</li>' +
           '</ul>' +
-          '<p>The Card Counter makes your first spin each round unloseable, The Daredevil pays $5 per win, and ' +
-          'The Skimmer makes the pot fill nearly twice as fast.</p>' +
+          '<p>The wheel is open all round — the <b>THE WHEEL</b> button or <b>W</b> — and allows <b>' + TUNE.spinsPerRound +
+          ' spins a round</b>. <b>A spin is final</b>: it wipes your undo history, because the house gives no refunds. ' +
+          'Winning the spin raises <b>HEAT</b>, which multiplies every score for the rest of the round.</p>' +
+          '<p>The Card Counter makes your first spin each round unloseable, The Daredevil adds $5 to every winning spin, ' +
+          'and The Skimmer makes the pot fill nearly twice as fast.</p>' +
 
           '<h4>Oddities and spare cards</h4>' +
           '<p>The shop sells cards that were never in a deck of 52 — a <b>Joker</b> that becomes whatever a ' +
@@ -1484,11 +1500,6 @@ const Overlays = (() => {
           'across so you can watch the move happen. Press it again, or just touch the board yourself, to stop. ' +
           'It stops on its own when the round ends or when it runs out of good moves, and it will never spend a ' +
           'pass or your ante score for you. (Hotkey: A)</p>' +
-
-          '<h4>Duplicate cards and Twins</h4>' +
-          '<p>Buying a second Ace of Spades used to strand it — a foundation only wants the <i>next</i> rank. ' +
-          'Now any card whose rank its foundation has already passed can be dropped <b>on top of its twin</b>: it scores ' +
-          'in full (plus +' + TUNE.twinMultBonus + ' Mult) without advancing the pile. Duplicates are free points, not dead weight.</p>' +
 
           '<h4>The Dealer\'s Whim</h4>' +
           '<p>From Ante ' + TUNE.whimsFromAnte + ', every round is dealt under a random house rule — shown as a badge up in the header. ' +

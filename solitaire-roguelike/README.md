@@ -125,29 +125,31 @@ on every collection, which turns the bounty chase into your main multiplier engi
 
 ### The Side Pot and the Wheel
 
-Every score drops **12%** of itself into a pot in the bottom-right corner (it costs you nothing — the points
-still land on your score as normal). Then it's your call:
+Every score drops **12%** of itself into a pot in the bottom-right corner — on top of your score, not out
+of it, and before the House Edge takes its cut. Then it's your call:
 
 - **CASH IT** — the whole pot goes straight onto your round score. Safe.
-- **SPIN THE WHEEL** — takes the pot to roulette. Nineteen pockets: nine red, nine black, one green zero.
-  Back **RED** or **BLACK** (9 in 19) and the pot pays **3×**; back the green **0** (1 in 19) and it pays **20×**.
-  Winning also raises your **HEAT**, which multiplies every score for the rest of the round — cash bets
-  heat the table up exactly the same way (+1 on a colour, +3 on the zero), and a miss resets it.
-- **If it misses**, the pot is gone *and the same amount again comes off your ante total* — this round's score
-  first, then your banked rounds. The real stake is double the pot, so only take a big one to the wheel when
-  you can afford to lose twice its size.
+- **STAKE THE POT** at the wheel, once it holds 200+. Your balls split the pot between them; each share that
+  lands pays **3×** on red or black and **20×** on the green zero, and each share that misses is gone *and
+  costs the same again off your ante total* — this round's score first, then your banked rounds. It's the one
+  bet at the table that can cost you quota progress.
+- **STAKE YOUR CASH OUT** instead, any time, out of **this round's purse** — the number on the CASH OUT
+  button. Honest casino odds: **1 to 1** on a colour, **18 to 1** on the zero, and a miss only costs its share.
+  Your banked wallet is never touched, so a bad spin costs money this round was going to pay you, not money
+  you already have.
 
-You can also put **cash** on the same wheel, staked out of **this round's purse** — the number on the
-CASH OUT button. Switch the panel to **STAKE YOUR CASH OUT**, pick a $5/$10/$25/ALL stake and a colour:
-red or black returns **2×**, the green 0 returns **18×**, and the result settles straight back into the
-purse. Win and CASH OUT goes up; lose and it comes down. Your banked wallet is never touched, so a bad
-spin costs you money this round was going to pay you, not money you already have. Win either way and a
-**LET IT RIDE** button appears, which puts the whole payout back on the same colour.
+Winning a spin raises **HEAT** (+1 on a colour, +3 on the zero), which multiplies every score for the rest of
+the round; a lost spin resets it. Win and a **LET IT RIDE** button puts the whole payout back on the same
+colour. The wheel is open all round from **THE WHEEL** button or `W`, and allows **3 spins a round**.
+
+**A spin is final** — it wipes your undo history for the round. Every undo point holds the table as it was
+before the bet, so stepping back past a spin would hand the stake straight back.
 
 Hover the **CASH OUT** button at any time to see the purse itemised, line by line.
 
-**The Card Counter** makes your first spin each round unloseable, **The Daredevil** pays $5 a win, and
-**The Skimmer** nearly doubles how fast the pot fills.
+**The Card Counter** makes your first spin each round unloseable — it rigs as many balls as the case needs —
+**The Daredevil** adds $5 to your CASH OUT for every winning spin, and **The Skimmer** nearly doubles how fast
+the pot fills.
 
 ### Reshuffling
 

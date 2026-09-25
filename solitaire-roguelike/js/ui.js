@@ -350,7 +350,8 @@ const UI = (() => {
       '<div class="sp-cap">SIDE POT' + (streak ? '<span class="sp-streak">' + streak + ' straight</span>' : '') + '</div>' +
       '<div class="sp-amount">' + fmt(pot) + '</div>' +
       '<div class="sp-sub">' + (heat ? 'HEAT X' + Game.heatMult() + ' · ' : '') +
-        (canFlip ? 'red/black pays ' + fmt(pot * TUNE.roulettePayEven) : 'needs ' + fmt(TUNE.potMinFlip)) + '</div>';
+        (canFlip ? 'red/black pays ' + fmt(Math.round(pot * Engine.betRate(G.run, 'red', false))) + ' if it all lands'
+                 : 'stake it from ' + fmt(TUNE.potMinFlip)) + '</div>';
 
     const row = el('div', 'sp-btns');
     const cash = el('button', 'sp-btn sp-cash' + (pot > 0 ? '' : ' off'), 'CASH IT');
@@ -374,10 +375,12 @@ const UI = (() => {
       '<div class="tip-title">The Side Pot</div>' +
       '<div class="tip-kind whim-kind">THE CORNER GAMBLE</div>' +
       '<div class="tip-text">Every score drops ' + Math.round((TUNE.potShare + Engine.mods(G.run).potShare) * 100) +
-      '% of itself into the pot. <b>CASH IT</b> adds the pot straight to your score.</div>' +
-      '<div class="tip-text"><b>DOUBLE OR NOTHING</b> flips a card from a freshly shuffled deck — there is no order ' +
-      'to learn. Red doubles the pot and raises your HEAT (which multiplies every score). Black takes the pot ' +
-      'and a pass with it.</div>'));
+      '% of itself into the pot — on top of your score, not out of it, and before the House Edge takes its cut. ' +
+      '<b>CASH IT</b> adds the whole pot straight to your round score.</div>' +
+      '<div class="tip-text"><b>SPIN THE WHEEL</b> to stake it once it reaches ' + fmt(TUNE.potMinFlip) + '. Your balls ' +
+      'split the pot; each share that lands is paid in full, and each that misses is gone <b>and costs the same ' +
+      'again off your ante</b>. Winning the spin raises HEAT, which multiplies every score this round.</div>' +
+      '<div class="tip-text">The wheel is open even with an empty pot — you can always bet your CASH OUT instead.</div>'));
     box.addEventListener('pointerleave', hideTip);
   }
 

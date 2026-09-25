@@ -323,8 +323,8 @@ const CURIOS = [
     hooks: { score: c => c.addChips(25 * c.tallestColumn()) } },
 
   { id: 'card_counter', name: 'The Card Counter', icon: 'magnifier', rarity: 'rare', cost: 11,
-    text: 'The first Side Pot flip each round cannot lose.',
-    long: 'One guaranteed double every round. Build the pot as high as you dare before spending it, because after that the flips are honest again.',
+    text: 'Your first spin at the wheel each round cannot lose.',
+    long: 'One guaranteed win every round, however many balls are in the case — it rigs as many of them as it takes. Build the pot as high as you dare, or bet your whole CASH OUT, before you spend it, because after that the wheel is honest again.',
     mods: { firstFlipSafe: true } },
 
   { id: 'hot_hand', name: 'Hot Hand', icon: 'twinflame', rarity: 'uncommon', cost: 8,
@@ -357,7 +357,7 @@ const CURIOS = [
     mods: { stashPlayMult: 3 } },
 
   { id: 'the_daredevil', name: 'The Daredevil', icon: 'dice', rarity: 'rare', cost: 10,
-    text: 'Every winning Side Pot flip also pays you $5.',
+    text: 'Every spin you win at the wheel also puts $5 on your CASH OUT.',
     mods: { dareBonus: true } },
 
   { id: 'inside_man', name: 'The Inside Man', icon: 'mask', rarity: 'rare', cost: 11,
@@ -962,11 +962,6 @@ const BALLS = [
 ];
 const BALL_BY_ID = {};
 BALLS.forEach(b => { BALL_BY_ID[b.id] = b; });
-function roulettePay(colour) {
-  return colour === 'green' ? TUNE.roulettePayGreen : TUNE.roulettePayEven;
-}
-
-
 /* =========================================================
    QUIPS -- the table has opinions. Purely cosmetic.
    ========================================================= */
