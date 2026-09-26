@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lanternfall</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; outline: none; cursor: default; }
+  #err { position: fixed; left: 8px; bottom: 8px; color: #f88; font: 12px monospace; white-space: pre-wrap; max-width: 90vw; }
+</style>
+</head>
+<body>
+<canvas id="game" tabindex="0"></canvas>
+<div id="err"></div>
+<script src="js/core.js"></script>
+<script src="js/font.js"></script>
+<script src="js/gfx.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/music.js"></script>
+<script src="js/data.js"></script>
+<script src="js/items.js"></script>
+<script src="js/level.js"></script>
+<script src="js/gen.js"></script>
+<script src="js/bg.js"></script>
+<script src="js/world.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/player.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/enemies.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script>
+  window.addEventListener('error', function (e) {
+    var el = document.getElementById('err');
+    if (el) el.textContent = 'Error: ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')';
+  });
+  G.boot();
+  document.getElementById('game').focus();
+</script>
+</body>
+</html>
