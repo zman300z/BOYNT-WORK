@@ -1019,7 +1019,7 @@ html { scroll-behavior: auto; }
 .toast.success { background:#1d5c38; }
 
 /* ============================================================
-   KICKSTARTER PAGE — full-screen takeover, surfaces from below
+   SUPPORT PAGE — full-screen takeover, surfaces from below
    ============================================================ */
 .nav-ks {
   color:#05ce78 !important; opacity:1 !important; font-weight:600;
@@ -1042,7 +1042,7 @@ html { scroll-behavior: auto; }
 }
 .nav-fw::before { content:'👑'; font-size:11px; line-height:1; }
 
-/* Teaser link on the Kickstarter page pointing to the wall */
+/* Teaser link on the support page pointing to the wall */
 .ks-wall-link {
   display:inline-block; margin:0 auto 36px;
   font-family:'Barlow Condensed',sans-serif; font-size:13px;
@@ -1241,7 +1241,7 @@ html { scroll-behavior: auto; }
 
 /* ============================================================
    BOYNT POPUPS — "shop's not open yet" + checkout intercept.
-   A cream card bobbing on the waves, funneling to Kickstarter.
+   A cream card bobbing on the waves, funneling to the campaign.
    ============================================================ */
 .bp-overlay {
   position:fixed; inset:0; background:rgba(3,10,18,.62);
@@ -1388,7 +1388,7 @@ html { scroll-behavior: auto; }
 .m-size.sold { opacity:.35; text-decoration:line-through; cursor:not-allowed; }
 #mpAdd:disabled { opacity:.55; cursor:not-allowed; transform:none; }
 
-/* Sunglasses "coming soon" state — tasteful, still clickable → Kickstarter popup */
+/* Sunglasses "coming soon" state — tasteful, still clickable → the campaign */
 .panel-add-btn.ks-soon {
   background:var(--cream); color:var(--driftwood);
   border:1.5px dashed var(--sand);
@@ -1571,7 +1571,7 @@ html { scroll-behavior: auto; }
     <a href="#merch"       class="nav-link-intro" data-section="merch">Merch</a>
     <a href="#shop"        class="nav-link-intro" data-section="shop">Shop</a>
     <a href="#contact"     class="nav-link-intro" data-section="contact">Contact</a>
-    <a href="#kickstarter" class="nav-ks" onclick="openKickstarter(event)">Kickstarter</a>
+    <a href="#support" class="nav-ks" onclick="openSupport(event)">GoFundMe</a>
     <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founding Backers</a>
     <a href="#shop"        class="nav-cta nav-link-intro" data-section="shop">Shop Now</a>
   </div>
@@ -2037,7 +2037,7 @@ html { scroll-behavior: auto; }
       <div class="footer-contact-item">📧 <a href="mailto:boyntsuns@gmail.com" style="color:rgba(255,255,255,.6);text-decoration:none;">boyntsuns@gmail.com</a></div>
       <div class="footer-contact-item">📞 <a href="tel:4437872943" style="color:rgba(255,255,255,.6);text-decoration:none;">(443) 787-2943</a></div>
       <div class="footer-contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg> <a href="https://instagram.com/boynt_llc" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6);text-decoration:none;">@boynt_llc</a></div>
-      <div class="footer-contact-item">🚀 <a href="#kickstarter" onclick="openKickstarter(event)" style="color:#05ce78;text-decoration:none;">Back us on Kickstarter</a></div>
+      <div class="footer-contact-item">🌊 <a href="#support" onclick="openSupport(event)" style="color:#05ce78;text-decoration:none;">Support us on GoFundMe</a></div>
       <div class="footer-contact-item">👑 <a href="#founders" onclick="openFounderWall(event)" style="color:#f5c04a;text-decoration:none;">The Founding Backers Wall</a></div>
       <div class="footer-contact-item" style="margin-top:20px;color:rgba(255,255,255,.4);font-size:12px;">BOYNT · Est. 2026 · USA</div>
     </div>
@@ -2210,21 +2210,21 @@ if (eggBubbles) {
   </div>
 </div>
 
-<!-- KICKSTARTER PAGE (full-screen takeover) -->
-<div class="ks-page" id="ksPage" aria-hidden="true">
-  <div class="ks-bubbles" id="ksBubbles"></div>
-  <button class="ks-close" onclick="closeKickstarter()" aria-label="Close">✕</button>
+<!-- SUPPORT PAGE (full-screen takeover) -->
+<div class="ks-page" id="supportPage" aria-hidden="true">
+  <div class="ks-bubbles" id="supportBubbles"></div>
+  <button class="ks-close" onclick="closeSupport()" aria-label="Close">✕</button>
   <div class="ks-inner">
     <div class="ks-glasses">
       <img src="glasses-float.webp" alt="BOYNT floating sunglasses on the water" loading="lazy" decoding="async">
     </div>
     <p class="ks-eyebrow">● Now Live</p>
-    <h2 class="ks-title">BOYNT IS ON<br><em>KICKSTARTER.</em></h2>
-    <p class="ks-sub">We're raising the funds for our first full production run — polarized, UV400 sunglasses that actually float, built for life on the water. Back the campaign and you're not just pre-ordering a pair: you're putting BOYNT on the map.</p>
-    <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
-    <p class="ks-account-note">Heads up: pledging takes a free Kickstarter account — it's quick to make.</p>
+    <h2 class="ks-title">HELP US<br><em>LAUNCH BOYNT.</em></h2>
+    <p class="ks-sub">We're raising the funds for our first full production run — polarized, UV400 sunglasses that actually float, built for life on the water. Every bit of support gets the tooling paid for, the first run made, and BOYNT on the water.</p>
+    <a class="ks-cta" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener">Support Us On GoFundMe&nbsp;↗</a>
+    <p class="ks-account-note">No account needed — any amount helps, and it takes about a minute.</p>
 
-    <div class="ks-divider"><span>No account? No problem</span></div>
+    <div class="ks-divider"><span>Other ways to chip in</span></div>
     <div class="ks-alt-grid">
       <a class="ks-alt" href="https://venmo.com/u/Zachary-Brisson-2" target="_blank" rel="noopener">
         <div class="ks-alt-label">Venmo</div>
@@ -2243,10 +2243,10 @@ if (eggBubbles) {
         <div class="ks-alt-value">(443) 787-2943</div>
       </a>
     </div>
-    <a class="ks-wall-link" href="#founders" onclick="closeKickstarter(); openFounderWall(event);">👑 Meet our backers — The Founding Backers Wall →</a>
+    <a class="ks-wall-link" href="#founders" onclick="closeSupport(); openFounderWall(event);">👑 The Founding Backers Wall — see who gets their name up →</a>
 
-    <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every pledge, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
-    <button class="ks-back" onclick="closeKickstarter()">← Back to the site</button>
+    <p class="ks-thanks">Reach out any of these ways and we'll happily set up another way to support the launch. Every dollar, follow, and share helps get BOYNT on the water. Thank you. 🌊</p>
+    <button class="ks-back" onclick="closeSupport()">← Back to the site</button>
   </div>
 </div>
 
@@ -2257,96 +2257,18 @@ if (eggBubbles) {
   <div class="ks-inner">
     <p class="ks-eyebrow" style="color:#f5c04a;">👑 Our Backers</p>
     <h2 class="ks-title">THE FOUNDING BACKERS<br><em style="color:#f5c04a;">WALL.</em></h2>
-    <p class="ks-sub">The people who believed first. Every backer earns a permanent spot on this wall, in the order they showed up — and we mean permanent.</p>
-
-    <div class="ks-founder legend" onclick="ksCelebrate(event)" title="Click me 🎉">
-      <div class="ks-crown">👑</div>
-      <div class="ks-founder-num">Founding Backer #007</div>
-      <div class="ks-founder-name">Lawrence (Papaw)</div>
-      <div class="ks-legend-badge">★ Legendary Backer ★</div>
-      <div class="ks-founder-tier">Founding Backer Delivers</div>
-    </div>
+    <p class="ks-sub">This is where the people who believe in BOYNT first get their names, in the order they show up — and we mean permanently. The wall is open and waiting for its first name.</p>
 
     <div class="ks-wall">
-      <div class="ks-founder">
+      <a class="ks-founder ghost" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener">
         <div class="ks-founder-num">Founding Backer #001</div>
-        <div class="ks-founder-name">Tzvi Alexander Lowy</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #002</div>
-        <div class="ks-founder-name">Ryne</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #003</div>
-        <div class="ks-founder-name">Nicholas Coffey</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #004</div>
-        <div class="ks-founder-name">Hanna</div>
-        <div class="ks-founder-tier">Wave Maker</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #005</div>
-        <div class="ks-founder-name">Patrick Rager</div>
-        <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #006</div>
-        <div class="ks-founder-name">Joy Brisson</div>
-        <div class="ks-founder-tier">Founding Backers Edition</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #008</div>
-        <div class="ks-founder-name">Adam Carson</div>
-        <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #009</div>
-        <div class="ks-founder-name">Scott</div>
-        <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #010</div>
-        <div class="ks-founder-name">Dylan Eberly</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #011</div>
-        <div class="ks-founder-name">Diane Dennies</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #012</div>
-        <div class="ks-founder-name">Sarah Dennies</div>
-        <div class="ks-founder-tier">Two Pairs · Mix &amp; Match</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #013</div>
-        <div class="ks-founder-name">Duane Brisson</div>
-        <div class="ks-founder-tier">The Full BOYNT</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #014</div>
-        <div class="ks-founder-name">Lisa Whiting</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <div class="ks-founder">
-        <div class="ks-founder-num">Founding Backer #015</div>
-        <div class="ks-founder-name">Mary Makowski</div>
-        <div class="ks-founder-tier">First Wave Backer</div>
-      </div>
-      <a class="ks-founder ghost" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">
-        <div class="ks-founder-num">Founding Backer #016</div>
         <div class="ks-founder-name">Your Name Here</div>
-        <div class="ks-founder-tier">Claim your spot →</div>
+        <div class="ks-founder-tier">Claim the first spot →</div>
       </a>
     </div>
 
-    <p class="ks-thanks">Want your name up here forever? Back the campaign — every Founding Backer is added to the wall in the order they arrive. 🌊</p>
-    <a class="ks-cta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener">Back Us On Kickstarter&nbsp;↗</a>
+    <p class="ks-thanks">Want your name up here forever? Support the launch — every Founding Backer is added to the wall in the order they arrive. 🌊</p>
+    <a class="ks-cta" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener">Support Us On GoFundMe&nbsp;↗</a>
     <div style="margin-top:26px;">
       <button class="ks-back" onclick="closeFounderWall()">← Back to the site</button>
     </div>
@@ -2361,7 +2283,7 @@ if (eggBubbles) {
     <div class="bp-emoji" id="bpEmoji">🕶️</div>
     <h3 class="bp-title" id="bpTitle"></h3>
     <p class="bp-body" id="bpBody"></p>
-    <a class="bp-cta" id="bpCta" href="https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses" target="_blank" rel="noopener"></a>
+    <a class="bp-cta" id="bpCta" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener"></a>
     <button class="bp-later" id="bpLater" onclick="onBpLater()"></button>
   </div>
 </div>
@@ -2785,7 +2707,7 @@ function selectColor(idx) {
     document.getElementById('panelPrice').textContent = '$' + c.price;
     document.querySelectorAll('.panel-swatch').forEach((s,i) => s.classList.toggle('active', i===idx));
     const btn = document.getElementById('panelAddBtn');
-    btn.textContent = '🚀 Coming Soon — Back Us on Kickstarter'; btn.classList.remove('added'); btn.classList.add('ks-soon');
+    btn.textContent = '🌊 Coming Soon — Support the Launch'; btn.classList.remove('added'); btn.classList.add('ks-soon');
   }, 150);
 }
 function renderPanel() {
@@ -2812,12 +2734,12 @@ function renderPanel() {
     sw.appendChild(s);
   });
   const btn = document.getElementById('panelAddBtn');
-  btn.textContent = '🚀 Coming Soon — Back Us on Kickstarter'; btn.classList.remove('added'); btn.classList.add('ks-soon');
+  btn.textContent = '🌊 Coming Soon — Support the Launch'; btn.classList.remove('added'); btn.classList.add('ks-soon');
 }
 function handleAddToCart() {
-  // Sunglasses aren't sold on the site yet — the button says Kickstarter, so
-  // send people straight there in a new tab (the site stays open behind it).
-  window.open('https://www.kickstarter.com/projects/boynt/boynt-floating-sunglasses',
+  // Sunglasses aren't sold on the site yet — the button points at the campaign,
+  // so send people straight there in a new tab (the site stays open behind it).
+  window.open('https://www.gofundme.com/f/boynt',
               '_blank', 'noopener');
 }
 document.querySelectorAll('.product-card[data-product]').forEach(card => {
@@ -2944,7 +2866,7 @@ async function checkout() {
 // Initialise cart badge on load
 updateCartCount();
 
-// ── KICKSTARTER PAGE ─────────────────────────────────────────────────────────
+// ── SUPPORT PAGE ─────────────────────────────────────────────────────────
 let _ksBubbled = false;
 // Confetti burst for the Legendary Backer plaque 👑
 function ksCelebrate(e) {
@@ -2981,17 +2903,17 @@ function ksCelebrate(e) {
   })();
 }
 
-function openKickstarter(e) {
+function openSupport(e) {
   if (e) e.preventDefault();
   toggleMenu(false); // close mobile menu if open
-  const p = document.getElementById('ksPage');
+  const p = document.getElementById('supportPage');
   p.classList.add('open');
   p.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
-  if (location.hash !== '#kickstarter') history.replaceState(null, '', '#kickstarter');
+  if (location.hash !== '#support') history.replaceState(null, '', '#support');
   if (!_ksBubbled) {
     _ksBubbled = true;
-    const wrap = document.getElementById('ksBubbles');
+    const wrap = document.getElementById('supportBubbles');
     for (let i = 0; i < 14; i++) {
       const b = document.createElement('div');
       const size = 4 + Math.random() * 12;
@@ -3006,12 +2928,12 @@ function openKickstarter(e) {
     }
   }
 }
-function closeKickstarter() {
-  const p = document.getElementById('ksPage');
+function closeSupport() {
+  const p = document.getElementById('supportPage');
   p.classList.remove('open');
   p.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
-  if (location.hash === '#kickstarter') history.replaceState(null, '', location.pathname);
+  if (location.hash === '#support') history.replaceState(null, '', location.pathname);
 }
 // ── FOUNDER WALL PAGE ─── same surfacing behavior, gold edition ──────────────
 let _fwBubbled = false;
@@ -3048,20 +2970,20 @@ function closeFounderWall() {
   if (location.hash === '#founders') history.replaceState(null, '', location.pathname);
 }
 
-// ── BOYNT POPUPS ─── preview notice + checkout intercept, both → Kickstarter ─
+// ── BOYNT POPUPS ─── preview notice + checkout intercept, both → the campaign ─
 const BP_COPY = {
   welcome: {
     emoji: '🕶️',
     title: "HEY — GLAD YOU <em>DRIFTED IN.</em>",
-    body: "Lay of the land: our floating sunglasses are funding on Kickstarter right now — backing gets you a pair before everyone else, plus your name on the Founding Backers Wall. And the merch shop is open: shirts and caps that ship right away.",
-    cta: '🚀 Check Out the Kickstarter',
+    body: "Lay of the land: our floating sunglasses aren't made yet — we're raising the money for the first production run on GoFundMe, and anyone who chips in gets their name on the Founding Backers Wall. The merch shop is open though: shirts and caps that ship right away.",
+    cta: '🌊 See Our GoFundMe',
     later: 'Take me to the merch →'
   },
   sunglasses: {
     emoji: '🕶️',
     title: "THE SHADES AREN'T IN THE SHOP <em>YET.</em>",
-    body: "Sunglasses are funding on Kickstarter right now — that's the only place to claim a pair today, and it puts your name on the Founding Backers Wall. The merch, on the other hand, ships right away.",
-    cta: '🚀 Get a Pair on Kickstarter',
+    body: "We're still raising the money to make the first run of sunglasses. Supporting the GoFundMe is the best way to help get them made — and it puts your name on the Founding Backers Wall. The merch, on the other hand, ships right away.",
+    cta: '🌊 Support the Launch',
     later: 'Got it — keep browsing'
   }
 };
@@ -3092,16 +3014,16 @@ function closeBoyntPopup() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeKickstarter(); closeFounderWall(); closeBoyntPopup(); closeMerchPanel(); }
+  if (e.key === 'Escape') { closeSupport(); closeFounderWall(); closeBoyntPopup(); closeMerchPanel(); }
 });
-// Deep links: boynt.com/#kickstarter and boynt.com/#founders open their pages directly
-if (location.hash === '#kickstarter') openKickstarter();
+// Deep links: boynt.com/#support and boynt.com/#founders open their pages directly
+if (location.hash === '#support') openSupport();
 if (location.hash === '#founders') openFounderWall();
 // Browser back/forward keeps page state honest
 window.addEventListener('hashchange', () => {
-  if (location.hash === '#kickstarter') { closeFounderWall(); openKickstarter(); }
-  else if (location.hash === '#founders') { closeKickstarter(); openFounderWall(); }
-  else { closeKickstarter(); closeFounderWall(); }
+  if (location.hash === '#support') { closeFounderWall(); openSupport(); }
+  else if (location.hash === '#founders') { closeSupport(); openFounderWall(); }
+  else { closeSupport(); closeFounderWall(); }
 });
 
 // ── LOADING INTRO ─── the original water/BOYNT reveal, played on page load ───
@@ -3146,7 +3068,7 @@ function finishIntro(instant) {
   // land on a deep-linked section, otherwise greet first-time visitors
   const target = _pendingSection || (location.hash.length > 1 ? location.hash.slice(1) : null);
   _pendingSection = null;
-  if (target && target !== 'kickstarter' && target !== 'founders' && document.getElementById(target)) {
+  if (target && target !== 'support' && target !== 'founders' && document.getElementById(target)) {
     setTimeout(function () { navigateToSection(target); }, instant ? 60 : 300);
   } else if (!target) {
     setTimeout(function () { showBoyntPopup('welcome'); }, instant ? 500 : 1100);
