@@ -2216,7 +2216,9 @@ if (eggBubbles) {
   <button class="ks-close" onclick="closeSupport()" aria-label="Close">✕</button>
   <div class="ks-inner">
     <div class="ks-glasses">
-      <img src="glasses-float.webp" alt="BOYNT floating sunglasses on the water" loading="lazy" decoding="async">
+      <!-- src is filled from the hero glasses on open: same photo, and the
+           single-file build would otherwise carry a second copy of it -->
+      <img src="" alt="BOYNT floating sunglasses on the water" loading="lazy" decoding="async">
     </div>
     <p class="ks-eyebrow">● Now Live</p>
     <h2 class="ks-title">HELP US<br><em>LAUNCH BOYNT.</em></h2>
@@ -2911,6 +2913,11 @@ function openSupport(e) {
   p.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   if (location.hash !== '#support') history.replaceState(null, '', '#support');
+  // Borrow the hero's glasses photo — note getAttribute, because .src on an
+  // empty <img> reports the page URL and would look already-filled.
+  const ki = p.querySelector('.ks-glasses img');
+  const hero = document.querySelector('#sceneGlasses img');
+  if (ki && hero && !ki.getAttribute('src')) ki.src = hero.src;
   if (!_ksBubbled) {
     _ksBubbled = true;
     const wrap = document.getElementById('supportBubbles');
