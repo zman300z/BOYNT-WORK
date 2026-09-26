@@ -108,6 +108,7 @@
     }
     addEmbers(v) {
       if (this.hasMut('embersoul')) v += 1;
+      G.game.hint('embers', '[ember]Embers[] are lost when you fall. Spend them with the Keeper in the passage between biomes.');
       this.embers += v;
       G.Audio.play('ember', { vol: 0.7 });
       G.game.emberFlash = 0.4;
@@ -495,7 +496,7 @@
     stClimb(dt, I) {
       const L = G.world.level;
       const dirY = (I.down.down ? 1 : 0) - (I.down.up ? 1 : 0);
-      this.vy = dirY * 95;
+      this.vy = dirY * 130;
       this.vx = 0;
       const beforeY = this.y;
       this.moveY(this.vy * dt, true);
@@ -906,7 +907,11 @@
       }
       if (this.hasMut('saltskin')) dmg *= 0.8;
       this.hp -= dmg;
-      if (h.kind !== 'hazard') { this.rally += dmg; this.rallyT = this.hasMut('secondwind') ? 4 : 2; }
+      if (h.kind !== 'hazard') {
+        this.rally += dmg;
+        this.rallyT = this.hasMut('secondwind') ? 4 : 2;
+        if (G.game.stats.damageTaken > 0) G.game.hint('rally', 'The [orange]orange[] part of your health can be won back: strike enemies quickly after being hurt.');
+      }
       this.invuln = 0.75;
       this.flashT = 0.15;
       const dir = h.dir || (h.x !== undefined ? Math.sign(this.cx - h.x) || 1 : -this.facing);

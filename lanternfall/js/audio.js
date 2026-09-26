@@ -23,6 +23,16 @@
     if (!AC) return;
     let ctx;
     try { ctx = new AC(); } catch (e) { return; }
+    A.setupGraph(ctx);
+    if (A.pendingMusic) {
+      const pm = A.pendingMusic;
+      A.pendingMusic = null;
+      A.playMusic(pm);
+    }
+    setInterval(schedulerTick, 25);
+  };
+  // builds the mixing graph on any (realtime or offline) context
+  A.setupGraph = (ctx) => {
     A.ctx = ctx;
     A.master = ctx.createGain();
     A.master.gain.value = 0.9;
@@ -71,12 +81,6 @@
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     A.ready = true;
     A.applyVolumes();
-    if (A.pendingMusic) {
-      const pm = A.pendingMusic;
-      A.pendingMusic = null;
-      A.playMusic(pm);
-    }
-    setInterval(schedulerTick, 25);
   };
 
   function makeImpulse(ctx, dur, decay) {
@@ -659,7 +663,8 @@
       this.melCache = {};
       const t = A.ctx.currentTime;
       this.out.gain.setValueAtTime(0.0001, t);
-      this.out.gain.exponentialRampToValueAtTime(1, t + (def.fadeIn || 1.2));
+      this.level = def.gain || 1;
+      this.out.gain.exponentialRampToValueAtTime(this.level, t + (def.fadeIn || 1.2));
     }
     section() {
       const s = this.def.sections[this.order[this.secIdx]];
@@ -803,6 +808,7 @@
     }
   }
 
+  A.TrackPlayer = TrackPlayer;
   function schedulerTick() {
     if (!A.ready) return;
     if (music.cur && !music.cur.stopped) music.cur.tick();
@@ -861,7 +867,7 @@
     const g = music.cur.out.gain, t = A.ctx.currentTime;
     g.cancelScheduledValues(t);
     g.setValueAtTime(Math.max(0.0001, g.value), t);
-    g.linearRampToValueAtTime(amt, t + 0.1);
-    g.linearRampToValueAtTime(1, t + time);
+    g.linearRampToValueAtTime(amt * music.cur.level, t + 0.1);
+    g.linearRampToValueAtTime(music.cur.level, t + time);
   };
 })();

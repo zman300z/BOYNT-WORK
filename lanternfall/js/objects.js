@@ -1082,14 +1082,24 @@
       this.layer = 1;
       this.id = o.id;
     }
-    ignoreSolid(s) { return s instanceof Gate && s.openAmt > 0.5; }
     update(dt) {
       this.vy = Math.min(400, this.vy + 1200 * dt);
       const r = this.moveY(this.vy * dt);
       if (r === 'floor') this.vy = 0;
       this.vx *= 0.8;
+      // lock into place when it reaches its pressure plate
+      if (!this.locked) {
+        const pl = W().ents.find((e) => e instanceof Plate && e.id === this.id);
+        if (pl && Math.abs(pl.cx - this.cx) < 8) {
+          this.locked = true;
+          this.x = pl.cx - this.w / 2;
+          G.Audio.play('lever', { x: this.cx });
+          G.fx.burst(this.cx, this.bottom, 10, { color: '#c0b0a0', speed: 60, life: 0.4, size: 2 });
+        }
+      }
     }
     push(dx) {
+      if (this.locked) return false;
       const before = this.x;
       this.solid = false;
       this.moveX(dx);

@@ -390,7 +390,7 @@
           const w = L.img.width;
           let ox = -((camX * L.f) % w);
           if (ox > 0) ox -= w;
-          const oy = -(camY - Math.max(0, levelH - G.H)) * L.f * 0.5;
+          const oy = Math.min(70, -(camY - Math.max(0, levelH - G.H)) * L.f * 0.12);
           for (let x = ox; x < G.W; x += w) ctx.drawImage(L.img, Math.round(x), Math.round(G.H - L.img.height + oy));
         }
         // storm lightning

@@ -6,8 +6,10 @@
   const G = window.G;
 
   // Difficulty scales purely by where you are on the isle (tier).
-  G.TIER_HP = [1, 1, 1.75, 2.8, 4.2, 5.9, 7.6];
-  G.TIER_DMG = [1, 1, 1.35, 1.8, 2.35, 2.95, 3.5];
+  // Enemy HP grows roughly in step with an invested player's damage, so hits-to-kill
+  // stays steady while enemy damage climbs faster: deeper = deadlier.
+  G.TIER_HP = [1, 1, 1.9, 3.2, 4.9, 7.0, 9.0];
+  G.TIER_DMG = [1, 1, 1.3, 1.7, 2.1, 2.6, 3.0];
   G.itemScale = (tier) => 1 + 0.62 * (tier - 1);
 
   // ---------------------------------------------------------------- biomes

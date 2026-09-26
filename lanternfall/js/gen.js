@@ -200,6 +200,12 @@
         }
       }
     }
+    // rune guardians are essential for progression: always place one
+    if (B.guardian && !active.some((c) => c.type === 'guardian')) {
+      const cands = normals().filter((c) => c.dist >= 2 && !c.inline.length).sort((a, b) => b.dist - a.dist);
+      const c = cands[0] || normals().sort((a, b) => b.dist - a.dist)[0];
+      if (c) c.type = 'guardian';
+    }
     // scrolls placed inline to reach quota
     let scrollCount = active.filter((c) => c.type === 'scroll').length + active.reduce((n, c) => n + c.inline.filter((x) => x.kind === 'scroll').length, 0);
     const scrollCands = rng.shuffle(normals().filter((c) => c.dist >= 1));

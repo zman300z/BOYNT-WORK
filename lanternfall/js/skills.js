@@ -244,6 +244,7 @@
           p.invuln = Math.max(p.invuln, 0.3);
           p.nextCritT = 1;
           G.applyStatuses(e, { stun: 1 });
+          e.takeHit({ dmg: pw, kind: 'skill', team: 'player', x: p.cx, y: p.cy, dir: p.facing, knock: 40, item: inst, poise: 20 });
           G.fx.burst(p.cx, p.cy, 16, { color: ['#c080ff', '#ffffff'], speed: 120, life: 0.4, size: 2, add: true });
           G.Audio.play('teleport');
           break;

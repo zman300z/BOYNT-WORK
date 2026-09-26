@@ -317,7 +317,7 @@
         if (act === 'down' || act === 'mdown') { if (this.axisY > 0.45) now = true; }
         const was = this.prev[act] || false;
         this.pressed[act] = (now && !was) || (latch && !was) || (latch && now === false);
-        this.released[act] = !now && was;
+        this.released[act] = (!now && was) || (latch && !now);
         this.down[act] = now || latch;
         this.prev[act] = now;
       }

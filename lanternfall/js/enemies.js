@@ -78,8 +78,8 @@
   G.ENEMIES = E;
 
   const GUARDIANS = {
-    vine: { name: 'Captain Brack, the Kelp-Bound', hpMul: 6, dmgMul: 1.3 },
-    spider: { name: 'Ser Aldric the Unbent', hpMul: 5.5, dmgMul: 1.3 },
+    vine: { name: 'Captain Brack, the Kelp-Bound', hpMul: 9, dmgMul: 1.3 },
+    spider: { name: 'Ser Aldric the Unbent', hpMul: 6.5, dmgMul: 1.3 },
   };
 
   // ---------------------------------------------------------------- Enemy class
@@ -247,7 +247,7 @@
         case 'static': if (this.aggro && p) this.facing = Math.sign(dx) || this.facing; break;
         case 'ceiling':
           if (this.hanging) {
-            if (p && Math.abs(dx) < 30 && dy > 0 && dy < 200 && G.world.level.los(this.cx, this.bottom + 2, p.cx, p.y)) this.dropFromCeiling();
+            if (p && Math.abs(dx) < 46 && dy > 0 && dy < 220 && G.world.level.los(this.cx, this.bottom + 2, p.cx, p.y)) this.dropFromCeiling();
           } else this.aiWalk(dt, p, dx, dy, dist, spd);
           break;
       }

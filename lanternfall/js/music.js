@@ -40,7 +40,7 @@
   };
 
   T.undercroft = {
-    bpm: 84, root: 50, mode: 'aeolian', reverb: 0.7,
+    gain: 1.25, bpm: 84, root: 50, mode: 'aeolian', reverb: 0.7,
     prog: [0, 5, 3, 4],
     sections: [
       { name: 'A', bars: 8, parts: ['pad', 'arp', 'bass', 'heart'] },
@@ -68,7 +68,7 @@
   };
 
   T.saltmarsh = {
-    bpm: 132, root: 57, mode: 'dorian', stepsPerBar: 12, reverb: 0.55,
+    gain: 1.3, bpm: 132, root: 57, mode: 'dorian', stepsPerBar: 12, reverb: 0.55,
     prog: [0, 6, 0, 3, 0, 6, 4, 0],
     sections: [
       { name: 'A', bars: 8, parts: ['pad', 'bass', 'drums', 'reed'] },
@@ -116,7 +116,7 @@
   };
 
   T.ramparts = {
-    bpm: 120, root: 48, mode: 'aeolian', reverb: 0.5,
+    gain: 1.25, bpm: 120, root: 48, mode: 'aeolian', reverb: 0.5,
     prog: MOTIF_PROG,
     sections: [
       { name: 'A', bars: 8, prog: [0, 5, 6, 0, 3, 5, '4^', '4^'], parts: ['str', 'bass', 'drums', 'ost'] },
@@ -136,7 +136,7 @@
   };
 
   T.glowcap = {
-    bpm: 90, root: 54, mode: 'phrygian', reverb: 0.85,
+    gain: 0.75, bpm: 90, root: 54, mode: 'phrygian', reverb: 0.85,
     prog: [0, 1, 0, 6],
     sections: [
       { name: 'A', bars: 8, parts: ['pad', 'glass', 'sub'] },
@@ -172,7 +172,7 @@
   };
 
   T.ossuary = {
-    bpm: 104, root: 59, mode: 'phrygian', reverb: 0.6,
+    gain: 1.6, bpm: 104, root: 59, mode: 'phrygian', reverb: 0.6,
     prog: [0, 1, 0, 5],
     sections: [
       { name: 'A', bars: 8, parts: ['choir', 'bones', 'bass', 'toms'] },
@@ -190,7 +190,7 @@
   };
 
   T.spire = {
-    bpm: 132, root: 47, mode: 'aeolian', reverb: 0.6,
+    gain: 1.3, bpm: 132, root: 47, mode: 'aeolian', reverb: 0.6,
     prog: MOTIF_PROG,
     sections: [
       { name: 'A', bars: 8, prog: [0, 5, 2, 6, 0, 5, 3, '4^'], parts: ['str', 'ost', 'bass', 'drums'] },
@@ -229,7 +229,7 @@
   };
 
   T.boss1 = {
-    bpm: 144, root: 52, mode: 'harmonic', reverb: 0.5, fadeIn: 0.3,
+    gain: 1.1, bpm: 144, root: 52, mode: 'harmonic', reverb: 0.5, fadeIn: 0.3,
     prog: [0, 0, 5, '4^'],
     sections: [
       { name: 'A', bars: 8, parts: ['str', 'bass', 'drums', 'bells'] },
@@ -251,7 +251,7 @@
   };
 
   T.boss2 = {
-    bpm: 128, root: 49, mode: 'harmonic', reverb: 0.8, fadeIn: 0.3,
+    gain: 0.7, bpm: 128, root: 49, mode: 'harmonic', reverb: 0.8, fadeIn: 0.3,
     prog: [0, 5, 3, '4^'],
     sections: [
       { name: 'A', bars: 8, parts: ['choir', 'trem', 'sub', 'toms'] },
@@ -271,7 +271,7 @@
   };
 
   T.boss3 = {
-    bpm: 150, root: 50, mode: 'harmonic', reverb: 0.6, fadeIn: 0.3,
+    gain: 1.15, bpm: 150, root: 50, mode: 'harmonic', reverb: 0.6, fadeIn: 0.3,
     prog: [0, 5, 3, '4^'],
     sections: [
       { name: 'A', bars: 8, parts: ['str', 'bass', 'drums', 'ost'] },

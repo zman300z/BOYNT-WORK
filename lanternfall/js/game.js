@@ -44,6 +44,14 @@
       return this.state === 'play' && !G.ui.modal && !this.cutscene && G.fade.a < 0.95;
     },
     notify(t) { G.ui.notify(t); },
+    // one-time contextual tips, remembered across runs
+    hint(id, text) {
+      G.save.flags.hints = G.save.flags.hints || {};
+      if (G.save.flags.hints[id]) return;
+      G.save.flags.hints[id] = true;
+      G.ui.notes.unshift({ text: '[#8ad0ff]TIP:[] ' + text, t: 7 });
+      if (G.ui.notes.length > 4) G.ui.notes.pop();
+    },
     banner(t, s, c, d) { G.ui.banner(t, s, c, d); },
     say(lines, cb) { G.ui.open('dialogue', { lines, cb }); },
     saveMeta() { G.store.set('save', G.save); },
@@ -270,12 +278,19 @@
       else G.world.kill(drop);
       G.Audio.play('pickup');
       this.notify('Equipped ' + '[q' + drop.inst.q + ']' + G.itemName(slots[slot]) + '[]');
+      const K = (a) => '[#ffd080]' + G.Input.keyName(a) + '[]';
+      const key = isSkill ? K(slot ? 'skill2' : 'skill1') : K(slot ? 'attack2' : 'attack1');
+      if (d.kind === 'shield') setTimeout(() => this.hint('shield', 'Hold ' + key + ' to block. Raise the shield just before a blow lands to PARRY and stun the attacker.'), 600);
+      else if (d.kind === 'ranged') setTimeout(() => this.hint('ranged', 'Press ' + key + ' to fire. Shots aim at the nearest enemy in front of you.'), 600);
+      else if (isSkill) setTimeout(() => this.hint('skill', 'Skills use ' + K('skill1') + ' / ' + K('skill2') + ' and recharge over time.'), 600);
+      else setTimeout(() => this.hint('melee', 'Press ' + key + ' repeatedly for a combo. Items scale with the color of their scroll stat.'), 600);
       if (!G.save.flags.firstItem) G.save.flags.firstItem = true;
     },
     foundBlueprint(id) {
       if (G.save.bpFound[id]) return;
       G.save.bpFound[id] = true;
       G.Audio.play('blueprint');
+      setTimeout(() => this.hint('blueprint', 'Blueprints are kept forever. Bring embers to the Keeper between biomes to add the item to the isle.'), 1500);
       this.notify('[q2]Blueprint found:[] ' + G.ITEMS[id].name + '  [gray](unlock it with the Keeper)[]');
       this.saveMeta();
     },
@@ -852,9 +867,19 @@
   };
 
   // ================================================================ boot
+  G.toggleFullscreen = () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else (document.documentElement.requestFullscreen || function () {}).call(document.documentElement);
+    } catch (e) {}
+  };
   G.boot = () => {
     G.initCanvas();
     G.Input.init(G.canvas);
+    window.addEventListener('blur', () => {
+      if (game.state === 'play' && !G.ui.modal && !game.cutscene) G.ui.open('pause');
+    });
+    window.addEventListener('keydown', (e) => { if (e.code === 'F11') { e.preventDefault(); G.toggleFullscreen(); } });
     initTitle();
     game.state = 'boot';
     let last = performance.now();

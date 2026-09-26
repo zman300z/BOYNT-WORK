@@ -25,9 +25,9 @@
       name: 'Twin Fangs', kind: 'melee', stats: ['cunning'], base: 6, start: true, critIf: 'behind', critMult: 2.5,
       desc: 'Paired daggers. Strikes against an enemy’s back are [cunning]critical hits[].',
       combo: [
-        S(0.05, 0.05, 0.1, 1.0, [0, -18, 24, 20], 'stab', { lunge: 40, sfx: 'thrust' }),
-        S(0.05, 0.05, 0.1, 1.0, [0, -18, 24, 20], 'stab2', { lunge: 40, sfx: 'thrust' }),
-        S(0.05, 0.05, 0.1, 1.1, [0, -18, 24, 20], 'stab', { lunge: 40, sfx: 'thrust' }),
+        S(0.05, 0.05, 0.1, 1.0, [0, -18, 26, 20], 'stab', { lunge: 70, sfx: 'thrust' }),
+        S(0.05, 0.05, 0.1, 1.0, [0, -18, 26, 20], 'stab2', { lunge: 70, sfx: 'thrust' }),
+        S(0.05, 0.05, 0.1, 1.1, [0, -18, 26, 20], 'stab', { lunge: 70, sfx: 'thrust' }),
         S(0.08, 0.06, 0.18, 1.4, [0, -20, 28, 22], 'slash', { lunge: 120 }),
       ],
       look: { shape: 'dagger', blade: '#b8c4d0', edge: '#f0f4ff', guard: '#503a60', hilt: '#2a2030', len: 8, twin: true },
@@ -135,9 +135,9 @@
       desc: 'A flurry of fists. The fourth punch [vigor]stuns[]; critical hits against stunned enemies.',
       bp: { from: 'hookhand', chance: 0.04, cost: 30 },
       combo: [
-        S(0.05, 0.04, 0.08, 1.0, [0, -18, 22, 16], 'punch', { sfx: 'thrust' }),
-        S(0.05, 0.04, 0.08, 1.0, [0, -18, 22, 16], 'punch2', { sfx: 'thrust' }),
-        S(0.05, 0.04, 0.08, 1.0, [0, -18, 22, 16], 'punch', { sfx: 'thrust' }),
+        S(0.05, 0.04, 0.08, 1.0, [0, -18, 26, 16], 'punch', { sfx: 'thrust', lunge: 70 }),
+        S(0.05, 0.04, 0.08, 1.0, [0, -18, 26, 16], 'punch2', { sfx: 'thrust', lunge: 70 }),
+        S(0.05, 0.04, 0.08, 1.0, [0, -18, 26, 16], 'punch', { sfx: 'thrust', lunge: 70 }),
         S(0.1, 0.06, 0.22, 2.2, [0, -20, 26, 20], 'punch2', { stun: 0.8, knock: 260, poise: 50, lunge: 100 }),
       ],
       look: { shape: 'knuckles', metal: '#8aa0a8', wrap: '#6a4a3a' },
@@ -148,8 +148,8 @@
       bp: { from: 'sporebloom', chance: 0.06, cost: 30 },
       onHit: { poison: 1 },
       combo: [
-        S(0.07, 0.05, 0.12, 1.0, [0, -18, 26, 16], 'stab', { sfx: 'thrust' }),
-        S(0.07, 0.05, 0.12, 1.0, [0, -18, 26, 16], 'stab2', { sfx: 'thrust' }),
+        S(0.07, 0.05, 0.12, 1.0, [0, -18, 28, 16], 'stab', { sfx: 'thrust', lunge: 60 }),
+        S(0.07, 0.05, 0.12, 1.0, [0, -18, 28, 16], 'stab2', { sfx: 'thrust', lunge: 60 }),
         S(0.07, 0.05, 0.16, 1.1, [0, -18, 28, 16], 'stab', { sfx: 'thrust', lunge: 80 }),
       ],
       look: { shape: 'dagger', blade: '#60c050', edge: '#b0ff90', guard: '#2a4020', hilt: '#1a2014', len: 9 },
@@ -781,6 +781,13 @@
       if (look.shape === 'flail') {
         G.pixCircle(c, 11, 5, 3, look.ball); px(c, 11, 1, '#ddd'); px(c, 15, 5, '#ddd'); px(c, 7, 5, '#ddd');
         G.pixLine(c, 6, 10, 9, 7, '#888');
+      }
+      if (look.shape === 'knuckles') {
+        c.clearRect(0, 0, 16, 16);
+        c.fillStyle = look.wrap; c.fillRect(3, 7, 6, 6);
+        c.fillStyle = look.metal; c.fillRect(8, 4, 5, 10); c.fillRect(6, 3, 7, 2);
+        c.fillStyle = '#ffffff'; c.fillRect(12, 4, 1, 9);
+        c.fillStyle = G.shade(look.metal, -0.3); c.fillRect(8, 7, 5, 1); c.fillRect(8, 10, 5, 1);
       }
       if (look.shape === 'knives') {
         c.save(); c.translate(9, 10); c.rotate(-Math.PI / 4); c.drawImage(h.img, -5, -2); c.restore();

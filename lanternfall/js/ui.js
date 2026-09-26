@@ -224,7 +224,7 @@
       }
     }
     // interaction prompt
-    if (game.prompt) {
+    if (game.prompt && !G.ui.modal) {
       const o = game.prompt;
       const cx = G.cam.rx, cy = G.cam.ry;
       const text = '[#ffd080][' + G.Input.keyName('interact') + '][] ' + o.text;
@@ -235,7 +235,7 @@
       G.text(ctx, text, px, py, '#ffffff', { align: 'center' });
     }
     // item tooltip when near
-    if (game.nearItem) {
+    if (game.nearItem && !G.ui.modal) {
       const it = game.nearItem.inst;
       const cur = G.ITEMS[it.id].kind === 'skill' ? p.skills : p.weapons;
       let th = tooltip(ctx, it, W - 196, 116, 188, p, 'ON THE GROUND');
@@ -538,15 +538,15 @@
       const rows = [];
       const found = Object.keys(G.save.bpFound).filter((id) => !G.save.unlocked[id]);
       for (const id of found) rows.push({ type: 'bp', id, name: G.ITEMS[id].name, cost: G.ITEMS[id].bp.cost, desc: G.ITEMS[id].desc, icon: id });
-      for (const id in G.MUTATIONS) {
-        const M = G.MUTATIONS[id];
-        if (M.start || G.save.mutUnlocked[id]) continue;
-        rows.push({ type: 'mut', id, name: 'Mutation: ' + M.name, cost: M.cost, desc: M.desc, stat: M.stat });
-      }
       for (const u of G.UPGRADES) {
         if (G.hasUpgrade(u.id)) continue;
         if (u.req && !G.hasUpgrade(u.req)) continue;
         rows.push({ type: 'up', id: u.id, name: u.name, cost: u.cost, desc: u.desc });
+      }
+      for (const id in G.MUTATIONS) {
+        const M = G.MUTATIONS[id];
+        if (M.start || G.save.mutUnlocked[id]) continue;
+        rows.push({ type: 'mut', id, name: 'Mutation: ' + M.name, cost: M.cost, desc: M.desc, stat: M.stat });
       }
       m.rows = rows;
       m.sel = Math.min(m.sel, Math.max(0, rows.length - 1));
@@ -953,7 +953,7 @@
         const sel = i === m.sel;
         if (sel) { ctx.fillStyle = 'rgba(120,80,40,0.5)'; ctx.fillRect(10, y - 2, 220, 12); }
         m.rects[i] = { x: 10, y: y - 2, w: 220, h: 12 };
-        G.text(ctx, e.title, 16, y, e.found ? (e.pearl ? '#ff90d0' : '#e0d8e8') : '#5a5068');
+        G.text(ctx, e.found || e.icon ? e.title : '???  [#3a3448]' + e.sub + '[]', 16, y, e.found ? (e.pearl ? '#ff90d0' : '#e0d8e8') : '#5a5068');
       }
       const e = list[m.sel];
       if (e) {
@@ -977,13 +977,14 @@
   };
 
   SCREENS.settings = {
-    init(m) { m.items = ['music', 'sfx', 'shake', 'back']; },
+    init(m) { m.items = ['music', 'sfx', 'shake', 'fullscreen', 'back']; },
     update(m) {
       const In = I();
       menuNav(m, m.items.length, { rects: m.rects });
       const k = m.items[m.sel];
       const s = G.settings;
-      if (k !== 'back' && (In.pressed.mleft || In.pressed.mright)) {
+      if (k === 'fullscreen' && (confirmPressed() || In.pressed.mleft || In.pressed.mright)) { G.toggleFullscreen(); return; }
+      if (k !== 'back' && k !== 'fullscreen' && (In.pressed.mleft || In.pressed.mright)) {
         const d = In.pressed.mleft ? -0.1 : 0.1;
         s[k] = Math.round(G.clamp(s[k] + d, 0, 1) * 10) / 10;
         G.Audio.applyVolumes();
@@ -995,14 +996,14 @@
     draw(ctx, m) {
       dim(ctx, 0.85);
       title(ctx, 'SETTINGS', 40);
-      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', back: 'Back' };
+      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', fullscreen: 'Toggle Fullscreen (F11)', back: 'Back' };
       m.rects = [];
       m.items.forEach((k, i) => {
         const y = 90 + i * 34;
         const sel = m.sel === i;
         m.rects.push(button(ctx, W / 2 - 140, y, 280, 26, '', sel));
         G.text(ctx, names[k], W / 2 - 128, y + 9, sel ? '#ffffff' : '#c8c0d0');
-        if (k !== 'back') {
+        if (k !== 'back' && k !== 'fullscreen') {
           G.bar(ctx, W / 2 + 10, y + 10, 100, 6, G.settings[k], '#ffb060', '#2a2030');
           G.text(ctx, Math.round(G.settings[k] * 100) + '%', W / 2 + 118, y + 9, '#c8c0d0');
         }
