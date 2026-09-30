@@ -1677,6 +1677,18 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .rb-arrow{ opacity:.5; font-size:9px; margin:0 1px; }
 .rb-row .rb-pocket{ flex:0 0 auto; min-width:22px; }
 
+/* the result leads with the net: up, down, or dead even */
+.rw-net{
+  display:block; font-family:var(--display); font-size:26px; letter-spacing:.04em; line-height:1.1;
+  margin-bottom:2px;
+}
+.rw-net.up{ color:var(--lime); text-shadow:0 0 18px rgba(126,231,135,.45); }
+.rw-net.down{ color:var(--hot); text-shadow:0 0 18px rgba(255,77,109,.35); }
+.rw-net.even{ color:var(--gold); font-size:20px; }
+.rw-detail{ font-size:12px; opacity:.85; margin-bottom:3px; }
+.wheel-result.even{ color:var(--paper); }
+.rw-ballchip:disabled{ cursor:default; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -2600,6 +2612,10 @@ const CURIO_BY_ID = {};
 CURIOS.forEach(c => { CURIO_BY_ID[c.id] = c; });
 
 const RARITY_WEIGHT = { common: 100, uncommon: 45, rare: 16, legendary: 3 };
+/* The ball shelf draws from ten balls, not sixty-odd Curios, so the Curio weights
+   let the two commons take nearly half of every shelf and left a rare ball like
+   the Emerald on under one shelf in eleven. Balls get a much flatter spread. */
+const BALL_RARITY_WEIGHT = { common: 30, uncommon: 26, rare: 20, legendary: 8 };
 
 /* =========================================================
    HOUSE RULES -- permanent, run-long, no mantel seat
@@ -3052,7 +3068,7 @@ const BALLS = [
 
   { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
     text: 'Stakes nothing and can never lose. A free throw that still counts as a hit.',
-    long: 'It puts none of your money on the table, so it costs you nothing when it misses — and because it does not raise the number of balls you need, every other ball in the case bets a bigger share. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak. Pure upside, and priced like it.',
+    long: 'It carries no chip, so it costs you nothing when it misses, and it does not raise the number of balls you need to win the spin. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak — and on green, where any one ball pays the whole chip, it is a free extra shot at the zero. Pure upside, and priced like it.',
     ghost: true },
 
   { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',
@@ -3505,17 +3521,15 @@ const Engine = (() => {
     return { p, win, need };
   }
 
-  /* The stake is split evenly across the balls in the case and each one rides its
-     own share, so RED and BLACK pay a true 1:1 and the zero its full multiple no
-     matter how many balls you own. More balls does not buy you a better price --
-     it buys you far less variance, and the abilities. */
   /* how many trips to the wheel a round allows */
   function spinsAllowed(run) {
     return TUNE.spinsPerRound + ((run && run.bonusSpins) || 0) + (mods(run).bonusSpins || 0);
   }
 
-  /* One share per ball, in case order, so a caller can index it by the ball it
-     threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
+  /* Only the SIDE POT splits across the balls now -- it is one pool, so it is
+     divided rather than riding each ball (cash bets put the chip on every ball;
+     see cashAtRisk). One share per ball, in case order, so a caller can index it
+     by the ball it threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
      on your colour -- so it takes a share of 0 and the stake splits across the
      rest. That also means the balls that ARE betting each bet more. */
   function ballShares(run, stake) {
@@ -3531,6 +3545,20 @@ const Engine = (() => {
     for (let i = 0; i < n; i++) pot.push(base + (rem-- > 0 ? 1 : 0));
     let k = 0;
     return balls.map(b => (betting.length && b.ghost) ? 0 : pot[k++]);
+  }
+
+  /* A CASH bet puts the chip on EVERY ball that bets: $10 with three balls is
+     $30 on the table, and each ball that lands is paid 1 to 1 on its own $10.
+     The zero is the exception -- it stakes the chip once, and any one ball in a
+     green pocket pays the whole of it. Ghost balls never carry a stake. */
+  function cashAtRisk(run, perBall, colour) {
+    if (greenIsAllIn(colour)) return perBall;
+    return perBall * Math.max(1, ballsCounted(run));
+  }
+
+  /* the most a single chip can be while every betting ball can still carry it */
+  function maxPerBall(run, purse) {
+    return Math.floor(purse / Math.max(1, ballsCounted(run)));
   }
 
   /* the rate a bet pays, paint included. Balls no longer touch it. */
@@ -3727,6 +3755,7 @@ const Engine = (() => {
     wheelPockets, wheelCounts, wheelPay, paintPocket, canPaint,
     paintablePockets, spreadTarget, wheelTakenOver,
     ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
+    cashAtRisk, maxPerBall,
     greenIsAllIn,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,
@@ -4541,13 +4570,18 @@ const Game = (() => {
      a loss is money this round never pays you. Honest casino payouts: red or
      black returns double, the zero returns eighteen times, and a loss costs the
      stake and nothing else.                                                    */
-  function spinRouletteCash(colour, stake) {
-    stake = Math.floor(stake || 0);
+  /* `chip` is what rides EACH betting ball on red or black, and the whole bet on
+     the zero -- see Engine.cashAtRisk. */
+  function spinRouletteCash(colour, chip) {
+    chip = Math.floor(chip || 0);
     if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
-    if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
+    if (chip <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
     const purse = roundPurse();
-    if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
+    const stake = Engine.cashAtRisk(G.run, chip, colour);
+    if (stake > purse) {
+      return { ok: false, reason: '$' + chip + ' on every ball is $' + stake + ' — your cash out is only $' + purse + '.' };
+    }
     if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
     /* The house gives no refunds. A spin wipes the undo history -- every undo
        point still holds a round from BEFORE the bet, so any of them would hand
@@ -4567,19 +4601,19 @@ const Game = (() => {
     const pay = +rate.toFixed(2);
     const allIn = Engine.greenIsAllIn(colour);
 
-    /* The zero does not split. One ball in a green pocket takes the WHOLE stake
-       at the full green price; none of them and the whole stake is gone. Every
-       other colour rides a share per ball at the table's honest price. */
+    /* The zero stakes the chip once and one ball in a green pocket pays the whole
+       of it at the full green price. Red and black put the chip on every betting
+       ball, and each one is settled on its own at 1 to 1 -- so three landing is
+       three times the win. A ghost carries nothing, so it can never cost you. */
     let payout = 0, lost = 0;
     if (allIn) {
       roll.thrown.forEach(t => { t.share = null; t.won = 0; });
       if (win) payout = Math.max(1, Math.round(stake * rate)); else lost = stake;
     } else {
-      const shares = Engine.ballShares(G.run, stake);
-      roll.thrown.forEach((t, i) => {
-        t.share = shares[i] || 0;
+      roll.thrown.forEach(t => {
+        t.share = t.ghost ? 0 : chip;
         t.won = t.hit ? Math.round(t.share * rate) : 0;
-        if (t.hit) payout += t.won; else lost += t.share;   // a ghost's share is 0 either way
+        if (t.hit) payout += t.won; else lost += t.share;
       });
     }
     G.round.cashSwing += payout - stake;
@@ -4594,8 +4628,9 @@ const Game = (() => {
       G.round.heat = 0;
     }
     const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-                  staked: stake, payout, lost, allIn, before: purse, thrown: roll.thrown,
-                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+                  chip, staked: stake, payout, lost, allIn, before: purse, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat,
+                  net: payout - stake };
     settleBalls(out, colour);
     out.purse = roundPurse();
     out.heat = G.round.heat;
@@ -4659,6 +4694,7 @@ const Game = (() => {
     }
     const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
                   pot: G.round.pot, staked: pot, anteHit, lost, kept, allIn, thrown: roll.thrown,
+                  net: kept - pot,
                   hits: roll.hits, need: roll.need, heat: G.round.heat, before: roundPurse() };
     settleBalls(out, colour);
     out.purse = roundPurse();
@@ -5404,9 +5440,9 @@ const Game = (() => {
       const pool = ballPool.filter(b => !seenB.has(b.id));
       if (!pool.length) break;
       let total = 0;
-      pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
+      pool.forEach(b => { total += BALL_RARITY_WEIGHT[b.rarity]; });
       let r = Math.random() * total, pick = pool[0];
-      for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
+      for (const b of pool) { r -= BALL_RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
       seenB.add(pick.id);
       balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
     }
@@ -7797,7 +7833,7 @@ const Overlays = (() => {
     row.appendChild(el('div', 'case-note',
       '<b>' + loadedIds.length + ' of ' + slots + '</b> seats filled' +
       (loadedIds.length > 1
-        ? '<br>the stake splits <b>' + loadedIds.length + '</b> ways · <b>' + need + '</b> landing wins the spin'
+        ? '<br>your chip rides <b>every ball</b> · <b>' + need + '</b> landing wins the spin'
         : '<br><span class="dim">a second ball halves your variance</span>')));
   }
 
@@ -8216,20 +8252,16 @@ const Overlays = (() => {
 
   let betMode = 'pot', cashStake = 0;
 
+  /* The wheel panel is a fixed shell -- the wheel, the balls sitting in their
+     pockets and the last result -- with the controls above and below it built
+     separately, so they can refresh after a spin and take the next bet without
+     the panel ever closing or the result being thrown away. */
   function roulette(auto) {
     /* auto = { colour, mode, stake } when letting a bet ride */
     if (auto && auto.mode) betMode = auto.mode;
-    const pot = Math.round(G.round ? (G.round.pot || 0) : 0);
-    const purse = Game.roundPurse();          // cash is staked out of your CASH OUT
-    if (betMode === 'pot' && pot < TUNE.potMinFlip && purse > 0) betMode = 'cash';
     if (auto && auto.stake) cashStake = auto.stake;
-    if (betMode === 'cash') {
-      if (cashStake > purse || cashStake <= 0) cashStake = Math.min(purse, TUNE.cashChips[0]);
-    }
 
-    /* the wheel is whatever the jewel balls have made of it */
     const pockets = Engine.wheelPockets(G.run);
-    const counts = Engine.wheelCounts(G.run);
     const nums = pockets.map((p, i) =>
       '<div class="rw-num r-' + p.c + (p.painted ? ' painted' : '') + '" style="transform:rotate(' + (i * SEG) +
       'deg) translateY(-86px) rotate(' + (-i * SEG) + 'deg)">' + p.n + '</div>').join('');
@@ -8237,107 +8269,160 @@ const Overlays = (() => {
       const c = p.c === 'green' ? '#1f9d55' : (p.c === 'red' ? '#c62b45' : '#1b1c22');
       return c + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
     }).join(',');
-
-    const cash = betMode === 'cash';
-    const stake = cash ? cashStake : pot;
-    const balls = Engine.ballsOf(G.run);
-    const spinsLeft = Game.spinsLeft();
-    const shares = Engine.ballShares(G.run, stake);
-    const need = Engine.ballThreshold(G.run);
-
-    const bet = (col) => {
-      const o = ROULETTE_ODDS[col];
-      const rate = Engine.betRate(G.run, col, cash);
-      const odds = Engine.ballWinChance(G.run, col);
-      const dead = stake <= 0 || spinsLeft <= 0;
-      const per = shares.length ? Math.round(shares[0] * rate) : 0;
-      const green = col === 'green';
-      const whole = Math.round(stake * rate);
-      return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
-        (dead ? ' disabled' : '') + '>' +
-        '<span class="rw-bl">' + o.label + '</span>' +
-        '<span class="rw-bo">' + (balls.length > 1
-            ? Math.round(odds.win * 100) + '% to win'
-            : counts[col] + ' in ' + pockets.length) +
-          (green ? ' · any ONE ball' : ' · pays 1 to 1') + '</span>' +
-        '<span class="rw-bp">' + (green || balls.length <= 1
-            ? 'pays ' + (cash ? '$' + whole : UI.fmt(whole))
-            : (cash ? '$' + per : UI.fmt(per)) + ' per ball that lands') +
-        '</span></button>';
-    };
-
-    /* the case: every ball you own, click to load or bench it */
-    const bag = Engine.ballBag(G.run);
-    const slots = Engine.ballSlots(G.run);
-    const loaded = balls.map(b => b.id);
-    const caseRow =
-      '<div class="rw-case">' +
-        '<div class="rw-case-cap">CASE <b>' + balls.length + '/' + slots + '</b></div>' +
-        '<div class="rw-case-balls">' + bag.map(b =>
-          '<button class="rw-ballchip ' + b.tint + (loaded.includes(b.id) ? ' in' : ' out') +
-          '" data-ball="' + b.id + '"></button>').join('') +
-        '</div>' +
-        '<div class="rw-case-need">' + (balls.length > 1
-          ? 'the stake splits <b>' + Engine.ballsCounted(G.run) + ' ways</b>' +
-            (Engine.ballsCounted(G.run) < balls.length ? ' (the ghost bets nothing)' : '') +
-            ' · <b>' + need + '</b> landing wins the spin · <b>the zero needs only one</b>'
-          : 'one ball, one pocket') + '</div>' +
-        '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
-      '</div>' +
-      (bag.length > balls.length || slots > balls.length
-        ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '');
-
-    const chips = TUNE.cashChips.concat([purse]).filter((v, i, a2) => v > 0 && v <= purse && a2.indexOf(v) === i);
-    const chipRow = cash
-      ? '<div class="rw-chips">' + chips.map(v =>
-          '<button class="rw-chip' + (v === cashStake ? ' on' : '') + '" data-stake="' + v + '">' +
-          (v === purse ? 'ALL $' + v : '$' + v) + '</button>').join('') +
-        (purse <= 0 ? '<span class="rw-broke">this round has not earned anything yet</span>' : '') + '</div>' +
-        '<div class="rw-purse">staked out of your <b>CASH OUT</b> — $' + purse +
-        ' &rarr; <b>$' + Math.max(0, purse - cashStake) + '</b> while it spins</div>'
-      : '';
+    const owner = Engine.wheelTakenOver(G.run);
 
     open(
       '<div class="panel wheel-panel">' +
         '<div class="panel-flag">THE WHEEL</div>' +
-        '<div class="rw-modes">' +
-          '<button class="rw-mode' + (cash ? '' : ' on') + (pot < TUNE.potMinFlip ? ' off' : '') + '" data-mode="pot"' +
-            (pot < TUNE.potMinFlip ? ' disabled' : '') + '>STAKE THE POT<span>' + UI.fmt(pot) + ' pts</span></button>' +
-          '<button class="rw-mode' + (cash ? ' on' : '') + (purse <= 0 ? ' off' : '') + '" data-mode="cash"' +
-            (purse <= 0 ? ' disabled' : '') + '>STAKE YOUR CASH OUT<span>$' + purse + '</span></button>' +
-        '</div>' +
-        chipRow +
-        '<div class="wheel-stake">On the line: <b>' + (cash ? '$' + stake : UI.fmt(stake) + ' pts') + '</b>' +
-          (balls.length > 1 ? '<span class="ws-split"> — ' +
-            (cash ? '$' + Math.max.apply(null, shares) : UI.fmt(Math.max.apply(null, shares))) +
-            ' riding each of your ' + Engine.ballsCounted(G.run) + ' betting balls</span>' : '') + '</div>' +
-        '<div class="wheel-wrap' + (Engine.wheelTakenOver(G.run) ? ' taken own-' + Engine.wheelTakenOver(G.run) : '') + '">' +
+        '<div id="rw-top"></div>' +
+        '<div class="wheel-wrap' + (owner ? ' taken own-' + owner : '') + '">' +
           '<div class="rw-pointer"></div>' +
           '<div class="rw-wheel" id="rw-wheel" style="transform:rotate(' + wheelAngle + 'deg);background:conic-gradient(' + stops + ')">' +
             '<div class="rw-paint" id="rw-paint"></div>' +
             '<div class="rw-nums">' + nums + '</div>' +
             '<div class="rw-hub"></div>' +
           '</div>' +
-          '<div class="rw-balls" id="rw-balls">' + balls.map((b, k) =>
-            '<div class="rw-ball ' + b.tint + '" id="rw-ball-' + k + '"></div>').join('') + '</div>' +
+          '<div class="rw-balls" id="rw-balls"></div>' +
         '</div>' +
-        caseRow +
-        '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
-        (spinsLeft <= 0
-          ? '<div class="wheel-dead">The table is done with you this round. Swap your balls around and come back next round.</div>'
-          : stake <= 0
-          ? '<div class="wheel-dead">Nothing to stake yet — the pot needs ' + UI.fmt(TUNE.potMinFlip) +
-            ' and your CASH OUT is $' + purse + '. Swap your balls around while you are here.</div>'
-          : '') +
-        '<div class="wheel-warn">' + (cash
-          ? 'Every ball rides its own share at the table\'s honest price. What lands comes back onto your <b>CASH OUT</b>; what misses is gone. <b>A spin is final</b> — no undo.'
-          : 'Every ball rides its own share of the pot. What lands is paid in full; what misses is gone — <b>and the same again comes off your ante total</b>.') + '</div>' +
+        '<div id="rw-under"></div>' +
         '<div class="wheel-result" id="rw-result"></div>' +
         '<button class="btn ghost" id="rw-close">WALK AWAY</button>' +
       '</div>', 'centered');
 
-    $$('.rw-mode').forEach(b2 => { b2.onclick = () => { Sfx.click(); betMode = b2.dataset.mode; roulette(); }; });
-    $$('.rw-chip').forEach(b2 => { b2.onclick = () => { Sfx.click(); cashStake = +b2.dataset.stake; roulette(); }; });
+    rackBalls();
+    refreshControls();
+    $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
+    if (auto && auto.colour) setTimeout(() => placeBet(auto.colour), 60);
+  }
+
+  /* one ball on the wheel per ball in the case */
+  function rackBalls() {
+    const rack = $('#rw-balls');
+    if (!rack) return;
+    rack.innerHTML = Engine.ballsOf(G.run).map((b, k) =>
+      '<div class="rw-ball ' + b.tint + '" id="rw-ball-' + k + '"></div>').join('');
+  }
+
+  /* Everything the player can change between spins. Safe to call at any time
+     the wheel is not spinning -- it never touches the wheel or the result. */
+  function refreshControls() {
+    const top = $('#rw-top'), under = $('#rw-under');
+    if (!top || !under) return;
+
+    const pot = Math.round(G.round ? (G.round.pot || 0) : 0);
+    const purse = Game.roundPurse();
+    if (betMode === 'pot' && pot < TUNE.potMinFlip && purse > 0) betMode = 'cash';
+    if (betMode === 'cash' && (cashStake > purse || cashStake <= 0)) cashStake = Math.min(purse, TUNE.cashChips[0]);
+
+    const cash = betMode === 'cash';
+    const balls = Engine.ballsOf(G.run);
+    const betting = Engine.ballsCounted(G.run);
+    const many = balls.length > 1;
+    const spinsLeft = Game.spinsLeft();
+    const need = Engine.ballThreshold(G.run, 'red');
+    const pockets = Engine.wheelPockets(G.run);
+    const counts = Engine.wheelCounts(G.run);
+    const chip = cashStake;
+    const potShares = Engine.ballShares(G.run, pot);
+    const money = v => cash ? '$' + v : UI.fmt(v);
+
+    const bet = col => {
+      const green = col === 'green';
+      const rate = Engine.betRate(G.run, col, cash);
+      const odds = Engine.ballWinChance(G.run, col);
+      /* what this colour actually puts on the table, and what it can bring back */
+      const risk = cash ? Engine.cashAtRisk(G.run, chip, col) : pot;
+      const allBack = green ? Math.round(risk * rate)
+                    : cash ? Math.round(chip * rate) * betting
+                    : potShares.reduce((a, v) => a + Math.round(v * rate), 0);
+      const broke = cash && risk > purse;
+      const dead = risk <= 0 || spinsLeft <= 0 || broke;
+      const oddsLine = green
+        ? (many ? 'any ONE ball · ' + Math.round(odds.win * 100) + '%' : counts.green + ' in ' + pockets.length + ' · ' + Math.round(rate) + ' to 1')
+        : counts[col] + ' in ' + pockets.length + (many ? ' each' : '') + ' · 1 to 1';
+      const payLine = broke ? 'needs ' + money(risk)
+        : green ? money(risk) + ' → ' + money(allBack)
+        : many ? money(risk) + ' on · all land +' + money(allBack - risk)
+        : money(risk) + ' → ' + money(allBack);
+      return '<button class="rw-bet rw-' + col + (dead ? ' off' : '') + '" data-col="' + col + '"' +
+        (dead ? ' disabled' : '') + '>' +
+        '<span class="rw-bl">' + ROULETTE_ODDS[col].label + '</span>' +
+        '<span class="rw-bo">' + oddsLine + '</span>' +
+        '<span class="rw-bp">' + payLine + '</span></button>';
+    };
+
+    /* the chips are what rides EACH ball -- MAX is the most every ball can carry */
+    const max = many ? Engine.maxPerBall(G.run, purse) : purse;
+    const chips = TUNE.cashChips.filter(v => v <= purse);
+    if (max > 0 && chips.indexOf(max) < 0) chips.push(max);
+    const chipRow = cash
+      ? '<div class="rw-chips">' + chips.map(v =>
+          '<button class="rw-chip' + (v === chip ? ' on' : '') + '" data-stake="' + v + '">' +
+          (v === max && v !== TUNE.cashChips[0] ? (many ? 'MAX $' + v + ' a ball' : 'ALL $' + v) : '$' + v) + '</button>').join('') +
+        (purse <= 0 ? '<span class="rw-broke">this round has not earned anything yet</span>' : '') + '</div>' +
+        '<div class="rw-purse">staked out of your <b>CASH OUT</b> — <b>$' + purse + '</b> in it right now</div>'
+      : '';
+
+    const stakeLine = cash
+      ? (many
+          ? 'On the line: <b>$' + chip + ' a ball</b><span class="ws-split"> — $' + (chip * betting) +
+            ' across ' + betting + ' balls on red or black, just $' + chip + ' on green</span>'
+          : 'On the line: <b>$' + chip + '</b>')
+      : 'On the line: <b>' + UI.fmt(pot) + ' pts</b>' +
+          (many ? '<span class="ws-split"> — split ' + betting + ' ways</span>' : '');
+
+    top.innerHTML =
+      '<div class="rw-modes">' +
+        '<button class="rw-mode' + (cash ? '' : ' on') + (pot < TUNE.potMinFlip ? ' off' : '') + '" data-mode="pot"' +
+          (pot < TUNE.potMinFlip ? ' disabled' : '') + '>STAKE THE POT<span>' + UI.fmt(pot) + ' pts</span></button>' +
+        '<button class="rw-mode' + (cash ? ' on' : '') + (purse <= 0 ? ' off' : '') + '" data-mode="cash"' +
+          (purse <= 0 ? ' disabled' : '') + '>STAKE YOUR CASH OUT<span>$' + purse + '</span></button>' +
+      '</div>' +
+      chipRow +
+      '<div class="wheel-stake">' + stakeLine + '</div>';
+
+    /* the case: every ball you own, click to load or bench it */
+    const bag = Engine.ballBag(G.run);
+    const slots = Engine.ballSlots(G.run);
+    const loaded = balls.map(b => b.id);
+    const ghostNote = betting < balls.length ? ' (the ghost rides free)' : '';
+    under.innerHTML =
+      '<div class="rw-case">' +
+        '<div class="rw-case-cap">CASE <b>' + balls.length + '/' + slots + '</b></div>' +
+        '<div class="rw-case-balls">' + bag.map(b =>
+          '<button class="rw-ballchip ' + b.tint + (loaded.includes(b.id) ? ' in' : ' out') +
+          '" data-ball="' + b.id + '"></button>').join('') +
+        '</div>' +
+        '<div class="rw-case-need">' + (many
+          ? (cash ? 'your chip rides <b>every ball</b>' : 'the pot splits <b>' + betting + ' ways</b>') + ghostNote +
+            ' · <b>' + need + '</b> landing wins the spin · <b>the zero needs only one</b>'
+          : 'one ball, one pocket') + '</div>' +
+        '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
+      '</div>' +
+      (bag.length > balls.length || slots > balls.length
+        ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '') +
+      '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
+      (spinsLeft <= 0
+        ? '<div class="wheel-dead">The table is done with you this round. Swap your balls around and come back next round.</div>'
+        : (cash ? chip : pot) <= 0
+        ? '<div class="wheel-dead">Nothing to stake yet — the pot needs ' + UI.fmt(TUNE.potMinFlip) +
+          ' and your CASH OUT is $' + purse + '. Swap your balls around while you are here.</div>'
+        : '') +
+      '<div class="wheel-warn">' + (cash
+        ? (many
+            ? 'Red and black: your chip rides <b>every ball</b>, and each one that lands is paid 1 to 1 on its own. ' +
+              'Green: one chip, and <b>any one ball</b> in a green pocket pays all of it. '
+            : 'Honest table odds, settled straight onto your <b>CASH OUT</b>. ')
+          + '<b>A spin is final</b> — no undo.'
+        : 'The pot splits across your balls. What lands is paid in full; what misses is gone — ' +
+          '<b>and the same again comes off your ante total</b>. <b>A spin is final</b> — no undo.') + '</div>';
+
+    wireControls();
+  }
+
+  function wireControls() {
+    $$('.rw-mode').forEach(b2 => { b2.onclick = () => { Sfx.click(); betMode = b2.dataset.mode; refreshControls(); }; });
+    $$('.rw-chip').forEach(b2 => { b2.onclick = () => { Sfx.click(); cashStake = +b2.dataset.stake; refreshControls(); }; });
     $$('.rw-bet').forEach(b2 => { b2.onclick = () => placeBet(b2.dataset.col); });
     $$('.rw-ballchip').forEach(chip => {
       const def = BALL_BY_ID[chip.dataset.ball];
@@ -8354,21 +8439,26 @@ const Overlays = (() => {
         if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
         Sfx.click();
         UI.hideTip();
-        roulette({ mode: betMode, stake: cashStake });
+        rackBalls();
+        refreshControls();
       };
     });
-    $('#rw-close').onclick = () => { Sfx.click(); close(); UI.render(); };
-    if (auto && auto.colour) setTimeout(() => placeBet(auto.colour), 60);
   }
 
   function placeBet(colour) {
     const cash = betMode === 'cash';
     const res = cash ? Game.spinRouletteCash(colour, cashStake) : Game.spinRoulette(colour);
     if (!res.ok) { Sfx.error(); UI.toast(res.reason); return; }
+    /* nothing can change mid-spin -- the case included, or the balls on the
+       wheel would stop matching the balls being thrown */
     $$('.rw-bet').forEach(x => { x.disabled = true; x.classList.toggle('chosen', x.dataset.col === colour); });
-    $$('.rw-mode,.rw-chip').forEach(x => { x.disabled = true; });
+    $$('.rw-mode,.rw-chip,.rw-ballchip').forEach(x => { x.disabled = true; });
+    $$('.ride-btn,.ride-note').forEach(x => x.remove());
     $('#rw-close').disabled = true;
+    $('#rw-result').className = 'wheel-result';
     $('#rw-result').innerHTML = '<span class="rw-spinning">the wheel is spinning…</span>';
+    UI.hideTip();
+    rackBalls();
 
     const wheel = $('#rw-wheel');
     const thrown = res.thrown || [{ index: res.index, hit: res.win }];
@@ -8597,7 +8687,7 @@ const Overlays = (() => {
       const money = (t.share == null) ? ''
         : (t.ghost && !t.share) ? '<span class="rb-cash free">free</span>'
         : (t.hit
-          ? '<span class="rb-cash up">+' + (cashMode ? '$' + t.won : UI.fmt(t.won)) + '</span>'
+          ? '<span class="rb-cash up">+' + (cashMode ? '$' + (t.won - t.share) : UI.fmt(t.won - t.share)) + '</span>'
           : '<span class="rb-cash down">\u2212' + (cashMode ? '$' + t.share : UI.fmt(t.share)) + '</span>');
       const mark = t.hit
         ? '<span class="rb-hit' + (t.doubled ? ' dbl' : '') + '">' + (t.doubled ? 'HIT x2' : 'HIT') + '</span>'
@@ -8626,19 +8716,12 @@ const Overlays = (() => {
 
     /* and a bottom line, so there is never a doubt about what the spin paid */
     const tot = [];
-    if (thrown.length > 1 || res.allIn) {
+    if (res.allIn && thrown.length > 1) {
       const back = cashMode ? res.payout : res.kept;
-      const gone = res.lost || 0;
-      if (res.allIn) {
-        tot.push(back
-          ? 'the whole <b>' + (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + '</b> pays the zero in full — <b>' +
-            (cashMode ? '$' + back : UI.fmt(back)) + '</b> back'
-          : 'no ball found green — the whole <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> is gone');
-      } else if (back != null) {
-        tot.push('<b>' + (cashMode ? '$' + back : UI.fmt(back)) + '</b> back of ' +
-          (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + ' staked' +
-          (gone ? ' · <b class="dn">' + (cashMode ? '$' + gone : UI.fmt(gone)) + '</b> lost' : ''));
-      }
+      tot.push(back
+        ? 'one ball on green is all it takes — the whole <b>' + (cashMode ? '$' + res.staked : UI.fmt(res.staked)) +
+          '</b> pays in full'
+        : 'no ball found green — the whole <b class="dn">' + (cashMode ? '$' + res.staked : UI.fmt(res.staked)) + '</b> is gone');
     }
     if (res.cash) tot.push('<b>+$' + res.cash + '</b> from the balls');
     if (res.chips) tot.push('<b>+' + UI.fmt(res.chips) + ' Chips</b> scored');
@@ -8659,68 +8742,77 @@ const Overlays = (() => {
     const box = $('#rw-result');
     const cash = res.mode === 'cash';
     const many = res.thrown && res.thrown.length > 1;
-    const where = many ? '<b>' + res.hits + '/' + res.thrown.length + ' ON ' + res.colour.toUpperCase() + '</b>'
-                       : '<b>' + p.n + ' ' + p.c.toUpperCase() + '</b>';
-    if (res.win) {
-      box.className = 'wheel-result win';
-      box.innerHTML = where + ' — ' +
-        (cash ? 'the table pays <b>$' + res.payout + '</b>' : 'the pot is now <b>' + UI.fmt(res.pot) + '</b>') +
-        (res.guaranteed ? '<br><span class="rw-note">The Card Counter saw that coming.</span>' : '') +
-        '<br><span class="rw-note">HEAT is now X' + Game.heatMult() + '</span>' +
-        '<br><span class="quip">' + quip(res.colour === 'green' ? 'wheelGreen' : 'wheelWin') + '</span>' +
-        ballReport(res);
+    const money = v => cash ? '$' + v : UI.fmt(v) + ' pts';
+    const where = many ? res.hits + ' of ' + res.thrown.length + ' on ' + res.colour.toUpperCase()
+                       : p.n + ' ' + p.c.toUpperCase();
+
+    /* Lead with what actually happened to your money. Winning the SPIN (which
+       is what raises HEAT) and coming out ahead are different things -- one ball
+       landing out of two is a won spin that pays back exactly what it staked. */
+    const net = res.net || 0;
+    const verdict = net > 0 ? '<span class="rw-net up">+' + money(net) + '</span>'
+                  : net < 0 ? '<span class="rw-net down">−' + money(-net) + '</span>'
+                  : '<span class="rw-net even">BROKE EVEN</span>';
+    const detail = '<b>' + where + '</b> — ' + money(res.staked) + ' staked, ' +
+      money(cash ? res.payout : res.kept) + ' back' +
+      (!cash && res.anteHit ? ', and ' + UI.fmt(res.anteHit) + ' off your ante total' : '');
+
+    box.className = 'wheel-result ' + (net > 0 ? 'win' : net < 0 ? 'lose' : 'even');
+    box.innerHTML = verdict + '<div class="rw-detail">' + detail + '</div>' +
+      (res.win
+        ? '<span class="rw-note">spin won — HEAT is now X' + Game.heatMult() +
+          (res.guaranteed ? ' · the Card Counter saw that coming' : '') + '</span>'
+        : '<span class="rw-note">spin lost — HEAT back to X1</span>') +
+      '<br><span class="quip">' + quip(net > 0 ? (res.colour === 'green' ? 'wheelGreen' : 'wheelWin') : 'wheelLose') + '</span>' +
+      ballReport(res);
+
+    if (net > 0) {
       Sfx.win(); UI.screenShake(12); UI.confetti($('.wheel-wrap'), res.colour === 'green' ? 90 : 45, 't3');
       UI.flashScreen(0.28, res.colour === 'green' ? '#7ee787' : '#ffd166');
-    } else {
-      box.className = 'wheel-result lose';
-      box.innerHTML = where + ' — the house takes <b>' +
-        (cash ? '$' + res.staked : UI.fmt(res.staked)) + '</b>' +
-        (cash ? '' : '<br><span class="rw-note">and ' + UI.fmt(res.anteHit) + ' off your ante total</span>') +
-        '<br><span class="quip">' + quip('wheelLose') + '</span>' +
-        ballReport(res);
+    } else if (net < 0) {
       Sfx.lose(); UI.screenShake(14); UI.flashScreen(0.3, '#ff4d6d');
+    } else {
+      Sfx.chip(3);
     }
+
     const btn = $('#rw-close');
     btn.disabled = false;
-    btn.textContent = res.win ? 'TAKE IT AND GO' : 'THAT IS GAMBLING';
+    btn.textContent = net > 0 ? 'TAKE IT AND GO' : net < 0 ? 'THAT IS GAMBLING' : 'WALK AWAY';
 
-    /* won, and the winnings are big enough to put straight back on the table */
-    const rideStake = cash ? Math.min(res.payout, Game.roundPurse()) : (G.round.pot || 0);
-    const rideOk = res.win && Game.spinsLeft() > 0 && (cash ? rideStake > 0 : rideStake >= TUNE.potMinFlip);
+    /* LET IT RIDE puts what came back straight back on the same colour. On red or
+       black that is spread across every ball again, so what is on the line stays
+       roughly what you just won. */
+    const green = res.colour === 'green';
+    const back = cash ? res.payout : (G.round.pot || 0);
+    const bettors = Math.max(1, Engine.ballsCounted(G.run));
+    const rideChip = cash ? (green ? back : Math.floor(back / bettors)) : back;
+    const rideRisk = cash ? Engine.cashAtRisk(G.run, rideChip, res.colour) : rideChip;
+    const rideOk = net > 0 && Game.spinsLeft() > 0 && rideChip > 0 &&
+      (cash ? rideRisk <= Game.roundPurse() : rideChip >= TUNE.potMinFlip);
     if (rideOk) {
-      const rate2 = Engine.betRate(G.run, res.colour, cash);
-      const shown = cash ? '$' + rideStake : UI.fmt(rideStake);
-      const becomes = cash ? '$' + Math.round(rideStake * rate2) : UI.fmt(Math.round(rideStake * rate2));
       const ride = el('button', 'btn ride-btn', 'LET IT RIDE');
-      ride.title = 'Put the whole ' + shown + ' back on ' + ROULETTE_ODDS[res.colour].label;
+      ride.title = 'Put ' + money(rideRisk) + ' back on ' + ROULETTE_ODDS[res.colour].label;
       ride.onclick = () => {
         ride.disabled = true;
         Sfx.voice('letItRide');
         UI.flashScreen(0.18, '#ffd166');
-        setTimeout(() => roulette({ colour: res.colour, mode: res.mode === 'cash' ? 'cash' : 'pot', stake: rideStake }), 620);
+        setTimeout(() => {
+          betMode = cash ? 'cash' : 'pot';
+          if (cash) cashStake = rideChip;
+          refreshControls();
+          placeBet(res.colour);
+        }, 620);
       };
       btn.parentNode.insertBefore(ride, btn);
-      const note = el('div', 'ride-note',
-        'Same colour, ' + shown + ' on the line — win and it becomes ' + becomes + '.' +
-        (cash ? ' Lose and your cash out drops to $' + Math.max(0, Game.roundPurse() - rideStake) + '.' : ''));
+      const note = el('div', 'ride-note', 'Same colour, ' + money(rideRisk) + ' on the line' +
+        (cash && !green && bettors > 1 ? ' ($' + rideChip + ' on each ball)' : '') + '.' +
+        ' Or pick any colour above to bet fresh.');
       btn.parentNode.insertBefore(note, btn);
     }
-    /* the panel was built before the spin -- bring the CASH OUT tab up to date so
-       you never have to close it to find out what you are actually holding */
-    const purseNow = Game.roundPurse();
-    const cashTab = $('.rw-mode[data-mode="cash"] span');
-    if (cashTab) cashTab.textContent = '$' + purseNow;
-    const potTab = $('.rw-mode[data-mode="pot"] span');
-    if (potTab) potTab.textContent = UI.fmt(Math.round(G.round.pot || 0)) + ' pts';
-    const purseNote = $('.rw-purse');
-    if (purseNote) purseNote.innerHTML = 'your <b>CASH OUT</b> is now <b>$' + purseNow + '</b>';
-    const spinBox = $('.rw-spins');
-    if (spinBox) {
-      const left = Game.spinsLeft();
-      spinBox.innerHTML = 'SPINS LEFT <b>' + left + '</b>';
-      spinBox.classList.toggle('out', left <= 0);
-    }
 
+    /* the table is ready for the next bet straight away -- no need to walk away
+       and come back */
+    refreshControls();
     UI.renderHud();
     UI.renderControls();
   }
@@ -8837,7 +8929,7 @@ const Overlays = (() => {
         'Each share that misses is gone AND the same again comes off your ante total, this round first and then your banked rounds — the one bet at the table that can cost you quota progress.');
       html += almEntry('coin', 'STAKE YOUR CASH OUT', 'any time',
         'Bet real money out of this round\'s purse instead, at honest casino odds: 1 to 1 on a colour, ' + TUNE.cashPayGreen + ' to 1 on the zero.',
-        'A miss costs its share of the stake and nothing more. The wheel is open all round from THE WHEEL button or W, whether or not the pot is big enough to stake.');
+        'With more than one ball your chip rides every ball — $10 across three balls is $30 on red or black, and each ball that lands is paid on its own. A miss costs that ball\'s chip and nothing more. The wheel is open all round from THE WHEEL button or W, whether or not the pot is big enough to stake.');
       html += almEntry('twinflame', 'HEAT', 'from winning spins',
         'Each spin you win raises HEAT by one (three on the zero). HEAT multiplies EVERY score for the rest of the round — X'
         + (1 + TUNE.heatMultPer) + ' at one level, X' + (1 + TUNE.heatMultPer * 4) + ' at four.',
@@ -8852,12 +8944,14 @@ const Overlays = (() => {
       html += almEntry('dice', 'The Daredevil', 'curio',
         'Every spin you win also puts $5 on your CASH OUT.', '');
     } else if (almanacTab === 'balls') {
-      html += almEntry('sparkle', 'The zero does not split', 'any ONE ball',
-        'A green bet is all or nothing on a single ball. If <b>any one</b> of your balls finds a green pocket, the <b>whole stake</b> pays the zero in full and the spin counts as a win — however many balls you own. If none of them do, the whole stake is gone.',
-        'That makes the zero the one bet that gets strictly better with every ball you add: four balls is four chances at it, and one hit pays the lot. Every other colour splits the stake and needs half the case.');
-      html += almEntry('coin', 'Your stake splits across the balls', 'the price never changes',
-        'RED and BLACK always pay <b>1 to 1</b>, however many balls you own. The stake is divided evenly between them and each ball rides its own share: what lands is paid in full, what misses is gone.',
-        'So a bigger case does not buy a better price — it buys far less variance. One ball is all or nothing; four balls means a bad spin usually still hands some of the stake back. The house edge is identical at every count, which is why the balls are worth owning for what they DO rather than for the odds.');
+      html += almEntry('coin', 'Your chip rides every ball', 'red and black',
+        'On red or black the chip you pick goes on <b>every</b> ball in the case. $10 with three balls is $30 on the table, and each ball is settled on its own at <b>1 to 1</b>: all three land and you are up $30, two land and you are up $10, one lands and you are down $10.',
+        'So more balls landing really is more money — and more balls missing is more gone. The odds per ball never change, only how much is riding. The MAX chip is the most every ball can carry out of your CASH OUT.');
+      html += almEntry('sparkle', 'The zero pays in full, always', 'any ONE ball',
+        'A green bet stakes the chip <b>once</b>. If <b>any one</b> of your balls finds a green pocket the whole chip pays the zero in full — ' + TUNE.cashPayGreen + ' to 1 — and the spin counts as a win, however many balls you own. More green balls do not pay more, and more balls never pay less.',
+        'That makes the zero the one bet that gets strictly better with every ball you add: four balls is four chances at it for the price of one chip.');
+      html += almEntry('coinstack', 'Staking the pot', 'the pot splits',
+        'The Side Pot is one pool, so it is divided between your balls rather than riding each of them. Each share that lands is paid in full; each that misses is gone and costs the same again off your ante.', '');
       html += almEntry('dice', 'Every ball you own is thrown', 'how it works',
         'A spin drops the whole case at once. Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b> — 1 of 1, 1 of 2, 2 of 3, 2 of 4, 3 of 5 — which is what raises HEAT, extends your streak and unlocks LET IT RIDE.',
         'Only the balls IN THE CASE are thrown — it seats ' + TUNE.startingBallSlots + ' to start, the Counter sells more, ' +
@@ -9035,18 +9129,19 @@ const Overlays = (() => {
           'whenever it scores. (Hotkey: R)</p>' +
 
           '<h4>The Ball Case</h4>' +
-          '<p>The shop sells <b>balls</b>, and every ball in your case is thrown on every spin. Your stake is ' +
-          '<b>split evenly between them</b> and each ball rides its own share, so <b>RED and BLACK always pay 1 to 1</b> ' +
-          'and the zero always pays its full multiple, however many balls you own. What lands is paid in full, what misses ' +
-          'is gone. A bigger case does not buy a better price — it buys far less variance.</p>' +
-          '<p>Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b>, which is a separate thing ' +
-          'from the money: it is what raises <b>HEAT</b>, extends your streak and unlocks <b>LET IT RIDE</b>.</p>' +
-          '<p><b>The zero is the exception.</b> A green bet does not split and does not care how many balls you own: if ' +
-          '<b>any one</b> of them finds a green pocket the <b>whole stake</b> pays the zero in full and the spin is a win. ' +
-          'If none do, the whole stake is gone. It is the one bet that gets strictly better with every ball you add.</p>' +
+          '<p>The shop sells <b>balls</b>, and every ball in your case is thrown on every spin. On <b>red or black</b> ' +
+          'the chip you pick rides <b>every ball</b>: $10 with three balls is $30 on the table, and each ball is settled ' +
+          'on its own at <b>1 to 1</b>. All three land and you are up $30; two land, up $10; one lands, down $10. More ' +
+          'balls landing really is more money. The result screen always leads with your real net, so a spin you won ' +
+          'but broke even on says <b>BROKE EVEN</b>.</p>' +
+          '<p>On <b>green</b> the chip goes down <b>once</b>, and <b>any one</b> ball in a green pocket pays the whole of it ' +
+          'at the full ' + TUNE.cashPayGreen + ' to 1, however many balls you own — it never pays less for owning more.</p>' +
+          '<p>Landing <b>half your balls, rounded up</b>, on your colour <b>wins the spin</b> — a separate thing from the money: ' +
+          'it is what raises <b>HEAT</b>, extends your streak and unlocks <b>LET IT RIDE</b>. After every spin the colours are ' +
+          'live again, so you can bet a different colour straight away without leaving the wheel.</p>' +
           '<p>The real reason to own balls is what they <i>do</i>. A ball\'s ability fires on the pocket it lands in ' +
           '<b>whether the bet won or lost</b> — the Iron Ball pays $3 on black even when you backed red and it cost you its ' +
-          'share. The jewel balls go further and <b>repaint the pocket they land in for the rest of the run</b>, though a ' +
+          'chip. The jewel balls go further and <b>repaint the pocket they land in for the rest of the run</b>, though a ' +
           'colour pays less the more of the wheel wears it. The case seats ' + TUNE.startingBallSlots + ' to start and the ' +
           'Counter sells more seats; you can own as many balls as you like and swap them at the wheel.</p>' +
           '<p>The table allows <b>' + TUNE.spinsPerRound + ' spins a round</b> (LET IT RIDE spends one). The Counter sells more of those too.</p>' +

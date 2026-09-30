@@ -1668,3 +1668,15 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .rb-pocket.was{ opacity:.45; text-decoration:line-through; }
 .rb-arrow{ opacity:.5; font-size:9px; margin:0 1px; }
 .rb-row .rb-pocket{ flex:0 0 auto; min-width:22px; }
+
+/* the result leads with the net: up, down, or dead even */
+.rw-net{
+  display:block; font-family:var(--display); font-size:26px; letter-spacing:.04em; line-height:1.1;
+  margin-bottom:2px;
+}
+.rw-net.up{ color:var(--lime); text-shadow:0 0 18px rgba(126,231,135,.45); }
+.rw-net.down{ color:var(--hot); text-shadow:0 0 18px rgba(255,77,109,.35); }
+.rw-net.even{ color:var(--gold); font-size:20px; }
+.rw-detail{ font-size:12px; opacity:.85; margin-bottom:3px; }
+.wheel-result.even{ color:var(--paper); }
+.rw-ballchip:disabled{ cursor:default; }

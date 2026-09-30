@@ -331,17 +331,15 @@ const Engine = (() => {
     return { p, win, need };
   }
 
-  /* The stake is split evenly across the balls in the case and each one rides its
-     own share, so RED and BLACK pay a true 1:1 and the zero its full multiple no
-     matter how many balls you own. More balls does not buy you a better price --
-     it buys you far less variance, and the abilities. */
   /* how many trips to the wheel a round allows */
   function spinsAllowed(run) {
     return TUNE.spinsPerRound + ((run && run.bonusSpins) || 0) + (mods(run).bonusSpins || 0);
   }
 
-  /* One share per ball, in case order, so a caller can index it by the ball it
-     threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
+  /* Only the SIDE POT splits across the balls now -- it is one pool, so it is
+     divided rather than riding each ball (cash bets put the chip on every ball;
+     see cashAtRisk). One share per ball, in case order, so a caller can index it
+     by the ball it threw. A GHOST BALL stakes nothing -- it is a free throw that can still land
      on your colour -- so it takes a share of 0 and the stake splits across the
      rest. That also means the balls that ARE betting each bet more. */
   function ballShares(run, stake) {
@@ -357,6 +355,20 @@ const Engine = (() => {
     for (let i = 0; i < n; i++) pot.push(base + (rem-- > 0 ? 1 : 0));
     let k = 0;
     return balls.map(b => (betting.length && b.ghost) ? 0 : pot[k++]);
+  }
+
+  /* A CASH bet puts the chip on EVERY ball that bets: $10 with three balls is
+     $30 on the table, and each ball that lands is paid 1 to 1 on its own $10.
+     The zero is the exception -- it stakes the chip once, and any one ball in a
+     green pocket pays the whole of it. Ghost balls never carry a stake. */
+  function cashAtRisk(run, perBall, colour) {
+    if (greenIsAllIn(colour)) return perBall;
+    return perBall * Math.max(1, ballsCounted(run));
+  }
+
+  /* the most a single chip can be while every betting ball can still carry it */
+  function maxPerBall(run, purse) {
+    return Math.floor(purse / Math.max(1, ballsCounted(run)));
   }
 
   /* the rate a bet pays, paint included. Balls no longer touch it. */
@@ -553,6 +565,7 @@ const Engine = (() => {
     wheelPockets, wheelCounts, wheelPay, paintPocket, canPaint,
     paintablePockets, spreadTarget, wheelTakenOver,
     ballsOf, ballBag, ballSlots, ballsCounted, ballThreshold, ballShares, ballWinChance, betRate, spinsAllowed,
+    cashAtRisk, maxPerBall,
     greenIsAllIn,
     isRed, isBlack, suitsOf, canStack, canPlaceOnFoundation, foundationTargetFor,
     canPlaceOnColumn, isRunFrom, anyMoveAvailable, isWon, nextId,

@@ -162,22 +162,29 @@ it scores. Hotkey `R`.
 
 ### The Ball Case
 
-The shop sells **balls**, and every ball in your case is thrown on every spin. Your stake is **split evenly
-between them** and each ball rides its own share, so **RED and BLACK always pay 1 to 1** and the zero always
-pays its full multiple, however many balls you own. What lands is paid in full, what misses is gone — a
-bigger case doesn't buy a better price, it buys far less variance.
+The shop sells **balls**, and every ball in your case is thrown on every spin.
 
-Landing **half your balls, rounded up**, on your colour **wins the spin** — 1 of 2, 2 of 3, 2 of 4, 3 of 5.
-The **Ghost Ball** is outside all of that: it puts nothing on the table, so it can never lose, it doesn't raise
-the number you need, and the balls that *are* betting each ride a bigger share. It can still land on your
-colour and be the throw that wins the spin — and on a green bet, where any one ball takes the whole stake, a
-free extra throw at the zero is exactly as good as it sounds.
-That's a separate thing from the money: it's what raises **HEAT**, extends your streak and unlocks
-**LET IT RIDE**.
+On **red or black**, the chip you pick rides **every ball**. $10 with three balls is $30 on the table, and each
+ball is settled on its own at **1 to 1**: all three land and you're up $30, two land and you're up $10, one
+lands and you're down $10. More balls landing really is more money — and more missing is more gone. The odds
+per ball never change, only how much is riding. The MAX chip is the most every ball can carry out of your
+CASH OUT.
 
-**The zero is the exception.** A green bet doesn't split and doesn't care how many balls you own: if **any
-one** of them finds a green pocket, the **whole stake** pays the zero in full and the spin is a win. If none
-do, the whole stake is gone. It's the one bet that gets strictly better with every ball you add.
+On **green**, the chip goes down **once**, and **any one** ball in a green pocket pays the whole of it at the full
+18 to 1, however many balls you own. More green balls don't pay more, and owning more balls never pays less —
+it's the one bet that gets strictly better with every ball you add.
+
+The result screen always leads with your **real net** — `+$30`, `−$10`, or `BROKE EVEN` — because winning the
+*spin* and coming out ahead are different things. Landing **half your balls, rounded up**, on your colour wins
+the spin, which is what raises **HEAT**, extends your streak and unlocks **LET IT RIDE**. After every spin the
+colours are live again, so you can bet a different colour straight away without leaving the wheel.
+
+Staking the **Side Pot** works differently: it's one pool, so it's divided between your balls rather than riding
+each of them.
+
+The **Ghost Ball** carries no chip, so it can never lose, and it doesn't raise the number you need to win the
+spin. It can still land on your colour and be the throw that wins it — and on green, a free extra shot at the
+zero is exactly as good as it sounds.
 
 The table allows **3 spins a round** (LET IT RIDE spends one); the Counter sells **Another Spin**, forever.
 

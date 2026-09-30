@@ -500,6 +500,10 @@ const CURIO_BY_ID = {};
 CURIOS.forEach(c => { CURIO_BY_ID[c.id] = c; });
 
 const RARITY_WEIGHT = { common: 100, uncommon: 45, rare: 16, legendary: 3 };
+/* The ball shelf draws from ten balls, not sixty-odd Curios, so the Curio weights
+   let the two commons take nearly half of every shelf and left a rare ball like
+   the Emerald on under one shelf in eleven. Balls get a much flatter spread. */
+const BALL_RARITY_WEIGHT = { common: 30, uncommon: 26, rare: 20, legendary: 8 };
 
 /* =========================================================
    HOUSE RULES -- permanent, run-long, no mantel seat
@@ -952,7 +956,7 @@ const BALLS = [
 
   { id: 'ghost', name: 'The Ghost Ball', tint: 'b-ghost', cost: 16, rarity: 'legendary',
     text: 'Stakes nothing and can never lose. A free throw that still counts as a hit.',
-    long: 'It puts none of your money on the table, so it costs you nothing when it misses — and because it does not raise the number of balls you need, every other ball in the case bets a bigger share. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak. Pure upside, and priced like it.',
+    long: 'It carries no chip, so it costs you nothing when it misses, and it does not raise the number of balls you need to win the spin. It can still land on your colour and be the throw that wins you the spin, the HEAT and the streak — and on green, where any one ball pays the whole chip, it is a free extra shot at the zero. Pure upside, and priced like it.',
     ghost: true },
 
   { id: 'magnet', name: 'The Magnet', tint: 'b-cool', cost: 15, rarity: 'rare',

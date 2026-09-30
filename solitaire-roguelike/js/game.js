@@ -487,13 +487,18 @@ const Game = (() => {
      a loss is money this round never pays you. Honest casino payouts: red or
      black returns double, the zero returns eighteen times, and a loss costs the
      stake and nothing else.                                                    */
-  function spinRouletteCash(colour, stake) {
-    stake = Math.floor(stake || 0);
+  /* `chip` is what rides EACH betting ball on red or black, and the whole bet on
+     the zero -- see Engine.cashAtRisk. */
+  function spinRouletteCash(colour, chip) {
+    chip = Math.floor(chip || 0);
     if (G.phase !== 'play') return { ok: false, reason: 'Not now.' };
     if (!ROULETTE_ODDS[colour]) return { ok: false, reason: 'Pick a colour.' };
-    if (stake <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
+    if (chip <= 0) return { ok: false, reason: 'Pick an amount to stake.' };
     const purse = roundPurse();
-    if (stake > purse) return { ok: false, reason: 'Your cash out is only $' + purse + ' right now.' };
+    const stake = Engine.cashAtRisk(G.run, chip, colour);
+    if (stake > purse) {
+      return { ok: false, reason: '$' + chip + ' on every ball is $' + stake + ' — your cash out is only $' + purse + '.' };
+    }
     if (spinsLeft() <= 0) return { ok: false, reason: 'The table is done with you this round.' };
     /* The house gives no refunds. A spin wipes the undo history -- every undo
        point still holds a round from BEFORE the bet, so any of them would hand
@@ -513,19 +518,19 @@ const Game = (() => {
     const pay = +rate.toFixed(2);
     const allIn = Engine.greenIsAllIn(colour);
 
-    /* The zero does not split. One ball in a green pocket takes the WHOLE stake
-       at the full green price; none of them and the whole stake is gone. Every
-       other colour rides a share per ball at the table's honest price. */
+    /* The zero stakes the chip once and one ball in a green pocket pays the whole
+       of it at the full green price. Red and black put the chip on every betting
+       ball, and each one is settled on its own at 1 to 1 -- so three landing is
+       three times the win. A ghost carries nothing, so it can never cost you. */
     let payout = 0, lost = 0;
     if (allIn) {
       roll.thrown.forEach(t => { t.share = null; t.won = 0; });
       if (win) payout = Math.max(1, Math.round(stake * rate)); else lost = stake;
     } else {
-      const shares = Engine.ballShares(G.run, stake);
-      roll.thrown.forEach((t, i) => {
-        t.share = shares[i] || 0;
+      roll.thrown.forEach(t => {
+        t.share = t.ghost ? 0 : chip;
         t.won = t.hit ? Math.round(t.share * rate) : 0;
-        if (t.hit) payout += t.won; else lost += t.share;   // a ghost's share is 0 either way
+        if (t.hit) payout += t.won; else lost += t.share;
       });
     }
     G.round.cashSwing += payout - stake;
@@ -540,8 +545,9 @@ const Game = (() => {
       G.round.heat = 0;
     }
     const out = { ok: true, mode: 'cash', win, guaranteed, pocket, index, colour, pay,
-                  staked: stake, payout, lost, allIn, before: purse, thrown: roll.thrown,
-                  hits: roll.hits, need: roll.need, heat: G.round.heat };
+                  chip, staked: stake, payout, lost, allIn, before: purse, thrown: roll.thrown,
+                  hits: roll.hits, need: roll.need, heat: G.round.heat,
+                  net: payout - stake };
     settleBalls(out, colour);
     out.purse = roundPurse();
     out.heat = G.round.heat;
@@ -605,6 +611,7 @@ const Game = (() => {
     }
     const out = { ok: true, mode: 'pot', win, guaranteed, pocket, index, colour, pay,
                   pot: G.round.pot, staked: pot, anteHit, lost, kept, allIn, thrown: roll.thrown,
+                  net: kept - pot,
                   hits: roll.hits, need: roll.need, heat: G.round.heat, before: roundPurse() };
     settleBalls(out, colour);
     out.purse = roundPurse();
@@ -1350,9 +1357,9 @@ const Game = (() => {
       const pool = ballPool.filter(b => !seenB.has(b.id));
       if (!pool.length) break;
       let total = 0;
-      pool.forEach(b => { total += RARITY_WEIGHT[b.rarity]; });
+      pool.forEach(b => { total += BALL_RARITY_WEIGHT[b.rarity]; });
       let r = Math.random() * total, pick = pool[0];
-      for (const b of pool) { r -= RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
+      for (const b of pool) { r -= BALL_RARITY_WEIGHT[b.rarity]; if (r <= 0) { pick = b; break; } }
       seenB.add(pick.id);
       balls.push({ type: 'ball', id: pick.id, cost: pick.cost });
     }
