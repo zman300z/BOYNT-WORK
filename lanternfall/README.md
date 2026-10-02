@@ -20,12 +20,17 @@ and relight the Lantern. Each time you fall, you reform in the Undercroft.
 | Ground slam (in air) | Down + Jump | Down + A |
 | Roll (invulnerable) | Shift or L | B |
 | Weapon 1 / 2 | J / K (or X / C, mouse) | X / Y |
+| Overhead swing | hold Up + attack | Up + X / Y |
+| Down-strike (bounces off foes) | hold Down + attack in the air | Down + X / Y |
 | Skill 1 / 2 | Q / E | LT / RT |
 | Interact | F | RB |
 | Health flask | R | LB |
 | Map | M or Tab | Select |
 | Pause | Esc or P | Start |
 | Fullscreen | F11 | |
+
+Every key can be rebound under **Pause → Settings → Rebind Controls**, with a primary and an alternate key per action.
+Settings also has toggles for screen shake, damage numbers, and "Up key also jumps".
 
 ## What's in it
 - **Difficulty by location, not a setting.** Enemy health and damage scale with the isle tier (I–VI) of the region you're in.
@@ -43,10 +48,15 @@ and relight the Lantern. Each time you fall, you reform in the Undercroft.
   burn, oil, freeze, stun, root, slow), and **rally health**: hit back quickly to recover damage you just took.
 - **26 enemy types** with telegraphed attacks, elites, and two named rune guardians.
   **3 multi-phase bosses**: the Bellwarden, Mother Brine, and King Oris.
+- **Combat feel:** buffered inputs, attack canceling into movement, soft lock-on that turns you toward the nearest foe,
+  a lunge that closes small gaps, hit-stop, and auto-aiming bows and throwing weapons.
+- **Doors** between rooms: walk into one to ease it open, or strike or roll into it to kick it in and stun whatever is behind it.
 - **Puzzles** guarding vaults: brazier order (the clue is on a mural elsewhere on the level), lever lights-out,
   bell melody, crate on a pressure plate, plus timed vaults for fast runs.
 - **Shops, cursed chests, secret breakable walls, lore tablets,** and a Codex covering lore, the bestiary, and the armory.
 - **Meta-progression:** give embers to the Keeper between regions to unlock found blueprints,
   flask upgrades, gold reserve, the forge, starting kits, and new mutations. Your run is saved at each passage (Continue).
 - **Soundtrack:** 15 synthesized tracks built around a recurring "Lantern" theme that resolves to a major key in the ending.
+  Each region also has its own ambient soundscape (rain, wind, cave drips, crickets, distant bells), and the music
+  muffles while the game is paused.
 - **Two endings.** Find the four Pearls of Ilyse hidden in puzzle vaults across the alternate regions to unlock the true ending.

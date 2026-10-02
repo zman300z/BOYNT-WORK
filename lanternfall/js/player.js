@@ -227,6 +227,7 @@
       if (this.nextCritT > 0) this.nextCritT -= dt;
       if (this.dropT > 0) this.dropT -= dt;
       if (this.wallLock > 0) this.wallLock -= dt;
+      if (this.atkBuf) { this.atkBuf.t -= dt; if (this.atkBuf.t <= 0) this.atkBuf = null; }
       for (let i = 0; i < 2; i++) {
         if (this.cds[i] > 0) this.cds[i] -= dt;
         if (this.reload[i] > 0) { this.reload[i] -= dt; if (this.reload[i] <= 0) this.ammo[i] = 0; }
@@ -362,7 +363,7 @@
       let mult = slowMult !== undefined ? slowMult : 1;
       if (attacking && this.atk) {
         const a = this.atk;
-        if (a.kind === 'melee') mult = this.onGround ? (a.phase === 'a' ? 0.1 : 0.25) : 0.7;
+        if (a.kind === 'melee') mult = this.onGround ? (a.phase === 'a' ? 0.15 : a.phase === 'r' ? 0.55 : 0.4) : 0.85;
         else if (a.kind === 'ranged') mult = this.onGround ? 0.35 : 0.75;
         else if (a.kind === 'shield') mult = (a.def.slow || 0.45);
       }
@@ -390,6 +391,8 @@
           }
         }
       }
+      // Up doubles as jump when there's no ladder to climb
+      if (I.pressed.up && G.settings.upJump === true && !attacking) { this.jumpBuf = 0.12; this.upJumped = true; }
       // drop through
       if (this.jumpBuf > 0 && I.down.down && this.onGround) {
         const tyB = Math.floor((this.bottom + 1) / TS);
@@ -404,6 +407,8 @@
         if (this.onGround || this.coyote > 0) {
           this.cancelAtk();
           this.vy = -JUMP_V;
+          this.jumpT = 0;
+          this.jumpCut = false;
           this.jumpBuf = 0;
           this.coyote = 0;
           this.onGround = false;
@@ -421,14 +426,22 @@
           this.cancelAtk();
           this.airJumps++;
           this.vy = -DJUMP_V;
+          this.jumpT = 0;
+          this.jumpCut = false;
           this.jumpBuf = 0;
           G.Audio.play('djump', { vol: 0.8 });
           G.fx.ring(this.cx, this.bottom, 10, '#ffb060', 0.25, 2);
           G.fx.burst(this.cx, this.bottom, 8, { color: ['#ffb060', '#ff7030'], speed: 70, life: 0.3, size: 1, angle: Math.PI / 2, spread: 2, add: true });
         }
       }
-      if (I.released.jump && this.vy < -150) this.vy *= 0.5;
-      this.gravity(dt);
+      // variable jump height, but even a lightning-quick tap gets a proper hop
+      if (this.vy < 0) this.jumpT = (this.jumpT || 0) + dt;
+      if ((I.released.jump || (this.upJumped && I.released.up)) && this.vy < -150) this.jumpCut = true;
+      if (this.jumpCut && this.jumpT >= 0.08) { if (this.vy < -150) this.vy *= 0.5; this.jumpCut = false; }
+      if (this.vy >= 0) this.jumpCut = false;
+      if (this.onGround && this.vy >= 0) this.upJumped = false;
+      // a little hang time at the apex while jump is held
+      this.gravity(dt, !this.onGround && Math.abs(this.vy) < 55 && (I.down.jump || this.upJumped) ? 0.5 : 1);
       this.physics(dt, true);
       // wall cling (spider rune)
       if (G.save.runes.spider && !this.onGround && this.vy > 20 && dir !== 0 && !attacking && this.wallLock <= 0) {
@@ -443,10 +456,9 @@
       if (this.state === 'climb') return;
       // actions
       if (I.pressed.roll && this.rollCd <= 0 && (canAct || (this.atk && this.atk.phase === 'w'))) return this.startRoll(dir);
-      if (this.state === 'normal' || (this.state === 'attack' && this.atk && this.atk.phase === 'r')) {
-        if (I.pressed.attack1 && this.state === 'normal') this.startAttack(0);
-        else if (I.pressed.attack2 && this.state === 'normal') this.startAttack(1);
-      }
+      if (I.pressed.attack1) this.atkBuf = { slot: 0, t: 0.2 };
+      else if (I.pressed.attack2) this.atkBuf = { slot: 1, t: 0.2 };
+      if (this.state === 'normal' && this.atkBuf && this.atkBuf.t > 0) this.startAttack(this.atkBuf.slot);
       if (this.state === 'normal') {
         if (I.pressed.skill1) this.useSkill(0);
         else if (I.pressed.skill2) this.useSkill(1);
@@ -459,6 +471,8 @@
       }
     }
     stRoll(dt, I) {
+      if (I.pressed.attack1) this.atkBuf = { slot: 0, t: 0.25 };
+      else if (I.pressed.attack2) this.atkBuf = { slot: 1, t: 0.25 };
       const sp = ROLL_V * (this.hasMut('quickwick') ? 1.15 : 1);
       this.vx = this.facing * sp * (this.stateT > ROLL_T * 0.75 ? 0.6 : 1);
       this.gravity(dt);
@@ -532,6 +546,8 @@
       if (I.pressed.jump) {
         this.state = 'normal';
         this.vy = -390;
+        this.jumpT = 0;
+        this.jumpCut = false;
         this.vx = -this.wallDir * 210;
         this.facing = -this.wallDir;
         this.wallLock = 0.16;
@@ -593,11 +609,13 @@
       const I = this.input();
       const dir = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0);
       if (dir) this.facing = dir;
+      else this.autoFace();
+      this.atkBuf = null;
       if (def.kind === 'melee') {
         let step = 0;
         const la = this.lastAtk;
-        if (la && la.slot === slot && G.world.time - la.end < 0.5 && la.step < def.combo.length - 1) step = la.step + 1;
-        this.atk = { slot, inst, def, kind: 'melee', step, phase: def.chargeable && step === 0 ? 'pre' : 'w', t: 0, hit: new Set(), queued: false, charge: 0, canTurn: true };
+        if (la && la.slot === slot && G.world.time - la.end < 0.55 && la.step < def.combo.length - 1) step = la.step + 1;
+        this.atk = { slot, inst, def, kind: 'melee', step, phase: def.chargeable && step === 0 ? 'pre' : 'w', t: 0, hit: new Set(), queued: false, charge: 0, canTurn: true, aim: this.readAim() };
       } else if (def.kind === 'ranged') {
         if (this.reload[slot] > 0) { G.Audio.play('uiDeny', { vol: 0.4 }); return; }
         if (def.shot.type === 'chakram' && this.chakramOut[slot]) return;
@@ -609,6 +627,39 @@
       }
       this.state = 'attack';
       this.stateT = 0;
+    }
+    // which way the attack is pointed: held Up = overhead swing, held Down in the air = down-strike
+    readAim() {
+      const I = this.input();
+      if (I.down.up && !I.down.down) return 'up';
+      if (I.down.down && !this.onGround) return 'down';
+      return 'fwd';
+    }
+    // with no direction held, turn toward the closest enemy (like Dead Cells' soft targeting)
+    autoFace() {
+      let best = null, bd = 80;
+      for (const e of G.world.enemies) {
+        if (e.dead || e.dying || e.hidden) continue;
+        const dx = e.cx - this.cx, dy = e.cy - this.cy;
+        if (Math.abs(dy) > 48) continue;
+        const d = Math.abs(dx);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (best && Math.abs(best.cx - this.cx) > 4) this.facing = Math.sign(best.cx - this.cx);
+      return best;
+    }
+    dirStep(step, aim) {
+      if (!aim || aim === 'fwd' || step.anim === 'spin') return step;
+      step._dir = step._dir || {};
+      if (step._dir[aim]) return step._dir[aim];
+      const reach = Math.max(30, Math.min(64, step.box[0] + step.box[2]));
+      const thick = Math.max(24, Math.min(40, step.box[3] + 6));
+      const thrust = ['thrust', 'stab', 'stab2', 'punch', 'punch2', 'whip'].includes(step.anim);
+      let d;
+      if (aim === 'up') d = Object.assign({}, step, { box: [-thick / 2 - 4, -(11 + reach), thick + 14, reach + 9], anim: thrust ? 'upthrust' : 'upslash', lunge: 0 });
+      else d = Object.assign({}, step, { box: [-thick / 2 - 2, 2, thick + 4, reach + 6], anim: thrust ? 'downthrust' : 'downslash', lunge: 0, pogo: true });
+      step._dir[aim] = d;
+      return d;
     }
     held(slot) {
       const I = this.input();
@@ -626,7 +677,8 @@
       else this.updateShield(dt, a);
     }
     meleeStep(a) {
-      return a.chargedStep ? a.def.charged : a.def.combo[a.step];
+      const base = a.chargedStep ? a.def.charged : a.def.combo[a.step];
+      return a.chargedStep ? base : this.dirStep(base, a.aim);
     }
     updateMelee(dt, a) {
       const spd = this.atkSpeed(a.def);
@@ -662,6 +714,11 @@
             if (step.shake) G.shake(step.shake * 0.4);
             if (step.iframes) this.invuln = Math.max(this.invuln, step.a + 0.05);
             this.spawnStepExtras(a, step);
+            if (a.aim === 'fwd' && this.onGround && !step.lunge) {
+              const reach = step.box[0] + step.box[2];
+              const t = G.world.nearestEnemy(this.cx + this.facing * reach * 0.6, this.cy, reach + 26, (e) => Math.sign(e.cx - this.cx) === this.facing && Math.abs(e.cy - this.cy) < 30);
+              if (t && Math.abs(t.cx - this.cx) - t.w / 2 > reach * 0.75) this.vx = this.facing * 150;
+            }
           }
           break;
         case 'a': {
@@ -683,10 +740,12 @@
             const I = this.input();
             const dir = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0);
             if (dir) this.facing = dir;
+            else this.autoFace();
+            a.aim = this.readAim();
           } else if (a.t >= step.r * 0.35 && this.pressedSlot(other) && this.weapons[other]) {
             this.lastAtk = null;
             this.startAttack(other);
-          } else if (a.t >= step.r) {
+          } else if (a.t >= step.r || (!a.queued && a.t >= step.r * 0.5 && this.moveHeld())) {
             this.lastAtk = { slot: a.slot, step: a.chargedStep ? a.def.combo.length - 1 : a.step, end: G.world.time };
             this.atk = null;
             this.state = 'normal';
@@ -697,6 +756,10 @@
           }
           break;
       }
+    }
+    moveHeld() {
+      const I = this.input();
+      return !!(I.down.left || I.down.right);
     }
     stepBox(step) {
       const [bx, by, bw, bh] = step.box;
@@ -761,6 +824,13 @@
             G.shake(0.2);
             G.game.stats.secrets++;
           }
+      if (step.pogo && !this.onGround && !a.pogoed && (hitAny || a.hit.size)) {
+        a.pogoed = true;
+        this.vy = -360;
+        this.airJumps = 0;
+        G.Audio.play('djump', { vol: 0.5 });
+        G.fx.ring(this.cx, this.bottom + 4, 12, '#ffffff', 0.2, 2);
+      }
       if (hitAny) {
         G.hitStop(step.dmg >= 1.5 ? 4 : 2);
         G.shake(0.06 + (step.shake || 0) * 0.5);
@@ -780,7 +850,12 @@
         const score = d + ang * 200;
         if (score < bs) { bs = score; best = e; }
       }
-      if (!best) return 0;
+      const I = this.input();
+      if (!best) {
+        if (I.down.up) return -0.75;
+        if (I.down.down && !this.onGround) return 0.75;
+        return 0;
+      }
       return Math.atan2(best.cy - (this.cy - 4), Math.abs(best.cx - this.cx));
     }
     updateRanged(dt, a) {
@@ -1030,18 +1105,32 @@
         const tw = ph === 'w' ? Math.min(1, a.t / step.w) : 0, ta = ph === 'a' ? Math.min(1, a.t / step.a) : 0, tr = ph === 'r' ? Math.min(1, a.t / step.r) : 0;
         const E = G.ease.outCubic;
         const lerpP = (w0, w1, a1, r1) => ph === 'pre' || ph === 'charge' ? w0 : ph === 'w' ? G.lerp(w0, w1, E(tw)) : ph === 'a' ? G.lerp(w1, a1, E(ta)) : G.lerp(a1, r1, tr);
+        // chain swings: each windup starts from wherever the previous swing left the blade
+        const now = G.world.time, key = a.step + ':' + (a.chargedStep ? 1 : 0) + ':' + a.aim;
+        if (a.poseKey !== key) {
+          a.poseKey = key;
+          a.fromAng = this._lastAng !== undefined && now - this._lastAngT < 0.25 && this._lastAngId === a.inst.id ? this._lastAng : null;
+        }
+        const lerpA = (w0, w1, a1, r1) => lerpP(a.fromAng !== null && a.fromAng !== undefined ? a.fromAng : w0, w1, a1, r1);
         switch (anim) {
-          case 'slash': p = { ang: lerpP(-0.6, -2.2, 0.9, 0.7), hx: 0, arc: [-2.2, 0.9] }; break;
-          case 'slash2': p = { ang: lerpP(0.5, 1.0, -1.9, -1.6), hx: 0, arc: [1.0, -1.9] }; break;
-          case 'overhead': p = { ang: lerpP(-1.0, -2.7, 1.25, 1.0), hx: 0, arc: [-2.7, 1.25] }; break;
+          case 'slash': p = { ang: lerpA(-0.6, -2.2, 0.9, 0.7), hx: 0, arc: [-2.2, 0.9] }; break;
+          case 'slash2': p = { ang: lerpA(0.5, 1.0, -1.9, -1.6), hx: 0, arc: [1.0, -1.9] }; break;
+          case 'overhead': p = { ang: lerpA(-1.0, -2.7, 1.25, 1.0), hx: 0, arc: [-2.7, 1.25] }; break;
           case 'spin': p = { ang: lerpP(-1.0, -1.6, -1.6 + Math.PI * 2 * (step.multi > 1 ? 1.5 : 1), 0.8), hx: 0, arc: null, spin: true }; break;
           case 'thrust': case 'stab': case 'stab2':
             p = { ang: anim === 'stab2' ? 0.3 : anim === 'stab' ? -0.15 : 0, hx: lerpP(0, -5, 9, 3), thrust: true }; break;
           case 'punch': case 'punch2': p = { ang: 0, hx: lerpP(0, -4, 9, 4), hy: anim === 'punch2' ? -2 : 1, thrust: true }; break;
-          case 'whip': p = { ang: lerpP(-1, -2.1, 0.1, 0.2), hx: 0, whip: ph === 'a' ? ta : ph === 'r' ? 1 - tr : 0 }; break;
+          case 'whip': p = { ang: lerpA(-1, -2.1, 0.1, 0.2), hx: 0, whip: ph === 'a' ? ta : ph === 'r' ? 1 - tr : 0 }; break;
+          case 'upslash': p = { ang: lerpA(0.6, 1.0, -2.8, -2.4), hx: 0, arc: [1.0, -2.8] }; break;
+          case 'downslash': p = { ang: lerpA(-0.8, -1.4, 2.3, 2.0), hx: 0, arc: [-1.4, 2.3] }; break;
+          case 'upthrust': p = { ang: -Math.PI / 2, hx: lerpP(0, -4, 10, 3), thrust: true, vert: -1 }; break;
+          case 'downthrust': p = { ang: Math.PI / 2, hx: lerpP(0, -4, 10, 3), thrust: true, vert: 1 }; break;
           default: p = { ang: 0, hx: 0 };
         }
         p.active = ph === 'a';
+        p.trail = ph === 'r' ? Math.max(0, 1 - tr * 5) : 0;
+        if (!p.spin && !p.thrust) { this._lastAng = p.ang; this._lastAngT = now; this._lastAngId = a.inst.id; }
+        else this._lastAng = undefined;
         p.t = ta;
         p.id = a.inst.id;
         return p;
@@ -1158,7 +1247,8 @@
       ctx.fillStyle = waxD;
       G.pixLine(ctx, sh.x - 2, sh.y, back.x, back.y, waxD);
       if (pose) {
-        if (pose.thrust || pose.ranged || pose.shield) hand = { x: sh.x + 3 + (pose.hx || 0), y: sh.y + 2 + (pose.hy || 0) };
+        if (pose.vert) hand = { x: sh.x + 1, y: sh.y + (pose.vert < 0 ? -2 - (pose.hx || 0) : 6 + (pose.hx || 0)) };
+        else if (pose.thrust || pose.ranged || pose.shield) hand = { x: sh.x + 3 + (pose.hx || 0), y: sh.y + 2 + (pose.hy || 0) };
         else hand = { x: sh.x + Math.round(Math.cos(pose.ang) * 5), y: sh.y + Math.round(Math.sin(pose.ang) * 5) };
         this.drawWeapon(ctx, pose, hand, sh);
       }
@@ -1243,23 +1333,34 @@
         return;
       }
       // melee
-      if (pose.active && !pose.thrust && pose.arc) {
-        // smear
+      if ((pose.active || pose.trail > 0) && !pose.thrust && pose.arc) {
+        // crescent smear: brighter toward the leading edge, lingers briefly after the swing
         const r = spr.img.width - spr.px + 3;
         const a0 = pose.arc[0];
-        const a1 = G.lerp(pose.arc[0], pose.arc[1], G.ease.outCubic(pose.t));
+        const a1 = G.lerp(pose.arc[0], pose.arc[1], G.ease.outCubic(pose.active ? pose.t : 1));
+        const fade = pose.active ? 1 : pose.trail;
+        const glow = d.look.glow || '#ffffff';
         ctx.save();
         ctx.translate(sh.x, sh.y);
-        const glow = d.look.glow || '#ffffff';
-        for (let i = 0; i < 3; i++) {
-          ctx.globalAlpha = 0.28 - i * 0.07;
-          ctx.strokeStyle = i === 0 ? '#ffffff' : glow;
-          ctx.lineWidth = 5 - i * 1.5;
+        const N = 10;
+        for (let k = 0; k < N; k++) {
+          const t0 = k / N, t1 = (k + 1) / N;
+          const b0 = G.lerp(a0, a1, t0), b1 = G.lerp(a0, a1, t1);
+          const inner = r - 4 - t1 * 5, outer = r + 5 + t1 * 2;
+          ctx.globalAlpha = (0.08 + t1 * t1 * 0.5) * fade;
+          ctx.fillStyle = k > N - 3 ? '#ffffff' : glow;
           ctx.beginPath();
-          const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
-          ctx.arc(0, 0, r + 4 - i * 3, lo, hi);
-          ctx.stroke();
+          ctx.arc(0, 0, outer, Math.min(b0, b1), Math.max(b0, b1));
+          ctx.arc(0, 0, Math.max(2, inner), Math.max(b0, b1), Math.min(b0, b1), true);
+          ctx.closePath();
+          ctx.fill();
         }
+        ctx.globalAlpha = 0.9 * fade;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 6, Math.min(a0, a1) + (a1 > a0 ? (a1 - a0) * 0.5 : 0), Math.max(a0, a1) - (a1 < a0 ? (a0 - a1) * 0.5 : 0));
+        ctx.stroke();
         ctx.globalAlpha = 1;
         ctx.restore();
       }
@@ -1315,7 +1416,8 @@
       if (pose.active && pose.thrust) {
         ctx.globalAlpha = 0.35;
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(hand.x + 2, hand.y - 1, spr.img.width + 10, 2);
+        if (pose.vert) ctx.fillRect(hand.x - 1, pose.vert < 0 ? hand.y - spr.img.width - 10 : hand.y + 2, 2, spr.img.width + 10);
+        else ctx.fillRect(hand.x + 2, hand.y - 1, spr.img.width + 10, 2);
         ctx.globalAlpha = 1;
       }
     }

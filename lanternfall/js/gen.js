@@ -239,6 +239,18 @@
     // ---------------------------------------------------- 7. carve cells
     const puzzleCells = [];
     for (const c of active) carveCell(L, c, rng, B);
+    // wooden doors on some ordinary room-to-room passages (hashed so the rng stream is untouched)
+    for (const c of active) {
+      const e = c.edges.R;
+      if (!e || e.gate || c.type !== 'normal' || e.right.type !== 'normal') continue;
+      const h = (Math.imul(c.cx + 7, 73856093) ^ Math.imul(c.cy + 3, 19349663) ^ Math.imul(seed | 0, 83492791)) >>> 0;
+      if (h % 100 >= 45) continue;
+      const bx = e.right.cx * CW, fy = c.cy * CH + e.floor;
+      let clear = true;
+      for (let y = fy - 4; y < fy; y++) if (L.get(bx, y) !== T.AIR || L.get(bx - 1, y) !== T.AIR) clear = false;
+      if (!clear || !L.isSolid(bx, fy) || !L.isSolid(bx - 1, fy)) continue;
+      L.spawns.push({ type: 'door', x: bx * TS, y: fy * TS });
+    }
     // secret alcoves behind breakable walls
     let alcoves = 0;
     for (const c of rng.shuffle(active.slice())) {

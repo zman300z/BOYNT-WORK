@@ -35,7 +35,12 @@
       for (let i = this.banners.length - 1; i >= 0; i--) { this.banners[i].t += dt; if (this.banners[i].t > this.banners[i].dur) this.banners.splice(i, 1); }
     },
     draw(ctx) {
-      for (const m of this.stack) m.draw(ctx, m);
+      this.stack.forEach((m, i) => {
+        // screens opened on top of another screen get a solid backdrop so text never overlaps
+        if (i > 0 && m.name !== 'confirm') { ctx.fillStyle = 'rgba(4,3,8,0.94)'; ctx.fillRect(0, 0, W, H); }
+        else if (i > 0) { ctx.fillStyle = 'rgba(4,3,8,0.6)'; ctx.fillRect(0, 0, W, H); }
+        m.draw(ctx, m);
+      });
     },
     notify(text) {
       if (this.notes.length && this.notes[0].text === text) { this.notes[0].t = 4; return; }
@@ -108,19 +113,47 @@
   G.drawTooltip = tooltip;
 
   // ================================================================ HUD
+  // lagging "chip" trails so a hit visibly bites a chunk out of a bar
+  const chips = {};
+  let chipClock = 0;
+  const chipTrail = (key, frac, dt) => {
+    let c = chips[key];
+    if (!c) c = chips[key] = { v: frac, hold: 0, flash: 0, last: frac };
+    if (frac < c.last - 0.001) { c.hold = 0.45; c.flash = 0.18; }
+    if (frac > c.v) c.v = frac;
+    else if (c.hold > 0) c.hold -= dt;
+    else c.v = Math.max(frac, c.v - dt * 0.9);
+    if (c.flash > 0) c.flash -= dt;
+    c.last = frac;
+    return c;
+  };
   G.drawHUD = (ctx) => {
     const p = G.world.player;
     if (!p) return;
     const game = G.game;
+    const now = performance.now() / 1000;
+    const hdt = Math.min(0.1, chipClock ? now - chipClock : 0);
+    chipClock = now;
     // --- health bar
     const hx = 8, hy = 8, hw = 150, hh = 10;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(hx - 2, hy - 2, hw + 4, hh + 4);
     const frac = Math.max(0, p.hp) / p.maxHp;
+    const low = frac > 0 && frac < 0.3;
+    const pulse = low ? Math.sin(now * 7) * 0.5 + 0.5 : 0;
+    ctx.fillStyle = low ? 'rgba(' + Math.round(90 + pulse * 120) + ',10,10,0.85)' : 'rgba(0,0,0,0.6)';
+    ctx.fillRect(hx - 2, hy - 2, hw + 4, hh + 4);
     const rallyFrac = Math.min(1, (Math.max(0, p.hp) + p.rally) / p.maxHp);
-    G.bar(ctx, hx, hy, hw, hh, frac, p.curse > 0 ? '#a050e0' : '#d83a3a', '#2a1418', rallyFrac, '#e89040');
+    const ch = chipTrail('hp', frac, hdt);
+    ctx.fillStyle = '#2a1418';
+    ctx.fillRect(hx, hy, hw, hh);
+    if (ch.v > frac) {
+      ctx.fillStyle = ch.flash > 0 ? '#ffffff' : '#f0d0b0';
+      ctx.fillRect(hx, hy, Math.round(hw * Math.min(1, ch.v)), hh);
+    }
+    G.bar(ctx, hx, hy, hw, hh, frac, p.curse > 0 ? '#a050e0' : low ? G.mix('#d83a3a', '#ff7060', pulse) : '#d83a3a', 'rgba(0,0,0,0)', rallyFrac, '#e89040');
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillRect(hx, hy, Math.round(hw * frac), 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(hx, hy + hh - 2, Math.round(hw * frac), 2);
     G.text(ctx, Math.ceil(Math.max(0, p.hp)) + ' / ' + p.maxHp, hx + hw / 2, hy + 1, '#ffffff', { align: 'center', outline: '#300808' });
     // flask
     let fx = hx;
@@ -216,7 +249,12 @@
       G.text(ctx, boss.name, W / 2, byy - 12, '#ffd8b0', { align: 'center', outline: '#000' });
       ctx.fillStyle = 'rgba(0,0,0,0.7)';
       ctx.fillRect(bx - 2, byy - 2, bw + 4, 10);
-      G.bar(ctx, bx, byy, bw, 6, boss.hp / boss.maxHp, '#c83040', '#2a1014');
+      const bf = Math.max(0, boss.hp / boss.maxHp);
+      const bc = chipTrail('boss' + (boss.name || ''), bf, hdt);
+      ctx.fillStyle = '#2a1014';
+      ctx.fillRect(bx, byy, bw, 6);
+      if (bc.v > bf) { ctx.fillStyle = bc.flash > 0 ? '#ffffff' : '#f0c0a0'; ctx.fillRect(bx, byy, Math.round(bw * Math.min(1, bc.v)), 6); }
+      G.bar(ctx, bx, byy, bw, 6, bf, '#c83040', 'rgba(0,0,0,0)');
       if (boss.isBoss && boss.def.phases) for (const th of boss.def.phases) { ctx.fillStyle = '#ffd080'; ctx.fillRect(bx + Math.round(bw * th), byy - 1, 1, 8); }
       if (boss.isBoss) {
         ctx.fillStyle = '#ffe060';
@@ -245,12 +283,16 @@
     let ny = H - 58;
     for (const n of ui.notes) {
       const a = Math.min(1, n.t * 2);
-      const tw = G.textWidth(n.text);
-      ctx.globalAlpha = a * 0.7;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(W / 2 - tw / 2 - 6, ny - 3, tw + 12, 13);
-      ctx.globalAlpha = a;
-      G.text(ctx, n.text, W / 2, ny, '#ffffff', { align: 'center' });
+      if (!n.lines) n.lines = G.textWidth(n.text) > W - 60 ? G.wrap(n.text, W - 80) : [n.text];
+      ny -= (n.lines.length - 1) * 11;
+      n.lines.forEach((ln, i) => {
+        const tw = G.textWidth(ln);
+        ctx.globalAlpha = a * 0.7;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(W / 2 - tw / 2 - 6, ny - 3 + i * 11, tw + 12, i === n.lines.length - 1 ? 13 : 11);
+        ctx.globalAlpha = a;
+        G.text(ctx, ln, W / 2, ny + i * 11, '#ffffff', { align: 'center' });
+      });
       ctx.globalAlpha = 1;
       ny -= 15;
     }
@@ -977,13 +1019,20 @@
   };
 
   SCREENS.settings = {
-    init(m) { m.items = ['music', 'sfx', 'shake', 'fullscreen', 'back']; },
+    init(m) { m.items = ['music', 'sfx', 'shake', 'upJump', 'numbers', 'fullscreen', 'controls', 'back']; },
     update(m) {
       const In = I();
       menuNav(m, m.items.length, { rects: m.rects });
       const k = m.items[m.sel];
       const s = G.settings;
       if (k === 'fullscreen' && (confirmPressed() || In.pressed.mleft || In.pressed.mright)) { G.toggleFullscreen(); return; }
+      if (k === 'controls' && confirmPressed()) { ui.open('controls'); return; }
+      if ((k === 'upJump' || k === 'numbers') && (confirmPressed() || In.pressed.mleft || In.pressed.mright)) {
+        G.settings[k] = k === 'numbers' ? G.settings.numbers === false : !G.settings[k];
+        G.Audio.play('uiMove');
+        G.game.saveSettings();
+        return;
+      }
       if (k !== 'back' && k !== 'fullscreen' && (In.pressed.mleft || In.pressed.mright)) {
         const d = In.pressed.mleft ? -0.1 : 0.1;
         s[k] = Math.round(G.clamp(s[k] + d, 0, 1) * 10) / 10;
@@ -996,50 +1045,98 @@
     draw(ctx, m) {
       dim(ctx, 0.85);
       title(ctx, 'SETTINGS', 40);
-      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', fullscreen: 'Toggle Fullscreen (F11)', back: 'Back' };
+      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', upJump: 'Up key also jumps', numbers: 'Damage numbers', fullscreen: 'Toggle Fullscreen (F11)', controls: 'Rebind Controls...', back: 'Back' };
       m.rects = [];
       m.items.forEach((k, i) => {
-        const y = 90 + i * 34;
+        const y = 64 + i * 30;
         const sel = m.sel === i;
         m.rects.push(button(ctx, W / 2 - 140, y, 280, 26, '', sel));
         G.text(ctx, names[k], W / 2 - 128, y + 9, sel ? '#ffffff' : '#c8c0d0');
-        if (k !== 'back' && k !== 'fullscreen') {
-          G.bar(ctx, W / 2 + 10, y + 10, 100, 6, G.settings[k], '#ffb060', '#2a2030');
-          G.text(ctx, Math.round(G.settings[k] * 100) + '%', W / 2 + 118, y + 9, '#c8c0d0');
+        if (k === 'upJump' || k === 'numbers') {
+          const on = k === 'numbers' ? G.settings.numbers !== false : !!G.settings[k];
+          G.text(ctx, on ? 'ON' : 'OFF', W / 2 + 60, y + 9, on ? '#80ff90' : '#a05050', { align: 'center' });
+        } else if (['music', 'sfx', 'shake'].includes(k)) {
+          G.bar(ctx, W / 2 + 4, y + 10, 100, 6, G.settings[k], '#ffb060', '#2a2030');
+          G.text(ctx, Math.round(G.settings[k] * 100) + '%', W / 2 + 134, y + 9, '#c8c0d0', { align: 'right' });
         }
       });
-      G.text(ctx, '[Left/Right] Adjust', W / 2, 250, '#6a6078', { align: 'center' });
+      G.text(ctx, '[Left/Right] Adjust', W / 2, 312, '#6a6078', { align: 'center' });
     },
   };
 
+  // interactive key rebinding
+  const REBIND = [
+    ['left', 'Move left'], ['right', 'Move right'], ['up', 'Up / climb / aim up'], ['down', 'Down / drop / aim down'],
+    ['jump', 'Jump (twice for double jump)'], ['roll', 'Roll (invulnerable dodge)'], ['attack1', 'Weapon 1'], ['attack2', 'Weapon 2'],
+    ['skill1', 'Skill 1'], ['skill2', 'Skill 2'], ['interact', 'Interact / pick up'], ['heal', 'Drink health flask'],
+    ['map', 'Map'], ['pause', 'Pause menu'],
+  ];
   SCREENS.controls = {
-    update(m) { if ((confirmPressed() || cancelPressed()) && m.t > 0.15) ui.close(m); },
+    init(m) { m.capture = null; m.col = 0; },
+    update(m) {
+      const In = I();
+      const n = REBIND.length + 1;
+      if (m.capture) return; // waiting for a raw key
+      if (In.pressed.mleft || In.pressed.mright) { m.col = m.col ? 0 : 1; G.Audio.play('uiMove'); }
+      menuNav(m, n, { rects: m.rects });
+      if (cancelPressed() && m.t > 0.15) { ui.close(m); return; }
+      if (In.pressed.confirm && m.t > 0.15) {
+        if (m.sel === REBIND.length) {
+          G.Input.resetBinds();
+          G.Audio.play('uiSelect');
+          G.game && G.game.notify && G.game.notify('Controls reset to defaults.');
+          return;
+        }
+        const act = REBIND[m.sel][0];
+        m.capture = act;
+        G.Audio.play('uiSelect');
+        G.Input.onRawKey = (code) => {
+          if (code === 'Escape') { m.capture = null; G.Input.onRawKey = null; G.Input.clearAll(); return true; }
+          const list = G.Input.binds[act].slice();
+          const col = m.col;
+          // remove this key from every other gameplay action so nothing double-binds
+          for (const [a] of REBIND) if (a !== act) G.Input.binds[a] = G.Input.binds[a].filter((c) => c !== code);
+          const others = list.filter((c, i) => i !== col && c !== code);
+          if (col === 0) G.Input.binds[act] = [code].concat(others);
+          else G.Input.binds[act] = [list[0] === code ? (others[0] || code) : list[0], code].concat(list.slice(2).filter((c) => c !== code));
+          G.Input.binds[act] = G.Input.binds[act].filter((c, i, arr) => c && arr.indexOf(c) === i);
+          G.Input.saveBinds();
+          m.capture = null;
+          G.Input.onRawKey = null;
+          G.Input.clearAll();
+          G.Audio.play('uiSelect');
+          return true;
+        };
+      }
+    },
     draw(ctx, m) {
-      dim(ctx, 0.9);
-      title(ctx, 'CONTROLS', 20);
-      const rows = [
-        ['Move', 'A/D or Arrows', 'D-pad / Stick'],
-        ['Jump / Double jump', 'Space or Z', 'A'],
-        ['Drop through platform', 'Down + Jump', 'Down + A'],
-        ['Ground slam', 'Down + Jump (in air)', 'Down + A (air)'],
-        ['Climb ladders', 'W/S or Up/Down', 'D-pad'],
-        ['Roll (dodge, invulnerable)', 'Shift or L', 'B'],
-        ['Weapon 1 / Weapon 2', 'J / K  (or X / C, mouse)', 'X / Y'],
-        ['Skill 1 / Skill 2', 'Q / E  (or U / I)', 'LT / RT'],
-        ['Interact / pick up', 'F', 'RB'],
-        ['Drink health flask', 'R', 'LB'],
-        ['Map', 'M or Tab', 'Select'],
-        ['Pause / menu', 'Esc or P', 'Start'],
-      ];
-      rows.forEach((r, i) => {
-        const y = 50 + i * 20;
-        G.text(ctx, r[0], 60, y, '#e0d8e8');
-        G.text(ctx, r[1], 300, y, '#ffd080');
-        G.text(ctx, r[2], 500, y, '#8ad0ff');
+      dim(ctx, 0.92);
+      title(ctx, 'CONTROLS', 8);
+      G.text(ctx, 'Select an action and press a new key.  [Left/Right] choose primary or alternate key.', W / 2, 32, '#8a8098', { align: 'center' });
+      m.rects = [];
+      const x0 = 70, rowH = 17, y0 = 48;
+      G.text(ctx, 'PRIMARY', 380, y0 - 2, m.col === 0 ? '#ffd080' : '#6a6078', { align: 'center' });
+      G.text(ctx, 'ALTERNATE', 500, y0 - 2, m.col === 1 ? '#ffd080' : '#6a6078', { align: 'center' });
+      REBIND.forEach(([act, label], i) => {
+        const y = y0 + 10 + i * rowH;
+        const sel = m.sel === i;
+        if (sel) { ctx.fillStyle = 'rgba(120,80,40,0.45)'; ctx.fillRect(x0 - 6, y - 3, W - 2 * x0 + 12, rowH - 2); }
+        m.rects[i] = { x: x0 - 6, y: y - 3, w: W - 2 * x0 + 12, h: rowH - 2 };
+        G.text(ctx, label, x0, y, sel ? '#ffffff' : '#c8c0d0');
+        const b = G.Input.binds[act] || [];
+        for (let c = 0; c < 2; c++) {
+          const cx = c === 0 ? 380 : 500;
+          const waiting = m.capture === act && m.col === c;
+          const txt = waiting ? (Math.floor(m.t * 3) % 2 ? 'press a key' : '') : G.Input.codeName(b[c]);
+          if (sel && m.col === c && !waiting) { ctx.fillStyle = 'rgba(255,208,128,0.18)'; ctx.fillRect(cx - 44, y - 3, 88, rowH - 2); }
+          G.text(ctx, txt, cx, y, waiting ? '#ffe060' : c === 0 ? '#ffd080' : '#a098a8', { align: 'center' });
+        }
       });
-      G.text(ctx, 'Hold a shield to block; raise it just before a hit to PARRY. Hit back quickly after taking damage to recover the orange rally health.', W / 2, 300, '#a098a8', { align: 'center' });
-      G.text(ctx, 'Enemies flash red and show "!" before attacking. Roll through attacks to avoid them.', W / 2, 312, '#a098a8', { align: 'center' });
-      G.drawKeyHint(ctx, W / 2, H - 20, 'cancel', 'Back', 'center');
+      const ry = y0 + 10 + REBIND.length * rowH + 4;
+      m.rects[REBIND.length] = button(ctx, W / 2 - 70, ry, 140, 18, 'Reset to defaults', m.sel === REBIND.length);
+      G.text(ctx, 'Hold Up/Down while attacking to swing up or strike down.', W / 2, H - 30, '#8a8098', { align: 'center' });
+      G.text(ctx, 'Gamepad: A jump, B roll, X/Y weapons, LT/RT skills, LB flask, RB interact.', W / 2, H - 20, '#6a6078', { align: 'center' });
+      G.text(ctx, m.capture ? '[ESC] cancel' : '[ESC] back', W / 2, H - 11, '#8a8098', { align: 'center' });
     },
   };
 

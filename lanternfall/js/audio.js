@@ -46,8 +46,16 @@
     comp.connect(ctx.destination);
     A.musicBus = ctx.createGain();
     A.sfxBus = ctx.createGain();
-    A.musicBus.connect(A.master);
+    // music runs through a lowpass so menus can muffle it
+    A.musicLP = ctx.createBiquadFilter();
+    A.musicLP.type = 'lowpass';
+    A.musicLP.frequency.value = 20000;
+    A.musicLP.Q.value = 0.5;
+    A.musicBus.connect(A.musicLP);
+    A.musicLP.connect(A.master);
     A.sfxBus.connect(A.master);
+    A.ambBus = ctx.createGain();
+    A.ambBus.connect(A.master);
     // reverb
     A.reverb = ctx.createConvolver();
     A.reverb.buffer = makeImpulse(ctx, 2.8, 2.6);
@@ -79,8 +87,13 @@
     A.noise = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = A.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    A.ambRev = ctx.createGain();
+    A.ambRev.gain.value = 0.5;
+    A.ambBus.connect(A.ambRev);
+    A.ambRev.connect(A.reverb);
     A.ready = true;
     A.applyVolumes();
+    if (amb.want) { const k = amb.want; amb.want = null; amb.kind = null; A.setAmbience(k); }
   };
 
   function makeImpulse(ctx, dur, decay) {
@@ -98,6 +111,15 @@
     const s = G.settings || { music: 0.7, sfx: 0.8 };
     A.musicBus.gain.setTargetAtTime(s.music * 0.55, A.ctx.currentTime, 0.05);
     A.sfxBus.gain.setTargetAtTime(s.sfx * 0.9, A.ctx.currentTime, 0.05);
+    A.ambBus.gain.setTargetAtTime(s.sfx * (A.muffled ? 0.25 : 0.75), A.ctx.currentTime, 0.1);
+  };
+  // pause & map muffle the music and hush the ambience
+  A.setMuffle = (on) => {
+    if (A.muffled === !!on) return;
+    A.muffled = !!on;
+    if (!A.ready) return;
+    A.musicLP.frequency.setTargetAtTime(on ? 520 : 20000, A.ctx.currentTime, on ? 0.06 : 0.15);
+    A.applyVolumes();
   };
 
   // ------------------------------------------------------------ low-level
@@ -809,8 +831,107 @@
   }
 
   A.TrackPlayer = TrackPlayer;
+  // ------------------------------------------------------------ ambience
+  // Each biome gets a quiet bed of filtered noise plus sparse one-shot details.
+  const amb = { kind: null, want: null, layers: [], next: 0 };
+  const AMB = {
+    cave: { bed: [['lowpass', 110, 0.9, 0.16], ['bandpass', 420, 0.6, 0.012]], ev: ['drip', 'drip', 'drip', 'rumble'], gap: [1.2, 4] },
+    damp: { bed: [['lowpass', 140, 0.9, 0.14], ['bandpass', 900, 0.5, 0.01]], ev: ['drip', 'drip', 'drip', 'drip', 'bubble'], gap: [0.5, 2.2] },
+    rain: { bed: [['highpass', 1400, 0.5, 0.03], ['bandpass', 3800, 0.4, 0.02], ['lowpass', 160, 0.8, 0.06]], ev: ['patter', 'patter', 'patter', 'thunder'], gap: [0.6, 3] },
+    storm: { bed: [['highpass', 1200, 0.5, 0.03], ['bandpass', 3800, 0.4, 0.018]], wind: 0.06, ev: ['patter', 'patter', 'thunder', 'bell'], gap: [0.8, 3.5] },
+    forest: { bed: [['bandpass', 1800, 0.5, 0.014]], wind: 0.025, ev: ['cricket', 'cricket', 'cricket', 'creak'], gap: [0.6, 2.4] },
+    ramparts: { bed: [['lowpass', 200, 0.7, 0.05]], wind: 0.07, ev: ['crackle', 'crackle', 'crackle', 'flag'], gap: [0.4, 1.8] },
+    crypt: { bed: [['lowpass', 90, 0.9, 0.14]], wind: 0.03, ev: ['whisper', 'drip', 'whisper', 'rumble'], gap: [1.5, 4.5] },
+    flesh: { bed: [['lowpass', 70, 1.2, 0.2], ['bandpass', 300, 1, 0.015]], ev: ['bubble', 'bubble', 'rumble', 'drip'], gap: [0.7, 2.5] },
+    gale: { bed: [['lowpass', 260, 0.6, 0.04]], wind: 0.11, ev: ['flag', 'whistle', 'flag'], gap: [1, 3] },
+    chapel: { bed: [['lowpass', 120, 0.9, 0.12]], ev: ['drip', 'drip', 'bell', 'drip'], gap: [1.2, 3.8] },
+  };
+  G.BIOME_AMB = { undercroft: 'cave', saltmarsh: 'rain', thornwood: 'forest', ramparts: 'ramparts', glowcap: 'damp', belfry: 'storm', cathedral: 'chapel', ossuary: 'crypt', maw: 'flesh', spire: 'gale', throne: 'storm', passage: 'cave' };
+  function noiseLoop(out) {
+    const src = A.ctx.createBufferSource();
+    src.buffer = A.noise;
+    src.loop = true;
+    src.loopStart = Math.random();
+    src.start(A.ctx.currentTime, Math.random() * 1.5);
+    src.connect(out);
+    return src;
+  }
+  A.setAmbience = (kind) => {
+    if (!A.ready) { amb.want = kind; return; }
+    if (amb.kind === kind) return;
+    const now = A.ctx.currentTime;
+    for (const l of amb.layers) {
+      l.g.gain.setTargetAtTime(0.0001, now, 0.4);
+      for (const n of l.srcs) try { n.stop(now + 2); } catch (e) {}
+    }
+    amb.layers = [];
+    amb.kind = kind;
+    const def = AMB[kind];
+    if (!def) return;
+    amb.next = now + 1 + Math.random() * 2;
+    const add = (filters, vol) => {
+      const g = A.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.setTargetAtTime(vol, now + 0.3, 0.8);
+      g.connect(A.ambBus);
+      let out = g;
+      for (const [type, f, q] of filters.slice().reverse()) out = filt(type, f, q, out);
+      const srcs = [noiseLoop(out)];
+      const layer = { g, srcs, f: out };
+      amb.layers.push(layer);
+      return layer;
+    };
+    for (const [type, f, q, vol] of def.bed) add([[type, f, q]], vol);
+    if (def.wind) {
+      // wind: lowpassed noise whose cutoff and level wander on slow LFOs
+      const l = add([['lowpass', 520, 1.4]], def.wind);
+      const lfo = A.ctx.createOscillator(), lg = A.ctx.createGain();
+      lfo.frequency.value = 0.07 + Math.random() * 0.05;
+      lg.gain.value = 320;
+      lfo.connect(lg); lg.connect(l.f.frequency);
+      const lfo2 = A.ctx.createOscillator(), lg2 = A.ctx.createGain();
+      lfo2.frequency.value = 0.11;
+      lg2.gain.value = def.wind * 0.6;
+      lfo2.connect(lg2); lg2.connect(l.g.gain);
+      lfo.start(now); lfo2.start(now);
+      l.srcs.push(lfo, lfo2);
+    }
+  };
+  function ambEvent(kind, t) {
+    const out = A.ctx.createGain();
+    out.gain.value = 1;
+    const pan = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null;
+    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; out.connect(pan); pan.connect(A.ambBus); } else out.connect(A.ambBus);
+    const r = Math.random;
+    switch (kind) {
+      case 'drip': { const f = 1300 + r() * 1400; tone(out, 'sine', f, f * 0.55, t, 0.09, 0.05 + r() * 0.03); tone(out, 'sine', f * 1.5, f * 0.8, t + 0.02, 0.05, 0.015); break; }
+      case 'bubble': for (let i = 0; i < 3; i++) { const f = 300 + r() * 300; tone(out, 'sine', f, f * 1.8, t + i * 0.07 + r() * 0.04, 0.06, 0.03); } break;
+      case 'rumble': nz(out, t, 2.6, 0.12, 'lowpass', 160, 50, 1, 0.8); break;
+      case 'thunder': nz(out, t, 3.2, 0.2, 'lowpass', 400, 45, 0.8, 0.12); nz(out, t + 0.1, 1.4, 0.08, 'lowpass', 900, 120, 0.7, 0.02); break;
+      case 'patter': for (let i = 0; i < 4; i++) nz(out, t + r() * 0.3, 0.025, 0.03 + r() * 0.03, 'bandpass', 2500 + r() * 3000, 0, 2); break;
+      case 'cricket': { const f = 3800 + r() * 900, n = 3 + ((r() * 4) | 0); for (let i = 0; i < n; i++) tone(out, 'triangle', f, f, t + i * 0.05, 0.03, 0.03); break; }
+      case 'creak': tone(out, 'sawtooth', 140 + r() * 40, 95, t, 0.5, 0.02, 0.12); break;
+      case 'crackle': for (let i = 0; i < 5; i++) nz(out, t + r() * 0.4, 0.012, 0.03 + r() * 0.05, 'highpass', 1800 + r() * 2000, 0, 1); break;
+      case 'flag': nz(out, t, 0.5, 0.04, 'bandpass', 700, 1100, 1.5, 0.08); nz(out, t + 0.25, 0.4, 0.03, 'bandpass', 900, 600, 1.5, 0.05); break;
+      case 'whistle': { const f = 600 + r() * 300; tone(out, 'sine', f, f * 1.25, t, 2.2, 0.012, 0.8); break; }
+      case 'whisper': nz(out, t, 1.4, 0.08, 'bandpass', 1400 + r() * 800, 900, 7, 0.5); break;
+      case 'bell': { const f = 98 * (r() < 0.5 ? 1 : 1.5); tone(out, 'sine', f, f, t, 4, 0.03, 0.01); tone(out, 'sine', f * 2.76, f * 2.76, t, 2.2, 0.012, 0.01); break; }
+    }
+    setTimeout(() => { try { out.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 6000);
+  }
+  function ambTick() {
+    const def = AMB[amb.kind];
+    if (!def || A.muffled) return;
+    const now = A.ctx.currentTime;
+    if (now < amb.next) return;
+    amb.next = now + def.gap[0] + Math.random() * (def.gap[1] - def.gap[0]);
+    ambEvent(def.ev[(Math.random() * def.ev.length) | 0], now + 0.05);
+  }
+  A.ambEvent = ambEvent;
+
   function schedulerTick() {
     if (!A.ready) return;
+    if (amb.kind) ambTick();
     if (music.cur && !music.cur.stopped) music.cur.tick();
     for (let i = music.fading.length - 1; i >= 0; i--) {
       const tp = music.fading[i];

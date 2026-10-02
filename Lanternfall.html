@@ -229,8 +229,12 @@
     tabL: [4],
     tabR: [5],
   };
+  G.DEFAULT_BINDS = DEFAULT_BINDS;
+  const savedBinds = G.store.get('binds', null);
+  const binds = JSON.parse(JSON.stringify(DEFAULT_BINDS));
+  if (savedBinds) for (const k in savedBinds) if (binds[k] && Array.isArray(savedBinds[k])) binds[k] = savedBinds[k];
   const Input = (G.Input = {
-    binds: DEFAULT_BINDS,
+    binds,
     keys: Object.create(null),
     latched: Object.create(null), // codes pressed since last poll
     down: Object.create(null),
@@ -245,21 +249,41 @@
     axisX: 0,
     axisY: 0,
     mouse: { x: 0, y: 0, moved: false },
+    // some keyboards / input methods report an empty e.code; fall back to e.key
+    codeOf(e) {
+      if (e.code && e.code !== 'Unidentified') return e.code;
+      const k = e.key;
+      if (k === ' ' || k === 'Spacebar') return 'Space';
+      if (k && k.length === 1 && /[a-z]/i.test(k)) return 'Key' + k.toUpperCase();
+      if (k && k.length === 1 && /[0-9]/.test(k)) return 'Digit' + k;
+      return k || '';
+    },
     init(canvas) {
       const prevent = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Tab', 'Backspace']);
-      window.addEventListener('keydown', (e) => {
-        if (prevent.has(e.code)) e.preventDefault();
-        if (!e.repeat) {
-          this.latched[e.code] = true;
+      // capture phase on window: we see keys before any host page script can swallow them
+      const down = (e) => {
+        const code = this.codeOf(e);
+        if (prevent.has(code)) e.preventDefault();
+        if (this.onRawKey && !e.repeat && this.onRawKey(code)) { e.preventDefault(); return; }
+        if (!e.repeat || !this.keys[code]) {
+          this.latched[code] = true;
           this.anyKeyLatched = true;
         }
-        this.keys[e.code] = true;
+        this.keys[code] = true;
         this.device = 'kb';
         if (G.Audio) G.Audio.unlock();
-      });
-      window.addEventListener('keyup', (e) => {
-        this.keys[e.code] = false;
-      });
+      };
+      const up = (e) => {
+        const code = this.codeOf(e);
+        if (prevent.has(code)) e.preventDefault();
+        this.keys[code] = false;
+      };
+      window.addEventListener('keydown', down, true);
+      window.addEventListener('keyup', up, true);
+      // clicking the game always gives it keyboard focus
+      const grab = () => { try { window.focus(); canvas.focus({ preventScroll: true }); } catch (err) {} };
+      canvas.addEventListener('pointerdown', grab);
+      window.addEventListener('load', grab);
       window.addEventListener('blur', () => {
         this.keys = Object.create(null);
       });
@@ -351,6 +375,12 @@
       for (const k in this.pressed) this.pressed[k] = false;
       this.anyPressed = false;
     },
+    saveBinds() { G.store.set('binds', this.binds); },
+    resetBinds() {
+      const d = JSON.parse(JSON.stringify(G.DEFAULT_BINDS));
+      for (const k in d) this.binds[k] = d[k];
+      G.store.del('binds');
+    },
     // pretty key names for prompts
     keyName(act) {
       if (this.device === 'gp') {
@@ -358,8 +388,17 @@
         return names[act] || act;
       }
       const code = this.binds[act] && this.binds[act][0];
-      if (!code) return '?';
+      return this.codeName(code);
+    },
+    codeName(code) {
+      if (!code) return '-';
       if (code.startsWith('Key')) return code.slice(3);
+      if (code.startsWith('Digit')) return code.slice(5);
+      if (code === 'Mouse0') return 'LMB';
+      if (code === 'Mouse2') return 'RMB';
+      if (code === 'Mouse1') return 'MMB';
+      if (code.startsWith('Control')) return 'CTRL';
+      if (code.startsWith('Alt')) return 'ALT';
       if (code === 'Space') return 'SPACE';
       if (code.startsWith('Arrow')) return code.slice(5).toUpperCase();
       if (code.startsWith('Shift')) return 'SHIFT';
@@ -801,6 +840,7 @@
   G.updateFade = (dt) => {
     const f = G.fade;
     if (f.a !== f.target) f.a = G.approach(f.a, f.target, f.speed * dt);
+    if (f.a === 0) f.iris = false;
     if (f.a === f.target && f.cb) {
       const cb = f.cb;
       f.cb = null;
@@ -816,10 +856,33 @@
       ctx.globalAlpha = 1;
     }
     if (G.fade.a > 0) {
-      ctx.globalAlpha = G.fade.a;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, G.W, G.H);
-      ctx.globalAlpha = 1;
+      const st = G.game && G.game.state;
+      const p = G.fade.iris && (st === 'play' || st === 'dying') && G.world && G.world.player;
+      if (p && G.fade.a < 1 && G.cam) {
+        // iris wipe that closes on / opens from the player's flame
+        const px = p.cx - G.cam.x, py = p.cy - G.cam.y;
+        const far = Math.hypot(Math.max(px, G.W - px), Math.max(py, G.H - py)) + 8;
+        const r = far * Math.pow(1 - G.fade.a, 1.6);
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.rect(0, 0, G.W, G.H);
+        ctx.arc(px, py, Math.max(0, r), 0, Math.PI * 2, true);
+        ctx.fill();
+        if (r > 2) {
+          ctx.globalAlpha = 0.6 * (1 - G.fade.a);
+          ctx.strokeStyle = '#ffb060';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        ctx.globalAlpha = G.fade.a;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, G.W, G.H);
+        ctx.globalAlpha = 1;
+      }
     }
   };
 
@@ -945,7 +1008,8 @@
             break;
           case 'text':
             ctx.globalAlpha = Math.min(1, (p.life / p.max) * 3);
-            G.text(ctx, p.text, x, y - (t < 0.15 ? (0.15 - t) * 20 : 0), col, { align: 'center', scale: p.scale, outline: '#000' });
+            // numbers punch in one size larger and white, then settle
+            G.text(ctx, p.text, x, y - (t < 0.15 ? (0.15 - t) * 20 : 0), t < 0.1 ? '#ffffff' : col, { align: 'center', scale: p.scale + (t < 0.1 ? 1 : 0), outline: '#000' });
             break;
           case 'streak':
             ctx.fillStyle = col;
@@ -1132,8 +1196,16 @@
     comp.connect(ctx.destination);
     A.musicBus = ctx.createGain();
     A.sfxBus = ctx.createGain();
-    A.musicBus.connect(A.master);
+    // music runs through a lowpass so menus can muffle it
+    A.musicLP = ctx.createBiquadFilter();
+    A.musicLP.type = 'lowpass';
+    A.musicLP.frequency.value = 20000;
+    A.musicLP.Q.value = 0.5;
+    A.musicBus.connect(A.musicLP);
+    A.musicLP.connect(A.master);
     A.sfxBus.connect(A.master);
+    A.ambBus = ctx.createGain();
+    A.ambBus.connect(A.master);
     // reverb
     A.reverb = ctx.createConvolver();
     A.reverb.buffer = makeImpulse(ctx, 2.8, 2.6);
@@ -1165,8 +1237,13 @@
     A.noise = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = A.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    A.ambRev = ctx.createGain();
+    A.ambRev.gain.value = 0.5;
+    A.ambBus.connect(A.ambRev);
+    A.ambRev.connect(A.reverb);
     A.ready = true;
     A.applyVolumes();
+    if (amb.want) { const k = amb.want; amb.want = null; amb.kind = null; A.setAmbience(k); }
   };
 
   function makeImpulse(ctx, dur, decay) {
@@ -1184,6 +1261,15 @@
     const s = G.settings || { music: 0.7, sfx: 0.8 };
     A.musicBus.gain.setTargetAtTime(s.music * 0.55, A.ctx.currentTime, 0.05);
     A.sfxBus.gain.setTargetAtTime(s.sfx * 0.9, A.ctx.currentTime, 0.05);
+    A.ambBus.gain.setTargetAtTime(s.sfx * (A.muffled ? 0.25 : 0.75), A.ctx.currentTime, 0.1);
+  };
+  // pause & map muffle the music and hush the ambience
+  A.setMuffle = (on) => {
+    if (A.muffled === !!on) return;
+    A.muffled = !!on;
+    if (!A.ready) return;
+    A.musicLP.frequency.setTargetAtTime(on ? 520 : 20000, A.ctx.currentTime, on ? 0.06 : 0.15);
+    A.applyVolumes();
   };
 
   // ------------------------------------------------------------ low-level
@@ -1895,8 +1981,107 @@
   }
 
   A.TrackPlayer = TrackPlayer;
+  // ------------------------------------------------------------ ambience
+  // Each biome gets a quiet bed of filtered noise plus sparse one-shot details.
+  const amb = { kind: null, want: null, layers: [], next: 0 };
+  const AMB = {
+    cave: { bed: [['lowpass', 110, 0.9, 0.16], ['bandpass', 420, 0.6, 0.012]], ev: ['drip', 'drip', 'drip', 'rumble'], gap: [1.2, 4] },
+    damp: { bed: [['lowpass', 140, 0.9, 0.14], ['bandpass', 900, 0.5, 0.01]], ev: ['drip', 'drip', 'drip', 'drip', 'bubble'], gap: [0.5, 2.2] },
+    rain: { bed: [['highpass', 1400, 0.5, 0.03], ['bandpass', 3800, 0.4, 0.02], ['lowpass', 160, 0.8, 0.06]], ev: ['patter', 'patter', 'patter', 'thunder'], gap: [0.6, 3] },
+    storm: { bed: [['highpass', 1200, 0.5, 0.03], ['bandpass', 3800, 0.4, 0.018]], wind: 0.06, ev: ['patter', 'patter', 'thunder', 'bell'], gap: [0.8, 3.5] },
+    forest: { bed: [['bandpass', 1800, 0.5, 0.014]], wind: 0.025, ev: ['cricket', 'cricket', 'cricket', 'creak'], gap: [0.6, 2.4] },
+    ramparts: { bed: [['lowpass', 200, 0.7, 0.05]], wind: 0.07, ev: ['crackle', 'crackle', 'crackle', 'flag'], gap: [0.4, 1.8] },
+    crypt: { bed: [['lowpass', 90, 0.9, 0.14]], wind: 0.03, ev: ['whisper', 'drip', 'whisper', 'rumble'], gap: [1.5, 4.5] },
+    flesh: { bed: [['lowpass', 70, 1.2, 0.2], ['bandpass', 300, 1, 0.015]], ev: ['bubble', 'bubble', 'rumble', 'drip'], gap: [0.7, 2.5] },
+    gale: { bed: [['lowpass', 260, 0.6, 0.04]], wind: 0.11, ev: ['flag', 'whistle', 'flag'], gap: [1, 3] },
+    chapel: { bed: [['lowpass', 120, 0.9, 0.12]], ev: ['drip', 'drip', 'bell', 'drip'], gap: [1.2, 3.8] },
+  };
+  G.BIOME_AMB = { undercroft: 'cave', saltmarsh: 'rain', thornwood: 'forest', ramparts: 'ramparts', glowcap: 'damp', belfry: 'storm', cathedral: 'chapel', ossuary: 'crypt', maw: 'flesh', spire: 'gale', throne: 'storm', passage: 'cave' };
+  function noiseLoop(out) {
+    const src = A.ctx.createBufferSource();
+    src.buffer = A.noise;
+    src.loop = true;
+    src.loopStart = Math.random();
+    src.start(A.ctx.currentTime, Math.random() * 1.5);
+    src.connect(out);
+    return src;
+  }
+  A.setAmbience = (kind) => {
+    if (!A.ready) { amb.want = kind; return; }
+    if (amb.kind === kind) return;
+    const now = A.ctx.currentTime;
+    for (const l of amb.layers) {
+      l.g.gain.setTargetAtTime(0.0001, now, 0.4);
+      for (const n of l.srcs) try { n.stop(now + 2); } catch (e) {}
+    }
+    amb.layers = [];
+    amb.kind = kind;
+    const def = AMB[kind];
+    if (!def) return;
+    amb.next = now + 1 + Math.random() * 2;
+    const add = (filters, vol) => {
+      const g = A.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.setTargetAtTime(vol, now + 0.3, 0.8);
+      g.connect(A.ambBus);
+      let out = g;
+      for (const [type, f, q] of filters.slice().reverse()) out = filt(type, f, q, out);
+      const srcs = [noiseLoop(out)];
+      const layer = { g, srcs, f: out };
+      amb.layers.push(layer);
+      return layer;
+    };
+    for (const [type, f, q, vol] of def.bed) add([[type, f, q]], vol);
+    if (def.wind) {
+      // wind: lowpassed noise whose cutoff and level wander on slow LFOs
+      const l = add([['lowpass', 520, 1.4]], def.wind);
+      const lfo = A.ctx.createOscillator(), lg = A.ctx.createGain();
+      lfo.frequency.value = 0.07 + Math.random() * 0.05;
+      lg.gain.value = 320;
+      lfo.connect(lg); lg.connect(l.f.frequency);
+      const lfo2 = A.ctx.createOscillator(), lg2 = A.ctx.createGain();
+      lfo2.frequency.value = 0.11;
+      lg2.gain.value = def.wind * 0.6;
+      lfo2.connect(lg2); lg2.connect(l.g.gain);
+      lfo.start(now); lfo2.start(now);
+      l.srcs.push(lfo, lfo2);
+    }
+  };
+  function ambEvent(kind, t) {
+    const out = A.ctx.createGain();
+    out.gain.value = 1;
+    const pan = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null;
+    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; out.connect(pan); pan.connect(A.ambBus); } else out.connect(A.ambBus);
+    const r = Math.random;
+    switch (kind) {
+      case 'drip': { const f = 1300 + r() * 1400; tone(out, 'sine', f, f * 0.55, t, 0.09, 0.05 + r() * 0.03); tone(out, 'sine', f * 1.5, f * 0.8, t + 0.02, 0.05, 0.015); break; }
+      case 'bubble': for (let i = 0; i < 3; i++) { const f = 300 + r() * 300; tone(out, 'sine', f, f * 1.8, t + i * 0.07 + r() * 0.04, 0.06, 0.03); } break;
+      case 'rumble': nz(out, t, 2.6, 0.12, 'lowpass', 160, 50, 1, 0.8); break;
+      case 'thunder': nz(out, t, 3.2, 0.2, 'lowpass', 400, 45, 0.8, 0.12); nz(out, t + 0.1, 1.4, 0.08, 'lowpass', 900, 120, 0.7, 0.02); break;
+      case 'patter': for (let i = 0; i < 4; i++) nz(out, t + r() * 0.3, 0.025, 0.03 + r() * 0.03, 'bandpass', 2500 + r() * 3000, 0, 2); break;
+      case 'cricket': { const f = 3800 + r() * 900, n = 3 + ((r() * 4) | 0); for (let i = 0; i < n; i++) tone(out, 'triangle', f, f, t + i * 0.05, 0.03, 0.03); break; }
+      case 'creak': tone(out, 'sawtooth', 140 + r() * 40, 95, t, 0.5, 0.02, 0.12); break;
+      case 'crackle': for (let i = 0; i < 5; i++) nz(out, t + r() * 0.4, 0.012, 0.03 + r() * 0.05, 'highpass', 1800 + r() * 2000, 0, 1); break;
+      case 'flag': nz(out, t, 0.5, 0.04, 'bandpass', 700, 1100, 1.5, 0.08); nz(out, t + 0.25, 0.4, 0.03, 'bandpass', 900, 600, 1.5, 0.05); break;
+      case 'whistle': { const f = 600 + r() * 300; tone(out, 'sine', f, f * 1.25, t, 2.2, 0.012, 0.8); break; }
+      case 'whisper': nz(out, t, 1.4, 0.08, 'bandpass', 1400 + r() * 800, 900, 7, 0.5); break;
+      case 'bell': { const f = 98 * (r() < 0.5 ? 1 : 1.5); tone(out, 'sine', f, f, t, 4, 0.03, 0.01); tone(out, 'sine', f * 2.76, f * 2.76, t, 2.2, 0.012, 0.01); break; }
+    }
+    setTimeout(() => { try { out.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 6000);
+  }
+  function ambTick() {
+    const def = AMB[amb.kind];
+    if (!def || A.muffled) return;
+    const now = A.ctx.currentTime;
+    if (now < amb.next) return;
+    amb.next = now + def.gap[0] + Math.random() * (def.gap[1] - def.gap[0]);
+    ambEvent(def.ev[(Math.random() * def.ev.length) | 0], now + 0.05);
+  }
+  A.ambEvent = ambEvent;
+
   function schedulerTick() {
     if (!A.ready) return;
+    if (amb.kind) ambTick();
     if (music.cur && !music.cur.stopped) music.cur.tick();
     for (let i = music.fading.length - 1; i >= 0; i--) {
       const tp = music.fading[i];
@@ -4767,6 +4952,18 @@
     // ---------------------------------------------------- 7. carve cells
     const puzzleCells = [];
     for (const c of active) carveCell(L, c, rng, B);
+    // wooden doors on some ordinary room-to-room passages (hashed so the rng stream is untouched)
+    for (const c of active) {
+      const e = c.edges.R;
+      if (!e || e.gate || c.type !== 'normal' || e.right.type !== 'normal') continue;
+      const h = (Math.imul(c.cx + 7, 73856093) ^ Math.imul(c.cy + 3, 19349663) ^ Math.imul(seed | 0, 83492791)) >>> 0;
+      if (h % 100 >= 45) continue;
+      const bx = e.right.cx * CW, fy = c.cy * CH + e.floor;
+      let clear = true;
+      for (let y = fy - 4; y < fy; y++) if (L.get(bx, y) !== T.AIR || L.get(bx - 1, y) !== T.AIR) clear = false;
+      if (!clear || !L.isSolid(bx, fy) || !L.isSolid(bx - 1, fy)) continue;
+      L.spawns.push({ type: 'door', x: bx * TS, y: fy * TS });
+    }
     // secret alcoves behind breakable walls
     let alcoves = 0;
     for (const c of rng.shuffle(active.slice())) {
@@ -6275,6 +6472,7 @@
     G.fx.burst(x, y, n || 6, { color: color || '#8a1a1a', speed: 120, life: 0.6, size: 2, size2: 1, grav: 500, angle: dir > 0 ? -0.4 : Math.PI + 0.4, spread: 1.4, collide: true });
   };
   G.dmgNumber = (x, y, amount, color, crit) => {
+    if (G.settings && G.settings.numbers === false) return;
     const n = Math.max(1, Math.round(amount));
     G.fx.text(x, y, crit ? n + '!' : '' + n, color || (crit ? '#ffe14a' : '#ffffff'), crit ? 2 : 1, crit ? 0.9 : 0.7);
   };
@@ -6984,6 +7182,7 @@
       if (this.nextCritT > 0) this.nextCritT -= dt;
       if (this.dropT > 0) this.dropT -= dt;
       if (this.wallLock > 0) this.wallLock -= dt;
+      if (this.atkBuf) { this.atkBuf.t -= dt; if (this.atkBuf.t <= 0) this.atkBuf = null; }
       for (let i = 0; i < 2; i++) {
         if (this.cds[i] > 0) this.cds[i] -= dt;
         if (this.reload[i] > 0) { this.reload[i] -= dt; if (this.reload[i] <= 0) this.ammo[i] = 0; }
@@ -7119,7 +7318,7 @@
       let mult = slowMult !== undefined ? slowMult : 1;
       if (attacking && this.atk) {
         const a = this.atk;
-        if (a.kind === 'melee') mult = this.onGround ? (a.phase === 'a' ? 0.1 : 0.25) : 0.7;
+        if (a.kind === 'melee') mult = this.onGround ? (a.phase === 'a' ? 0.15 : a.phase === 'r' ? 0.55 : 0.4) : 0.85;
         else if (a.kind === 'ranged') mult = this.onGround ? 0.35 : 0.75;
         else if (a.kind === 'shield') mult = (a.def.slow || 0.45);
       }
@@ -7147,6 +7346,8 @@
           }
         }
       }
+      // Up doubles as jump when there's no ladder to climb
+      if (I.pressed.up && G.settings.upJump === true && !attacking) { this.jumpBuf = 0.12; this.upJumped = true; }
       // drop through
       if (this.jumpBuf > 0 && I.down.down && this.onGround) {
         const tyB = Math.floor((this.bottom + 1) / TS);
@@ -7161,6 +7362,8 @@
         if (this.onGround || this.coyote > 0) {
           this.cancelAtk();
           this.vy = -JUMP_V;
+          this.jumpT = 0;
+          this.jumpCut = false;
           this.jumpBuf = 0;
           this.coyote = 0;
           this.onGround = false;
@@ -7178,14 +7381,22 @@
           this.cancelAtk();
           this.airJumps++;
           this.vy = -DJUMP_V;
+          this.jumpT = 0;
+          this.jumpCut = false;
           this.jumpBuf = 0;
           G.Audio.play('djump', { vol: 0.8 });
           G.fx.ring(this.cx, this.bottom, 10, '#ffb060', 0.25, 2);
           G.fx.burst(this.cx, this.bottom, 8, { color: ['#ffb060', '#ff7030'], speed: 70, life: 0.3, size: 1, angle: Math.PI / 2, spread: 2, add: true });
         }
       }
-      if (I.released.jump && this.vy < -150) this.vy *= 0.5;
-      this.gravity(dt);
+      // variable jump height, but even a lightning-quick tap gets a proper hop
+      if (this.vy < 0) this.jumpT = (this.jumpT || 0) + dt;
+      if ((I.released.jump || (this.upJumped && I.released.up)) && this.vy < -150) this.jumpCut = true;
+      if (this.jumpCut && this.jumpT >= 0.08) { if (this.vy < -150) this.vy *= 0.5; this.jumpCut = false; }
+      if (this.vy >= 0) this.jumpCut = false;
+      if (this.onGround && this.vy >= 0) this.upJumped = false;
+      // a little hang time at the apex while jump is held
+      this.gravity(dt, !this.onGround && Math.abs(this.vy) < 55 && (I.down.jump || this.upJumped) ? 0.5 : 1);
       this.physics(dt, true);
       // wall cling (spider rune)
       if (G.save.runes.spider && !this.onGround && this.vy > 20 && dir !== 0 && !attacking && this.wallLock <= 0) {
@@ -7200,10 +7411,9 @@
       if (this.state === 'climb') return;
       // actions
       if (I.pressed.roll && this.rollCd <= 0 && (canAct || (this.atk && this.atk.phase === 'w'))) return this.startRoll(dir);
-      if (this.state === 'normal' || (this.state === 'attack' && this.atk && this.atk.phase === 'r')) {
-        if (I.pressed.attack1 && this.state === 'normal') this.startAttack(0);
-        else if (I.pressed.attack2 && this.state === 'normal') this.startAttack(1);
-      }
+      if (I.pressed.attack1) this.atkBuf = { slot: 0, t: 0.2 };
+      else if (I.pressed.attack2) this.atkBuf = { slot: 1, t: 0.2 };
+      if (this.state === 'normal' && this.atkBuf && this.atkBuf.t > 0) this.startAttack(this.atkBuf.slot);
       if (this.state === 'normal') {
         if (I.pressed.skill1) this.useSkill(0);
         else if (I.pressed.skill2) this.useSkill(1);
@@ -7216,6 +7426,8 @@
       }
     }
     stRoll(dt, I) {
+      if (I.pressed.attack1) this.atkBuf = { slot: 0, t: 0.25 };
+      else if (I.pressed.attack2) this.atkBuf = { slot: 1, t: 0.25 };
       const sp = ROLL_V * (this.hasMut('quickwick') ? 1.15 : 1);
       this.vx = this.facing * sp * (this.stateT > ROLL_T * 0.75 ? 0.6 : 1);
       this.gravity(dt);
@@ -7289,6 +7501,8 @@
       if (I.pressed.jump) {
         this.state = 'normal';
         this.vy = -390;
+        this.jumpT = 0;
+        this.jumpCut = false;
         this.vx = -this.wallDir * 210;
         this.facing = -this.wallDir;
         this.wallLock = 0.16;
@@ -7350,11 +7564,13 @@
       const I = this.input();
       const dir = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0);
       if (dir) this.facing = dir;
+      else this.autoFace();
+      this.atkBuf = null;
       if (def.kind === 'melee') {
         let step = 0;
         const la = this.lastAtk;
-        if (la && la.slot === slot && G.world.time - la.end < 0.5 && la.step < def.combo.length - 1) step = la.step + 1;
-        this.atk = { slot, inst, def, kind: 'melee', step, phase: def.chargeable && step === 0 ? 'pre' : 'w', t: 0, hit: new Set(), queued: false, charge: 0, canTurn: true };
+        if (la && la.slot === slot && G.world.time - la.end < 0.55 && la.step < def.combo.length - 1) step = la.step + 1;
+        this.atk = { slot, inst, def, kind: 'melee', step, phase: def.chargeable && step === 0 ? 'pre' : 'w', t: 0, hit: new Set(), queued: false, charge: 0, canTurn: true, aim: this.readAim() };
       } else if (def.kind === 'ranged') {
         if (this.reload[slot] > 0) { G.Audio.play('uiDeny', { vol: 0.4 }); return; }
         if (def.shot.type === 'chakram' && this.chakramOut[slot]) return;
@@ -7366,6 +7582,39 @@
       }
       this.state = 'attack';
       this.stateT = 0;
+    }
+    // which way the attack is pointed: held Up = overhead swing, held Down in the air = down-strike
+    readAim() {
+      const I = this.input();
+      if (I.down.up && !I.down.down) return 'up';
+      if (I.down.down && !this.onGround) return 'down';
+      return 'fwd';
+    }
+    // with no direction held, turn toward the closest enemy (like Dead Cells' soft targeting)
+    autoFace() {
+      let best = null, bd = 80;
+      for (const e of G.world.enemies) {
+        if (e.dead || e.dying || e.hidden) continue;
+        const dx = e.cx - this.cx, dy = e.cy - this.cy;
+        if (Math.abs(dy) > 48) continue;
+        const d = Math.abs(dx);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (best && Math.abs(best.cx - this.cx) > 4) this.facing = Math.sign(best.cx - this.cx);
+      return best;
+    }
+    dirStep(step, aim) {
+      if (!aim || aim === 'fwd' || step.anim === 'spin') return step;
+      step._dir = step._dir || {};
+      if (step._dir[aim]) return step._dir[aim];
+      const reach = Math.max(30, Math.min(64, step.box[0] + step.box[2]));
+      const thick = Math.max(24, Math.min(40, step.box[3] + 6));
+      const thrust = ['thrust', 'stab', 'stab2', 'punch', 'punch2', 'whip'].includes(step.anim);
+      let d;
+      if (aim === 'up') d = Object.assign({}, step, { box: [-thick / 2 - 4, -(11 + reach), thick + 14, reach + 9], anim: thrust ? 'upthrust' : 'upslash', lunge: 0 });
+      else d = Object.assign({}, step, { box: [-thick / 2 - 2, 2, thick + 4, reach + 6], anim: thrust ? 'downthrust' : 'downslash', lunge: 0, pogo: true });
+      step._dir[aim] = d;
+      return d;
     }
     held(slot) {
       const I = this.input();
@@ -7383,7 +7632,8 @@
       else this.updateShield(dt, a);
     }
     meleeStep(a) {
-      return a.chargedStep ? a.def.charged : a.def.combo[a.step];
+      const base = a.chargedStep ? a.def.charged : a.def.combo[a.step];
+      return a.chargedStep ? base : this.dirStep(base, a.aim);
     }
     updateMelee(dt, a) {
       const spd = this.atkSpeed(a.def);
@@ -7419,6 +7669,11 @@
             if (step.shake) G.shake(step.shake * 0.4);
             if (step.iframes) this.invuln = Math.max(this.invuln, step.a + 0.05);
             this.spawnStepExtras(a, step);
+            if (a.aim === 'fwd' && this.onGround && !step.lunge) {
+              const reach = step.box[0] + step.box[2];
+              const t = G.world.nearestEnemy(this.cx + this.facing * reach * 0.6, this.cy, reach + 26, (e) => Math.sign(e.cx - this.cx) === this.facing && Math.abs(e.cy - this.cy) < 30);
+              if (t && Math.abs(t.cx - this.cx) - t.w / 2 > reach * 0.75) this.vx = this.facing * 150;
+            }
           }
           break;
         case 'a': {
@@ -7440,10 +7695,12 @@
             const I = this.input();
             const dir = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0);
             if (dir) this.facing = dir;
+            else this.autoFace();
+            a.aim = this.readAim();
           } else if (a.t >= step.r * 0.35 && this.pressedSlot(other) && this.weapons[other]) {
             this.lastAtk = null;
             this.startAttack(other);
-          } else if (a.t >= step.r) {
+          } else if (a.t >= step.r || (!a.queued && a.t >= step.r * 0.5 && this.moveHeld())) {
             this.lastAtk = { slot: a.slot, step: a.chargedStep ? a.def.combo.length - 1 : a.step, end: G.world.time };
             this.atk = null;
             this.state = 'normal';
@@ -7454,6 +7711,10 @@
           }
           break;
       }
+    }
+    moveHeld() {
+      const I = this.input();
+      return !!(I.down.left || I.down.right);
     }
     stepBox(step) {
       const [bx, by, bw, bh] = step.box;
@@ -7518,6 +7779,13 @@
             G.shake(0.2);
             G.game.stats.secrets++;
           }
+      if (step.pogo && !this.onGround && !a.pogoed && (hitAny || a.hit.size)) {
+        a.pogoed = true;
+        this.vy = -360;
+        this.airJumps = 0;
+        G.Audio.play('djump', { vol: 0.5 });
+        G.fx.ring(this.cx, this.bottom + 4, 12, '#ffffff', 0.2, 2);
+      }
       if (hitAny) {
         G.hitStop(step.dmg >= 1.5 ? 4 : 2);
         G.shake(0.06 + (step.shake || 0) * 0.5);
@@ -7537,7 +7805,12 @@
         const score = d + ang * 200;
         if (score < bs) { bs = score; best = e; }
       }
-      if (!best) return 0;
+      const I = this.input();
+      if (!best) {
+        if (I.down.up) return -0.75;
+        if (I.down.down && !this.onGround) return 0.75;
+        return 0;
+      }
       return Math.atan2(best.cy - (this.cy - 4), Math.abs(best.cx - this.cx));
     }
     updateRanged(dt, a) {
@@ -7787,18 +8060,32 @@
         const tw = ph === 'w' ? Math.min(1, a.t / step.w) : 0, ta = ph === 'a' ? Math.min(1, a.t / step.a) : 0, tr = ph === 'r' ? Math.min(1, a.t / step.r) : 0;
         const E = G.ease.outCubic;
         const lerpP = (w0, w1, a1, r1) => ph === 'pre' || ph === 'charge' ? w0 : ph === 'w' ? G.lerp(w0, w1, E(tw)) : ph === 'a' ? G.lerp(w1, a1, E(ta)) : G.lerp(a1, r1, tr);
+        // chain swings: each windup starts from wherever the previous swing left the blade
+        const now = G.world.time, key = a.step + ':' + (a.chargedStep ? 1 : 0) + ':' + a.aim;
+        if (a.poseKey !== key) {
+          a.poseKey = key;
+          a.fromAng = this._lastAng !== undefined && now - this._lastAngT < 0.25 && this._lastAngId === a.inst.id ? this._lastAng : null;
+        }
+        const lerpA = (w0, w1, a1, r1) => lerpP(a.fromAng !== null && a.fromAng !== undefined ? a.fromAng : w0, w1, a1, r1);
         switch (anim) {
-          case 'slash': p = { ang: lerpP(-0.6, -2.2, 0.9, 0.7), hx: 0, arc: [-2.2, 0.9] }; break;
-          case 'slash2': p = { ang: lerpP(0.5, 1.0, -1.9, -1.6), hx: 0, arc: [1.0, -1.9] }; break;
-          case 'overhead': p = { ang: lerpP(-1.0, -2.7, 1.25, 1.0), hx: 0, arc: [-2.7, 1.25] }; break;
+          case 'slash': p = { ang: lerpA(-0.6, -2.2, 0.9, 0.7), hx: 0, arc: [-2.2, 0.9] }; break;
+          case 'slash2': p = { ang: lerpA(0.5, 1.0, -1.9, -1.6), hx: 0, arc: [1.0, -1.9] }; break;
+          case 'overhead': p = { ang: lerpA(-1.0, -2.7, 1.25, 1.0), hx: 0, arc: [-2.7, 1.25] }; break;
           case 'spin': p = { ang: lerpP(-1.0, -1.6, -1.6 + Math.PI * 2 * (step.multi > 1 ? 1.5 : 1), 0.8), hx: 0, arc: null, spin: true }; break;
           case 'thrust': case 'stab': case 'stab2':
             p = { ang: anim === 'stab2' ? 0.3 : anim === 'stab' ? -0.15 : 0, hx: lerpP(0, -5, 9, 3), thrust: true }; break;
           case 'punch': case 'punch2': p = { ang: 0, hx: lerpP(0, -4, 9, 4), hy: anim === 'punch2' ? -2 : 1, thrust: true }; break;
-          case 'whip': p = { ang: lerpP(-1, -2.1, 0.1, 0.2), hx: 0, whip: ph === 'a' ? ta : ph === 'r' ? 1 - tr : 0 }; break;
+          case 'whip': p = { ang: lerpA(-1, -2.1, 0.1, 0.2), hx: 0, whip: ph === 'a' ? ta : ph === 'r' ? 1 - tr : 0 }; break;
+          case 'upslash': p = { ang: lerpA(0.6, 1.0, -2.8, -2.4), hx: 0, arc: [1.0, -2.8] }; break;
+          case 'downslash': p = { ang: lerpA(-0.8, -1.4, 2.3, 2.0), hx: 0, arc: [-1.4, 2.3] }; break;
+          case 'upthrust': p = { ang: -Math.PI / 2, hx: lerpP(0, -4, 10, 3), thrust: true, vert: -1 }; break;
+          case 'downthrust': p = { ang: Math.PI / 2, hx: lerpP(0, -4, 10, 3), thrust: true, vert: 1 }; break;
           default: p = { ang: 0, hx: 0 };
         }
         p.active = ph === 'a';
+        p.trail = ph === 'r' ? Math.max(0, 1 - tr * 5) : 0;
+        if (!p.spin && !p.thrust) { this._lastAng = p.ang; this._lastAngT = now; this._lastAngId = a.inst.id; }
+        else this._lastAng = undefined;
         p.t = ta;
         p.id = a.inst.id;
         return p;
@@ -7915,7 +8202,8 @@
       ctx.fillStyle = waxD;
       G.pixLine(ctx, sh.x - 2, sh.y, back.x, back.y, waxD);
       if (pose) {
-        if (pose.thrust || pose.ranged || pose.shield) hand = { x: sh.x + 3 + (pose.hx || 0), y: sh.y + 2 + (pose.hy || 0) };
+        if (pose.vert) hand = { x: sh.x + 1, y: sh.y + (pose.vert < 0 ? -2 - (pose.hx || 0) : 6 + (pose.hx || 0)) };
+        else if (pose.thrust || pose.ranged || pose.shield) hand = { x: sh.x + 3 + (pose.hx || 0), y: sh.y + 2 + (pose.hy || 0) };
         else hand = { x: sh.x + Math.round(Math.cos(pose.ang) * 5), y: sh.y + Math.round(Math.sin(pose.ang) * 5) };
         this.drawWeapon(ctx, pose, hand, sh);
       }
@@ -8000,23 +8288,34 @@
         return;
       }
       // melee
-      if (pose.active && !pose.thrust && pose.arc) {
-        // smear
+      if ((pose.active || pose.trail > 0) && !pose.thrust && pose.arc) {
+        // crescent smear: brighter toward the leading edge, lingers briefly after the swing
         const r = spr.img.width - spr.px + 3;
         const a0 = pose.arc[0];
-        const a1 = G.lerp(pose.arc[0], pose.arc[1], G.ease.outCubic(pose.t));
+        const a1 = G.lerp(pose.arc[0], pose.arc[1], G.ease.outCubic(pose.active ? pose.t : 1));
+        const fade = pose.active ? 1 : pose.trail;
+        const glow = d.look.glow || '#ffffff';
         ctx.save();
         ctx.translate(sh.x, sh.y);
-        const glow = d.look.glow || '#ffffff';
-        for (let i = 0; i < 3; i++) {
-          ctx.globalAlpha = 0.28 - i * 0.07;
-          ctx.strokeStyle = i === 0 ? '#ffffff' : glow;
-          ctx.lineWidth = 5 - i * 1.5;
+        const N = 10;
+        for (let k = 0; k < N; k++) {
+          const t0 = k / N, t1 = (k + 1) / N;
+          const b0 = G.lerp(a0, a1, t0), b1 = G.lerp(a0, a1, t1);
+          const inner = r - 4 - t1 * 5, outer = r + 5 + t1 * 2;
+          ctx.globalAlpha = (0.08 + t1 * t1 * 0.5) * fade;
+          ctx.fillStyle = k > N - 3 ? '#ffffff' : glow;
           ctx.beginPath();
-          const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
-          ctx.arc(0, 0, r + 4 - i * 3, lo, hi);
-          ctx.stroke();
+          ctx.arc(0, 0, outer, Math.min(b0, b1), Math.max(b0, b1));
+          ctx.arc(0, 0, Math.max(2, inner), Math.max(b0, b1), Math.min(b0, b1), true);
+          ctx.closePath();
+          ctx.fill();
         }
+        ctx.globalAlpha = 0.9 * fade;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 6, Math.min(a0, a1) + (a1 > a0 ? (a1 - a0) * 0.5 : 0), Math.max(a0, a1) - (a1 < a0 ? (a0 - a1) * 0.5 : 0));
+        ctx.stroke();
         ctx.globalAlpha = 1;
         ctx.restore();
       }
@@ -8072,7 +8371,8 @@
       if (pose.active && pose.thrust) {
         ctx.globalAlpha = 0.35;
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(hand.x + 2, hand.y - 1, spr.img.width + 10, 2);
+        if (pose.vert) ctx.fillRect(hand.x - 1, pose.vert < 0 ? hand.y - spr.img.width - 10 : hand.y + 2, 2, spr.img.width + 10);
+        else ctx.fillRect(hand.x + 2, hand.y - 1, spr.img.width + 10, 2);
         ctx.globalAlpha = 1;
       }
     }
@@ -8525,6 +8825,7 @@
     update(dt) {
       this.animT += dt;
       if (this.flashT > 0) this.flashT -= dt;
+      if (this.squashT > 0) this.squashT -= dt;
       if (this.hpBarT > 0) this.hpBarT -= dt;
       if (this.alertT > 0) this.alertT -= dt;
       if (this.dying) {
@@ -9058,6 +9359,7 @@
       this.lastItem = h.item || this.lastItem;
       if (h.kind !== 'dot') {
         this.flashT = 0.1;
+        this.squashT = h.crit ? 0.2 : 0.14;
         this.setAggro();
         if (h.dir && !h.noKnock && !this.def.heavy) {
           const kb = (h.knock === undefined ? 100 : h.knock) * (this.elite ? 0.5 : 1);
@@ -9164,7 +9466,10 @@
         ctx.globalAlpha = alpha;
         G.addLight(this.cx, this.cy, 70, ac, 0.8);
       }
-      ctx.scale(this.facing * this.sc, this.sc);
+      // impact squash: flattens and wobbles for a beat after each hit
+      const sq = this.squashT > 0 && !this.dying ? this.squashT / 0.14 : 0;
+      if (sq) ctx.translate(Math.round((Math.random() - 0.5) * 2 * sq), 0);
+      ctx.scale(this.facing * this.sc * (1 + 0.18 * sq), this.sc * (1 - 0.14 * sq));
       if (this.hanging) ctx.scale(1, -1), ctx.translate(0, this.h / this.sc);
       if (this.boneT !== undefined) {
         // bone pile
@@ -10917,6 +11222,17 @@
       const q = this.inst.q;
       const col = G.QUALITY_COLORS[q];
       ctx.globalCompositeOperation = 'lighter';
+      // loot beam: taller and brighter the rarer the item
+      if (q > 0 && !this.pedestal) {
+        const bh = 50 + q * 26, bw = 4 + q * 2, by = Math.round(this.bottom - cy);
+        const g = ctx.createLinearGradient(0, by - bh, 0, by);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, col);
+        ctx.globalAlpha = (0.22 + q * 0.06) * (0.8 + Math.sin(this.age * 3) * 0.2) * Math.min(1, this.age * 2);
+        ctx.fillStyle = g;
+        ctx.fillRect(x + 8 - bw / 2, by - bh, bw, bh);
+        ctx.fillRect(x + 8 - 1, by - bh * 1.15, 2, bh * 1.15);
+      }
       ctx.globalAlpha = 0.35 + Math.sin(this.age * 4) * 0.1;
       ctx.drawImage(G.glowSprite(col), x - 8, y - 8, 32, 32);
       ctx.globalAlpha = 1;
@@ -11970,8 +12286,140 @@
     }
   }
   G.Crate = Crate;
-  // player pushes crates
+
+  // ------------------------------------------------------------------ room doors
+  // Walk into a door to ease it open; strike or roll into it to kick it off its
+  // hinges, stunning whatever was waiting on the other side.
+  class Door extends G.Entity {
+    constructor(x, y) {
+      super(x - 3, y - 64, 6, 64);
+      this.solid = true;
+      this.canBeSolid = true;
+      this.projHittable = true;
+      this.layer = 0;
+      this.state = 'closed';
+      this.openAmt = 0;
+      this.openDir = 1;
+      this.pushT = 0;
+      this.pushing = false;
+      this.shakeT = 0;
+      this.planks = null;
+    }
+    push(dir, roll) {
+      if (this.state !== 'closed') return false;
+      if (roll) { this.smash(dir, true); return true; }
+      this.pushing = true;
+      this.openDir = dir > 0 ? 1 : -1;
+      return false;
+    }
+    open(dir) {
+      if (this.state !== 'closed') return;
+      this.state = 'open';
+      this.openDir = dir;
+      this.solid = false;
+      this.onHit = null;
+      G.Audio.play('door', { x: this.cx, vol: 0.7 });
+      G.fx.burst(this.cx, this.bottom - 2, 5, { color: '#8a7a68', speed: 40, life: 0.4, size: 1, angle: -Math.PI / 2, spread: 2.5 });
+      G.game.hint('door', 'Doors ease open when you walk into them. Strike one to [orange]kick it in[] and stun whatever waits behind.');
+    }
+    smash(dir, roll) {
+      if (this.state !== 'closed') return;
+      this.state = 'broken';
+      this.openDir = dir;
+      this.solid = false;
+      this.onHit = null;
+      const tier = (W().level && W().level.tier) || 1;
+      G.Audio.play('doorBreak', { x: this.cx });
+      G.Audio.play('swingHeavy', { x: this.cx, vol: 0.5 });
+      G.shake(0.3);
+      G.hitStop(5);
+      G.fx.burst(this.cx, this.cy, 22, { color: ['#7a5a38', '#5a4028', '#9a7a50'], speed: 240, life: 0.7, size: 2, size2: 1, grav: 600, angle: dir > 0 ? -0.3 : Math.PI + 0.3, spread: 1.4, collide: true });
+      G.fx.burst(this.cx, this.cy, 8, { color: '#c0b8a8', speed: 80, life: 0.6, size: 5, size2: 10, type: 'smoke', drag: 0.05 });
+      G.fx.ring(this.cx + dir * 10, this.cy, 26, '#ffd8a0', 0.25, 3);
+      this.planks = [];
+      for (let i = 0; i < 3; i++) this.planks.push({ x: dir * (8 + i * 9 + Math.random() * 4), w: 7 + Math.floor(Math.random() * 6), r: (Math.random() - 0.5) * 0.5 });
+      let n = 0;
+      for (const e of W().enemies) {
+        if (e.dead || e.dying) continue;
+        const dx = (e.cx - this.cx) * dir;
+        if (dx < -4 || dx > 110 || Math.abs(e.bottom - this.bottom) > 56) continue;
+        e.takeHit({ dmg: (roll ? 8 : 12) + tier * 6, kind: 'melee', team: 'player', x: this.cx, y: this.cy, dir, knock: 260, knockUp: 120, statuses: { stun: 1.6 }, poise: 60 });
+        n++;
+      }
+      if (n) G.game.notify('[orange]Door kicked![] ' + n + ' stunned.');
+      G.game.hint('door', 'Kicking a door in stuns the enemies on the far side. Walk into one to open it quietly instead.');
+    }
+    onHit(h) {
+      if (h.proj) { G.Audio.play('hitMetal', { x: this.cx, vol: 0.4 }); this.shakeT = 0.12; if (h.proj.expire) h.proj.expire(); return; }
+      this.smash(h.dir || 1);
+    }
+    update(dt) {
+      if (this.state === 'closed') {
+        if (this.pushing) { this.pushT += dt; this.shakeT = Math.max(this.shakeT, 0.05); }
+        else this.pushT = Math.max(0, this.pushT - dt * 2);
+        this.pushing = false;
+        if (this.pushT > 0.14) this.open(this.openDir);
+        // enemy shots thunk into closed doors
+        for (const pr of W().ents) {
+          if (pr.dead || pr.team !== 'enemy' || !(pr instanceof G.Proj)) continue;
+          if (G.overlap(this, pr)) { pr.expire && pr.expire(); }
+        }
+      } else this.openAmt = G.approach(this.openAmt, 1, dt * 5);
+      if (this.shakeT > 0) this.shakeT -= dt;
+    }
+    draw(ctx, cx, cy) {
+      const x = Math.round(this.cx - cx), y = Math.round(this.y - cy), b = Math.round(this.bottom - cy);
+      // lintel
+      ctx.fillStyle = '#3a2818';
+      ctx.fillRect(x - 6, y - 4, 12, 4);
+      ctx.fillStyle = '#5a4028';
+      ctx.fillRect(x - 6, y - 4, 12, 1);
+      if (this.state === 'closed') {
+        const j = this.shakeT > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+        ctx.fillStyle = '#4a3020';
+        ctx.fillRect(x - 3 + j, y, 6, 64);
+        ctx.fillStyle = '#7a5a38';
+        ctx.fillRect(x - 2 + j, y, 4, 64);
+        ctx.fillStyle = '#9a7a50';
+        ctx.fillRect(x - 2 + j, y, 1, 64);
+        ctx.fillStyle = '#3a3a44';
+        for (const by of [8, 30, 52]) { ctx.fillRect(x - 3 + j, y + by, 6, 3); ctx.fillStyle = '#6a6a78'; ctx.fillRect(x - 3 + j, y + by, 6, 1); ctx.fillStyle = '#3a3a44'; }
+        ctx.fillStyle = '#c0a060';
+        ctx.fillRect(x - 3 + j - 1, y + 36, 2, 2);
+        ctx.fillRect(x + 2 + j, y + 36, 2, 2);
+      } else if (this.state === 'open') {
+        // swung flat against the room, face toward us
+        const wdt = Math.round(6 + 16 * this.openAmt);
+        const x0 = this.openDir > 0 ? x : x - wdt;
+        ctx.fillStyle = '#3a2618';
+        ctx.fillRect(x0, y + 1, wdt, 63);
+        ctx.fillStyle = '#5a4028';
+        ctx.fillRect(x0 + 1, y + 2, wdt - 2, 61);
+        ctx.fillStyle = '#4a3020';
+        for (let xx = x0 + 4; xx < x0 + wdt - 1; xx += 5) ctx.fillRect(xx, y + 2, 1, 61);
+        ctx.fillStyle = '#2e2e38';
+        for (const by of [8, 30, 52]) ctx.fillRect(x0, y + by, wdt, 2);
+        ctx.fillStyle = '#2a1a10';
+        ctx.fillRect(this.openDir > 0 ? x0 : x0 + wdt - 1, y + 1, 1, 63);
+      } else if (this.planks) {
+        // splinters and a hanging stub
+        ctx.fillStyle = '#5a4028';
+        ctx.fillRect(x - 2, y, 4, 9);
+        ctx.fillRect(x - 1, y + 9, 2, 3);
+        for (const pk of this.planks) {
+          ctx.fillStyle = '#4a3020';
+          ctx.fillRect(x + Math.round(pk.x) - (pk.x < 0 ? pk.w : 0), b - 3, pk.w, 3);
+          ctx.fillStyle = '#7a5a38';
+          ctx.fillRect(x + Math.round(pk.x) - (pk.x < 0 ? pk.w : 0), b - 3, pk.w, 1);
+        }
+      }
+    }
+  }
+  G.Door = Door;
+
+  // player pushes crates and doors
   G.Player.prototype.pushSolid = function (s, dx) {
+    if (s instanceof Door) return s.push(Math.sign(dx), this.state === 'roll');
     if (s instanceof Crate && this.onGround) return s.push(dx * 0.7);
     return false;
   };
@@ -12042,7 +12490,12 @@
       for (let i = this.banners.length - 1; i >= 0; i--) { this.banners[i].t += dt; if (this.banners[i].t > this.banners[i].dur) this.banners.splice(i, 1); }
     },
     draw(ctx) {
-      for (const m of this.stack) m.draw(ctx, m);
+      this.stack.forEach((m, i) => {
+        // screens opened on top of another screen get a solid backdrop so text never overlaps
+        if (i > 0 && m.name !== 'confirm') { ctx.fillStyle = 'rgba(4,3,8,0.94)'; ctx.fillRect(0, 0, W, H); }
+        else if (i > 0) { ctx.fillStyle = 'rgba(4,3,8,0.6)'; ctx.fillRect(0, 0, W, H); }
+        m.draw(ctx, m);
+      });
     },
     notify(text) {
       if (this.notes.length && this.notes[0].text === text) { this.notes[0].t = 4; return; }
@@ -12115,19 +12568,47 @@
   G.drawTooltip = tooltip;
 
   // ================================================================ HUD
+  // lagging "chip" trails so a hit visibly bites a chunk out of a bar
+  const chips = {};
+  let chipClock = 0;
+  const chipTrail = (key, frac, dt) => {
+    let c = chips[key];
+    if (!c) c = chips[key] = { v: frac, hold: 0, flash: 0, last: frac };
+    if (frac < c.last - 0.001) { c.hold = 0.45; c.flash = 0.18; }
+    if (frac > c.v) c.v = frac;
+    else if (c.hold > 0) c.hold -= dt;
+    else c.v = Math.max(frac, c.v - dt * 0.9);
+    if (c.flash > 0) c.flash -= dt;
+    c.last = frac;
+    return c;
+  };
   G.drawHUD = (ctx) => {
     const p = G.world.player;
     if (!p) return;
     const game = G.game;
+    const now = performance.now() / 1000;
+    const hdt = Math.min(0.1, chipClock ? now - chipClock : 0);
+    chipClock = now;
     // --- health bar
     const hx = 8, hy = 8, hw = 150, hh = 10;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(hx - 2, hy - 2, hw + 4, hh + 4);
     const frac = Math.max(0, p.hp) / p.maxHp;
+    const low = frac > 0 && frac < 0.3;
+    const pulse = low ? Math.sin(now * 7) * 0.5 + 0.5 : 0;
+    ctx.fillStyle = low ? 'rgba(' + Math.round(90 + pulse * 120) + ',10,10,0.85)' : 'rgba(0,0,0,0.6)';
+    ctx.fillRect(hx - 2, hy - 2, hw + 4, hh + 4);
     const rallyFrac = Math.min(1, (Math.max(0, p.hp) + p.rally) / p.maxHp);
-    G.bar(ctx, hx, hy, hw, hh, frac, p.curse > 0 ? '#a050e0' : '#d83a3a', '#2a1418', rallyFrac, '#e89040');
+    const ch = chipTrail('hp', frac, hdt);
+    ctx.fillStyle = '#2a1418';
+    ctx.fillRect(hx, hy, hw, hh);
+    if (ch.v > frac) {
+      ctx.fillStyle = ch.flash > 0 ? '#ffffff' : '#f0d0b0';
+      ctx.fillRect(hx, hy, Math.round(hw * Math.min(1, ch.v)), hh);
+    }
+    G.bar(ctx, hx, hy, hw, hh, frac, p.curse > 0 ? '#a050e0' : low ? G.mix('#d83a3a', '#ff7060', pulse) : '#d83a3a', 'rgba(0,0,0,0)', rallyFrac, '#e89040');
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillRect(hx, hy, Math.round(hw * frac), 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(hx, hy + hh - 2, Math.round(hw * frac), 2);
     G.text(ctx, Math.ceil(Math.max(0, p.hp)) + ' / ' + p.maxHp, hx + hw / 2, hy + 1, '#ffffff', { align: 'center', outline: '#300808' });
     // flask
     let fx = hx;
@@ -12223,7 +12704,12 @@
       G.text(ctx, boss.name, W / 2, byy - 12, '#ffd8b0', { align: 'center', outline: '#000' });
       ctx.fillStyle = 'rgba(0,0,0,0.7)';
       ctx.fillRect(bx - 2, byy - 2, bw + 4, 10);
-      G.bar(ctx, bx, byy, bw, 6, boss.hp / boss.maxHp, '#c83040', '#2a1014');
+      const bf = Math.max(0, boss.hp / boss.maxHp);
+      const bc = chipTrail('boss' + (boss.name || ''), bf, hdt);
+      ctx.fillStyle = '#2a1014';
+      ctx.fillRect(bx, byy, bw, 6);
+      if (bc.v > bf) { ctx.fillStyle = bc.flash > 0 ? '#ffffff' : '#f0c0a0'; ctx.fillRect(bx, byy, Math.round(bw * Math.min(1, bc.v)), 6); }
+      G.bar(ctx, bx, byy, bw, 6, bf, '#c83040', 'rgba(0,0,0,0)');
       if (boss.isBoss && boss.def.phases) for (const th of boss.def.phases) { ctx.fillStyle = '#ffd080'; ctx.fillRect(bx + Math.round(bw * th), byy - 1, 1, 8); }
       if (boss.isBoss) {
         ctx.fillStyle = '#ffe060';
@@ -12252,12 +12738,16 @@
     let ny = H - 58;
     for (const n of ui.notes) {
       const a = Math.min(1, n.t * 2);
-      const tw = G.textWidth(n.text);
-      ctx.globalAlpha = a * 0.7;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(W / 2 - tw / 2 - 6, ny - 3, tw + 12, 13);
-      ctx.globalAlpha = a;
-      G.text(ctx, n.text, W / 2, ny, '#ffffff', { align: 'center' });
+      if (!n.lines) n.lines = G.textWidth(n.text) > W - 60 ? G.wrap(n.text, W - 80) : [n.text];
+      ny -= (n.lines.length - 1) * 11;
+      n.lines.forEach((ln, i) => {
+        const tw = G.textWidth(ln);
+        ctx.globalAlpha = a * 0.7;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(W / 2 - tw / 2 - 6, ny - 3 + i * 11, tw + 12, i === n.lines.length - 1 ? 13 : 11);
+        ctx.globalAlpha = a;
+        G.text(ctx, ln, W / 2, ny + i * 11, '#ffffff', { align: 'center' });
+      });
       ctx.globalAlpha = 1;
       ny -= 15;
     }
@@ -12984,13 +13474,20 @@
   };
 
   SCREENS.settings = {
-    init(m) { m.items = ['music', 'sfx', 'shake', 'fullscreen', 'back']; },
+    init(m) { m.items = ['music', 'sfx', 'shake', 'upJump', 'numbers', 'fullscreen', 'controls', 'back']; },
     update(m) {
       const In = I();
       menuNav(m, m.items.length, { rects: m.rects });
       const k = m.items[m.sel];
       const s = G.settings;
       if (k === 'fullscreen' && (confirmPressed() || In.pressed.mleft || In.pressed.mright)) { G.toggleFullscreen(); return; }
+      if (k === 'controls' && confirmPressed()) { ui.open('controls'); return; }
+      if ((k === 'upJump' || k === 'numbers') && (confirmPressed() || In.pressed.mleft || In.pressed.mright)) {
+        G.settings[k] = k === 'numbers' ? G.settings.numbers === false : !G.settings[k];
+        G.Audio.play('uiMove');
+        G.game.saveSettings();
+        return;
+      }
       if (k !== 'back' && k !== 'fullscreen' && (In.pressed.mleft || In.pressed.mright)) {
         const d = In.pressed.mleft ? -0.1 : 0.1;
         s[k] = Math.round(G.clamp(s[k] + d, 0, 1) * 10) / 10;
@@ -13003,50 +13500,98 @@
     draw(ctx, m) {
       dim(ctx, 0.85);
       title(ctx, 'SETTINGS', 40);
-      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', fullscreen: 'Toggle Fullscreen (F11)', back: 'Back' };
+      const names = { music: 'Music Volume', sfx: 'Sound Volume', shake: 'Screen Shake', upJump: 'Up key also jumps', numbers: 'Damage numbers', fullscreen: 'Toggle Fullscreen (F11)', controls: 'Rebind Controls...', back: 'Back' };
       m.rects = [];
       m.items.forEach((k, i) => {
-        const y = 90 + i * 34;
+        const y = 64 + i * 30;
         const sel = m.sel === i;
         m.rects.push(button(ctx, W / 2 - 140, y, 280, 26, '', sel));
         G.text(ctx, names[k], W / 2 - 128, y + 9, sel ? '#ffffff' : '#c8c0d0');
-        if (k !== 'back' && k !== 'fullscreen') {
-          G.bar(ctx, W / 2 + 10, y + 10, 100, 6, G.settings[k], '#ffb060', '#2a2030');
-          G.text(ctx, Math.round(G.settings[k] * 100) + '%', W / 2 + 118, y + 9, '#c8c0d0');
+        if (k === 'upJump' || k === 'numbers') {
+          const on = k === 'numbers' ? G.settings.numbers !== false : !!G.settings[k];
+          G.text(ctx, on ? 'ON' : 'OFF', W / 2 + 60, y + 9, on ? '#80ff90' : '#a05050', { align: 'center' });
+        } else if (['music', 'sfx', 'shake'].includes(k)) {
+          G.bar(ctx, W / 2 + 4, y + 10, 100, 6, G.settings[k], '#ffb060', '#2a2030');
+          G.text(ctx, Math.round(G.settings[k] * 100) + '%', W / 2 + 134, y + 9, '#c8c0d0', { align: 'right' });
         }
       });
-      G.text(ctx, '[Left/Right] Adjust', W / 2, 250, '#6a6078', { align: 'center' });
+      G.text(ctx, '[Left/Right] Adjust', W / 2, 312, '#6a6078', { align: 'center' });
     },
   };
 
+  // interactive key rebinding
+  const REBIND = [
+    ['left', 'Move left'], ['right', 'Move right'], ['up', 'Up / climb / aim up'], ['down', 'Down / drop / aim down'],
+    ['jump', 'Jump (twice for double jump)'], ['roll', 'Roll (invulnerable dodge)'], ['attack1', 'Weapon 1'], ['attack2', 'Weapon 2'],
+    ['skill1', 'Skill 1'], ['skill2', 'Skill 2'], ['interact', 'Interact / pick up'], ['heal', 'Drink health flask'],
+    ['map', 'Map'], ['pause', 'Pause menu'],
+  ];
   SCREENS.controls = {
-    update(m) { if ((confirmPressed() || cancelPressed()) && m.t > 0.15) ui.close(m); },
+    init(m) { m.capture = null; m.col = 0; },
+    update(m) {
+      const In = I();
+      const n = REBIND.length + 1;
+      if (m.capture) return; // waiting for a raw key
+      if (In.pressed.mleft || In.pressed.mright) { m.col = m.col ? 0 : 1; G.Audio.play('uiMove'); }
+      menuNav(m, n, { rects: m.rects });
+      if (cancelPressed() && m.t > 0.15) { ui.close(m); return; }
+      if (In.pressed.confirm && m.t > 0.15) {
+        if (m.sel === REBIND.length) {
+          G.Input.resetBinds();
+          G.Audio.play('uiSelect');
+          G.game && G.game.notify && G.game.notify('Controls reset to defaults.');
+          return;
+        }
+        const act = REBIND[m.sel][0];
+        m.capture = act;
+        G.Audio.play('uiSelect');
+        G.Input.onRawKey = (code) => {
+          if (code === 'Escape') { m.capture = null; G.Input.onRawKey = null; G.Input.clearAll(); return true; }
+          const list = G.Input.binds[act].slice();
+          const col = m.col;
+          // remove this key from every other gameplay action so nothing double-binds
+          for (const [a] of REBIND) if (a !== act) G.Input.binds[a] = G.Input.binds[a].filter((c) => c !== code);
+          const others = list.filter((c, i) => i !== col && c !== code);
+          if (col === 0) G.Input.binds[act] = [code].concat(others);
+          else G.Input.binds[act] = [list[0] === code ? (others[0] || code) : list[0], code].concat(list.slice(2).filter((c) => c !== code));
+          G.Input.binds[act] = G.Input.binds[act].filter((c, i, arr) => c && arr.indexOf(c) === i);
+          G.Input.saveBinds();
+          m.capture = null;
+          G.Input.onRawKey = null;
+          G.Input.clearAll();
+          G.Audio.play('uiSelect');
+          return true;
+        };
+      }
+    },
     draw(ctx, m) {
-      dim(ctx, 0.9);
-      title(ctx, 'CONTROLS', 20);
-      const rows = [
-        ['Move', 'A/D or Arrows', 'D-pad / Stick'],
-        ['Jump / Double jump', 'Space or Z', 'A'],
-        ['Drop through platform', 'Down + Jump', 'Down + A'],
-        ['Ground slam', 'Down + Jump (in air)', 'Down + A (air)'],
-        ['Climb ladders', 'W/S or Up/Down', 'D-pad'],
-        ['Roll (dodge, invulnerable)', 'Shift or L', 'B'],
-        ['Weapon 1 / Weapon 2', 'J / K  (or X / C, mouse)', 'X / Y'],
-        ['Skill 1 / Skill 2', 'Q / E  (or U / I)', 'LT / RT'],
-        ['Interact / pick up', 'F', 'RB'],
-        ['Drink health flask', 'R', 'LB'],
-        ['Map', 'M or Tab', 'Select'],
-        ['Pause / menu', 'Esc or P', 'Start'],
-      ];
-      rows.forEach((r, i) => {
-        const y = 50 + i * 20;
-        G.text(ctx, r[0], 60, y, '#e0d8e8');
-        G.text(ctx, r[1], 300, y, '#ffd080');
-        G.text(ctx, r[2], 500, y, '#8ad0ff');
+      dim(ctx, 0.92);
+      title(ctx, 'CONTROLS', 8);
+      G.text(ctx, 'Select an action and press a new key.  [Left/Right] choose primary or alternate key.', W / 2, 32, '#8a8098', { align: 'center' });
+      m.rects = [];
+      const x0 = 70, rowH = 17, y0 = 48;
+      G.text(ctx, 'PRIMARY', 380, y0 - 2, m.col === 0 ? '#ffd080' : '#6a6078', { align: 'center' });
+      G.text(ctx, 'ALTERNATE', 500, y0 - 2, m.col === 1 ? '#ffd080' : '#6a6078', { align: 'center' });
+      REBIND.forEach(([act, label], i) => {
+        const y = y0 + 10 + i * rowH;
+        const sel = m.sel === i;
+        if (sel) { ctx.fillStyle = 'rgba(120,80,40,0.45)'; ctx.fillRect(x0 - 6, y - 3, W - 2 * x0 + 12, rowH - 2); }
+        m.rects[i] = { x: x0 - 6, y: y - 3, w: W - 2 * x0 + 12, h: rowH - 2 };
+        G.text(ctx, label, x0, y, sel ? '#ffffff' : '#c8c0d0');
+        const b = G.Input.binds[act] || [];
+        for (let c = 0; c < 2; c++) {
+          const cx = c === 0 ? 380 : 500;
+          const waiting = m.capture === act && m.col === c;
+          const txt = waiting ? (Math.floor(m.t * 3) % 2 ? 'press a key' : '') : G.Input.codeName(b[c]);
+          if (sel && m.col === c && !waiting) { ctx.fillStyle = 'rgba(255,208,128,0.18)'; ctx.fillRect(cx - 44, y - 3, 88, rowH - 2); }
+          G.text(ctx, txt, cx, y, waiting ? '#ffe060' : c === 0 ? '#ffd080' : '#a098a8', { align: 'center' });
+        }
       });
-      G.text(ctx, 'Hold a shield to block; raise it just before a hit to PARRY. Hit back quickly after taking damage to recover the orange rally health.', W / 2, 300, '#a098a8', { align: 'center' });
-      G.text(ctx, 'Enemies flash red and show "!" before attacking. Roll through attacks to avoid them.', W / 2, 312, '#a098a8', { align: 'center' });
-      G.drawKeyHint(ctx, W / 2, H - 20, 'cancel', 'Back', 'center');
+      const ry = y0 + 10 + REBIND.length * rowH + 4;
+      m.rects[REBIND.length] = button(ctx, W / 2 - 70, ry, 140, 18, 'Reset to defaults', m.sel === REBIND.length);
+      G.text(ctx, 'Hold Up/Down while attacking to swing up or strike down.', W / 2, H - 30, '#8a8098', { align: 'center' });
+      G.text(ctx, 'Gamepad: A jump, B roll, X/Y weapons, LT/RT skills, LB flask, RB interact.', W / 2, H - 20, '#6a6078', { align: 'center' });
+      G.text(ctx, m.capture ? '[ESC] cancel' : '[ESC] back', W / 2, H - 11, '#8a8098', { align: 'center' });
     },
   };
 
@@ -13171,6 +13716,7 @@
       G.fade.a = 1;
       G.fadeTo(0, 1.5);
       G.Audio.playMusic('title');
+      G.Audio.setAmbience('rain');
       G.ui.closeAll();
       initTitle();
     },
@@ -13180,6 +13726,7 @@
       if (this.transitioning) return;
       this.transitioning = true;
       G.Audio.play('transition');
+      G.fade.iris = true;
       G.fadeTo(1, 3, () => {
         try { fn(); } catch (e) { console.error(e); }
         this.transitioning = false;
@@ -13201,6 +13748,7 @@
         else this.banner(B.name.toUpperCase(), B.sub, '#ff9070', 3.5);
         if (B.music) G.Audio.playMusic(B.music);
         else G.Audio.playMusic('silence');
+        G.Audio.setAmbience(G.BIOME_AMB[id] || 'cave');
         if (id === 'undercroft') this.tutorialT = G.save.stats.runs <= 2 ? 30 : 0;
       };
       if (this.state === 'play' && G.world.level) this.transition(doLoad);
@@ -13213,6 +13761,7 @@
         this.setupWorld(L, 7);
         this.saveRun(next);
         G.Audio.playMusic('passage');
+        G.Audio.setAmbience('cave');
         this.banner('PASSAGE', 'Next: ' + G.BIOMES[next].name, '#ffb060', 3);
         this.player.deathsDoorUsed = false;
       };
@@ -13284,6 +13833,7 @@
         case 'songstone': return Wd.add(new G.SongStone(sp.x, sp.y, sp));
         case 'plate': return Wd.add(new G.Plate(sp.x, sp.y, sp));
         case 'crate': return Wd.add(new G.Crate(sp.x, sp.y, sp));
+        case 'door': return Wd.add(new G.Door(sp.x, sp.y));
         case 'startGear': G.spawnStartGear(sp.x, sp.y); return null;
         case 'keeper': return Wd.add(new G.Keeper(sp.x, sp.y));
         case 'fountain': return Wd.add(new G.Fountain(sp.x, sp.y));
@@ -13345,7 +13895,7 @@
       if (d.kind === 'shield') setTimeout(() => this.hint('shield', 'Hold ' + key + ' to block. Raise the shield just before a blow lands to PARRY and stun the attacker.'), 600);
       else if (d.kind === 'ranged') setTimeout(() => this.hint('ranged', 'Press ' + key + ' to fire. Shots aim at the nearest enemy in front of you.'), 600);
       else if (isSkill) setTimeout(() => this.hint('skill', 'Skills use ' + K('skill1') + ' / ' + K('skill2') + ' and recharge over time.'), 600);
-      else setTimeout(() => this.hint('melee', 'Press ' + key + ' repeatedly for a combo. Items scale with the color of their scroll stat.'), 600);
+      else setTimeout(() => this.hint('melee', 'Press ' + key + ' repeatedly for a combo. Hold ' + K('up') + ' to swing overhead, or ' + K('down') + ' in mid-air to strike down and bounce off foes.'), 600);
       if (!G.save.flags.firstItem) G.save.flags.firstItem = true;
     },
     foundBlueprint(id) {
@@ -13484,6 +14034,7 @@
       this.player.state = 'cutscene';
       this.cutscene = { t: 0, focus: { cx: L.arena.x1 + 100, cy: L.arena.floor - 60 } };
       G.Audio.playMusic('ending', 2);
+      G.Audio.setAmbience(null);
       setTimeout(() => {
         G.fadeTo(1, 0.6, () => {
           this.state = 'ending';
@@ -13540,11 +14091,13 @@
     return items;
   }
 
+  const MUFFLED = new Set(['pause', 'settings', 'controls', 'map', 'islemap', 'codex', 'character', 'confirm']);
   game.update = function (dt) {
     G.Input.poll();
     G.time += dt;
     G.updateFade(dt);
-    G.Audio && G.Audio.ready;
+    const mm = G.ui.modal && G.ui.modal.name;
+    G.Audio.setMuffle(this.state === 'play' && MUFFLED.has(mm));
     if (this.goldFlash > 0) this.goldFlash -= dt;
     if (this.emberFlash > 0) this.emberFlash -= dt;
     const In = G.Input;
@@ -13673,6 +14226,7 @@
       this.deathT += dt;
       if (this.deathT > 2.2 && !this.deathFading) {
         this.deathFading = true;
+        G.fade.iris = true;
         G.fadeTo(1, 1.2, () => { this.state = 'death'; this.deathT = 0; this.deathFading = false; G.fadeTo(0, 1.5); G.JINGLES.death(); });
       }
     }
@@ -13733,9 +14287,9 @@
     const a = Math.min(1, t / 2);
     ctx.globalAlpha = a;
     const x = W - 158, y = 112;
-    G.panel(ctx, x, y, 150, 104, { bg: 'rgba(8,6,14,0.8)', corner: false });
+    G.panel(ctx, x, y, 150, 116, { bg: 'rgba(8,6,14,0.8)', corner: false });
     const K = (a) => '[#ffd080]' + G.Input.keyName(a) + '[]';
-    const lines = ['Move: ' + K('left') + '/' + K('right'), 'Jump: ' + K('jump') + ' (twice!)', 'Attack: ' + K('attack1') + ' / ' + K('attack2'), 'Roll: ' + K('roll'), 'Skills: ' + K('skill1') + ' / ' + K('skill2'), 'Heal: ' + K('heal') + '   Use: ' + K('interact'), 'Map: ' + K('map') + '   Menu: ' + K('pause'), '[gray]Controls in the pause menu[]'];
+    const lines = ['Move: ' + K('left') + '/' + K('right'), 'Jump: ' + K('jump') + ' (twice!)', 'Attack: ' + K('attack1') + ' / ' + K('attack2'), '  hold ' + K('up') + ' / ' + K('down') + ' to aim', 'Roll: ' + K('roll'), 'Skills: ' + K('skill1') + ' / ' + K('skill2'), 'Heal: ' + K('heal') + '   Use: ' + K('interact'), 'Map: ' + K('map') + '   Menu: ' + K('pause'), '[gray]Controls in the pause menu[]'];
     lines.forEach((l, i) => G.text(ctx, l, x + 8, y + 7 + i * 12, '#d8d0e0'));
     ctx.globalAlpha = 1;
   }

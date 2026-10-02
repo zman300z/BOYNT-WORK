@@ -127,6 +127,7 @@
     G.fx.burst(x, y, n || 6, { color: color || '#8a1a1a', speed: 120, life: 0.6, size: 2, size2: 1, grav: 500, angle: dir > 0 ? -0.4 : Math.PI + 0.4, spread: 1.4, collide: true });
   };
   G.dmgNumber = (x, y, amount, color, crit) => {
+    if (G.settings && G.settings.numbers === false) return;
     const n = Math.max(1, Math.round(amount));
     G.fx.text(x, y, crit ? n + '!' : '' + n, color || (crit ? '#ffe14a' : '#ffffff'), crit ? 2 : 1, crit ? 0.9 : 0.7);
   };

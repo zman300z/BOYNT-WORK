@@ -146,6 +146,7 @@
     update(dt) {
       this.animT += dt;
       if (this.flashT > 0) this.flashT -= dt;
+      if (this.squashT > 0) this.squashT -= dt;
       if (this.hpBarT > 0) this.hpBarT -= dt;
       if (this.alertT > 0) this.alertT -= dt;
       if (this.dying) {
@@ -679,6 +680,7 @@
       this.lastItem = h.item || this.lastItem;
       if (h.kind !== 'dot') {
         this.flashT = 0.1;
+        this.squashT = h.crit ? 0.2 : 0.14;
         this.setAggro();
         if (h.dir && !h.noKnock && !this.def.heavy) {
           const kb = (h.knock === undefined ? 100 : h.knock) * (this.elite ? 0.5 : 1);
@@ -785,7 +787,10 @@
         ctx.globalAlpha = alpha;
         G.addLight(this.cx, this.cy, 70, ac, 0.8);
       }
-      ctx.scale(this.facing * this.sc, this.sc);
+      // impact squash: flattens and wobbles for a beat after each hit
+      const sq = this.squashT > 0 && !this.dying ? this.squashT / 0.14 : 0;
+      if (sq) ctx.translate(Math.round((Math.random() - 0.5) * 2 * sq), 0);
+      ctx.scale(this.facing * this.sc * (1 + 0.18 * sq), this.sc * (1 - 0.14 * sq));
       if (this.hanging) ctx.scale(1, -1), ctx.translate(0, this.h / this.sc);
       if (this.boneT !== undefined) {
         // bone pile

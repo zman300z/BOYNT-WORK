@@ -109,6 +109,7 @@
       G.fade.a = 1;
       G.fadeTo(0, 1.5);
       G.Audio.playMusic('title');
+      G.Audio.setAmbience('rain');
       G.ui.closeAll();
       initTitle();
     },
@@ -118,6 +119,7 @@
       if (this.transitioning) return;
       this.transitioning = true;
       G.Audio.play('transition');
+      G.fade.iris = true;
       G.fadeTo(1, 3, () => {
         try { fn(); } catch (e) { console.error(e); }
         this.transitioning = false;
@@ -139,6 +141,7 @@
         else this.banner(B.name.toUpperCase(), B.sub, '#ff9070', 3.5);
         if (B.music) G.Audio.playMusic(B.music);
         else G.Audio.playMusic('silence');
+        G.Audio.setAmbience(G.BIOME_AMB[id] || 'cave');
         if (id === 'undercroft') this.tutorialT = G.save.stats.runs <= 2 ? 30 : 0;
       };
       if (this.state === 'play' && G.world.level) this.transition(doLoad);
@@ -151,6 +154,7 @@
         this.setupWorld(L, 7);
         this.saveRun(next);
         G.Audio.playMusic('passage');
+        G.Audio.setAmbience('cave');
         this.banner('PASSAGE', 'Next: ' + G.BIOMES[next].name, '#ffb060', 3);
         this.player.deathsDoorUsed = false;
       };
@@ -222,6 +226,7 @@
         case 'songstone': return Wd.add(new G.SongStone(sp.x, sp.y, sp));
         case 'plate': return Wd.add(new G.Plate(sp.x, sp.y, sp));
         case 'crate': return Wd.add(new G.Crate(sp.x, sp.y, sp));
+        case 'door': return Wd.add(new G.Door(sp.x, sp.y));
         case 'startGear': G.spawnStartGear(sp.x, sp.y); return null;
         case 'keeper': return Wd.add(new G.Keeper(sp.x, sp.y));
         case 'fountain': return Wd.add(new G.Fountain(sp.x, sp.y));
@@ -283,7 +288,7 @@
       if (d.kind === 'shield') setTimeout(() => this.hint('shield', 'Hold ' + key + ' to block. Raise the shield just before a blow lands to PARRY and stun the attacker.'), 600);
       else if (d.kind === 'ranged') setTimeout(() => this.hint('ranged', 'Press ' + key + ' to fire. Shots aim at the nearest enemy in front of you.'), 600);
       else if (isSkill) setTimeout(() => this.hint('skill', 'Skills use ' + K('skill1') + ' / ' + K('skill2') + ' and recharge over time.'), 600);
-      else setTimeout(() => this.hint('melee', 'Press ' + key + ' repeatedly for a combo. Items scale with the color of their scroll stat.'), 600);
+      else setTimeout(() => this.hint('melee', 'Press ' + key + ' repeatedly for a combo. Hold ' + K('up') + ' to swing overhead, or ' + K('down') + ' in mid-air to strike down and bounce off foes.'), 600);
       if (!G.save.flags.firstItem) G.save.flags.firstItem = true;
     },
     foundBlueprint(id) {
@@ -422,6 +427,7 @@
       this.player.state = 'cutscene';
       this.cutscene = { t: 0, focus: { cx: L.arena.x1 + 100, cy: L.arena.floor - 60 } };
       G.Audio.playMusic('ending', 2);
+      G.Audio.setAmbience(null);
       setTimeout(() => {
         G.fadeTo(1, 0.6, () => {
           this.state = 'ending';
@@ -478,11 +484,13 @@
     return items;
   }
 
+  const MUFFLED = new Set(['pause', 'settings', 'controls', 'map', 'islemap', 'codex', 'character', 'confirm']);
   game.update = function (dt) {
     G.Input.poll();
     G.time += dt;
     G.updateFade(dt);
-    G.Audio && G.Audio.ready;
+    const mm = G.ui.modal && G.ui.modal.name;
+    G.Audio.setMuffle(this.state === 'play' && MUFFLED.has(mm));
     if (this.goldFlash > 0) this.goldFlash -= dt;
     if (this.emberFlash > 0) this.emberFlash -= dt;
     const In = G.Input;
@@ -611,6 +619,7 @@
       this.deathT += dt;
       if (this.deathT > 2.2 && !this.deathFading) {
         this.deathFading = true;
+        G.fade.iris = true;
         G.fadeTo(1, 1.2, () => { this.state = 'death'; this.deathT = 0; this.deathFading = false; G.fadeTo(0, 1.5); G.JINGLES.death(); });
       }
     }
@@ -671,9 +680,9 @@
     const a = Math.min(1, t / 2);
     ctx.globalAlpha = a;
     const x = W - 158, y = 112;
-    G.panel(ctx, x, y, 150, 104, { bg: 'rgba(8,6,14,0.8)', corner: false });
+    G.panel(ctx, x, y, 150, 116, { bg: 'rgba(8,6,14,0.8)', corner: false });
     const K = (a) => '[#ffd080]' + G.Input.keyName(a) + '[]';
-    const lines = ['Move: ' + K('left') + '/' + K('right'), 'Jump: ' + K('jump') + ' (twice!)', 'Attack: ' + K('attack1') + ' / ' + K('attack2'), 'Roll: ' + K('roll'), 'Skills: ' + K('skill1') + ' / ' + K('skill2'), 'Heal: ' + K('heal') + '   Use: ' + K('interact'), 'Map: ' + K('map') + '   Menu: ' + K('pause'), '[gray]Controls in the pause menu[]'];
+    const lines = ['Move: ' + K('left') + '/' + K('right'), 'Jump: ' + K('jump') + ' (twice!)', 'Attack: ' + K('attack1') + ' / ' + K('attack2'), '  hold ' + K('up') + ' / ' + K('down') + ' to aim', 'Roll: ' + K('roll'), 'Skills: ' + K('skill1') + ' / ' + K('skill2'), 'Heal: ' + K('heal') + '   Use: ' + K('interact'), 'Map: ' + K('map') + '   Menu: ' + K('pause'), '[gray]Controls in the pause menu[]'];
     lines.forEach((l, i) => G.text(ctx, l, x + 8, y + 7 + i * 12, '#d8d0e0'));
     ctx.globalAlpha = 1;
   }

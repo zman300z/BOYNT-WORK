@@ -165,6 +165,7 @@
   G.updateFade = (dt) => {
     const f = G.fade;
     if (f.a !== f.target) f.a = G.approach(f.a, f.target, f.speed * dt);
+    if (f.a === 0) f.iris = false;
     if (f.a === f.target && f.cb) {
       const cb = f.cb;
       f.cb = null;
@@ -180,10 +181,33 @@
       ctx.globalAlpha = 1;
     }
     if (G.fade.a > 0) {
-      ctx.globalAlpha = G.fade.a;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, G.W, G.H);
-      ctx.globalAlpha = 1;
+      const st = G.game && G.game.state;
+      const p = G.fade.iris && (st === 'play' || st === 'dying') && G.world && G.world.player;
+      if (p && G.fade.a < 1 && G.cam) {
+        // iris wipe that closes on / opens from the player's flame
+        const px = p.cx - G.cam.x, py = p.cy - G.cam.y;
+        const far = Math.hypot(Math.max(px, G.W - px), Math.max(py, G.H - py)) + 8;
+        const r = far * Math.pow(1 - G.fade.a, 1.6);
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.rect(0, 0, G.W, G.H);
+        ctx.arc(px, py, Math.max(0, r), 0, Math.PI * 2, true);
+        ctx.fill();
+        if (r > 2) {
+          ctx.globalAlpha = 0.6 * (1 - G.fade.a);
+          ctx.strokeStyle = '#ffb060';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        ctx.globalAlpha = G.fade.a;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, G.W, G.H);
+        ctx.globalAlpha = 1;
+      }
     }
   };
 
@@ -309,7 +333,8 @@
             break;
           case 'text':
             ctx.globalAlpha = Math.min(1, (p.life / p.max) * 3);
-            G.text(ctx, p.text, x, y - (t < 0.15 ? (0.15 - t) * 20 : 0), col, { align: 'center', scale: p.scale, outline: '#000' });
+            // numbers punch in one size larger and white, then settle
+            G.text(ctx, p.text, x, y - (t < 0.15 ? (0.15 - t) * 20 : 0), t < 0.1 ? '#ffffff' : col, { align: 'center', scale: p.scale + (t < 0.1 ? 1 : 0), outline: '#000' });
             break;
           case 'streak':
             ctx.fillStyle = col;

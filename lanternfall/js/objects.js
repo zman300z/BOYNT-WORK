@@ -65,6 +65,17 @@
       const q = this.inst.q;
       const col = G.QUALITY_COLORS[q];
       ctx.globalCompositeOperation = 'lighter';
+      // loot beam: taller and brighter the rarer the item
+      if (q > 0 && !this.pedestal) {
+        const bh = 50 + q * 26, bw = 4 + q * 2, by = Math.round(this.bottom - cy);
+        const g = ctx.createLinearGradient(0, by - bh, 0, by);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, col);
+        ctx.globalAlpha = (0.22 + q * 0.06) * (0.8 + Math.sin(this.age * 3) * 0.2) * Math.min(1, this.age * 2);
+        ctx.fillStyle = g;
+        ctx.fillRect(x + 8 - bw / 2, by - bh, bw, bh);
+        ctx.fillRect(x + 8 - 1, by - bh * 1.15, 2, bh * 1.15);
+      }
       ctx.globalAlpha = 0.35 + Math.sin(this.age * 4) * 0.1;
       ctx.drawImage(G.glowSprite(col), x - 8, y - 8, 32, 32);
       ctx.globalAlpha = 1;
@@ -1118,8 +1129,140 @@
     }
   }
   G.Crate = Crate;
-  // player pushes crates
+
+  // ------------------------------------------------------------------ room doors
+  // Walk into a door to ease it open; strike or roll into it to kick it off its
+  // hinges, stunning whatever was waiting on the other side.
+  class Door extends G.Entity {
+    constructor(x, y) {
+      super(x - 3, y - 64, 6, 64);
+      this.solid = true;
+      this.canBeSolid = true;
+      this.projHittable = true;
+      this.layer = 0;
+      this.state = 'closed';
+      this.openAmt = 0;
+      this.openDir = 1;
+      this.pushT = 0;
+      this.pushing = false;
+      this.shakeT = 0;
+      this.planks = null;
+    }
+    push(dir, roll) {
+      if (this.state !== 'closed') return false;
+      if (roll) { this.smash(dir, true); return true; }
+      this.pushing = true;
+      this.openDir = dir > 0 ? 1 : -1;
+      return false;
+    }
+    open(dir) {
+      if (this.state !== 'closed') return;
+      this.state = 'open';
+      this.openDir = dir;
+      this.solid = false;
+      this.onHit = null;
+      G.Audio.play('door', { x: this.cx, vol: 0.7 });
+      G.fx.burst(this.cx, this.bottom - 2, 5, { color: '#8a7a68', speed: 40, life: 0.4, size: 1, angle: -Math.PI / 2, spread: 2.5 });
+      G.game.hint('door', 'Doors ease open when you walk into them. Strike one to [orange]kick it in[] and stun whatever waits behind.');
+    }
+    smash(dir, roll) {
+      if (this.state !== 'closed') return;
+      this.state = 'broken';
+      this.openDir = dir;
+      this.solid = false;
+      this.onHit = null;
+      const tier = (W().level && W().level.tier) || 1;
+      G.Audio.play('doorBreak', { x: this.cx });
+      G.Audio.play('swingHeavy', { x: this.cx, vol: 0.5 });
+      G.shake(0.3);
+      G.hitStop(5);
+      G.fx.burst(this.cx, this.cy, 22, { color: ['#7a5a38', '#5a4028', '#9a7a50'], speed: 240, life: 0.7, size: 2, size2: 1, grav: 600, angle: dir > 0 ? -0.3 : Math.PI + 0.3, spread: 1.4, collide: true });
+      G.fx.burst(this.cx, this.cy, 8, { color: '#c0b8a8', speed: 80, life: 0.6, size: 5, size2: 10, type: 'smoke', drag: 0.05 });
+      G.fx.ring(this.cx + dir * 10, this.cy, 26, '#ffd8a0', 0.25, 3);
+      this.planks = [];
+      for (let i = 0; i < 3; i++) this.planks.push({ x: dir * (8 + i * 9 + Math.random() * 4), w: 7 + Math.floor(Math.random() * 6), r: (Math.random() - 0.5) * 0.5 });
+      let n = 0;
+      for (const e of W().enemies) {
+        if (e.dead || e.dying) continue;
+        const dx = (e.cx - this.cx) * dir;
+        if (dx < -4 || dx > 110 || Math.abs(e.bottom - this.bottom) > 56) continue;
+        e.takeHit({ dmg: (roll ? 8 : 12) + tier * 6, kind: 'melee', team: 'player', x: this.cx, y: this.cy, dir, knock: 260, knockUp: 120, statuses: { stun: 1.6 }, poise: 60 });
+        n++;
+      }
+      if (n) G.game.notify('[orange]Door kicked![] ' + n + ' stunned.');
+      G.game.hint('door', 'Kicking a door in stuns the enemies on the far side. Walk into one to open it quietly instead.');
+    }
+    onHit(h) {
+      if (h.proj) { G.Audio.play('hitMetal', { x: this.cx, vol: 0.4 }); this.shakeT = 0.12; if (h.proj.expire) h.proj.expire(); return; }
+      this.smash(h.dir || 1);
+    }
+    update(dt) {
+      if (this.state === 'closed') {
+        if (this.pushing) { this.pushT += dt; this.shakeT = Math.max(this.shakeT, 0.05); }
+        else this.pushT = Math.max(0, this.pushT - dt * 2);
+        this.pushing = false;
+        if (this.pushT > 0.14) this.open(this.openDir);
+        // enemy shots thunk into closed doors
+        for (const pr of W().ents) {
+          if (pr.dead || pr.team !== 'enemy' || !(pr instanceof G.Proj)) continue;
+          if (G.overlap(this, pr)) { pr.expire && pr.expire(); }
+        }
+      } else this.openAmt = G.approach(this.openAmt, 1, dt * 5);
+      if (this.shakeT > 0) this.shakeT -= dt;
+    }
+    draw(ctx, cx, cy) {
+      const x = Math.round(this.cx - cx), y = Math.round(this.y - cy), b = Math.round(this.bottom - cy);
+      // lintel
+      ctx.fillStyle = '#3a2818';
+      ctx.fillRect(x - 6, y - 4, 12, 4);
+      ctx.fillStyle = '#5a4028';
+      ctx.fillRect(x - 6, y - 4, 12, 1);
+      if (this.state === 'closed') {
+        const j = this.shakeT > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+        ctx.fillStyle = '#4a3020';
+        ctx.fillRect(x - 3 + j, y, 6, 64);
+        ctx.fillStyle = '#7a5a38';
+        ctx.fillRect(x - 2 + j, y, 4, 64);
+        ctx.fillStyle = '#9a7a50';
+        ctx.fillRect(x - 2 + j, y, 1, 64);
+        ctx.fillStyle = '#3a3a44';
+        for (const by of [8, 30, 52]) { ctx.fillRect(x - 3 + j, y + by, 6, 3); ctx.fillStyle = '#6a6a78'; ctx.fillRect(x - 3 + j, y + by, 6, 1); ctx.fillStyle = '#3a3a44'; }
+        ctx.fillStyle = '#c0a060';
+        ctx.fillRect(x - 3 + j - 1, y + 36, 2, 2);
+        ctx.fillRect(x + 2 + j, y + 36, 2, 2);
+      } else if (this.state === 'open') {
+        // swung flat against the room, face toward us
+        const wdt = Math.round(6 + 16 * this.openAmt);
+        const x0 = this.openDir > 0 ? x : x - wdt;
+        ctx.fillStyle = '#3a2618';
+        ctx.fillRect(x0, y + 1, wdt, 63);
+        ctx.fillStyle = '#5a4028';
+        ctx.fillRect(x0 + 1, y + 2, wdt - 2, 61);
+        ctx.fillStyle = '#4a3020';
+        for (let xx = x0 + 4; xx < x0 + wdt - 1; xx += 5) ctx.fillRect(xx, y + 2, 1, 61);
+        ctx.fillStyle = '#2e2e38';
+        for (const by of [8, 30, 52]) ctx.fillRect(x0, y + by, wdt, 2);
+        ctx.fillStyle = '#2a1a10';
+        ctx.fillRect(this.openDir > 0 ? x0 : x0 + wdt - 1, y + 1, 1, 63);
+      } else if (this.planks) {
+        // splinters and a hanging stub
+        ctx.fillStyle = '#5a4028';
+        ctx.fillRect(x - 2, y, 4, 9);
+        ctx.fillRect(x - 1, y + 9, 2, 3);
+        for (const pk of this.planks) {
+          ctx.fillStyle = '#4a3020';
+          ctx.fillRect(x + Math.round(pk.x) - (pk.x < 0 ? pk.w : 0), b - 3, pk.w, 3);
+          ctx.fillStyle = '#7a5a38';
+          ctx.fillRect(x + Math.round(pk.x) - (pk.x < 0 ? pk.w : 0), b - 3, pk.w, 1);
+        }
+      }
+    }
+  }
+  G.Door = Door;
+
+  // player pushes crates and doors
   G.Player.prototype.pushSolid = function (s, dx) {
+    if (s instanceof Door) return s.push(Math.sign(dx), this.state === 'roll');
     if (s instanceof Crate && this.onGround) return s.push(dx * 0.7);
     return false;
   };

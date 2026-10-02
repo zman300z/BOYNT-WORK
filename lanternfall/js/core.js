@@ -211,8 +211,12 @@
     tabL: [4],
     tabR: [5],
   };
+  G.DEFAULT_BINDS = DEFAULT_BINDS;
+  const savedBinds = G.store.get('binds', null);
+  const binds = JSON.parse(JSON.stringify(DEFAULT_BINDS));
+  if (savedBinds) for (const k in savedBinds) if (binds[k] && Array.isArray(savedBinds[k])) binds[k] = savedBinds[k];
   const Input = (G.Input = {
-    binds: DEFAULT_BINDS,
+    binds,
     keys: Object.create(null),
     latched: Object.create(null), // codes pressed since last poll
     down: Object.create(null),
@@ -227,21 +231,41 @@
     axisX: 0,
     axisY: 0,
     mouse: { x: 0, y: 0, moved: false },
+    // some keyboards / input methods report an empty e.code; fall back to e.key
+    codeOf(e) {
+      if (e.code && e.code !== 'Unidentified') return e.code;
+      const k = e.key;
+      if (k === ' ' || k === 'Spacebar') return 'Space';
+      if (k && k.length === 1 && /[a-z]/i.test(k)) return 'Key' + k.toUpperCase();
+      if (k && k.length === 1 && /[0-9]/.test(k)) return 'Digit' + k;
+      return k || '';
+    },
     init(canvas) {
       const prevent = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Tab', 'Backspace']);
-      window.addEventListener('keydown', (e) => {
-        if (prevent.has(e.code)) e.preventDefault();
-        if (!e.repeat) {
-          this.latched[e.code] = true;
+      // capture phase on window: we see keys before any host page script can swallow them
+      const down = (e) => {
+        const code = this.codeOf(e);
+        if (prevent.has(code)) e.preventDefault();
+        if (this.onRawKey && !e.repeat && this.onRawKey(code)) { e.preventDefault(); return; }
+        if (!e.repeat || !this.keys[code]) {
+          this.latched[code] = true;
           this.anyKeyLatched = true;
         }
-        this.keys[e.code] = true;
+        this.keys[code] = true;
         this.device = 'kb';
         if (G.Audio) G.Audio.unlock();
-      });
-      window.addEventListener('keyup', (e) => {
-        this.keys[e.code] = false;
-      });
+      };
+      const up = (e) => {
+        const code = this.codeOf(e);
+        if (prevent.has(code)) e.preventDefault();
+        this.keys[code] = false;
+      };
+      window.addEventListener('keydown', down, true);
+      window.addEventListener('keyup', up, true);
+      // clicking the game always gives it keyboard focus
+      const grab = () => { try { window.focus(); canvas.focus({ preventScroll: true }); } catch (err) {} };
+      canvas.addEventListener('pointerdown', grab);
+      window.addEventListener('load', grab);
       window.addEventListener('blur', () => {
         this.keys = Object.create(null);
       });
@@ -333,6 +357,12 @@
       for (const k in this.pressed) this.pressed[k] = false;
       this.anyPressed = false;
     },
+    saveBinds() { G.store.set('binds', this.binds); },
+    resetBinds() {
+      const d = JSON.parse(JSON.stringify(G.DEFAULT_BINDS));
+      for (const k in d) this.binds[k] = d[k];
+      G.store.del('binds');
+    },
     // pretty key names for prompts
     keyName(act) {
       if (this.device === 'gp') {
@@ -340,8 +370,17 @@
         return names[act] || act;
       }
       const code = this.binds[act] && this.binds[act][0];
-      if (!code) return '?';
+      return this.codeName(code);
+    },
+    codeName(code) {
+      if (!code) return '-';
       if (code.startsWith('Key')) return code.slice(3);
+      if (code.startsWith('Digit')) return code.slice(5);
+      if (code === 'Mouse0') return 'LMB';
+      if (code === 'Mouse2') return 'RMB';
+      if (code === 'Mouse1') return 'MMB';
+      if (code.startsWith('Control')) return 'CTRL';
+      if (code.startsWith('Alt')) return 'ALT';
       if (code === 'Space') return 'SPACE';
       if (code.startsWith('Arrow')) return code.slice(5).toUpperCase();
       if (code.startsWith('Shift')) return 'SHIFT';
