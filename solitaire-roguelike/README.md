@@ -197,7 +197,7 @@ bet won or lost**, and everything the wheel pays — bets, ball abilities, the D
 | **Iron Ball** | Lands on black: **+$3** |
 | **Brass Ball** | Lands on red: **+300 Chips** onto your round score |
 | **Zero Ball** | Lands on a green pocket: **+2 HEAT and $12** |
-| **Emerald** · **Garnet** · **Onyx** | 14% chance the pocket it lands in turns that colour **for the rest of the run** |
+| **Emerald** · **Garnet** · **Onyx** | 14% chance the pocket it lands in turns that colour **for the rest of the run** — each miss makes it hungrier (+6% next spin, up to 85%) until it paints |
 | **Loaded Ball** | Thrown again if it misses your colour — you watch it kick back out and take another lap |
 | **Clay Ball** | Landing on your colour counts as two balls toward winning the spin |
 | **Ghost Ball** | **Stakes nothing and can never lose** — a free throw that still counts as a hit |
@@ -212,13 +212,14 @@ Keep at it and you get **THE WHEEL IS YOURS** — all 18 pockets one colour. Tha
 essentially every spin, which means the win, the **HEAT** and the streak, every single time. The table isn't
 stupid about it: **a colour pays less the more of the wheel wears it**, and at a full takeover it pays your
 stake back and nothing more. The money goes flat and the guaranteed HEAT becomes the prize. Budget about
-**35 rounds** with one jewel ball — buy *Another Spin* from the Counter if you mean it, and never run two
+**20 rounds** with one jewel ball — buy *Another Spin* from the Counter if you mean it, and never run two
 jewel balls of different colours, because they'll fight over the same pockets and neither will finish.
 
 **You can own as many balls as you like** — only the ones *in the case* are thrown. The case seats **3** to
 start; the Counter sells **Wider Ball Case** for another seat, over and over, with no ceiling worth hitting.
 Swap your collection in and out at the wheel itself (click a ball to load or bench it), or from the shop
-shelf, where the price tag sells it back for half.
+shelf, where the price tag sells it back for half. Buy a ball with the case already full and it lands on the
+bench — the wheel flags it with a pulsing chip so it doesn't sit there unthrown.
 
 The wheel is **open all round** — hit `W` or the THE WHEEL button any time. A short Side Pot just means the
 cash tab is the live one, and you can still rearrange the case while you're standing there.

@@ -56,6 +56,8 @@ const TUNE = {
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
   paintChance: 0.14,        // a jewel ball's odds of keeping the pocket it lands in
+  paintHunger: 0.06,        // ...plus this much more for every throw since it last painted
+  paintChanceCap: 0.85,
   spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
@@ -915,17 +917,17 @@ const BALLS = [
     long: 'The ball the table came with. You always have it, you cannot sell it, and it does exactly nothing beyond landing somewhere.' },
 
   { id: 'emerald', name: 'The Emerald', tint: 'b-green', cost: 13, rarity: 'rare',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn GREEN for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn GREEN for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'Slowly repaints the wheel in your favour. Green pays the most, so more green pockets means the zero bet starts landing — but the table pays the zero less the more of them there are, so this is a build, not a printer.',
     hooks: { land: c => c.tryPaint('green') } },
 
   { id: 'garnet', name: 'The Garnet', tint: 'b-red', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn RED for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn RED for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'Repaints the wheel red a pocket at a time. Red pays less the more red there is, so this is about landing your colour more often, not about the multiple.',
     hooks: { land: c => c.tryPaint('red') } },
 
   { id: 'onyx', name: 'The Onyx', tint: 'b-black', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn BLACK for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn BLACK for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'The same deal as the Garnet, in the other direction. Pairs with anything that likes a predictable wheel.',
     hooks: { land: c => c.tryPaint('black') } },
 

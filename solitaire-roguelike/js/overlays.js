@@ -781,12 +781,14 @@ const Overlays = (() => {
     const slots = Engine.ballSlots(G.run);
     const loaded = balls.map(b => b.id);
     const ghostNote = betting < balls.length ? ' (the ghost rides free)' : '';
+    const fresh = (G.run.newOnBench || []).filter(id => bag.some(b => b.id === id) && !loaded.includes(id));
+    const freshNames = fresh.map(id => BALL_BY_ID[id].name.replace(/^The /, ''));
     under.innerHTML =
       '<div class="rw-case">' +
         '<div class="rw-case-cap">CASE <b>' + balls.length + '/' + slots + '</b></div>' +
         '<div class="rw-case-balls">' + bag.map(b =>
           '<button class="rw-ballchip ' + b.tint + (loaded.includes(b.id) ? ' in' : ' out') +
-          '" data-ball="' + b.id + '"></button>').join('') +
+          (fresh.includes(b.id) ? ' fresh' : '') + '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (many
           ? (cash ? 'your chip rides <b>every ball</b>' : 'the pot splits <b>' + betting + ' ways</b>') + ghostNote +
@@ -794,8 +796,12 @@ const Overlays = (() => {
           : 'one ball, one pocket') + '</div>' +
         '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
-      (bag.length > balls.length || slots > balls.length
-        ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '') +
+      (fresh.length
+        ? '<div class="rw-bench-alert">\u2191 Your new <b>' + freshNames.join(' and ') + '</b> ' +
+          (fresh.length > 1 ? 'are' : 'is') + ' on the bench and <b>not being thrown</b> — click ' +
+          (fresh.length > 1 ? 'them' : 'it') + ' to put ' + (fresh.length > 1 ? 'them' : 'it') + ' in the case</div>'
+        : (bag.length > balls.length || slots > balls.length
+          ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '')) +
       '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
       (spinsLeft <= 0
         ? '<div class="wheel-dead">The table is done with you this round. Swap your balls around and come back next round.</div>'
@@ -1078,6 +1084,7 @@ const Overlays = (() => {
       if (t.cash) bits.push('+$' + t.cash);
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
+      else if (t.hunger) bits.push('hungrier — ' + t.hunger + '% next time');
       const cashMode = res.mode === 'cash';
       const money = (t.share == null) ? ''
         : (t.ghost && !t.share) ? '<span class="rb-cash free">free</span>'

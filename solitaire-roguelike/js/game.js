@@ -445,8 +445,19 @@ const Game = (() => {
             if (target < 0) { t.noPaint = true; return false; }   // nothing left to take
             spread = true;
           }
-          const odds = spread ? TUNE.paintChance * TUNE.paintSpread : TUNE.paintChance;
-          if (Math.random() >= odds) return false;
+          /* A jewel ball gets hungrier every throw it fails to paint, so a long
+             dry streak is impossible rather than merely unlikely -- at a flat 13%
+             a spin, ten dry spins in a row happened one time in four. */
+          run.paintHunger = run.paintHunger || {};
+          const hunger = run.paintHunger[def.id] || 0;
+          const base = spread ? TUNE.paintChance * TUNE.paintSpread : TUNE.paintChance;
+          const odds = Math.min(TUNE.paintChanceCap, base + TUNE.paintHunger * hunger);
+          if (Math.random() >= odds) {
+            run.paintHunger[def.id] = hunger + 1;
+            t.hunger = Math.round(Math.min(TUNE.paintChanceCap, base + TUNE.paintHunger * (hunger + 1)) * 100);
+            return false;
+          }
+          run.paintHunger[def.id] = 0;
           const ok = Engine.paintPocket(run, target, to);
           if (ok) {
             t.painted = to;
@@ -1429,6 +1440,7 @@ const Game = (() => {
       /* it goes straight into the case if there is a seat, otherwise onto the bench */
       const loaded = G.run.balls.length < Engine.ballSlots(G.run);
       if (loaded) G.run.balls.push(item.id);
+      else { G.run.newOnBench = G.run.newOnBench || []; G.run.newOnBench.push(item.id); }
       item.bought = true;
       save();
       return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id], loaded };
@@ -1531,6 +1543,7 @@ const Game = (() => {
       return { ok: false, reason: 'The case only seats ' + Engine.ballSlots(run) + '. Take one out first.' };
     }
     run.balls.push(id);
+    if (run.newOnBench) run.newOnBench = run.newOnBench.filter(x => x !== id);
     save();
     return { ok: true, balls: run.balls.slice() };
   }

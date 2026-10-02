@@ -42,6 +42,39 @@ const UI = (() => {
   let hintCells = [];
 
   /* ============ CARD ELEMENT ============ */
+  /* Classic pip layouts, as % of the inner pip area. Pips in the lower half are
+     printed upside down, the way a real deck is. */
+  const PIP_LAYOUT = {
+    2:  [[50, 0], [50, 100]],
+    3:  [[50, 0], [50, 50], [50, 100]],
+    4:  [[0, 0], [100, 0], [0, 100], [100, 100]],
+    5:  [[0, 0], [100, 0], [50, 50], [0, 100], [100, 100]],
+    6:  [[0, 0], [100, 0], [0, 50], [100, 50], [0, 100], [100, 100]],
+    7:  [[0, 0], [100, 0], [50, 25], [0, 50], [100, 50], [0, 100], [100, 100]],
+    8:  [[0, 0], [100, 0], [50, 25], [0, 50], [100, 50], [50, 75], [0, 100], [100, 100]],
+    9:  [[0, 0], [100, 0], [0, 33.3], [100, 33.3], [50, 50], [0, 66.7], [100, 66.7], [0, 100], [100, 100]],
+    10: [[0, 0], [100, 0], [50, 16.7], [0, 33.3], [100, 33.3], [0, 66.7], [100, 66.7], [50, 83.3], [0, 100], [100, 100]]
+  };
+  const COURT = { 11: { icon: 'jester', title: 'JACK' }, 12: { icon: 'glassgem', title: 'QUEEN' }, 13: { icon: 'crown', title: 'KING' } };
+
+  /* the middle of a face: pips for 2-10, a single grand pip for an ace, and a
+     framed portrait for the court cards, so a King never reads like a 2 */
+  function cardCentre(rank, s, r) {
+    if (rank >= 11) {
+      const c = COURT[rank];
+      return '<div class="court-frame">' +
+        '<div class="court-ico">' + icon(c.icon) + '</div>' +
+        '<div class="court-rank">' + r + '</div>' +
+        '<div class="court-suit">' + s + '</div>' +
+      '</div>' +
+      '<div class="mid small-only">' + s + '</div>';
+    }
+    if (rank === 1) return '<div class="mid ace-pip">' + s + '</div>';
+    const pips = (PIP_LAYOUT[rank] || []).map(([x, y]) =>
+      '<span class="pip' + (y > 50 ? ' flip' : '') + '" style="left:' + x + '%;top:' + y + '%">' + s + '</span>').join('');
+    return '<div class="pips">' + pips + '</div><div class="mid small-only">' + s + '</div>';
+  }
+
   function cardEl(card, opts) {
     opts = opts || {};
     const suit = SUITS[card.suit];
@@ -82,10 +115,11 @@ const UI = (() => {
 
     const r = RANK_NAMES[card.rank];
     const s = card.enhancement === 'wild' ? '✿' : suit.sym;
+    n.classList.add(card.rank >= 11 ? 'court' : card.rank === 1 ? 'ace' : 'spot');
     n.innerHTML =
       '<div class="face">' +
         '<div class="corner tl"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
-        '<div class="mid">' + s + '</div>' +
+        cardCentre(card.rank, s, r) +
         '<div class="corner br"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
         (card.enhancement && card.enhancement !== 'none' && ENHANCEMENTS[card.enhancement].glyph
           ? '<div class="enh-badge">' + ENHANCEMENTS[card.enhancement].glyph + '</div>' : '') +
@@ -595,29 +629,47 @@ const UI = (() => {
   function clearSelection() { selection = null; applySelectionClasses(); }
 
   let landedId = null;
-  function doMove(src, dst) {
+  /* the card a move is about to pick up, wherever it lives */
+  function cardAt(src) {
+    if (src.zone === 'tableau') return (G.board.tableau[src.col] || [])[src.index];
+    if (src.zone === 'waste') return G.board.waste[src.index != null ? src.index : G.board.waste.length - 1];
+    if (src.zone === 'stash') return (G.run.stash || [])[src.index];
+    if (src.zone === 'foundation') { const f = G.board.foundations[src.suit] || []; return f[f.length - 1]; }
+    return null;
+  }
+
+  /* opts.from: where the card should fly in from -- the drop point after a drag.
+     Without it the card flies from wherever it was sitting, so a click or a
+     double-click moves the card across the table instead of teleporting it. */
+  function doMove(src, dst, opts) {
     stopAuto();                       // a hand on the table always wins
+    const moving = cardAt(src);
+    let from = opts && opts.from;
+    if (!from && moving) {
+      const node = document.querySelector('[data-id="' + moving.id + '"]');
+      if (node) from = node.getBoundingClientRect();
+    }
+    const fly = () => { if (moving && from) flyCard(moving.id, from); };
+
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
-      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); fly(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
     if (src.zone === 'stash') {
       const ok2 = Game.stashPlay(src.index, dst);
-      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); clearSelection(); render(); fly(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
-    const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
-                 : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
-                 : null;
     const ok = Game.tryMove(src, dst);
     if (ok) {
       landedId = moving ? moving.id : null;
       Sfx.place();
       clearSelection();
       render();
+      fly();
       drainFx();
       checkStuck();
     } else {
@@ -762,6 +814,8 @@ const UI = (() => {
     if (!drag) { sweepGhosts(); return; }
     const d = drag;
     drag = null;
+    const ghostCard = d.ghost && d.ghost.querySelector('.card');
+    const dropRect = ghostCard ? ghostCard.getBoundingClientRect() : (d.ghost ? d.ghost.getBoundingClientRect() : null);
     if (d.ghost) d.ghost.remove();
     sweepGhosts();
     document.body.classList.remove('dragging-now');
@@ -770,7 +824,7 @@ const UI = (() => {
     $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
     if (d.moved) {
       const dst = dropTargetAt(e.clientX, e.clientY);
-      if (dst) doMove(d.src, dst);
+      if (dst) doMove(d.src, dst, { from: dropRect });
       else render();
     } else {
       onTap(d.src, e);

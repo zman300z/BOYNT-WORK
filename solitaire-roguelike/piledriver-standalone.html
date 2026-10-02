@@ -1689,6 +1689,62 @@ body.hot::before{ opacity:.6; animation:scanRoll .4s linear infinite; }
 .wheel-result.even{ color:var(--paper); }
 .rw-ballchip:disabled{ cursor:default; }
 
+/* ---------------- CARD FACES ----------------
+   Printed paper, real pip layouts, and court cards with a portrait panel. On
+   small screens the pips get too fine to read, so the single big pip returns. */
+.card:not(.down):not(.oddity){
+  background:
+    radial-gradient(120% 90% at 30% 10%, #fffdf6 0%, #f6f0e2 60%, #ece3cf 100%);
+}
+.card:not(.down):not(.oddity) .face::before{
+  content:''; position:absolute; inset:3px; border-radius:5px; pointer-events:none;
+  border:1px solid rgba(0,0,0,.08);
+}
+.card .pips{
+  position:absolute; left:33%; right:33%; top:16%; bottom:16%;
+  font-size:calc(var(--ch) * .12); line-height:1;
+}
+.card .pip{ position:absolute; transform:translate(-50%,-50%); }
+.card .pip.flip{ transform:translate(-50%,-50%) rotate(180deg); }
+.card .ace-pip{ font-size:calc(var(--ch) * .42); filter:drop-shadow(0 2px 0 rgba(0,0,0,.12)); }
+.card .court-frame{
+  position:absolute; left:22%; right:22%; top:15%; bottom:15%; border-radius:5px;
+  border:1.5px solid currentColor; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:1px; opacity:.92;
+  background:
+    repeating-linear-gradient(135deg, rgba(0,0,0,.035) 0 3px, transparent 3px 6px),
+    linear-gradient(180deg, rgba(255,255,255,.6), rgba(0,0,0,.05));
+}
+.card.red .court-frame{ background-color:rgba(217,43,75,.07); }
+.card.black .court-frame{ background-color:rgba(22,24,29,.06); }
+.card .court-ico{ width:46%; aspect-ratio:1; }
+.card .court-ico .ico{ width:100%; height:100%; }
+.card .court-rank{ font-family:var(--display); font-size:calc(var(--ch) * .2); line-height:.9; }
+.card .court-suit{ font-size:calc(var(--ch) * .12); line-height:1; }
+.card .mid.small-only{ display:none; }
+@media (max-width:1100px){
+  .card .pips, .card .court-frame{ display:none; }
+  .card .mid.small-only{ display:flex; }
+}
+
+/* a ball you bought that is sitting unused on the bench */
+.rw-ballchip.fresh{ opacity:1; filter:none; animation:freshPulse 1.1s ease-in-out infinite; }
+@keyframes freshPulse{
+  0%,100%{ box-shadow:0 0 0 2px var(--lime), 0 0 4px var(--lime); transform:scale(1); }
+  50%{ box-shadow:0 0 0 3px var(--lime), 0 0 16px var(--lime); transform:scale(1.25); }
+}
+.rw-bench-alert{
+  font-size:11px; text-align:center; margin:-2px 0 6px; padding:5px 8px; border-radius:7px;
+  color:var(--lime); background:rgba(126,231,135,.1); border:1px solid rgba(126,231,135,.35);
+}
+
+/* a card you can pick up rises a touch under the cursor */
+.card.grabbable:hover{
+  transform:translateY(-3px);
+  box-shadow:0 5px 0 rgba(0,0,0,.4), 0 14px 22px rgba(0,0,0,.5);
+}
+body.dragging-now .card.grabbable:hover{ transform:none; }
+
 </style>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127183;</text></svg>">
 </head>
@@ -2168,6 +2224,8 @@ const TUNE = {
   cashPayGreen: 18,
   cashChips: [5, 10, 25],   // quick stake buttons
   paintChance: 0.14,        // a jewel ball's odds of keeping the pocket it lands in
+  paintHunger: 0.06,        // ...plus this much more for every throw since it last painted
+  paintChanceCap: 0.85,
   spinsPerRound: 3,         // the wheel is an event, not a grind
   startingBallSlots: 3,     // how many balls the case can hold at the start
   maxBallSlots: 12,         // the counter sells more, and keeps selling them
@@ -3027,17 +3085,17 @@ const BALLS = [
     long: 'The ball the table came with. You always have it, you cannot sell it, and it does exactly nothing beyond landing somewhere.' },
 
   { id: 'emerald', name: 'The Emerald', tint: 'b-green', cost: 13, rarity: 'rare',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn GREEN for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn GREEN for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'Slowly repaints the wheel in your favour. Green pays the most, so more green pockets means the zero bet starts landing — but the table pays the zero less the more of them there are, so this is a build, not a printer.',
     hooks: { land: c => c.tryPaint('green') } },
 
   { id: 'garnet', name: 'The Garnet', tint: 'b-red', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn RED for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn RED for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'Repaints the wheel red a pocket at a time. Red pays less the more red there is, so this is about landing your colour more often, not about the multiple.',
     hooks: { land: c => c.tryPaint('red') } },
 
   { id: 'onyx', name: 'The Onyx', tint: 'b-black', cost: 9, rarity: 'uncommon',
-    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn BLACK for the rest of the run.',
+    text: 'Where it lands has a ' + Math.round(TUNE.paintChance * 100) + '% chance to turn BLACK for the rest of the run. Every miss makes it hungrier (+' + Math.round(TUNE.paintHunger * 100) + '% a spin).',
     long: 'The same deal as the Garnet, in the other direction. Pairs with anything that likes a predictable wheel.',
     hooks: { land: c => c.tryPaint('black') } },
 
@@ -4528,8 +4586,19 @@ const Game = (() => {
             if (target < 0) { t.noPaint = true; return false; }   // nothing left to take
             spread = true;
           }
-          const odds = spread ? TUNE.paintChance * TUNE.paintSpread : TUNE.paintChance;
-          if (Math.random() >= odds) return false;
+          /* A jewel ball gets hungrier every throw it fails to paint, so a long
+             dry streak is impossible rather than merely unlikely -- at a flat 13%
+             a spin, ten dry spins in a row happened one time in four. */
+          run.paintHunger = run.paintHunger || {};
+          const hunger = run.paintHunger[def.id] || 0;
+          const base = spread ? TUNE.paintChance * TUNE.paintSpread : TUNE.paintChance;
+          const odds = Math.min(TUNE.paintChanceCap, base + TUNE.paintHunger * hunger);
+          if (Math.random() >= odds) {
+            run.paintHunger[def.id] = hunger + 1;
+            t.hunger = Math.round(Math.min(TUNE.paintChanceCap, base + TUNE.paintHunger * (hunger + 1)) * 100);
+            return false;
+          }
+          run.paintHunger[def.id] = 0;
           const ok = Engine.paintPocket(run, target, to);
           if (ok) {
             t.painted = to;
@@ -5512,6 +5581,7 @@ const Game = (() => {
       /* it goes straight into the case if there is a seat, otherwise onto the bench */
       const loaded = G.run.balls.length < Engine.ballSlots(G.run);
       if (loaded) G.run.balls.push(item.id);
+      else { G.run.newOnBench = G.run.newOnBench || []; G.run.newOnBench.push(item.id); }
       item.bought = true;
       save();
       return { ok: true, kind: 'ball', ball: BALL_BY_ID[item.id], loaded };
@@ -5614,6 +5684,7 @@ const Game = (() => {
       return { ok: false, reason: 'The case only seats ' + Engine.ballSlots(run) + '. Take one out first.' };
     }
     run.balls.push(id);
+    if (run.newOnBench) run.newOnBench = run.newOnBench.filter(x => x !== id);
     save();
     return { ok: true, balls: run.balls.slice() };
   }
@@ -6103,6 +6174,39 @@ const UI = (() => {
   let hintCells = [];
 
   /* ============ CARD ELEMENT ============ */
+  /* Classic pip layouts, as % of the inner pip area. Pips in the lower half are
+     printed upside down, the way a real deck is. */
+  const PIP_LAYOUT = {
+    2:  [[50, 0], [50, 100]],
+    3:  [[50, 0], [50, 50], [50, 100]],
+    4:  [[0, 0], [100, 0], [0, 100], [100, 100]],
+    5:  [[0, 0], [100, 0], [50, 50], [0, 100], [100, 100]],
+    6:  [[0, 0], [100, 0], [0, 50], [100, 50], [0, 100], [100, 100]],
+    7:  [[0, 0], [100, 0], [50, 25], [0, 50], [100, 50], [0, 100], [100, 100]],
+    8:  [[0, 0], [100, 0], [50, 25], [0, 50], [100, 50], [50, 75], [0, 100], [100, 100]],
+    9:  [[0, 0], [100, 0], [0, 33.3], [100, 33.3], [50, 50], [0, 66.7], [100, 66.7], [0, 100], [100, 100]],
+    10: [[0, 0], [100, 0], [50, 16.7], [0, 33.3], [100, 33.3], [0, 66.7], [100, 66.7], [50, 83.3], [0, 100], [100, 100]]
+  };
+  const COURT = { 11: { icon: 'jester', title: 'JACK' }, 12: { icon: 'glassgem', title: 'QUEEN' }, 13: { icon: 'crown', title: 'KING' } };
+
+  /* the middle of a face: pips for 2-10, a single grand pip for an ace, and a
+     framed portrait for the court cards, so a King never reads like a 2 */
+  function cardCentre(rank, s, r) {
+    if (rank >= 11) {
+      const c = COURT[rank];
+      return '<div class="court-frame">' +
+        '<div class="court-ico">' + icon(c.icon) + '</div>' +
+        '<div class="court-rank">' + r + '</div>' +
+        '<div class="court-suit">' + s + '</div>' +
+      '</div>' +
+      '<div class="mid small-only">' + s + '</div>';
+    }
+    if (rank === 1) return '<div class="mid ace-pip">' + s + '</div>';
+    const pips = (PIP_LAYOUT[rank] || []).map(([x, y]) =>
+      '<span class="pip' + (y > 50 ? ' flip' : '') + '" style="left:' + x + '%;top:' + y + '%">' + s + '</span>').join('');
+    return '<div class="pips">' + pips + '</div><div class="mid small-only">' + s + '</div>';
+  }
+
   function cardEl(card, opts) {
     opts = opts || {};
     const suit = SUITS[card.suit];
@@ -6143,10 +6247,11 @@ const UI = (() => {
 
     const r = RANK_NAMES[card.rank];
     const s = card.enhancement === 'wild' ? '✿' : suit.sym;
+    n.classList.add(card.rank >= 11 ? 'court' : card.rank === 1 ? 'ace' : 'spot');
     n.innerHTML =
       '<div class="face">' +
         '<div class="corner tl"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
-        '<div class="mid">' + s + '</div>' +
+        cardCentre(card.rank, s, r) +
         '<div class="corner br"><span class="rk">' + r + '</span><span class="st">' + s + '</span></div>' +
         (card.enhancement && card.enhancement !== 'none' && ENHANCEMENTS[card.enhancement].glyph
           ? '<div class="enh-badge">' + ENHANCEMENTS[card.enhancement].glyph + '</div>' : '') +
@@ -6656,29 +6761,47 @@ const UI = (() => {
   function clearSelection() { selection = null; applySelectionClasses(); }
 
   let landedId = null;
-  function doMove(src, dst) {
+  /* the card a move is about to pick up, wherever it lives */
+  function cardAt(src) {
+    if (src.zone === 'tableau') return (G.board.tableau[src.col] || [])[src.index];
+    if (src.zone === 'waste') return G.board.waste[src.index != null ? src.index : G.board.waste.length - 1];
+    if (src.zone === 'stash') return (G.run.stash || [])[src.index];
+    if (src.zone === 'foundation') { const f = G.board.foundations[src.suit] || []; return f[f.length - 1]; }
+    return null;
+  }
+
+  /* opts.from: where the card should fly in from -- the drop point after a drag.
+     Without it the card flies from wherever it was sitting, so a click or a
+     double-click moves the card across the table instead of teleporting it. */
+  function doMove(src, dst, opts) {
     stopAuto();                       // a hand on the table always wins
+    const moving = cardAt(src);
+    let from = opts && opts.from;
+    if (!from && moving) {
+      const node = document.querySelector('[data-id="' + moving.id + '"]');
+      if (node) from = node.getBoundingClientRect();
+    }
+    const fly = () => { if (moving && from) flyCard(moving.id, from); };
+
     if (dst.zone === 'stash') {
       const ok2 = Game.stash(src);
-      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); toast(quip('wish'), 1500); clearSelection(); render(); fly(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
     if (src.zone === 'stash') {
       const ok2 = Game.stashPlay(src.index, dst);
-      if (ok2) { Sfx.place(); clearSelection(); render(); drainFx(); checkStuck(); }
+      if (ok2) { Sfx.place(); clearSelection(); render(); fly(); drainFx(); checkStuck(); }
       else { Sfx.error(); shake($('#stash')); render(); G.fx.length = 0; }
       return ok2;
     }
-    const moving = src.zone === 'tableau' ? (G.board.tableau[src.col] || [])[src.index]
-                 : src.zone === 'waste' ? G.board.waste[src.index != null ? src.index : G.board.waste.length - 1]
-                 : null;
     const ok = Game.tryMove(src, dst);
     if (ok) {
       landedId = moving ? moving.id : null;
       Sfx.place();
       clearSelection();
       render();
+      fly();
       drainFx();
       checkStuck();
     } else {
@@ -6823,6 +6946,8 @@ const UI = (() => {
     if (!drag) { sweepGhosts(); return; }
     const d = drag;
     drag = null;
+    const ghostCard = d.ghost && d.ghost.querySelector('.card');
+    const dropRect = ghostCard ? ghostCard.getBoundingClientRect() : (d.ghost ? d.ghost.getBoundingClientRect() : null);
     if (d.ghost) d.ghost.remove();
     sweepGhosts();
     document.body.classList.remove('dragging-now');
@@ -6831,7 +6956,7 @@ const UI = (() => {
     $$('.card.lifted').forEach(n => n.classList.remove('lifted'));
     if (d.moved) {
       const dst = dropTargetAt(e.clientX, e.clientY);
-      if (dst) doMove(d.src, dst);
+      if (dst) doMove(d.src, dst, { from: dropRect });
       else render();
     } else {
       onTap(d.src, e);
@@ -8386,12 +8511,14 @@ const Overlays = (() => {
     const slots = Engine.ballSlots(G.run);
     const loaded = balls.map(b => b.id);
     const ghostNote = betting < balls.length ? ' (the ghost rides free)' : '';
+    const fresh = (G.run.newOnBench || []).filter(id => bag.some(b => b.id === id) && !loaded.includes(id));
+    const freshNames = fresh.map(id => BALL_BY_ID[id].name.replace(/^The /, ''));
     under.innerHTML =
       '<div class="rw-case">' +
         '<div class="rw-case-cap">CASE <b>' + balls.length + '/' + slots + '</b></div>' +
         '<div class="rw-case-balls">' + bag.map(b =>
           '<button class="rw-ballchip ' + b.tint + (loaded.includes(b.id) ? ' in' : ' out') +
-          '" data-ball="' + b.id + '"></button>').join('') +
+          (fresh.includes(b.id) ? ' fresh' : '') + '" data-ball="' + b.id + '"></button>').join('') +
         '</div>' +
         '<div class="rw-case-need">' + (many
           ? (cash ? 'your chip rides <b>every ball</b>' : 'the pot splits <b>' + betting + ' ways</b>') + ghostNote +
@@ -8399,8 +8526,12 @@ const Overlays = (() => {
           : 'one ball, one pocket') + '</div>' +
         '<div class="rw-spins' + (spinsLeft <= 0 ? ' out' : '') + '">SPINS LEFT <b>' + spinsLeft + '</b></div>' +
       '</div>' +
-      (bag.length > balls.length || slots > balls.length
-        ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '') +
+      (fresh.length
+        ? '<div class="rw-bench-alert">\u2191 Your new <b>' + freshNames.join(' and ') + '</b> ' +
+          (fresh.length > 1 ? 'are' : 'is') + ' on the bench and <b>not being thrown</b> — click ' +
+          (fresh.length > 1 ? 'them' : 'it') + ' to put ' + (fresh.length > 1 ? 'them' : 'it') + ' in the case</div>'
+        : (bag.length > balls.length || slots > balls.length
+          ? '<div class="rw-swap-hint">click a ball to swap it in or out · the Counter sells wider cases</div>' : '')) +
       '<div class="wheel-bets" id="rw-bets">' + bet('red') + bet('green') + bet('black') + '</div>' +
       (spinsLeft <= 0
         ? '<div class="wheel-dead">The table is done with you this round. Swap your balls around and come back next round.</div>'
@@ -8683,6 +8814,7 @@ const Overlays = (() => {
       if (t.cash) bits.push('+$' + t.cash);
       if (t.heat) bits.push('+' + t.heat + ' HEAT');
       if (t.painted) bits.push('painted ' + t.painted.toUpperCase() + ' for the run');
+      else if (t.hunger) bits.push('hungrier — ' + t.hunger + '% next time');
       const cashMode = res.mode === 'cash';
       const money = (t.share == null) ? ''
         : (t.ghost && !t.share) ? '<span class="rb-cash free">free</span>'
