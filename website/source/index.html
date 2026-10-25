@@ -106,6 +106,8 @@ body {
 img { display:block; max-width:100%; }
 button { font:inherit; }
 :focus-visible { outline:2px solid var(--sky); outline-offset:3px; }
+[hidden] { display:none !important; }
+.sr-only { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 
 /* scroll progress */
 .progress-bar { position:fixed; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--ocean),var(--aqua)); z-index:200; transform-origin:left; transform:scaleX(0); }
@@ -119,8 +121,12 @@ button { font:inherit; }
   font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:600;
   letter-spacing:2px; text-transform:uppercase; border:1.5px solid transparent;
   transition:background .2s, border-color .2s, transform .2s, box-shadow .2s, color .2s;
+  position:relative; overflow:hidden;
 }
 .btn:hover { transform:translateY(-2px); }
+.tap-ring { position:absolute; border-radius:50%; background:rgba(255,255,255,.55); pointer-events:none; transform:scale(0); opacity:0; }
+.btn-shop .tee-ico { width:18px; height:18px; flex-shrink:0; }
+.shop-tag { background:var(--gold); color:var(--ink); font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; padding:4px 8px; border-radius:20px; }
 .btn .arr { transition:transform .2s; }
 .btn:hover .arr { transform:translateX(4px); }
 .btn-primary { background:var(--ocean-light); color:#fff; }
@@ -191,6 +197,11 @@ nav.scrolled .nav-fw { color:var(--gold-deep) !important; }
   transition:background .2s, transform .2s !important;
 }
 .nav-cta:hover { background:var(--go-hi); transform:translateY(-1px); }
+.nav-shop { display:inline-flex; align-items:center; gap:8px; border:1.5px solid currentColor; border-radius:40px; padding:8px 16px; opacity:1 !important; transition:background .2s; }
+.nav-links a.nav-shop::after { display:none; }
+.nav-shop svg { width:15px; height:15px; }
+.nav-shop:hover { background:rgba(255,255,255,.12); }
+nav.scrolled .nav-shop:hover { background:rgba(26,22,18,.06); }
 .nav-cta .live-dot { width:7px; height:7px; background:var(--go-ink); }
 .nav-cta .live-dot::after { background:var(--go-ink); }
 
@@ -316,11 +327,36 @@ nav.scrolled .nav-fw { color:var(--gold-deep) !important; }
 /* ============================================================
    MARQUEE
    ============================================================ */
-.marquee-wrap { background:var(--ocean-deep); padding:18px 0; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06); }
 .marquee-track { display:flex; width:max-content; animation:marquee 40s linear infinite; white-space:nowrap; }
 .marquee-item { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:4px; color:rgba(255,255,255,.28); flex-shrink:0; padding:0 28px; }
-.marquee-item.accent { color:var(--sky); }
 @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* two crossing ribbons under the hero: green = back the launch, gold = merch shop */
+.tapes { position:relative; height:118px; background:var(--ocean-deep); overflow:hidden; }
+.tape { position:absolute; left:-4%; right:-4%; display:block; padding:11px 0; text-decoration:none; overflow:hidden; box-shadow:0 10px 24px rgba(0,8,16,.35); }
+.tape-go { top:22px; z-index:2; background:var(--go); color:var(--go-ink); transform:rotate(-2.2deg); }
+.tape-shop { top:58px; background:var(--gold); color:var(--ink); transform:rotate(1.8deg); }
+.tape .marquee-track { animation-duration:34s; }
+.tape-shop .marquee-track { animation-direction:reverse; }
+.tape .marquee-item { color:inherit; font-size:22px; letter-spacing:3px; padding:0 18px; }
+.tapes:not(.is-live) .marquee-track, .tape:hover .marquee-track, .tape:focus-visible .marquee-track { animation-play-state:paused; }
+.tape:focus-visible { outline:3px solid #fff; outline-offset:-3px; }
+.tapes:has(.tape-shop[hidden]) { height:76px; }
+
+/* headlines "surface" line by line, then a wave draws under the accent word */
+.ln { display:block; overflow:hidden; padding:.06em 0 .16em; margin:-.06em 0 -.16em; }
+.js [data-surface] .ln-in { display:block; transform:translateY(112%) rotate(2deg); transform-origin:0 100%; transition:transform .9s var(--ease-out) calc(var(--l) * 90ms); }
+[data-surface].surfaced .ln-in { transform:none; }
+[data-surface] em { position:relative; display:inline-block; }
+[data-surface] em::after {
+  content:''; position:absolute; left:0; right:.1em; bottom:-.07em; height:.13em;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%234ab8d4' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 50% / .5em 100%;
+  clip-path:inset(0 100% 0 0); transition:clip-path .8s ease .55s;
+}
+[data-surface].surfaced em::after { clip-path:inset(0); }
+.about-title em::after { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%231a6b8a' stroke-width='2.4'/%3E%3C/svg%3E"); }
+.launch-title em::after { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%2305ce78' stroke-width='2.4'/%3E%3C/svg%3E"); }
+#merchTitle em::after { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%23f5c04a' stroke-width='2.4'/%3E%3C/svg%3E"); animation:waveSlide 1.6s linear infinite; }
 
 /* ============================================================
    PROOF — "they actually float"
@@ -340,7 +376,7 @@ nav.scrolled .nav-fw { color:var(--gold-deep) !important; }
 .ripples i:nth-child(2) { animation-delay:1.4s; }
 .ripples i:nth-child(3) { animation-delay:2.8s; }
 @keyframes ripple { 0%{transform:scale(.4);opacity:.7} 100%{transform:scale(1.9);opacity:0} }
-.proof-content { display:flex; flex-direction:column; justify-content:center; padding:80px; }
+.proof-content { display:flex; flex-direction:column; justify-content:center; padding:80px 80px calc(80px + clamp(46px,9vh,110px)); }
 .proof-label { font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:4px; text-transform:uppercase; color:var(--sky); margin-bottom:20px; }
 .proof-title { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:clamp(52px,5vw,80px); letter-spacing:2px; color:var(--white); line-height:.95; margin-bottom:28px; }
 .proof-title em { color:var(--sky); font-style:normal; }
@@ -417,7 +453,7 @@ nav.scrolled .nav-fw { color:var(--gold-deep) !important; }
 /* ============================================================
    FEATURES
    ============================================================ */
-.features-strip { background:var(--ink-soft); padding:72px 80px; }
+.features-strip { background:linear-gradient(180deg, #0d3d52 0%, #04121f 100%); padding:72px 80px; }
 .features-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
 .feature-item { background:rgba(255,255,255,.04); padding:40px 32px; text-align:center; transition:background .25s; }
 .feature-item:hover { background:rgba(255,255,255,.08); }
@@ -552,24 +588,141 @@ nav.scrolled .nav-fw { color:var(--gold-deep) !important; }
 .ks-alt-value { font-size:15px; color:var(--aqua); word-break:break-word; }
 
 /* ============================================================
-   MERCH (live from Shopify)
+   MERCH — the shop that's open today: a sunlit "pool" section
    ============================================================ */
-.merch-grid { grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
-.merch-status { text-align:center; color:var(--mist); font-weight:300; font-size:15px; padding:6px 0 40px; }
-.m-card .product-card-img { position:relative; }
-.m-card .product-card-img img { position:absolute; inset:0; transition:opacity .45s ease, transform .6s ease; }
-.m-card:hover .product-card-img img { animation:none; }
-.m-front { opacity:1; }
-.m-back { opacity:0; }
-.m-card:hover .m-front { opacity:0; }
-.m-card:hover .m-back { opacity:1; transform:scale(1.04); }
-.m-card:hover .product-card-img img.m-solo { transform:scale(1.06); opacity:1; }
-.m-badge2 { position:absolute; top:14px; right:14px; z-index:2; background:var(--ink); color:var(--white); font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 10px; border-radius:2px; }
-.m-flip { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:2; font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--mist); opacity:.7; white-space:nowrap; transition:opacity .25s; }
-.m-card:hover .m-flip { opacity:0; }
-.m-dots { grid-column:1 / -1; display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; align-items:center; }
-.m-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.16); display:inline-block; }
+#merch.merch-stage {
+  position:relative; color:#fff; padding:110px 80px 170px;
+  background:
+    radial-gradient(90% 50% at 50% 0%, rgba(109,212,236,.35), transparent 70%),
+    linear-gradient(180deg, #1f7fa3 0%, #1a6b8a 45%, #0d3d52 100%);
+}
+.merch-stage .waves.rise { top:auto; bottom:calc(100% - 1px); }
+.merch-fx { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.merch-caustics {
+  position:absolute; inset:-25%; opacity:.09; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M-10 30c30-14 50 14 80 0s50-14 80 0 50 14 80 0'/%3E%3Cpath d='M-10 74c30 14 50-14 80 0s50 14 80 0 50-14 80 0'/%3E%3Cpath d='M-10 118c30-14 50 14 80 0s50-14 80 0 50 14 80 0'/%3E%3Cpath d='M-10 162c30 14 50-14 80 0s50 14 80 0 50-14 80 0'/%3E%3Cpath d='M-10 206c30-14 50 14 80 0s50-14 80 0 50 14 80 0'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 300px;
+  animation:caustics 18s ease-in-out infinite alternate; animation-play-state:paused;
+}
+.merch-caustics.b { opacity:.06; background-size:460px; animation-duration:26s; animation-direction:alternate-reverse; }
+#merch.is-live .merch-caustics { animation-play-state:running; }
+.merch-inner { position:relative; z-index:1; max-width:1120px; margin:0 auto; }
+#merch .section-header { max-width:760px; margin:0 auto 44px; }
+.m-open-pill {
+  display:inline-flex; align-items:center; gap:10px; margin-bottom:18px; padding:8px 16px; border-radius:40px;
+  background:var(--gold); color:var(--ink); font:600 13px/1 'Barlow Condensed',sans-serif; letter-spacing:2.5px; text-transform:uppercase;
+  box-shadow:0 8px 24px rgba(0,20,32,.25);
+}
+.m-pill-dot { position:relative; width:8px; height:8px; border-radius:50%; background:var(--ink); }
+.m-pill-dot::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--ink); animation:livePing 1.8s ease-out infinite; }
+#merch .section-title { color:#fff; }
+#merch .section-title em { color:var(--gold); font-style:normal; }
+#merch .section-sub { color:rgba(255,255,255,.9); }
+.merch-status { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:14px; text-align:center; font-size:16px; color:#fff; padding:10px 0 30px; }
+.merch-debug { white-space:pre-wrap; text-align:left; font:12px/1.5 ui-monospace,Menlo,monospace; background:rgba(0,0,0,.35); color:#d7f3ff; padding:14px; border-radius:8px; margin:0 0 20px; max-height:340px; overflow:auto; }
+
+/* loading shimmer (transform-only) */
+.m-skels { display:grid; gap:18px; }
+.m-skel { position:relative; overflow:hidden; border-radius:12px; background:rgba(255,255,255,.12); }
+.m-skel::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent); animation:skel 1.4s ease-in-out infinite; }
+@keyframes skel { to { transform:translateX(100%); } }
+.m-skel-spot { height:440px; }
+.m-skel-row { display:flex; justify-content:center; gap:18px; }
+.m-skel-card { width:min(300px, 48%); aspect-ratio:3 / 4; }
+
+/* spotlight — the photo tee, back and front at once */
+.m-spot { position:relative; margin:0 auto 22px; background:#fff; color:var(--ink); border-radius:14px; overflow:hidden; box-shadow:0 30px 80px rgba(0,20,32,.35); }
+.m-spot-stage { position:relative; background:#f3f3f1; }
+.m-face { position:relative; display:block; width:100%; padding:0; border:0; background:#f3f3f1; cursor:pointer; overflow:hidden; color:inherit; font:inherit; }
+.m-face img { display:block; width:100%; aspect-ratio:1; object-fit:contain; }
+.m-sidetag {
+  position:absolute; left:10px; bottom:10px; z-index:2; padding:6px 10px; border-radius:3px; pointer-events:none;
+  background:var(--ink); color:#fff; font:600 12px/1 'Barlow Condensed',sans-serif; letter-spacing:2.5px; text-transform:uppercase;
+}
+.m-sidetag.is-back { background:var(--gold); color:var(--ink); }
+.m-ribbon {
+  position:absolute; z-index:4; top:14px; left:14px; display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:40px; pointer-events:none;
+  background:var(--gold); color:var(--ink); font:600 13px/1 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; box-shadow:0 6px 16px rgba(0,0,0,.18);
+}
+.m-ribbon svg { width:15px; height:15px; }
+.m-spot-info { padding:22px 20px 24px; }
+.m-kicker { font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold-deep); }
+.m-spot-title { font:400 clamp(40px,4.4vw,56px)/.95 'Bebas Neue',sans-serif; letter-spacing:2px; margin:6px 0 12px; }
+.m-spot-note { display:flex; gap:9px; align-items:flex-start; font-size:16px; font-weight:300; line-height:1.5; color:var(--ink-soft); }
+.m-spot-note svg { width:20px; height:20px; flex-shrink:0; color:var(--gold-deep); margin-top:2px; }
+.m-spot-note strong { font-weight:600; color:var(--ink); }
+.m-spot-price { font:400 40px 'Bebas Neue',sans-serif; letter-spacing:2px; color:var(--ocean); margin:12px 0 10px; }
+.m-spot-colors { margin-bottom:18px; }
+.m-spot-colorname { display:block; font:500 12px 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; color:var(--mist); margin-bottom:6px; }
+.m-spot-colorname b { color:var(--ink); font-weight:600; }
+.m-dotbtn { width:32px; height:32px; border-radius:50%; border:0; cursor:pointer; margin:4px 10px 4px 2px; box-shadow:inset 0 0 0 1px rgba(26,22,18,.22); transition:box-shadow .2s; }
+.m-dotbtn[aria-pressed="true"] { box-shadow:inset 0 0 0 1px rgba(26,22,18,.22), 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+.m-cta {
+  display:block; width:100%; margin-top:auto; padding:14px; border:0; border-radius:4px; cursor:pointer; position:relative; overflow:hidden;
+  background:var(--ink); color:#fff; text-align:center; font:400 18px 'Bebas Neue',sans-serif; letter-spacing:2px; white-space:nowrap; transition:background .2s, transform .15s;
+}
+.m-spot-cta:hover { background:var(--ocean); }
+.m-seg button { min-height:44px; border:1.5px solid var(--cream); background:#fff; border-radius:4px; cursor:pointer; font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink); }
+.m-seg button[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); color:#fff; }
+.m-spot.in.two [data-face="back"] img { animation:turnIn .9s var(--ease-out) backwards; }
+@keyframes turnIn { from { transform:perspective(900px) rotateY(-100deg); opacity:.15; } to { transform:none; opacity:1; } }
+@keyframes miniPop { from { transform:scale(.05); opacity:0; } }
+
+@media (min-width:900px) {
+  .m-spot { display:grid; grid-template-columns:1.25fr 1fr; align-items:center; }
+  .m-spot.two .m-spot-stage { display:grid; grid-template-columns:1.4fr 1fr; gap:12px; align-items:end; padding:58px 18px 18px; }
+  .m-spot.one .m-spot-stage { padding:18px; }
+  .m-face { border-radius:8px; }
+  .m-face img { transition:transform .6s ease; }
+  .m-spot.two [data-face="back"] { box-shadow:0 0 0 2px var(--gold); }
+  .m-seg, .m-minicap { display:none; }
+  .m-spot-info { padding:40px 44px; }
+}
+@media (min-width:900px) and (hover:hover) { .m-face:hover img { transform:scale(1.04); } }
+@media (max-width:899px) {
+  .m-spot.two .m-spot-stage { aspect-ratio:1; }
+  .m-spot.two .m-face { position:absolute; inset:0; transform-origin:calc(100% - 12px) calc(100% - 12px); transition:transform .45s var(--ease-out), box-shadow .3s, border-radius .3s; }
+  .m-spot.two .m-face img { height:100%; }
+  .m-spot.two[data-side="back"] [data-face="front"], .m-spot.two[data-side="front"] [data-face="back"] { transform:scale(.3); z-index:3; border-radius:16px; box-shadow:0 0 0 10px #fff, 0 14px 34px rgba(0,0,0,.3); }
+  .m-spot.two[data-side="back"] [data-face="front"] .m-sidetag, .m-spot.two[data-side="front"] [data-face="back"] .m-sidetag { opacity:0; }
+  .m-minicap { position:absolute; right:9px; bottom:9px; z-index:4; width:calc(30% - 4px); text-align:center; pointer-events:none; background:var(--ink); color:#fff; font:600 10px/1.9 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; border-radius:0 0 5px 5px; }
+  .m-spot.two[data-side="front"] .m-minicap { background:var(--gold); color:var(--ink); }
+  .m-seg { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:12px 16px 0; }
+  .m-spot.in.two[data-side="back"] [data-face="front"] { animation:miniPop .5s .35s var(--ease-out) backwards; }
+}
+
+/* grid cards */
+.m-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 300px)); justify-content:center; gap:18px; }
+.m-card { position:relative; display:flex; flex-direction:column; background:#fff; color:var(--ink); border-radius:12px; overflow:hidden; box-shadow:0 18px 40px rgba(0,20,32,.28); transition:transform .35s var(--ease-out), box-shadow .35s; }
+.m-img { position:relative; aspect-ratio:1; background:#f3f3f1; overflow:hidden; }
+.m-img > img { width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
+.m-info { display:flex; flex-direction:column; gap:4px; padding:14px 16px 16px; flex:1; }
+.m-name { font:600 16px 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; }
+.m-open { all:unset; cursor:pointer; }
+.m-open::after { content:''; position:absolute; inset:0; z-index:5; border-radius:12px; }
+.m-open:focus-visible::after { outline:3px solid var(--gold); outline-offset:-3px; }
+.m-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:var(--mist); font-weight:300; }
+.m-dots { display:inline-flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.m-dot { width:13px; height:13px; border-radius:50%; border:1px solid rgba(0,0,0,.16); display:inline-block; }
 .m-dot-more { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:var(--mist); letter-spacing:1px; }
+.m-price { font:400 26px 'Bebas Neue',sans-serif; letter-spacing:1.5px; color:var(--ocean); }
+.m-card .m-cta { padding:12px; font-size:17px; margin-top:auto; }
+@media (hover:hover) and (pointer:fine) {
+  .m-card:hover { transform:translateY(-5px); box-shadow:0 26px 56px rgba(0,20,32,.36); }
+  .m-card:hover .m-img > img { transform:scale(1.04); }
+  .m-card:hover .m-cta { background:var(--ocean); }
+}
+.m-inset { position:absolute; right:8px; bottom:38px; z-index:2; width:32%; aspect-ratio:1; background:#fff; border:2px solid #fff; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.2); overflow:hidden; }
+.m-inset img { width:100%; height:100%; object-fit:contain; }
+.m-inset b { position:absolute; left:0; right:0; bottom:0; background:rgba(26,22,18,.86); color:#fff; font:600 9px/1.8 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-align:center; text-transform:uppercase; }
+.m-img .m-sidetag { bottom:38px; }
+.m-backstrip { position:absolute; left:0; right:0; bottom:0; z-index:2; display:flex; gap:6px; align-items:center; justify-content:center; padding:8px 6px; background:var(--gold); color:var(--ink); font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; }
+.m-backstrip svg { width:14px; height:14px; }
+.m-hasback .m-img > img { padding-bottom:30px; object-fit:contain; }
+.m-card.no-back .m-inset, .m-card.no-back .m-sidetag { display:none; }
+
+/* bridge back to the campaign */
+.m-bridge { margin:30px auto 0; display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:18px 22px; border:1px solid rgba(255,255,255,.22); border-radius:10px; background:rgba(4,18,31,.22); }
+.m-bridge p { font-size:15px; font-weight:300; color:rgba(255,255,255,.88); max-width:620px; }
+.m-bridge strong { font-weight:600; color:#fff; }
 
 /* ============================================================
    FOOTER
@@ -616,19 +769,23 @@ footer { background:var(--ink); color:var(--white); }
 .reveal-delay-3 { transition-delay:.3s; }
 
 /* ============================================================
-   STICKY "BACK THE LAUNCH" CTA
+   STICKY BAR — shop merch / cart  +  back the launch
    ============================================================ */
 .sticky-cta {
-  position:fixed; z-index:95; right:24px; bottom:24px;
-  display:inline-flex; align-items:center; gap:12px; text-decoration:none;
-  background:var(--ink); color:#fff; padding:10px 10px 10px 18px; border-radius:50px;
-  box-shadow:0 16px 40px rgba(0,8,16,.35), 0 0 0 1px rgba(255,255,255,.08);
+  position:fixed; z-index:95; right:24px; bottom:24px; display:flex; align-items:center; gap:6px; padding:6px;
+  background:var(--ink); color:#fff; border-radius:50px; box-shadow:0 16px 40px rgba(0,8,16,.35), 0 0 0 1px rgba(255,255,255,.08);
   font-family:'Barlow Condensed',sans-serif; font-size:14px; letter-spacing:1.5px; text-transform:uppercase;
   transform:translateY(160%); transition:transform .5s var(--ease-out);
 }
 .sticky-cta.show { transform:translateY(0); }
-.sticky-cta b { background:var(--go); color:var(--go-ink); font-weight:600; padding:9px 16px; border-radius:40px; transition:background .2s; }
-.sticky-cta:hover b { background:var(--go-hi); }
+.sticky-cta a, .sticky-cta button { display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:inherit; background:none; border:0; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; }
+.sc-shop, .sc-cart { position:relative; overflow:hidden; padding:9px 14px; border-radius:40px; border:1px solid rgba(255,255,255,.28) !important; transition:border-color .2s, color .2s; }
+.sc-shop:hover, .sc-cart:hover { border-color:var(--gold) !important; color:var(--gold); }
+.sc-shop svg, .sc-cart svg { width:16px; height:16px; }
+.sc-back { gap:12px !important; padding-left:8px; }
+.sc-back b { position:relative; overflow:hidden; background:var(--go); color:var(--go-ink); font-weight:600; padding:9px 16px; border-radius:40px; transition:background .2s, transform .15s; }
+.sc-back:hover b { background:var(--go-hi); }
+.sticky-cta.in-merch .sc-shop { display:none; }
 
 /* ============================================================
    PRODUCT + MERCH PANELS
@@ -649,6 +806,10 @@ footer { background:var(--ink); color:var(--white); }
 }
 .panel-close:hover { transform:rotate(90deg); background:#fff; }
 .panel-img-wrap { position:relative; overflow:hidden; height:320px; flex-shrink:0; background:#fff; }
+#merchPanel .panel-img-wrap { height:330px; background:#f3f3f1; }
+#merchPanel .panel-body { padding-top:22px; }
+#merchPanel .panel-divider { margin:14px 0; }
+#merchPanel .m-chips, #merchPanel .m-sizes { margin-bottom:18px; }
 .panel-img-wrap img { width:100%; height:100%; object-fit:contain; padding:32px; transition:opacity .3s ease, transform .4s ease; }
 .panel-img-wrap img.fading { opacity:0; transform:scale(.97); }
 .panel-float-badge { position:absolute; top:16px; left:16px; background:var(--ocean); color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:5px 12px; border-radius:2px; }
@@ -691,9 +852,31 @@ footer { background:var(--ink); color:var(--white); }
 .panel-secondary-btn:hover { border-color:var(--sand); background:var(--cream); }
 .panel-secondary-btn svg { width:16px; height:16px; }
 .panel-shipping { margin-top:16px; text-align:center; font-size:13px; color:var(--mist); font-weight:300; line-height:1.5; }
+.panel-merch-link { display:block; width:100%; margin:2px 0 14px; padding:6px; background:none; border:0; cursor:pointer; font-size:14px; color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+.panel-merch-link:hover { color:var(--ocean); }
 
 /* merch panel extras */
-#mpView { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--mist); }
+.mp-title { font-size:34px; }
+.mp-price { font-size:30px; margin-bottom:8px; }
+#mpImg { cursor:zoom-in; transition:transform .35s var(--ease-out); }
+.panel-img-wrap.zoom #mpImg { transform:scale(2.2); cursor:zoom-out; }
+.mp-sidetag { position:absolute; left:16px; bottom:14px; z-index:2; padding:6px 10px; border-radius:3px; pointer-events:none; background:var(--ink); color:#fff; font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; }
+.mp-sidetag.is-back { background:var(--gold); color:var(--ink); }
+.mp-sidetag:empty { display:none; }
+.mp-zoom { position:absolute; right:14px; bottom:12px; z-index:2; padding:7px 12px; border-radius:30px; border:1px solid rgba(26,22,18,.18); background:rgba(255,255,255,.92); cursor:pointer; font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink); }
+.mp-sides { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 32px 0; }
+.mp-side { display:flex; align-items:center; gap:10px; min-height:52px; padding:5px 10px 5px 5px; border:1.5px solid var(--cream); background:#fff; border-radius:4px; cursor:pointer; font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink); text-align:left; }
+.mp-side img { width:40px; height:40px; object-fit:contain; flex-shrink:0; }
+.mp-side[aria-pressed="true"] { border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); }
+.mp-side[data-view="back"][aria-pressed="true"] { border-color:var(--gold-deep); box-shadow:inset 0 0 0 1px var(--gold-deep); background:rgba(245,192,74,.14); }
+.mp-backnote { display:flex; gap:8px; align-items:center; font-size:14px; color:var(--ink-soft); margin:6px 0 8px; }
+.mp-backnote svg { width:18px; height:18px; flex-shrink:0; color:var(--gold-deep); }
+.mp-sizemsg { margin:0 0 8px; text-align:center; font-size:13px; font-weight:600; color:var(--rust); }
+.mp-sizemsg:empty { display:none; }
+.mp-buy { margin-top:4px; }
+.mp-buy .panel-add-btn { margin-bottom:8px; }
+.mp-buy .panel-shipping { margin-top:0; }
+.m-debug { display:block; font:10px/1.3 ui-monospace,monospace; color:var(--mist); text-transform:none; letter-spacing:0; }
 .m-thumbs { display:flex; gap:8px; padding:14px 32px 0; flex-wrap:wrap; }
 .m-thumb { width:56px; padding:0; background:#fff; cursor:pointer; border:1.5px solid var(--cream); border-radius:3px; overflow:hidden; transition:border-color .2s; }
 .m-thumb img { width:100%; height:50px; object-fit:contain; padding:4px; }
@@ -701,9 +884,9 @@ footer { background:var(--ink); color:var(--white); }
 .m-thumb.on { border-color:var(--ocean); }
 #mpColorName { color:var(--ink); font-weight:600; }
 .m-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px; }
-.m-chip { width:36px; height:36px; border-radius:50%; cursor:pointer; padding:0; border:2px solid transparent; position:relative; flex-shrink:0; transition:transform .2s, box-shadow .2s; }
+.m-chip { width:36px; height:36px; border-radius:50%; cursor:pointer; padding:0; border:2px solid transparent; position:relative; flex-shrink:0; transition:transform .2s, box-shadow .2s; box-shadow:inset 0 0 0 1px rgba(26,22,18,.22); }
 .m-chip:hover { transform:scale(1.12); }
-.m-chip.on { box-shadow:0 0 0 3px var(--white), 0 0 0 5px var(--ink); }
+.m-chip.on { box-shadow:inset 0 0 0 1px rgba(26,22,18,.22), 0 0 0 3px var(--white), 0 0 0 5px var(--ink); }
 .m-sizes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
 .m-size { min-width:46px; padding:9px 10px; font-family:'Barlow Condensed',sans-serif; font-size:14px; letter-spacing:1px; border:1.5px solid var(--cream); background:none; border-radius:2px; cursor:pointer; color:var(--ink-soft); transition:border-color .15s, background .15s; }
 .m-size:hover { border-color:var(--sand); }
@@ -742,6 +925,15 @@ footer { background:var(--ink); color:var(--white); }
 .cart-checkout { width:100%; padding:16px; background:var(--ocean); color:#fff; border:none; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:3px; border-radius:3px; transition:background .2s, transform .15s; }
 .cart-checkout:hover { background:var(--ocean-deep); transform:translateY(-1px); }
 .cart-checkout:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.cart-checkout { position:relative; overflow:hidden; }
+.cart-added { margin:14px 0 4px; padding:10px 14px; border-radius:6px; background:rgba(5,206,120,.12); color:#0b6b40; font-weight:500; font-size:14px; }
+.cart-item.just-added { animation:justAdded 2.4s ease forwards; padding-left:12px; }
+@keyframes justAdded { 0%, 70% { box-shadow:inset 3px 0 0 var(--gold); } 100% { box-shadow:inset 3px 0 0 transparent; } }
+.cart-keep { display:block; width:100%; margin-top:10px; padding:10px; background:none; border:0; cursor:pointer; font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+.cart-secure { text-align:center; font-size:12px; color:var(--mist); margin-top:2px; }
+.cart-gfm { display:block; text-align:center; margin-top:10px; font-size:13px; color:#0b8a54; text-decoration:none; }
+.cart-gfm:hover { text-decoration:underline; }
+.cart-empty .panel-secondary-btn { margin:20px auto 0; max-width:240px; }
 
 /* toast */
 .toast {
@@ -935,7 +1127,8 @@ footer { background:var(--ink); color:var(--white); }
   .collection-intro { min-height:0; }
   .collection-hero-img { aspect-ratio:3/2; }
   .collection-info { padding:48px 32px; }
-  .proof-content { padding:56px 32px; }
+  .proof-content { padding:56px 32px calc(56px + clamp(46px,9vh,110px)); }
+  #merch.merch-stage { padding:80px 24px 150px; }
   .features-grid { grid-template-columns:1fr 1fr; }
   .lifestyle-full-text { left:24px; right:24px; bottom:48px; }
   .footer-top { padding:56px 24px 40px; gap:40px; }
@@ -956,8 +1149,13 @@ footer { background:var(--ink); color:var(--white); }
   .hero-sub { font-size:16px; margin-bottom:28px; }
   .hero-btns { flex-direction:column; }
   .hero-btns .btn { width:100%; }
-  /* sticky CTA becomes a full-width bar */
-  .sticky-cta { left:12px; right:12px; bottom:max(12px, env(safe-area-inset-bottom)); justify-content:space-between; }
+  /* sticky bar becomes full width: [Shop merch | Cart] + green Back it */
+  .sticky-cta { left:12px; right:12px; bottom:max(12px, env(safe-area-inset-bottom)); }
+  .sc-shop, .sc-cart { flex:1; justify-content:center; min-height:44px; border-color:rgba(248,245,240,.4) !important; }
+  .sc-back { flex:1.25; padding-left:0; }
+  .sc-back b { flex:1; display:flex; align-items:center; justify-content:center; min-height:44px; }
+  .sc-help { display:none; }
+  .m-bridge { justify-content:center; text-align:center; }
   .ks-alt-grid { grid-template-columns:1fr; }
   .ks-page .ks-alt-grid { grid-template-columns:1fr; }
 }
@@ -966,13 +1164,16 @@ footer { background:var(--ink); color:var(--white); }
   .collections, .features-strip { padding:64px 18px; }
   .about { padding:64px 18px 120px; }
   .launch { padding:64px 18px 80px; }
-  .proof-content { padding:44px 22px; }
+  .proof-content { padding:44px 22px calc(44px + clamp(46px,9vh,110px)); }
   .collection-info { padding:36px 22px; }
   .section-header { margin-bottom:48px; }
   .collection-block + .collection-block { margin-top:64px; }
   .proof-stats { gap:22px 36px; }
-  .features-grid { grid-template-columns:1fr; }
-  .feature-item { padding:30px 24px; }
+  .features-grid { grid-template-columns:1fr 1fr; }
+  .feature-item { padding:22px 14px; }
+  .feature-desc { font-size:13px; }
+  .feature-name { font-size:18px; }
+  .feature-icon { width:38px; height:38px; margin-bottom:12px; }
   .lifestyle-full { height:70vh; height:70svh; min-height:420px; }
   .lifestyle-full-text { left:18px; right:18px; bottom:32px; }
   .lifestyle-quote { font-size:clamp(28px,7.5vw,40px); }
@@ -983,8 +1184,29 @@ footer { background:var(--ink); color:var(--white); }
   .product-card-name { font-size:14px; letter-spacing:1.2px; }
   .product-card-price { grid-column:1; grid-row:auto; text-align:left; font-size:20px; margin-top:6px; }
   .product-card-price small { display:inline; margin-left:6px; }
-  .m-flip { display:none; }
   .m-thumbs { padding:12px 20px 0; }
+  #merch.merch-stage { padding:72px 14px 130px; }
+  .m-open-pill { font-size:12px; }
+  .m-skel-spot { height:auto; aspect-ratio:1 / 1.5; }
+  .m-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .m-info { padding:10px 12px 12px; }
+  .m-name { font-size:14px; letter-spacing:1px; }
+  .m-price { font-size:22px; }
+  .m-card .m-cta { font-size:15px; letter-spacing:1.5px; padding:10px 6px; }
+  .m-grid > .m-card:last-child:nth-child(odd) { grid-column:1 / -1; flex-direction:row; }
+  .m-grid > .m-card:last-child:nth-child(odd) .m-img { width:42%; flex:none; }
+  .m-backstrip { font-size:10px; letter-spacing:1.4px; }
+  .m-bridge .btn { width:100%; }
+  .tapes { height:108px; }
+  .tape-go { transform:rotate(-3.5deg); }
+  .tape-shop { top:54px; transform:rotate(3deg); }
+  .tape .marquee-item { font-size:19px; padding:0 14px; }
+  .panel-img-wrap, #merchPanel .panel-img-wrap { height:clamp(260px,40vh,360px); }
+  .panel-img-wrap img { padding:14px; }
+  .mp-sides { padding:10px 20px 0; }
+  /* phones: the buy button stays in view while you pick colour and size */
+  #merchPanel .panel-body { scroll-padding-bottom:130px; padding-bottom:0; }
+  .mp-buy { position:sticky; bottom:0; z-index:2; margin:0 -32px; padding:12px 32px calc(14px + env(safe-area-inset-bottom)); background:var(--white); box-shadow:0 -1px 0 var(--cream), 0 -10px 14px -8px rgba(26,22,18,.12); }
   .launch-visual { aspect-ratio:4/3; }
   .launch-steps li { padding:14px 16px; gap:14px; }
   .progress-raised { font-size:36px; }
@@ -1003,9 +1225,13 @@ footer { background:var(--ink); color:var(--white); }
 
 /* touch devices: no hover-only effects */
 @media (hover:none), (pointer:coarse) {
+  .btn:hover, .share-btn:hover, .ks-alt:hover, .launch-wall:hover, .bp-cta:hover, .panel-add-btn:hover, .nav-cta:hover,
+  .ks-wall-link:hover, .ks-founder.ghost:hover, .ks-founder.legend:hover, .cart-checkout:hover { transform:none; }
   .product-card:hover { transform:none; box-shadow:none; }
   .product-card:hover .product-card-img img, .collection-hero-img:hover img, .proof-img:hover img { animation:none; transform:none; }
 }
+
+.btn:active, .panel-add-btn:active, .m-cta:active, .cart-checkout:active, .sc-back:active b { transform:scale(.97); }
 
 /* respect the OS "reduce motion" setting */
 @media (prefers-reduced-motion: reduce) {
@@ -1015,6 +1241,9 @@ footer { background:var(--ink); color:var(--white); }
   .bubble, .ripples { display:none; }
   .js .hero-anim { opacity:1; transform:none; }
   .reveal { opacity:1; transform:none; }
+  .js [data-surface] .ln-in { transform:none; }
+  [data-surface] em::after { clip-path:none; }
+  .tap-ring, .merch-caustics { display:none; }
 }
 </style>
 </head>
@@ -1033,8 +1262,8 @@ footer { background:var(--ink); color:var(--white); }
   <div class="nav-links" id="navLinks">
     <a href="#collections" data-section="collections">The Lineup</a>
     <a href="#about" data-section="about">Our Story</a>
-    <a href="#merch" data-section="merch">Merch</a>
     <a href="#founders" class="nav-fw" onclick="openFounderWall(event)">Founders Wall</a>
+    <a href="#merch" class="nav-shop" data-section="merch" data-merch-entry><svg class="tee-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3.5 5.5 2 10l3 1.2V21h14v-9.8L22 10l-1.5-4.5L16 3c-.6 1.6-2.2 2.6-4 2.6S8.6 4.6 8 3z"/></svg>Shop Merch</a>
     <a href="#launch" class="nav-cta" data-section="launch"><span class="live-dot"></span>Back the Launch</a>
   </div>
   <div class="nav-actions">
@@ -1060,13 +1289,13 @@ footer { background:var(--ink); color:var(--white); }
     <p class="hero-sub hero-anim">Polarized UV400 shades engineered to stay on the surface — so a slip off the dock is a quick reach and a laugh, not a lost pair. Help us make the first run.</p>
     <div class="hero-btns hero-anim">
       <a href="#launch" class="btn btn-go btn-lg" data-section="launch">Back the Launch</a>
-      <a href="#collections" class="btn btn-ghost" data-section="collections">See the Lineup <span class="arr">→</span></a>
+      <a href="#merch" class="btn btn-ghost btn-shop" data-section="merch" data-merch-entry="hero"><svg class="tee-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3.5 5.5 2 10l3 1.2V21h14v-9.8L22 10l-1.5-4.5L16 3c-.6 1.6-2.2 2.6-4 2.6S8.6 4.6 8 3z"/></svg><span class="btn-shop-label">Shop Merch</span><span class="shop-tag">Available now</span></a>
     </div>
     <ul class="hero-trust hero-anim">
       <li>Floats</li><li>Polarized</li><li>UV400</li><li>From $25</li>
     </ul>
   </div>
-  <a class="hero-scroll" href="#proof" data-section="proof"><i></i>Scroll</a>
+  <a class="hero-scroll" href="#collections" data-section="collections"><i></i>See the lineup</a>
   <svg class="waves bottom" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
     <g class="wave-layers">
       <use href="#wavePath" x="48" y="0" fill="rgba(13,61,82,.35)"/>
@@ -1077,16 +1306,24 @@ footer { background:var(--ink); color:var(--white); }
   </svg>
 </header>
 
-<!-- MARQUEE (script duplicates the track for a seamless loop) -->
-<div class="marquee-wrap" aria-hidden="true">
-  <div class="marquee-track">
-    <span class="marquee-item accent">BOYNT</span><span class="marquee-item">✦ FLOATING SUNGLASSES</span>
-    <span class="marquee-item accent">POLARIZED</span><span class="marquee-item">✦ UV400 PROTECTION</span>
-    <span class="marquee-item accent">PERFORMANCE THAT FLOATS</span><span class="marquee-item">✦ ESTD 2026</span>
-    <span class="marquee-item accent">BOYNT</span><span class="marquee-item">✦ FLOATING SUNGLASSES</span>
-    <span class="marquee-item accent">POLARIZED</span><span class="marquee-item">✦ UV400 PROTECTION</span>
-    <span class="marquee-item accent">PERFORMANCE THAT FLOATS</span><span class="marquee-item">✦ ESTD 2026</span>
-  </div>
+<!-- TAPES — two crossing ribbons: back the launch + the merch shop -->
+<div class="tapes">
+  <a class="tape tape-go" href="#launch" data-section="launch" aria-label="Back the launch on GoFundMe">
+    <div class="marquee-track" aria-hidden="true">
+      <span class="marquee-item">BACK THE LAUNCH</span><span class="marquee-item">✦ LIVE ON GOFUNDME</span><span class="marquee-item">✦ SUNGLASSES THAT ACTUALLY FLOAT</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">BACK THE LAUNCH</span><span class="marquee-item">✦ LIVE ON GOFUNDME</span><span class="marquee-item">✦ SUNGLASSES THAT ACTUALLY FLOAT</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">BACK THE LAUNCH</span><span class="marquee-item">✦ LIVE ON GOFUNDME</span><span class="marquee-item">✦ SUNGLASSES THAT ACTUALLY FLOAT</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">BACK THE LAUNCH</span><span class="marquee-item">✦ LIVE ON GOFUNDME</span><span class="marquee-item">✦ SUNGLASSES THAT ACTUALLY FLOAT</span><span class="marquee-item">✦</span>
+    </div>
+  </a>
+  <a class="tape tape-shop" href="#merch" data-section="merch" data-merch-entry aria-label="Shop the merch — available today">
+    <div class="marquee-track" aria-hidden="true">
+      <span class="marquee-item">MERCH SHOP OPEN</span><span class="marquee-item">✦ TEES &amp; CAPS</span><span class="marquee-item">✦ AVAILABLE TODAY</span><span class="marquee-item">✦ WEAR THE BRAND</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">MERCH SHOP OPEN</span><span class="marquee-item">✦ TEES &amp; CAPS</span><span class="marquee-item">✦ AVAILABLE TODAY</span><span class="marquee-item">✦ WEAR THE BRAND</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">MERCH SHOP OPEN</span><span class="marquee-item">✦ TEES &amp; CAPS</span><span class="marquee-item">✦ AVAILABLE TODAY</span><span class="marquee-item">✦ WEAR THE BRAND</span><span class="marquee-item">✦</span>
+      <span class="marquee-item">MERCH SHOP OPEN</span><span class="marquee-item">✦ TEES &amp; CAPS</span><span class="marquee-item">✦ AVAILABLE TODAY</span><span class="marquee-item">✦ WEAR THE BRAND</span><span class="marquee-item">✦</span>
+    </div>
+  </a>
 </div>
 
 <!-- FLOATING PROOF -->
@@ -1098,7 +1335,7 @@ footer { background:var(--ink); color:var(--white); }
     </div>
     <div class="proof-content">
       <p class="proof-label reveal">The Difference</p>
-      <h2 class="proof-title reveal reveal-delay-1">They<br>actually<br><em>float.</em></h2>
+      <h2 class="proof-title" data-surface>They<br>actually<br><em>float.</em></h2>
       <p class="proof-body reveal reveal-delay-2">Drop them in the water and watch. BOYNT frames are engineered with hollow polypropylene construction — lighter than water, tough enough for every day. When they slip off your face, they'll be floating right there waiting for you.</p>
       <div class="proof-stats reveal reveal-delay-3">
         <div class="stat"><div class="stat-num">UV400</div><div class="stat-label">Lens Protection</div></div>
@@ -1110,11 +1347,49 @@ footer { background:var(--ink); color:var(--white); }
   </div>
 </section>
 
+<!-- MERCH — what people can buy today -->
+<section class="merch-stage" id="merch" aria-labelledby="merchTitle">
+  <svg class="waves rise" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
+    <g class="wave-layers">
+      <use href="#wavePath" x="48" y="0" fill="rgba(31,127,163,.35)"/>
+      <use href="#wavePath" x="48" y="3" fill="rgba(31,127,163,.6)"/>
+      <use href="#wavePath" x="48" y="7" fill="#1f7fa3"/>
+    </g>
+  </svg>
+  <div class="merch-fx" aria-hidden="true"><i class="merch-caustics"></i><i class="merch-caustics b"></i></div>
+  <div class="merch-inner">
+    <div class="section-header">
+      <p class="m-open-pill reveal"><span class="m-pill-dot"></span>Merch shop — open now</p>
+      <h2 class="section-title" id="merchTitle" data-surface>Wear the brand <em>today.</em></h2>
+      <p class="section-sub reveal reveal-delay-2">Tees and caps, printed when you order and sent straight to your door. The sunglasses are still funding — this you can grab today.</p>
+    </div>
+    <p class="merch-status sr-only" id="merchStatus" role="status">Loading the shop…</p>
+    <pre class="merch-debug" id="merchDebug" hidden></pre>
+    <div class="m-skels" id="mSkels" aria-hidden="true">
+      <div class="m-skel m-skel-spot"></div>
+      <div class="m-skel-row"><div class="m-skel m-skel-card"></div><div class="m-skel m-skel-card"></div></div>
+    </div>
+    <article class="m-spot" id="mSpot" hidden></article>
+    <div class="m-grid" id="merchGrid" hidden></div>
+    <div class="m-bridge reveal" id="mBridge">
+      <p><strong>Want the sunglasses too?</strong> They're still funding on GoFundMe — every backer goes on the Founding Backers Wall.</p>
+      <a class="btn btn-go" href="#launch" data-section="launch">Back the Launch</a>
+    </div>
+  </div>
+  <svg class="waves bottom" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
+    <g class="wave-layers">
+      <use href="#wavePath" x="48" y="0" fill="rgba(248,245,240,.3)"/>
+      <use href="#wavePath" x="48" y="3" fill="rgba(248,245,240,.6)"/>
+      <use href="#wavePath" x="48" y="7" fill="#f8f5f0"/>
+    </g>
+  </svg>
+</section>
+
 <!-- COLLECTIONS -->
 <section class="collections" id="collections">
   <div class="section-header">
     <p class="section-label reveal">The Lineup</p>
-    <h2 class="section-title reveal reveal-delay-1">Three styles.<br>One mission.</h2>
+    <h2 class="section-title" data-surface>Three styles.<br>One mission.</h2>
     <p class="section-sub reveal reveal-delay-2">Every pair floats. Every pair is polarized. Built for the water, worn everywhere.</p>
   </div>
 
@@ -1238,7 +1513,7 @@ footer { background:var(--ink); color:var(--white); }
   <div class="about-inner">
     <div class="about-left">
       <p class="section-label reveal">Our Story</p>
-      <h2 class="about-title reveal reveal-delay-1">Gear that<br>works<br>with the<br><em>water.</em></h2>
+      <h2 class="about-title" data-surface>Gear that<br>works<br>with the<br><em>water.</em></h2>
       <div class="about-img reveal reveal-delay-2">
         <img data-img="aboutDeck" alt="Enjoying a day on the water in BOYNT floating sunglasses" loading="lazy" decoding="async">
       </div>
@@ -1258,9 +1533,9 @@ footer { background:var(--ink); color:var(--white); }
   </div>
   <svg class="waves bottom" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
     <g class="wave-layers">
-      <use href="#wavePath" x="48" y="0" fill="rgba(36,144,184,.22)"/>
-      <use href="#wavePath" x="48" y="3" fill="rgba(26,107,138,.4)"/>
-      <use href="#wavePath" x="48" y="5" fill="rgba(13,61,82,.7)"/>
+      <use href="#wavePath" x="48" y="0" fill="#9fc7d6"/>
+      <use href="#wavePath" x="48" y="3" fill="#4f93ad"/>
+      <use href="#wavePath" x="48" y="5" fill="#1a5a77"/>
       <use href="#wavePath" x="48" y="7" fill="#04121f"/>
     </g>
   </svg>
@@ -1273,7 +1548,7 @@ footer { background:var(--ink); color:var(--white); }
   <div class="launch-inner">
     <div class="launch-copy">
       <p class="launch-eyebrow reveal"><span class="live-dot"></span>Live on GoFundMe</p>
-      <h2 class="launch-title reveal reveal-delay-1">Help put BOYNT<br><em>on the water.</em></h2>
+      <h2 class="launch-title" data-surface>Help put BOYNT<br><em>on the water.</em></h2>
       <p class="launch-body reveal reveal-delay-2">We're raising the funds for our first full production run — polarized, UV400 sunglasses that actually float, built for life on the water. Every bit of support gets the tooling paid for, the first run made, and BOYNT on the water.</p>
 
       <div class="progress js-progress reveal" hidden></div>
@@ -1313,28 +1588,6 @@ footer { background:var(--ink); color:var(--white); }
   </div>
 </section>
 
-<!-- MERCH -->
-<div class="marquee-wrap" aria-hidden="true">
-  <div class="marquee-track">
-    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
-    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
-    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
-    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
-    <span class="marquee-item accent">MERCH</span><span class="marquee-item">✦ SHIPS NOW</span>
-    <span class="marquee-item accent">PRINTED ON DEMAND</span><span class="marquee-item">✦ WEAR THE BRAND</span>
-  </div>
-</div>
-
-<section class="collections cream" id="merch">
-  <div class="section-header">
-    <p class="section-label reveal">Merch — Ships Now</p>
-    <h2 class="section-title reveal reveal-delay-1">Wear the brand</h2>
-    <p class="section-sub reveal reveal-delay-2">Tees and caps, printed when you order and sent straight to your door. The sunglasses are still funding — this you can grab today.</p>
-  </div>
-  <div class="merch-status" id="merchStatus">Loading the collection…</div>
-  <div class="product-grid merch-grid" id="merchGrid"></div>
-</section>
-
 <!-- FOOTER -->
 <footer id="contact">
   <div class="footer-top">
@@ -1349,7 +1602,7 @@ footer { background:var(--ink); color:var(--white); }
         <li><a href="#collections" data-section="collections">The Classics — $25–$30</a></li>
         <li><a href="#collections" data-section="collections">The Drifters — $30–$35</a></li>
         <li><a href="#currents" data-section="currents">The Currents — $35–$40</a></li>
-        <li><a href="#merch" data-section="merch">Merch — Ships Now</a></li>
+        <li><a href="#merch" data-section="merch" data-merch-entry>Merch — Available Now</a></li>
         <li><a href="#about" data-section="about">Our Story</a></li>
       </ul>
     </div>
@@ -1388,14 +1641,16 @@ footer { background:var(--ink); color:var(--white); }
 
 </main>
 
-<!-- STICKY CTA (appears after the hero, hides near the launch section) -->
-<a class="sticky-cta" id="stickyCta" href="#launch" data-section="launch" aria-label="Back the BOYNT launch">
-  <span>Help launch BOYNT</span><b>Back it →</b>
-</a>
+<!-- STICKY BAR (after the hero): shop merch / cart + back the launch -->
+<div class="sticky-cta" id="stickyCta" role="group" aria-label="Quick actions">
+  <a class="sc-shop" href="#merch" data-section="merch" data-merch-entry><svg class="tee-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3.5 5.5 2 10l3 1.2V21h14v-9.8L22 10l-1.5-4.5L16 3c-.6 1.6-2.2 2.6-4 2.6S8.6 4.6 8 3z"/></svg><span>Shop merch</span></a>
+  <button type="button" class="sc-cart" id="scCart" hidden onclick="openCart()"><svg class="tee-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3.5 5.5 2 10l3 1.2V21h14v-9.8L22 10l-1.5-4.5L16 3c-.6 1.6-2.2 2.6-4 2.6S8.6 4.6 8 3z"/></svg><span>Cart (<span id="scCartN">0</span>)</span></button>
+  <a class="sc-back" href="#launch" data-section="launch" aria-label="Back the BOYNT launch"><span class="sc-help">Help launch BOYNT</span><b>Back it →</b></a>
+</div>
 
 <!-- PRODUCT PANEL -->
 <div class="panel-overlay" id="panelOverlay"></div>
-<aside class="product-panel" id="productPanel" aria-label="Product details" aria-hidden="true">
+<aside class="product-panel" id="productPanel" role="dialog" aria-modal="true" aria-labelledby="panelProductName" aria-hidden="true">
   <button class="panel-close" onclick="closePanel()" aria-label="Close">✕</button>
   <div class="panel-img-wrap">
     <div class="panel-float-badge">Floats</div>
@@ -1417,6 +1672,7 @@ footer { background:var(--ink); color:var(--white); }
       <li>Everyday wearable design</li>
     </ul>
     <a class="panel-add-btn go" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener" data-gfm>Coming Soon — Back the Launch ↗</a>
+    <button type="button" class="panel-merch-link" id="panelMerchLink" data-merch-entry>Can't wait for the shades? The merch shop is open today →</button>
     <button class="panel-secondary-btn" onclick="shareBoynt()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
       Share with a friend
@@ -1426,30 +1682,36 @@ footer { background:var(--ink); color:var(--white); }
 </aside>
 
 <!-- MERCH PANEL -->
-<aside class="product-panel" id="merchPanel" aria-label="Merch details" aria-hidden="true">
+<aside class="product-panel" id="merchPanel" role="dialog" aria-modal="true" aria-labelledby="mpTitle" aria-hidden="true">
   <button class="panel-close" onclick="closeMerchPanel()" aria-label="Close">✕</button>
   <div class="panel-img-wrap">
-    <div class="panel-float-badge">Ships Now</div>
+    <div class="panel-float-badge">Available now</div>
     <img id="mpImg" alt="BOYNT merch">
-    <span id="mpView"></span>
+    <span class="mp-sidetag" id="mpSideTag" aria-live="polite"></span>
+    <button type="button" class="mp-zoom" id="mpZoom" aria-pressed="false">Zoom</button>
   </div>
+  <div class="mp-sides" id="mpSides" role="group" aria-label="Which side" hidden></div>
   <div class="m-thumbs" id="mpThumbs"></div>
   <div class="panel-body">
     <p class="panel-style-name">BOYNT Merch</p>
-    <div class="panel-product-name" id="mpTitle" style="font-size:32px;"></div>
-    <div class="panel-price" id="mpPrice" style="font-size:28px;"></div>
+    <div class="panel-product-name mp-title" id="mpTitle"></div>
+    <p class="mp-backnote" id="mpBackNote" hidden></p>
+    <div class="panel-price mp-price" id="mpPrice"></div>
     <div class="panel-divider"></div>
     <div class="panel-swatch-label">Select Color — <span id="mpColorName"></span></div>
     <div class="m-chips" id="mpColorChips"></div>
-    <div class="panel-swatch-label">Select Size</div>
+    <div class="panel-swatch-label" id="mpSizeLabel">Select Size</div>
     <div class="m-sizes" id="mpSizes"></div>
-    <button class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
-    <p class="panel-shipping">🚚 Printed on demand · ships in a few days</p>
+    <div class="mp-buy">
+      <p class="mp-sizemsg" id="mpSizeMsg" aria-live="polite"></p>
+      <button type="button" class="panel-add-btn" id="mpAdd" onclick="addMerchToCart()">Add to Cart</button>
+      <p class="panel-shipping">🚚 Printed on demand · ships in a few days</p>
+    </div>
   </div>
 </aside>
 
 <!-- CART -->
-<aside class="cart-drawer" id="cartDrawer" aria-label="Cart" aria-hidden="true">
+<aside class="cart-drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-label="Your cart" aria-hidden="true">
   <div class="cart-head">
     <h3>Your Cart</h3>
     <button aria-label="Close cart" onclick="closeCart()">✕</button>
@@ -1461,6 +1723,9 @@ footer { background:var(--ink); color:var(--white); }
       <span class="amount" id="cartSubtotal">$0</span>
     </div>
     <button class="cart-checkout" id="cartCheckout" onclick="checkout()">Checkout</button>
+    <button type="button" class="cart-keep" onclick="closeCart()">Keep shopping</button>
+    <p class="cart-secure">Checkout is handled by Shopify.</p>
+    <a class="cart-gfm" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener" data-gfm>The sunglasses are still funding — Back the Launch ↗</a>
   </div>
 </aside>
 
@@ -1508,9 +1773,9 @@ footer { background:var(--ink); color:var(--white); }
     <button class="bp-close" onclick="closeBoyntPopup()" aria-label="Close">✕</button>
     <div class="bp-emoji">🕶️</div>
     <h3 class="bp-title" id="bpTitle">Like what you see? <em>Help us make them.</em></h3>
-    <p class="bp-body">Our floating sunglasses aren't made yet — we're raising the money for the first production run on GoFundMe, and anyone who chips in gets their name on the Founding Backers Wall. The merch shop is open, though: shirts and caps that ship right away.</p>
+    <p class="bp-body">Our floating sunglasses aren't made yet — we're raising the money for the first production run on GoFundMe, and anyone who chips in gets their name on the Founding Backers Wall. The merch shop is open, though: shirts and caps you can order today.</p>
     <a class="bp-cta" href="https://www.gofundme.com/f/boynt" target="_blank" rel="noopener" data-gfm onclick="closeBoyntPopup()">🌊 Back the Launch on GoFundMe</a>
-    <button class="bp-later" onclick="closeBoyntPopup(); navigateToSection('merch');">Take me to the merch →</button>
+    <button class="bp-later" data-merch-entry onclick="closeBoyntPopup(); navigateToSection('merch');">Take me to the merch →</button>
   </div>
 </div>
 
@@ -1612,6 +1877,27 @@ const SHOP_CONFIG = {
   domain: 'boynt-2.myshopify.com',
   token: 'c269dc76ef038de1e7ea5be5876562a6',   // public Storefront token — read-only, safe to embed
   apiVersion: '2025-10'
+};
+
+// ── MERCH: which tee has a photo on the back? ──────────────────────────────
+// The site works this out by itself (a Shopify title containing "Front & Back",
+// a "back-print" product tag, or image alt text containing "Back").
+// If it guesses wrong, fill these in:
+//   backPrint:   ['photo tee']  ← words from the product's Shopify title (or its handle) to FORCE the photo-on-back look
+//   noBackPrint: ['logo tee']   ← words to switch it OFF for a product
+//   backImages:  ['a1b2c3d4']   ← any piece of an image's web address that IS a back view
+//                                  (Shopify admin → product → right-click the back mockup → Copy image address)
+//   frontFirst:  true           ← show the front first instead of the back
+//   spotlight:   false          ← no big featured product (or title words to feature a different one)
+//   backLabel:   'Photo on the back'  ← the words on the badge
+// Add ?shopdebug to the end of the site address to see what it detected.
+const MERCH_CONFIG = {
+  backPrint: [],
+  noBackPrint: [],
+  backImages: [],
+  frontFirst: false,
+  spotlight: 'auto',
+  backLabel: 'Photo on the back'
 };
 
 /* ==========================================================================
@@ -1781,7 +2067,8 @@ function toggleMenu(force) {
    ========================================================================== */
 const parallaxImgs = $$('.lifestyle-full img');
 const stickyCta = $('#stickyCta');
-let ctaBlocked = false;     // true while the launch section or footer is on screen
+let ctaBlocked = false;     // true while the launch section, merch bridge or footer is on screen
+let inMerch = false;        // true while the merch section is on screen
 let ticking = false;
 
 function onScroll() {
@@ -1799,7 +2086,9 @@ function onScroll() {
     });
   }
 
-  stickyCta.classList.toggle('show', y > vh * 0.9 && !ctaBlocked);
+  // phones: the bar would cover the merch cards, so it steps aside there entirely
+  stickyCta.classList.toggle('in-merch', inMerch);
+  stickyCta.classList.toggle('show', y > vh * 0.9 && !ctaBlocked && !(inMerch && window.innerWidth <= 700));
   maybeNudge(y, max);
 }
 window.addEventListener('scroll', () => {
@@ -1826,6 +2115,7 @@ const revealObs = new IntersectionObserver(entries => {
   entries.forEach(en => {
     if (!en.isIntersecting) return;
     const el = en.target;
+    if (el.hasAttribute('data-surface')) { el.classList.add('surfaced'); revealObs.unobserve(el); return; }
     el.classList.add('visible');
     $$('[data-count]', el).forEach(countUp);
     if (el.classList.contains('js-progress')) fillProgress(el);
@@ -1834,15 +2124,46 @@ const revealObs = new IntersectionObserver(entries => {
     setTimeout(() => el.classList.remove('reveal', 'visible', 'reveal-delay-1', 'reveal-delay-2', 'reveal-delay-3'), 1300);
   });
 }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-function observeReveals(root) { $$('.reveal', root).forEach(el => revealObs.observe(el)); }
+function observeReveals(root) { $$('.reveal, [data-surface]', root).forEach(el => revealObs.observe(el)); }
 
-// the sticky CTA steps aside while the launch section or footer is visible
+// Headlines "surface" line by line: split each <br>-separated line into a clip box
+$$('[data-surface]').forEach(h => {
+  h.innerHTML = h.innerHTML.split(/<br\s*\/?>/i)
+    .map((part, i) => '<span class="ln"><span class="ln-in" style="--l:' + i + '">' + part.trim() + '</span></span>').join('');
+});
+
+// the sticky CTA steps aside near the launch section, the merch bridge and the footer
+const CTA_BLOCKERS = ['launch', 'mBridge', 'contact', 'easter-egg'];
 const ctaObs = new IntersectionObserver(entries => {
   entries.forEach(en => { en.target._onScreen = en.isIntersecting; });
-  ctaBlocked = ['launch', 'contact', 'easter-egg'].some(id => { const el = document.getElementById(id); return el && el._onScreen; });
+  ctaBlocked = CTA_BLOCKERS.some(id => { const el = document.getElementById(id); return el && el._onScreen; });
+  const m = document.getElementById('merch');
+  inMerch = !!(m && m._onScreen && !m.hidden);
   onScroll();
 }, { threshold: 0.05 });
-['launch', 'contact', 'easter-egg'].forEach(id => { const el = document.getElementById(id); if (el) ctaObs.observe(el); });
+CTA_BLOCKERS.concat('merch').forEach(id => { const el = document.getElementById(id); if (el) ctaObs.observe(el); });
+
+// looping decorations only run while they're on screen
+const liveObs = new IntersectionObserver(entries => {
+  entries.forEach(en => en.target.classList.toggle('is-live', en.isIntersecting));
+});
+$$('.tapes, #merch').forEach(el => liveObs.observe(el));
+
+// water ripple where a button is pressed
+if (!reduceMotion) {
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.btn, .panel-add-btn, .sc-shop, .sc-cart, .sc-back b, .m-spot-cta, .cart-checkout');
+    if (!b || b.disabled) return;
+    const r = b.getBoundingClientRect(), size = Math.max(r.width, r.height) * 2.2;
+    const ring = document.createElement('span');
+    ring.className = 'tap-ring';
+    ring.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' + (e.clientX - r.left - size / 2) + 'px;top:' + (e.clientY - r.top - size / 2) + 'px';
+    b.appendChild(ring);
+    const a = ring.animate([{ transform: 'scale(0)', opacity: .45 }, { transform: 'scale(1)', opacity: 0 }], { duration: 600, easing: 'cubic-bezier(.22,.9,.3,1)' });
+    a.onfinish = () => ring.remove();
+    setTimeout(() => ring.remove(), 900);
+  }, { passive: true });
+}
 
 // bubbles only run while their section is on screen
 const bubbleObs = new IntersectionObserver(entries => {
@@ -1856,29 +2177,56 @@ const bubbleObs = new IntersectionObserver(entries => {
 $$('.marquee-track').forEach(track => { track.innerHTML += track.innerHTML; });
 
 /* ==========================================================================
+   DRAWERS — the sunglasses panel, merch panel and cart share one overlay,
+   keep keyboard focus inside while open, and hand it back when they close
+   ========================================================================== */
+const overlay = $('#panelOverlay');
+const drawerReturn = new Map();
+function drawerOpen(el, focusSel) {
+  if (!el.classList.contains('open')) drawerReturn.set(el, document.activeElement);
+  el.classList.add('open');
+  el.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('open');
+  lockScroll(true);
+  setTimeout(() => { const f = $(focusSel || '.panel-close', el); if (f) f.focus({ preventScroll: true }); }, 60);
+}
+function drawerClose(el, keepOverlay) {
+  if (!el.classList.contains('open')) return false;
+  el.classList.remove('open');
+  el.setAttribute('aria-hidden', 'true');
+  if (keepOverlay) return true;
+  overlay.classList.remove('open');
+  lockScroll(false);
+  const back = drawerReturn.get(el);
+  drawerReturn.delete(el);
+  if (back && back.focus && document.contains(back)) back.focus({ preventScroll: true });
+  return true;
+}
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const d = $('.product-panel.open, .cart-drawer.open');
+  if (!d) return;
+  const f = $$('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])', d).filter(x => x.offsetParent !== null);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (!d.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+/* ==========================================================================
    SUNGLASSES PANEL
    ========================================================================== */
 let currentProduct = null, currentColorIdx = 0;
-const overlay = $('#panelOverlay');
 const panel = $('#productPanel');
 
 function openPanel(productKey, colorIdx) {
   currentProduct = productKey;
   currentColorIdx = colorIdx || 0;
   renderPanel();
-  overlay.classList.add('open');
-  panel.classList.add('open');
-  panel.setAttribute('aria-hidden', 'false');
-  lockScroll(true);
-  setTimeout(() => $('.panel-close', panel).focus({ preventScroll: true }), 50);
+  drawerOpen(panel);
 }
-function closePanel() {
-  if (!panel.classList.contains('open')) return;
-  panel.classList.remove('open');
-  panel.setAttribute('aria-hidden', 'true');
-  overlay.classList.remove('open');
-  lockScroll(false);
-}
+function closePanel() { drawerClose(panel); }
 function setPanelColor(idx) {
   const p = PRODUCTS[currentProduct], c = p.colors[idx];
   currentColorIdx = idx;
@@ -1914,6 +2262,8 @@ document.addEventListener('keydown', e => {
   const card = e.target.closest && e.target.closest('.product-card[data-product]');
   if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); card.click(); }
 });
+// "can't buy the shades yet?" → the merch shop
+$('#panelMerchLink').addEventListener('click', () => { closePanel(); setTimeout(() => navigateToSection('merch'), 80); });
 
 /* ==========================================================================
    CART (merch only — the sunglasses aren't on sale yet)
@@ -1935,49 +2285,48 @@ function updateCartCount() {
   const el = $('#cartCount'), n = cart.reduce((s, i) => s + i.qty, 0);
   el.textContent = n;
   el.classList.toggle('show', n > 0);
+  // sticky bar: "Shop merch" until there's something in the cart, then "Cart (n)"
+  $('#scCart').hidden = n === 0;
+  $('#scCartN').textContent = n;
+  $('.sc-shop').hidden = !merchOn || n > 0;
 }
-function openCart() {
-  renderCart();
-  $('#cartDrawer').classList.add('open');
-  $('#cartDrawer').setAttribute('aria-hidden', 'false');
-  overlay.classList.add('open');
-  lockScroll(true);
+function openCart(justAdded) {
+  renderCart(typeof justAdded === 'string' ? justAdded : null);
+  drawerOpen($('#cartDrawer'), '.cart-head button');
 }
-function closeCart() {
-  const d = $('#cartDrawer');
-  if (!d.classList.contains('open')) return;
-  d.classList.remove('open');
-  d.setAttribute('aria-hidden', 'true');
-  overlay.classList.remove('open');
-  lockScroll(false);
-}
-function renderCart() {
+function closeCart() { drawerClose($('#cartDrawer')); }
+function renderCart(justAdded) {
   const wrap = $('#cartItems'), foot = $('#cartFoot');
   if (!cart.length) {
-    wrap.innerHTML = '<p class="cart-empty">Your cart is empty.<br>The merch rack is stocked — go grab something. 👕</p>';
+    wrap.innerHTML = '<div class="cart-empty"><p>Your cart is empty.</p>'
+      + (merchOn ? '<button type="button" class="panel-secondary-btn cart-shop">Shop merch →</button>' : '') + '</div>';
     foot.hidden = true;
     return;
   }
   foot.hidden = false;
-  wrap.innerHTML = cart.map(i => `
-    <div class="cart-item">
+  wrap.innerHTML = (justAdded ? '<p class="cart-added" role="status">✓ Added to your cart</p>' : '')
+    + cart.map(i => `
+    <div class="cart-item${i.id === justAdded ? ' just-added' : ''}">
       <div class="cart-item-img"><img src="${esc(i.img)}" alt="${esc(i.name)}"></div>
       <div class="cart-item-info">
         <div class="cart-item-name">${esc(i.name)}</div>
         <div class="cart-item-color">${esc(i.color)}</div>
         <div class="cart-item-bottom">
           <div class="qty-control">
-            <button onclick="changeQty('${i.id}',-1)" aria-label="Decrease quantity">−</button>
+            <button type="button" onclick="changeQty('${i.id}',-1)" aria-label="Decrease quantity">−</button>
             <span>${i.qty}</span>
-            <button onclick="changeQty('${i.id}',1)" aria-label="Increase quantity">+</button>
+            <button type="button" onclick="changeQty('${i.id}',1)" aria-label="Increase quantity">+</button>
           </div>
           <span class="cart-item-price">${fmtUsd(i.price * i.qty)}</span>
         </div>
-        <button class="cart-item-remove" onclick="removeFromCart('${i.id}')">Remove</button>
+        <button type="button" class="cart-item-remove" onclick="removeFromCart('${i.id}')">Remove</button>
       </div>
     </div>`).join('');
   $('#cartSubtotal').textContent = fmtUsd(cart.reduce((s, i) => s + i.price * i.qty, 0));
 }
+$('#cartItems').addEventListener('click', e => {
+  if (e.target.closest('.cart-shop')) { closeCart(); setTimeout(() => navigateToSection('merch'), 80); }
+});
 function checkout() {
   const items = cart.filter(i => i.variantId);
   if (!items.length) return;
@@ -2101,14 +2450,6 @@ function closeBoyntPopup() {
 /* ==========================================================================
    CLOSE THINGS: overlay click + Escape
    ========================================================================== */
-function closeMerchPanel() {
-  const p = $('#merchPanel');
-  if (!p.classList.contains('open')) return;
-  p.classList.remove('open');
-  p.setAttribute('aria-hidden', 'true');
-  overlay.classList.remove('open');
-  lockScroll(false);
-}
 overlay.addEventListener('click', () => { closePanel(); closeCart(); closeMerchPanel(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
@@ -2118,30 +2459,60 @@ document.addEventListener('keydown', e => {
 /* ==========================================================================
    MERCH — live from Shopify
    ========================================================================== */
+let merchOn = true;     // false while the shop is empty or couldn't load (hides every "Shop merch" link)
+const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+
 function merchLog(msg) {
   console.log('[merch]', msg);
   if (params.has('shopdebug')) {
-    const s = $('#merchStatus');
-    if (s) { s.hidden = false; s.style.whiteSpace = 'pre-wrap'; s.style.textAlign = 'left'; s.textContent += '\n' + msg; }
+    const d = $('#merchDebug');
+    if (d) { d.hidden = false; d.textContent += msg + '\n'; }
   }
 }
+
 async function shopQuery(query) {
-  const res = await fetch('https://' + SHOP_CONFIG.domain + '/api/' + SHOP_CONFIG.apiVersion + '/graphql.json', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': SHOP_CONFIG.token },
-    body: JSON.stringify({ query: query })
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  if (data.errors) throw new Error(data.errors.map(e => e.message).join('; '));
-  return data.data;
+  const ctl = window.AbortController ? new AbortController() : null;
+  const timer = ctl && setTimeout(() => ctl.abort(), 10000);   // a request that never answers ends in the failure state
+  try {
+    const res = await fetch('https://' + SHOP_CONFIG.domain + '/api/' + SHOP_CONFIG.apiVersion + '/graphql.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': SHOP_CONFIG.token },
+      body: JSON.stringify({ query: query }),
+      signal: ctl ? ctl.signal : undefined
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.errors) { const err = new Error(data.errors.map(e => e.message).join('; ')); err.gql = true; throw err; }
+    return data.data;
+  } finally { clearTimeout(timer); }
 }
-const MERCH_QUERY = '{ products(first: 50, sortKey: CREATED_AT) { edges { node { '
-  + 'title featuredImage { url } '
-  + 'images(first: 100) { edges { node { url altText } } } '
-  + 'variants(first: 100) { edges { node { '
-  + 'id availableForSale price { amount } selectedOptions { name value } image { url altText } '
-  + '} } } } } } }';
+
+// Richer query first (handle, description, tags, images capped at 1000px wide).
+// "tags" needs an extra token permission, so fall back step by step to the
+// original query, which is known to work on this store.
+const IMG = 'url(transform: {maxWidth: 1000})';
+function merchQuery(level) {
+  const rich = level < 2;
+  return '{ products(first: 50, sortKey: CREATED_AT) { edges { node { '
+    + 'title ' + (rich ? 'handle description(truncateAt: 400) ' : '') + (level === 0 ? 'tags ' : '')
+    + 'featuredImage { ' + (rich ? IMG : 'url') + ' } '
+    + 'images(first: 100) { edges { node { ' + (rich ? IMG : 'url') + ' altText } } } '
+    + 'variants(first: 100) { edges { node { '
+    + 'id availableForSale price { amount } selectedOptions { name value } image { ' + (rich ? IMG : 'url') + ' altText } '
+    + '} } } } } } }';
+}
+async function fetchProducts() {
+  let lastErr;
+  for (let level = 0; level < 3; level++) {
+    try { return (await shopQuery(merchQuery(level))).products.edges.map(e => e.node); }
+    catch (err) {
+      lastErr = err;
+      if (!err.gql) throw err;          // network / HTTP trouble: retrying a smaller query won't help
+      merchLog('query level ' + level + ' refused (' + err.message + ') — trying a simpler one');
+    }
+  }
+  throw lastErr;
+}
 
 // Garment colour names → swatch dot (Comfort Colors + Bella+Canvas palettes).
 // Unknown names fall back to a neutral; the name is always shown on screen too.
@@ -2176,161 +2547,589 @@ function colorDot(name) {
   return hit ? COLOR_HEX[hit] : '#b9b3a6';
 }
 
-let MERCH = [];
-let merchSel = null;
-
 // "BOYNT Logo T-shirt Light Text" + "... Dark Text" merge into one card;
 // anything after a "|" in the Shopify title is trimmed for display.
 function merchDisplayTitle(t) {
-  return t.split('|')[0]
+  return String(t || '').split('|')[0]
           .replace(/\s*[-–—]?\s*front\s*(&|and)\s*back(\s*print)?\s*$/i, '')
           .replace(/\s*(light|dark)\s*text\s*$/i, '').trim();
 }
-function titleSaysFrontBack(t) { return /front\s*(&|and)\s*back/i.test(t); }
-function viewLabel(alt) {
-  const a = String(alt || '').toLowerCase();
-  if (a.indexOf('back') !== -1) return 'Back';
-  if (a.indexOf('front') !== -1) return 'Front';
-  if (a.indexOf('side') !== -1) return 'Side';
-  if (a.indexOf('detail') !== -1 || a.indexOf('close') !== -1) return 'Detail';
+
+/* ── Which product has a back print, and which image is each colour's back? ──
+   Printify usually leaves image alt text empty, so this looks at (in order):
+   the owner's MERCH_CONFIG, a "back-print" tag, the title ("Front & Back"),
+   the description, then each image's alt text and file name. Images are
+   matched to colours by alt text, else by upload order. When unsure, it
+   claims nothing — a wrong "photo on the back" is worse than a missed one. */
+const RX_FB_TITLE = /front\s*(?:&|and|\+|\/)\s*back|\bback[\s-]*print|\bprinted\s+(?:on\s+(?:the\s+)?)?back\b|\bphoto\s+(?:on\s+(?:the\s+)?)?back\b/i;
+const RX_FB_TAG   = /^(?:back[\s-]*print(?:ed)?|front[\s-]*(?:&|and)?[\s-]*back|photo[\s-]*(?:on[\s-]*(?:the[\s-]*)?)?back)$/i;
+const RX_FB_DESC  = /\b(?:printed\s+on\s+the\s+back|print\s+on\s+the\s+back|back\s+print|photo\s+on\s+the\s+back)\b/i;
+const RX_BACK  = /\b(?:back|rear|reverse)\b/i;
+const RX_FRONT = /\bfront\b/i;
+const urlKey = u => String(u || '').split('?')[0];
+function without(s, needles) {
+  let t = String(s || '').toLowerCase();
+  needles.forEach(n => { n = String(n || '').toLowerCase().trim(); if (n) t = t.split(n).join(' '); });
+  return t.replace(new RegExp(RX_FB_TITLE.source, 'gi'), ' ');
+}
+function listHit(list, p) {
+  return (list || []).some(w => w && (p.handle === w || p.title.toLowerCase().indexOf(String(w).toLowerCase()) !== -1));
+}
+function optColor(v) { return (v.selectedOptions.find(o => /^colou?rs?$/i.test(o.name)) || {}).value || 'Classic'; }
+function optSize(v) {
+  const s = v.selectedOptions.find(o => /^size$/i.test(o.name));
+  if (s) return s.value;
+  const other = v.selectedOptions.filter(o => !/^colou?rs?$/i.test(o.name) && !/^title$/i.test(o.name)).map(o => o.value).join(' / ');
+  return other || 'One Size';
+}
+function viewOf(im, p) {
+  if (MERCH_CONFIG.backImages.some(f => f && im.url.indexOf(f) !== -1)) { im.why = 'backImages'; return 'back'; }
+  const alt = without(im.alt, [p.title, p.handle, merchDisplayTitle(p.title)]);   // so "Back the Launch Tee" can't count
+  if (RX_BACK.test(alt)) { im.why = 'alt text'; return 'back'; }
+  if (RX_FRONT.test(alt)) { im.why = 'alt text'; return 'front'; }
+  let file = urlKey(im.url).split('/').pop();
+  try { file = decodeURIComponent(file); } catch (e) { /* keep as is */ }
+  file = without(file, [p.handle]).replace(/[_\-.]+/g, ' ');
+  if (RX_BACK.test(file)) { im.why = 'file name'; return 'back'; }
+  if (RX_FRONT.test(file)) { im.why = 'file name'; return 'front'; }
   return '';
 }
-function groupMerch(products) {
-  const cards = {};
-  for (const p of products) {
-    const disp = merchDisplayTitle(p.title), key = disp.toLowerCase();
-    if (!cards[key]) cards[key] = { title: disp, colors: {}, all: [], image: p.featuredImage && p.featuredImage.url, min: Infinity, hasBack: false };
-    const card = cards[key];
-    if (titleSaysFrontBack(p.title)) card.hasBack = true;
-    const allImgs = p.images.edges.map(e => ({ url: e.node.url, alt: e.node.altText || '' }));
-    allImgs.forEach(im => { if (!card.all.some(x => x.url === im.url)) card.all.push(im); });
-    if (allImgs.some(im => viewLabel(im.alt) === 'Back')) card.hasBack = true;
-    merchLog(p.title + ' → ' + allImgs.length + ' images, ' + p.variants.edges.length + ' variants');
-    for (const ve of p.variants.edges) {
-      const v = ve.node, opts = {};
-      v.selectedOptions.forEach(o => { opts[o.name.toLowerCase()] = o.value; });
-      const color = opts.color || opts.colors || 'Classic';
-      const size = opts.size || 'One Size';
-      if (!card.colors[color]) card.colors[color] = { image: null, gallery: [], sizes: {} };
-      const c = card.colors[color];
-      if (!c.image && v.image) c.image = v.image.url;
-      c.sizes[size] = { id: v.id.split('/').pop(), price: parseFloat(v.price.amount), ok: v.availableForSale };
-      if (v.availableForSale) card.min = Math.min(card.min, parseFloat(v.price.amount));
+function detectSides(p) {
+  p.title = p.title || '';
+  p.handle = p.handle || '';
+  const why = [];
+  let has = null;
+  if (listHit(MERCH_CONFIG.noBackPrint, p)) { has = false; why.push('MERCH_CONFIG.noBackPrint'); }
+  else if (listHit(MERCH_CONFIG.backPrint, p)) { has = true; why.push('MERCH_CONFIG.backPrint'); }
+  else {
+    if ((p.tags || []).some(t => RX_FB_TAG.test(String(t).trim()))) why.push('tag');
+    if (RX_FB_TITLE.test(p.title)) why.push('title');
+    if (RX_FB_DESC.test(p.description || '')) why.push('description');
+  }
+  const imgs = ((p.images && p.images.edges) || []).map((e, i) => ({ url: e.node.url, alt: e.node.altText || '', pos: i + 1 }));
+  imgs.forEach(im => { im.view = viewOf(im, p); });
+  if (has === null && imgs.some(im => im.view === 'back')) why.push('image alt/name');
+  if (has === null) has = why.length > 0;
+
+  // Each variant's image is that colour's default (front) mockup.
+  const colorOf = {}, colors = [], variantImg = {};
+  p.variants.edges.forEach(({ node: v }) => {
+    const c = optColor(v);
+    if (colors.indexOf(c) === -1) colors.push(c);
+    if (v.image && !variantImg[c]) variantImg[c] = v.image.url;
+    if (v.image && !colorOf[urlKey(v.image.url)]) colorOf[urlKey(v.image.url)] = c;
+  });
+  const by = {};
+  colors.forEach(c => { by[c] = { front: null, back: null, backSure: false, backColorUnknown: false, extras: [] }; });
+  const fronts = imgs.filter(im => colorOf[urlKey(im.url)]);
+  const extras = imgs.filter(im => !colorOf[urlKey(im.url)]);
+  fronts.forEach(im => { const b = by[colorOf[urlKey(im.url)]]; if (!b.front) b.front = im; });
+
+  // Give every other image to a colour: (1) its alt text names the colour,
+  // (2) "run" order — uploaded colour by colour, (3) "block" order — view by view.
+  const byLength = colors.slice().sort((a, b) => b.length - a.length);   // "true navy" before "navy"
+  const named = im => { const a = without(im.alt, [p.title, p.handle]); return byLength.find(c => a.indexOf(c.toLowerCase()) !== -1); };
+  const run = {};
+  let cur = null;
+  imgs.forEach(im => { const c = colorOf[urlKey(im.url)]; if (c) cur = c; else if (cur) (run[cur] = run[cur] || []).push(im); });
+  const withFront = colors.filter(c => by[c].front), n = withFront.length;
+  const runEven = n > 0 && extras.length > 0 && withFront.every(c => (run[c] || []).length === extras.length / n);
+  const lastFront = Math.max(-1, ...fronts.map(f => f.pos));
+  const blockOK = n > 0 && extras.length % n === 0 && extras.every(e => e.pos > lastFront);
+  const frontOrder = fronts.map(f => colorOf[urlKey(f.url)]).filter((c, i, a) => a.indexOf(c) === i);
+  let mapping = extras.length ? '' : 'none needed';
+  extras.forEach((im, j) => {
+    let c = named(im), how = 'alt text';
+    if (!c && runEven) { c = withFront.find(k => (run[k] || []).indexOf(im) !== -1); how = 'run'; }
+    else if (!c && blockOK) { c = frontOrder[j % n]; how = 'block'; }
+    if (c && by[c]) { by[c].extras.push(im); if (mapping.indexOf(how) === -1) mapping += (mapping ? '+' : '') + how; }
+    else { im.orphan = true; if (mapping.indexOf('unknown') === -1) mapping += (mapping ? '+' : '') + 'unknown'; }
+  });
+
+  if (has) {
+    colors.forEach(c => {
+      const b = by[c];
+      const tagged = b.extras.find(im => im.view === 'back');
+      if (tagged) { b.back = tagged; b.backSure = true; }
+      else if (b.extras.length) b.back = b.extras.find(im => im.view !== 'front') || null;   // best guess
+      if (b.front && b.front.view === 'back') {        // the seller made the back mockup the colour's main image
+        const realFront = b.extras.find(im => im.view === 'front') || (b.back !== b.front ? b.back : null);
+        if (realFront) { b.back = b.front; b.front = realFront; b.backSure = true; }
+      }
+    });
+    if (!colors.some(c => by[c].back)) {              // couldn't match colours: use an unmatched image, colour unknown
+      const o = extras.find(im => im.orphan && im.view === 'back') || extras.find(im => im.orphan && im.view !== 'front');
+      const c = withFront[0] || colors[0];
+      if (o && c) { by[c].back = o; by[c].backColorUnknown = true; by[c].backSure = o.view === 'back'; }
     }
   }
-  // Each colour's gallery: images whose alt text names the colour, else every
-  // mockup on the product (Printify often leaves alt text empty).
-  Object.values(cards).forEach(card => {
-    Object.keys(card.colors).forEach(color => {
-      const c = card.colors[color], cl = color.toLowerCase(), g = [];
-      const push = im => { if (im && im.url && !g.some(x => x.url === im.url)) g.push({ url: im.url, label: viewLabel(im.alt) }); };
-      if (c.image) push({ url: c.image, alt: 'front' });
-      card.all.forEach(im => { if (im.alt && im.alt.toLowerCase().indexOf(cl) !== -1) push(im); });
-      if (g.length < 2) card.all.forEach(push);
-      c.gallery = g.slice(0, 8);
-      if (!c.image && c.gallery.length) c.image = c.gallery[0].url;
+  colors.forEach(c => { const b = by[c]; if (!b.front && variantImg[c]) b.front = { url: variantImg[c], alt: '', pos: 0, view: '' }; });
+  return { has, why, mapping: mapping || 'none needed', colors, by, imgs };
+}
+
+function reportSides(p, d) {
+  if (!params.has('shopdebug')) return;
+  merchLog(p.title + ' → back print: ' + (d.has ? 'YES (' + d.why.join(', ') + ')' : 'no') + ' · colour order: ' + d.mapping);
+  if (d.has) {
+    d.colors.forEach(c => {
+      const b = d.by[c];
+      merchLog('   ' + c + ': front ' + (b.front ? '#' + b.front.pos : '—') + ' · back '
+        + (b.back ? '#' + b.back.pos + (b.backSure ? ' (' + (b.back.why || 'alt text') + ')' : ' (guess — pin with backImages if wrong)')
+          + (b.backColorUnknown ? ' (colour unknown)' : '') + ' · …' + urlKey(b.back.url).slice(-28) : 'not found'));
+    });
+  } else if (d.colors.length && d.colors.every(c => d.by[c].extras.length)) {
+    const word = merchDisplayTitle(p.title).toLowerCase().split(/\s+/).slice(-2).join(' ');
+    merchLog('   hint: every colour has an extra image — if this product has a back print, add \'' + word + '\' to MERCH_CONFIG.backPrint');
+  }
+}
+
+let MERCH = [];
+let merchSel = null;      // what's open in the merch panel
+let spot = null;          // the featured product: { idx, color, side }
+
+function groupMerch(products) {
+  const cards = {}, order = [];
+  products.forEach(p => {
+    const d = detectSides(p);
+    reportSides(p, d);
+    const disp = merchDisplayTitle(p.title) || p.title, key = disp.toLowerCase();
+    let card = cards[key];
+    if (!card) {
+      card = cards[key] = { title: disp, rawTitles: [], hasBack: false, backWhy: [], colors: {}, min: Infinity, max: 0,
+                            image: p.featuredImage && p.featuredImage.url };
+      order.push(card);
+    }
+    card.rawTitles.push(p.title);
+    if (d.has) { card.hasBack = true; d.why.forEach(w => { if (card.backWhy.indexOf(w) === -1) card.backWhy.push(w); }); }
+    p.variants.edges.forEach(({ node: v }) => {
+      const color = optColor(v), size = optSize(v);
+      let c = card.colors[color];
+      if (!c) {
+        const b = d.by[color] || { extras: [] };
+        const front = (b.front && b.front.url) || (v.image && v.image.url) || card.image || '';
+        const back = d.has && b.back && b.back.url !== front ? b.back.url : '';
+        const gallery = [{ url: front, view: 'front' }];
+        if (back) gallery.push({ url: back, view: 'back' });
+        b.extras.forEach(im => { if (im.url !== front && im.url !== back && gallery.length < 6) gallery.push({ url: im.url, view: im.view || '' }); });
+        c = card.colors[color] = { image: front, front, back, backSure: !!b.backSure, backColorUnknown: !!b.backColorUnknown, gallery, sizes: {} };
+      }
+      const price = parseFloat(v.price.amount);
+      if (!c.sizes[size]) c.sizes[size] = { id: v.id.split('/').pop(), price, ok: v.availableForSale };
+      if (v.availableForSale) { card.min = Math.min(card.min, price); card.max = Math.max(card.max, price); }
     });
   });
-  return Object.values(cards);
+  const backCards = order.filter(c => c.hasBack).length;
+  order.forEach(c => {
+    c.backLabel = MERCH_CONFIG.backLabel || 'Photo on the back';
+    if (backCards > 1 && !c.rawTitles.some(t => /photo/i.test(t))) c.backLabel = 'Printed on the back';
+    c.photo = /photo/i.test(c.backLabel);
+    c.showBack = c.hasBack && Object.keys(c.colors).some(k => c.colors[k].back);   // back-image UI needs a real back image
+  });
+  return order;
+}
+
+// The front + back to show for a colour. Borrows another colour's back if this one has none.
+function sidesFor(card, color) {
+  const c = card.colors[color] || {};
+  if (c.back) return { front: c.front, back: c.back, borrowed: '', unknown: !!c.backColorUnknown };
+  if (card.showBack) {
+    const k = Object.keys(card.colors).find(x => card.colors[x].back);
+    if (k) return { front: c.front, back: card.colors[k].back, borrowed: card.colors[k].backColorUnknown ? '' : k, unknown: !!card.colors[k].backColorUnknown };
+  }
+  return { front: c.front, back: '' };
+}
+function backTagText(card, sd) {
+  if (sd.borrowed) return 'Back · shown in ' + sd.borrowed;
+  return 'Back';
+}
+function backAlt(card) { return card.title + (card.photo ? ' — back, with photo print' : ' — back'); }
+function priceText(c) {
+  if (!isFinite(c.min)) return 'Sold out';
+  return c.max > c.min ? 'From ' + fmtUsd(c.min) : fmtUsd(c.min);
+}
+function optionCounts(c) {
+  const colors = Object.keys(c.colors), sizes = {};
+  colors.forEach(k => Object.keys(c.colors[k].sizes).forEach(s => { sizes[s] = 1; }));
+  return { colors: colors.length, sizes: Object.keys(sizes).length };
+}
+function ctaText(c, long) {
+  const o = optionCounts(c);
+  if (o.colors > 1 && o.sizes > 1) return long ? 'Choose color & size →' : 'Choose size →';
+  if (o.sizes > 1) return long ? 'Choose your size →' : 'Choose size →';
+  if (o.colors > 1) return 'Choose color →';
+  return 'View details →';
+}
+function colorDots(c, max) {
+  const colors = Object.keys(c.colors);
+  return colors.slice(0, max).map(col => '<span class="m-dot" style="background:' + colorDot(col) + '" title="' + esc(col) + '"></span>').join('')
+    + (colors.length > max ? '<span class="m-dot-more">+' + (colors.length - max) + '</span>' : '');
+}
+
+function merchCardHTML(c, i) {
+  const colors = Object.keys(c.colors), first = c.colors[colors[0]];
+  const sd = sidesFor(c, colors[0]);
+  const bp = c.showBack && sd.back;
+  const strip = c.hasBack ? '<span class="m-backstrip">' + CAM_ICON + esc(c.backLabel) + '</span>' : '';
+  const img = bp
+    ? '<img class="m-main" src="' + esc(sd.back) + '" data-front="' + esc(first.front) + '" alt="' + esc(backAlt(c)) + '" loading="lazy" decoding="async">'
+      + '<span class="m-sidetag is-back">' + esc(backTagText(c, sd)) + '</span>'
+      + '<span class="m-inset"><img src="' + esc(first.front) + '" alt="' + esc(c.title) + ' — front" loading="lazy" decoding="async"><b>Front</b></span>'
+    : '<img class="m-main" src="' + esc(first.front) + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">';
+  const label = bp ? ' data-view="back" aria-label="' + esc(c.title + ' — ' + c.backLabel.toLowerCase() + ' — view details') + '"' : '';
+  return '<article class="m-card reveal' + (bp ? ' m-bp' : '') + (c.hasBack ? ' m-hasback' : '') + '">'
+    + '<div class="m-img">' + img + strip + '</div>'
+    + '<div class="m-info">'
+    + '<h3 class="m-name"><button type="button" class="m-open" data-merch="' + i + '"' + label + '>' + esc(c.title) + '</button></h3>'
+    + '<p class="m-meta">' + (colors.length > 1 ? colors.length + ' colors' : esc(colors[0])) + ' <span class="m-dots">' + colorDots(c, 6) + '</span></p>'
+    + '<p class="m-price">' + priceText(c) + '</p>'
+    + '<span class="m-cta" aria-hidden="true">' + ctaText(c, false) + '</span>'
+    + '</div></article>';
+}
+
+function pickSpotlight() {
+  const s = MERCH_CONFIG.spotlight;
+  if (s === false || !MERCH.length) return -1;
+  if (typeof s === 'string' && s && s !== 'auto') {
+    const w = s.toLowerCase();
+    const i = MERCH.findIndex(c => c.rawTitles.concat(c.title).some(t => t.toLowerCase().indexOf(w) !== -1));
+    if (i !== -1) return i;
+  }
+  const b = MERCH.findIndex(c => c.showBack);
+  return b !== -1 ? b : 0;
+}
+
+function renderSpotlight(idx) {
+  const el = $('#mSpot');
+  if (idx < 0) { el.hidden = true; spot = null; return; }
+  const c = MERCH[idx], colors = Object.keys(c.colors);
+  const two = c.showBack;
+  spot = { idx, color: colors[0], side: two && !MERCH_CONFIG.frontFirst ? 'back' : 'front' };
+  el.hidden = false;
+  el.className = 'm-spot reveal ' + (two ? 'two' : 'one');
+  const note = c.hasBack
+    ? '<p class="m-spot-note">' + CAM_ICON + '<span>' + (c.photo ? 'Printed on both sides — <strong>the photo is on the back.</strong>' : 'Printed on both sides — <strong>front and back.</strong>') + '</span></p>'
+    : '';
+  const face = (side, cls) =>
+    '<button type="button" class="m-face" data-face="' + side + '">'
+    + '<img alt="" decoding="async" loading="eager">'
+    + (two ? '<span class="m-sidetag' + cls + '">' + (side === 'back' ? 'Back' : 'Front') + '</span>' : '') + '</button>';
+  el.innerHTML =
+    '<div class="m-spot-stage">'
+    + (two ? '<span class="m-ribbon">' + CAM_ICON + esc(c.backLabel) + '</span>' + face('back', ' is-back') + face('front', '') + '<span class="m-minicap" aria-hidden="true"></span>'
+           : face('front', ''))
+    + '</div>'
+    + (two ? '<div class="m-seg" role="group" aria-label="Which side"><button type="button" data-side="front">Front</button><button type="button" data-side="back">Back</button></div>' : '')
+    + '<div class="m-spot-info">'
+    + '<p class="m-kicker">' + (two ? 'Turn it around' : 'Featured') + '</p>'
+    + '<h3 class="m-spot-title" id="mSpotTitle">' + esc(c.title) + '</h3>'
+    + note
+    + '<p class="m-spot-price">' + priceText(c) + '</p>'
+    + (colors.length > 1
+        ? '<div class="m-spot-colors"><span class="m-spot-colorname">Color: <b></b></span><div role="group" aria-label="Color">'
+          + colors.map(col => '<button type="button" class="m-dotbtn" data-spot-color="' + esc(col) + '" aria-label="' + esc(col) + '" style="background:' + colorDot(col) + '"></button>').join('')
+          + '</div></div>'
+        : '')
+    + '<button type="button" class="m-cta m-spot-cta">' + ctaText(c, true) + '</button>'
+    + '</div>';
+  el.setAttribute('aria-labelledby', 'mSpotTitle');
+  setSpotColor(spot.color);
+  setSpotSide(spot.side);
+  $$('.m-face img', el).forEach(img => img.addEventListener('error', () => {
+    // a back image that won't load: fall back to the one-image version but keep the text
+    if (img.closest('[data-face="back"]') && el.classList.contains('two')) {
+      el.classList.remove('two'); el.classList.add('one');
+      setSpotSide('front');
+    }
+  }, { once: true }));
+}
+function setSpotColor(color) {
+  const el = $('#mSpot'), c = MERCH[spot.idx], sd = sidesFor(c, color);
+  spot.color = color;
+  const back = $('[data-face="back"] img', el), front = $('[data-face="front"] img', el);
+  front.src = sd.front;
+  front.alt = c.title + (sd.back ? ' — front' : '');
+  if (back && sd.back) {
+    back.src = sd.back;
+    back.alt = backAlt(c);
+    $('[data-face="back"] .m-sidetag', el).textContent = backTagText(c, sd);
+  }
+  $$('[data-spot-color]', el).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.spotColor === color)));
+  const name = $('.m-spot-colorname b', el);
+  if (name) name.textContent = color;
+}
+function setSpotSide(side) {
+  const el = $('#mSpot');
+  if (!el.classList.contains('two')) side = 'front';
+  spot.side = side;
+  el.dataset.side = side;
+  $$('.m-seg button', el).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.side === side)));
+  const cap = $('.m-minicap', el);
+  if (cap) cap.textContent = side === 'back' ? 'Front' : 'Back';
+  const title = MERCH[spot.idx].title;
+  $$('.m-face', el).forEach(f => {
+    const isBig = f.dataset.face === side;
+    const what = f.dataset.face === 'back' ? 'Back of ' + title + (MERCH[spot.idx].photo ? ', with the photo print' : '') : 'Front of ' + title;
+    f.setAttribute('aria-label', what + (isBig || !el.classList.contains('two') ? ' — view details' : ' — tap to show this side'));
+  });
+}
+$('#mSpot').addEventListener('click', e => {
+  if (!spot) return;
+  const el = $('#mSpot');
+  const seg = e.target.closest('.m-seg button');
+  if (seg) { setSpotSide(seg.dataset.side); return; }
+  const dot = e.target.closest('[data-spot-color]');
+  if (dot) { setSpotColor(dot.dataset.spotColor); return; }
+  const face = e.target.closest('.m-face');
+  const phone = window.matchMedia('(max-width:899px)').matches;
+  if (face && phone && el.classList.contains('two') && face.dataset.face !== spot.side) { setSpotSide(face.dataset.face); return; }
+  if (face || e.target.closest('.m-spot-cta')) openMerchPanel(spot.idx, face ? face.dataset.face : spot.side, spot.color);
+});
+
+function renderMerch() {
+  const si = pickSpotlight();
+  renderSpotlight(si);
+  const grid = $('#merchGrid');
+  const rest = MERCH.map((c, i) => i).filter(i => i !== si);
+  grid.hidden = !rest.length;
+  grid.innerHTML = rest.map(i => merchCardHTML(MERCH[i], i)).join('');
+  $$('.m-bp .m-main', grid).forEach(img => img.addEventListener('error', () => {
+    const card = img.closest('.m-card');
+    card.classList.add('no-back');
+    img.src = img.dataset.front;
+  }, { once: true }));
+  observeReveals($('#merch'));
+  if (!reduceMotion && si >= 0) spotEntranceObs.observe($('#mSpot'));
+}
+
+// one-time "turn it around" entrance the first time the spotlight is half on screen
+const spotEntranceObs = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    const el = en.target;
+    el.classList.add('in');
+    spotEntranceObs.unobserve(el);
+    setTimeout(() => el.classList.remove('in'), 1600);   // so later side swaps never replay it
+  });
+}, { threshold: 0.5 });
+
+// Every "Shop merch" link on the page, switched together
+function setMerchEntries(on) {
+  merchOn = on;
+  $$('[data-merch-entry]').forEach(el => { if (el.dataset.merchEntry !== 'hero') el.hidden = !on; });
+  const h = $('.btn-shop');
+  if (h) {
+    h.setAttribute('href', on ? '#merch' : '#collections');
+    h.dataset.section = on ? 'merch' : 'collections';
+    $('.btn-shop-label', h).textContent = on ? 'Shop Merch' : 'See the Lineup →';
+    $$('.tee-ico, .shop-tag', h).forEach(x => { x.hidden = !on; });
+  }
+  updateCartCount();
 }
 
 async function loadMerch() {
-  const grid = $('#merchGrid'), status = $('#merchStatus');
+  const sec = $('#merch'), status = $('#merchStatus'), skels = $('#mSkels');
+  status.className = 'merch-status sr-only';
+  status.textContent = 'Loading the shop…';
+  skels.hidden = false;
   try {
-    const data = await shopQuery(MERCH_QUERY);
-    MERCH = groupMerch(data.products.edges.map(e => e.node));
-    if (!MERCH.length) { status.textContent = 'New merch is on the way — check back soon. 🌊'; return; }
-    if (!params.has('shopdebug')) status.hidden = true;
-    grid.innerHTML = MERCH.map((c, i) => {
-      const colors = Object.keys(c.colors), first = c.colors[colors[0]];
-      const front = c.image || (first && first.image) || '';
-      const pool = first && first.gallery.length ? first.gallery : c.all.map(im => ({ url: im.url }));
-      const backShot = pool.filter(g => g.url !== front)[0], back = backShot ? backShot.url : '';
-      const dots = colors.slice(0, 8).map(col => '<span class="m-dot" style="background:' + colorDot(col) + '" title="' + esc(col) + '"></span>').join('')
-        + (colors.length > 8 ? '<span class="m-dot-more">+' + (colors.length - 8) + '</span>' : '');
-      return '<div class="product-card m-card reveal" role="button" tabindex="0" data-merch="' + i + '" aria-label="' + esc(c.title) + ' — view details">'
-        + '<div class="product-badge">Ships Now</div>'
-        + (c.hasBack ? '<span class="m-badge2">Front &amp; Back</span>' : '')
-        + '<div class="product-card-img">'
-        + '<img class="m-front' + (back ? '' : ' m-solo') + '" src="' + esc(front) + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">'
-        + (back ? '<img class="m-back" src="' + esc(back) + '" alt="' + esc(c.title) + ' back" loading="lazy" decoding="async"><span class="m-flip">Hover to flip ↻</span>' : '')
-        + '</div><div class="product-card-info">'
-        + '<div class="product-card-name">' + esc(c.title) + '</div>'
-        + '<div class="product-card-color">' + (colors.length > 1 ? colors.length + ' colors' : esc(colors[0])) + '</div>'
-        + '<div class="product-card-price">' + (isFinite(c.min) ? fmtUsd(c.min) : '') + '</div>'
-        + '<div class="m-dots">' + dots + '</div>'
-        + '</div></div>';
-    }).join('');
-    observeReveals(grid);
+    const products = await fetchProducts();
+    MERCH = groupMerch(products);
+    skels.hidden = true;
+    if (!MERCH.length) {
+      sec.hidden = true;
+      setMerchEntries(false);
+      merchLog('0 products — merch section hidden');
+      return;
+    }
+    sec.hidden = false;
+    status.textContent = MERCH.length + (MERCH.length === 1 ? ' item' : ' items') + ' in the merch shop.';
+    renderMerch();
+    setMerchEntries(true);
     merchLog('loaded ' + MERCH.length + ' cards');
   } catch (err) {
-    status.hidden = false;
-    status.textContent = 'The merch rack is being restocked — refresh in a moment. 🌊';
-    merchLog('load failed: ' + err.message);
+    skels.hidden = true;
+    $('#mSpot').hidden = true;
+    $('#merchGrid').hidden = true;
+    status.className = 'merch-status';
+    status.innerHTML = '<span>Couldn’t load the merch shop just now.</span> <button type="button" class="btn btn-ghost m-retry">Try again</button>';
+    setMerchEntries(false);
+    merchLog('load failed: ' + (err.name === 'AbortError' ? 'timed out after 10s' : err.message));
   }
 }
 document.addEventListener('click', e => {
-  const card = e.target.closest('[data-merch]');
-  if (card) openMerchPanel(+card.dataset.merch);
-});
-document.addEventListener('keydown', e => {
-  const card = e.target.closest && e.target.closest('[data-merch]');
-  if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openMerchPanel(+card.dataset.merch); }
+  if (e.target.closest('.m-retry')) { loadMerch(); return; }
+  const open = e.target.closest('.m-open[data-merch]');
+  if (open) openMerchPanel(+open.dataset.merch, open.dataset.view || '');
 });
 
-function openMerchPanel(idx) {
+/* ── Merch panel ─────────────────────────────────────────────────────────── */
+function openMerchPanel(idx, view, color) {
   const c = MERCH[idx];
-  merchSel = { card: c, color: Object.keys(c.colors)[0], size: null, img: 0 };
+  if (!c) return;
+  const colors = Object.keys(c.colors);
+  merchSel = {
+    idx, card: c, color: color && c.colors[color] ? color : colors[0], size: null,
+    view: view || (c.showBack && !MERCH_CONFIG.frontFirst ? 'back' : 'front'), extra: -1
+  };
   $('#mpTitle').textContent = c.title;
+  $('#mpSizeMsg').textContent = '';
+  setZoom(false);
   renderMerchPanel();
-  overlay.classList.add('open');
-  $('#merchPanel').classList.add('open');
-  $('#merchPanel').setAttribute('aria-hidden', 'false');
-  lockScroll(true);
+  drawerOpen($('#merchPanel'));
 }
-function pickMerchColor(color) { merchSel.color = color; merchSel.size = null; merchSel.img = 0; renderMerchPanel(); }
-function pickMerchSize(size) { merchSel.size = size; renderMerchPanel(); }
-function pickMerchImage(i) { merchSel.img = i; renderMerchPanel(); }
-function renderMerchPanel() {
-  const card = merchSel.card, color = merchSel.color, cd = card.colors[color];
-  const sizeKeys = Object.keys(cd.sizes);
-  if (!merchSel.size && sizeKeys.length === 1 && cd.sizes[sizeKeys[0]].ok) merchSel.size = sizeKeys[0];
-  const size = merchSel.size;
-  const gal = cd.gallery && cd.gallery.length ? cd.gallery : [{ url: cd.image || card.image || '', label: '' }];
-  const cur = gal[Math.min(merchSel.img, gal.length - 1)];
-  $('#mpImg').src = cur.url;
-  $('#mpView').textContent = cur.label || '';
-  $('#mpThumbs').innerHTML = gal.length > 1 ? gal.map((g, i) =>
-    '<button class="m-thumb' + (i === merchSel.img ? ' on' : '') + '" onclick="pickMerchImage(' + i + ')">'
-    + '<img src="' + esc(g.url) + '" alt="' + esc(g.label || 'view') + '" loading="lazy">'
-    + (g.label ? '<span>' + g.label + '</span>' : '') + '</button>').join('') : '';
-  $('#mpColorName').textContent = color;
+function pickMerchColor(color) { merchSel.color = color; merchSel.size = null; merchSel.extra = -1; setZoom(false); $('#mpSizeMsg').textContent = ''; renderMerchPanel('fade'); }
+function pickMerchSize(size) { merchSel.size = size; $('#mpSizeMsg').textContent = ''; renderMerchPanel(); }
+function pickMerchSide(view) { if (merchSel.view === view && merchSel.extra < 0) return; merchSel.view = view; merchSel.extra = -1; setZoom(false); renderMerchPanel('flip'); }
+function pickMerchExtra(i) { merchSel.extra = i; setZoom(false); renderMerchPanel('fade'); }
+
+let mpSwapToken = 0;
+function setPanelImage(url, alt, how) {
+  const img = $('#mpImg'), token = ++mpSwapToken;
+  if (img.getAttribute('src') === url) { img.alt = alt; return; }
+  if (!how || reduceMotion || !img.animate) { img.src = url; img.alt = alt; return; }
+  const out = how === 'flip'
+    ? [{ transform: 'perspective(800px) rotateY(0)' }, { transform: 'perspective(800px) rotateY(90deg)' }]
+    : [{ opacity: 1 }, { opacity: 0 }];
+  const back = how === 'flip'
+    ? [{ transform: 'perspective(800px) rotateY(-90deg)' }, { transform: 'perspective(800px) rotateY(0)' }]
+    : [{ opacity: 0 }, { opacity: 1 }];
+  const a1 = img.animate(out, { duration: how === 'flip' ? 160 : 120, easing: 'ease-in', fill: 'forwards' });
+  a1.onfinish = () => {
+    if (token === mpSwapToken) { img.src = url; img.alt = alt; img.animate(back, { duration: 200, easing: 'ease-out' }); }
+    a1.cancel();   // drop the held half-turn so the zoom transform can apply again
+  };
+}
+
+function renderMerchPanel(how) {
+  const s = merchSel, card = s.card, cd = card.colors[s.color];
+  const sd = sidesFor(card, s.color);
+  const view = sd.back ? s.view : 'front';
+  const extras = cd.gallery.filter(g => g.url !== sd.front && g.url !== sd.back);
+  if (s.extra >= extras.length) s.extra = -1;
+
+  // main image + its side tag
+  const tag = $('#mpSideTag');
+  tag.classList.remove('is-back');
+  if (s.extra >= 0) {
+    setPanelImage(extras[s.extra].url, card.title + ' — view ' + (s.extra + 3), how);
+    tag.textContent = '';
+  } else if (view === 'back') {
+    setPanelImage(sd.back, backAlt(card), how);
+    tag.textContent = sd.borrowed ? 'Back · shown in ' + sd.borrowed : (card.photo && !sd.unknown ? 'Back · photo print' : 'Back');
+    tag.classList.add('is-back');
+  } else {
+    setPanelImage(sd.front, card.title + (sd.back ? ' — front' : ''), how);
+    tag.textContent = sd.back ? 'Front' : '';
+  }
+
+  // Front / Back buttons
+  const sides = $('#mpSides');
+  sides.hidden = !sd.back;
+  if (sd.back) {
+    const btn = (v, src, label) =>
+      '<button type="button" class="mp-side" data-view="' + v + '" aria-pressed="' + (s.extra < 0 && view === v) + '">'
+      + '<img src="' + esc(src) + '" alt=""><span>' + label + '</span>' + debugTag(src) + '</button>';
+    sides.innerHTML = btn('front', sd.front, 'Front') + btn('back', sd.back, card.photo ? 'Back · photo' : 'Back');
+  } else sides.innerHTML = '';
+
+  // any other views of this colour
+  $('#mpThumbs').innerHTML = extras.map((g, i) =>
+    '<button type="button" class="m-thumb' + (i === s.extra ? ' on' : '') + '" aria-pressed="' + (i === s.extra) + '" aria-label="View ' + (i + 3) + '">'
+    + '<img src="' + esc(g.url) + '" alt="" loading="lazy">' + debugTag(g.url) + '</button>').join('');
+  $$('#mpThumbs .m-thumb').forEach((b, i) => { b.onclick = () => pickMerchExtra(i); });
+
+  const note = $('#mpBackNote');
+  note.hidden = !card.hasBack;
+  note.innerHTML = CAM_ICON + '<span>' + (card.photo ? 'Photo printed on the back' : 'Printed on the back') + (sd.back ? ' — see both sides above.' : '.') + '</span>';
+
+  // colours
+  $('#mpColorName').textContent = s.color;
   $('#mpColorChips').innerHTML = Object.keys(card.colors).map(col =>
-    '<button class="m-chip' + (col === color ? ' on' : '') + '" aria-label="' + esc(col) + '" style="background:' + colorDot(col) + '"'
-    + ' onclick="pickMerchColor(&quot;' + esc(col) + '&quot;)"><span class="swatch-tooltip">' + esc(col) + '</span></button>').join('');
-  $('#mpSizes').innerHTML = sizeKeys.map(s => {
-    const v = cd.sizes[s];
-    return '<button class="m-size' + (s === size ? ' on' : '') + (v.ok ? '' : ' sold') + '" '
-      + (v.ok ? 'onclick="pickMerchSize(&quot;' + esc(s) + '&quot;)"' : 'disabled') + '>' + esc(s) + '</button>';
+    '<button type="button" class="m-chip' + (col === s.color ? ' on' : '') + '" aria-pressed="' + (col === s.color) + '" aria-label="' + esc(col) + '" style="background:' + colorDot(col) + '">'
+    + '<span class="swatch-tooltip">' + esc(col) + '</span></button>').join('');
+  $$('#mpColorChips .m-chip').forEach((b, i) => { b.onclick = () => pickMerchColor(Object.keys(card.colors)[i]); });
+
+  // sizes
+  const sizeKeys = Object.keys(cd.sizes);
+  if (!s.size && sizeKeys.length === 1 && cd.sizes[sizeKeys[0]].ok) s.size = sizeKeys[0];
+  $('#mpSizeLabel').hidden = sizeKeys.length === 1 && sizeKeys[0] === 'One Size';
+  $('#mpSizes').innerHTML = sizeKeys.map(k => {
+    const v = cd.sizes[k];
+    return '<button type="button" class="m-size' + (k === s.size ? ' on' : '') + (v.ok ? '' : ' sold') + '" aria-pressed="' + (k === s.size) + '"'
+      + ' aria-label="Size ' + esc(k) + (v.ok ? '' : ', sold out') + '"' + (v.ok ? '' : ' disabled') + '>' + esc(k) + '</button>';
   }).join('');
-  const chosen = size ? cd.sizes[size] : null;
-  $('#mpPrice').textContent = chosen ? fmtUsd(chosen.price) : '—';
-  const btn = $('#mpAdd'), ready = !!(chosen && chosen.ok);
-  btn.disabled = !ready;
-  btn.textContent = ready ? 'Add to Cart' : 'Select a size';
+  $$('#mpSizes .m-size').forEach((b, i) => { if (!b.disabled) b.onclick = () => pickMerchSize(sizeKeys[i]); });
+
+  // price + button
+  const chosen = s.size ? cd.sizes[s.size] : null;
+  const avail = sizeKeys.filter(k => cd.sizes[k].ok).map(k => cd.sizes[k].price);
+  const btn = $('#mpAdd');
+  btn.classList.remove('added');
+  if (!avail.length) {
+    $('#mpPrice').textContent = 'Sold out';
+    btn.disabled = true;
+    btn.textContent = 'Sold out in ' + s.color;
+  } else {
+    $('#mpPrice').textContent = chosen ? fmtUsd(chosen.price) : (Math.max.apply(null, avail) > Math.min.apply(null, avail) ? 'From ' : '') + fmtUsd(Math.min.apply(null, avail));
+    btn.disabled = false;
+    btn.textContent = chosen && chosen.ok ? 'Add to Cart — ' + fmtUsd(chosen.price) : 'Add to Cart';
+  }
+}
+function debugTag(url) {
+  if (!params.has('shopdebug')) return '';
+  return '<small class="m-debug">…' + esc(urlKey(url).split('/').pop().slice(-12)) + '</small>';
+}
+$('#mpSides').addEventListener('click', e => { const b = e.target.closest('.mp-side'); if (b) pickMerchSide(b.dataset.view); });
+$('#mpSides').addEventListener('keydown', e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  pickMerchSide(merchSel.view === 'back' ? 'front' : 'back');
+  const b = $('.mp-side[data-view="' + merchSel.view + '"]');
+  if (b) b.focus();
+});
+
+// tap the photo (or the Zoom button) to look closer at the print
+function setZoom(on, x, y) {
+  const wrap = $('#merchPanel .panel-img-wrap'), img = $('#mpImg'), btn = $('#mpZoom');
+  wrap.classList.toggle('zoom', on);
+  img.style.transformOrigin = on ? (x != null ? x + '% ' + y + '%' : '50% 40%') : '';
+  btn.setAttribute('aria-pressed', String(on));
+  btn.textContent = on ? 'Zoom out' : 'Zoom';
+}
+$('#mpZoom').addEventListener('click', () => setZoom(!$('#merchPanel .panel-img-wrap').classList.contains('zoom')));
+$('#mpImg').addEventListener('click', e => {
+  const wrap = $('#merchPanel .panel-img-wrap');
+  if (wrap.classList.contains('zoom')) { setZoom(false); return; }
+  const r = e.currentTarget.getBoundingClientRect();
+  setZoom(true, Math.round((e.clientX - r.left) / r.width * 100), Math.round((e.clientY - r.top) / r.height * 100));
+});
+
+function promptSize() {
+  const msg = $('#mpSizeMsg'), row = $('#mpSizes');
+  msg.textContent = 'Pick a size first';
+  if (!reduceMotion && row.animate) {
+    row.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 350 });
+  }
+  const first = $('#mpSizes .m-size:not([disabled])');
+  if (first) { first.focus({ preventScroll: true }); row.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' }); }
 }
 function addMerchToCart() {
-  const card = merchSel.card, color = merchSel.color, size = merchSel.size;
-  const v = card.colors[color].sizes[size];
-  if (!v || !v.ok) return;
+  const s = merchSel, card = s.card, cd = card.colors[s.color];
+  const v = s.size ? cd.sizes[s.size] : null;
+  if (!v) { promptSize(); return; }
+  if (!v.ok) return;
+  const sd = sidesFor(card, s.color);
+  const img = s.view === 'back' && sd.back && !sd.borrowed ? sd.back : sd.front;   // the cart shows the side they were looking at
   const id = 'm::' + v.id, existing = cart.find(i => i.id === id);
   if (existing) existing.qty += 1;
-  else cart.push({ id: id, variantId: v.id, name: card.title, color: color + ' · ' + size, price: v.price, img: card.colors[color].image || card.image, qty: 1 });
-  cartChanged();
-  const btn = $('#mpAdd');
-  btn.textContent = '✓ Added!'; btn.classList.add('added');
-  setTimeout(() => { btn.textContent = 'Add to Cart'; btn.classList.remove('added'); }, 1400);
+  else cart.push({ id: id, variantId: v.id, name: card.title, color: s.color + ' · ' + s.size, price: v.price, img: img, qty: 1 });
+  saveCart(); updateCartCount();
+  const mp = $('#merchPanel'), ret = drawerReturn.get(mp);
+  drawerClose(mp, true);
+  openCart(id);
+  if (ret) drawerReturn.set($('#cartDrawer'), ret);
 }
+function closeMerchPanel() { drawerClose($('#merchPanel')); setZoom(false); }
 
 /* ==========================================================================
    LOADING INTRO — water rises, BOYNT surfaces, the site appears.
