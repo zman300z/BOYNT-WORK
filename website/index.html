@@ -2619,8 +2619,11 @@ function viewOf(im, p) {
   file = without(file, [p.handle]).replace(/[_\-.]+/g, ' ');
   if (RX_BACK.test(file)) { im.why = 'file name'; return 'back'; }
   if (RX_FRONT.test(file)) { im.why = 'file name'; return 'front'; }
+  const shot = p._shots && p._shots[urlKey(im.url)];
+  if (shot && (shot.view === 'back' || shot.view === 'front' || shot.view === 'other')) { im.why = 'photo check'; return shot.view; }
   return '';
 }
+const EXPLICIT = im => im.why && im.why !== 'photo check';
 function detectSides(p, force) {
   p.title = p.title || '';
   p.handle = p.handle || '';
@@ -2636,7 +2639,7 @@ function detectSides(p, force) {
   }
   const imgs = ((p.images && p.images.edges) || []).map((e, i) => ({ url: e.node.url, alt: e.node.altText || '', pos: i + 1 }));
   imgs.forEach(im => { im.view = viewOf(im, p); });
-  if (has === null && imgs.some(im => im.view === 'back')) why.push('image alt/name');
+  if (has === null && imgs.some(im => im.view === 'back' && EXPLICIT(im))) why.push('image alt/name');
   if (has === null) has = why.length > 0;
 
   // Each variant's image is that colour's default (front) mockup.
@@ -2665,10 +2668,22 @@ function detectSides(p, force) {
   const lastFront = Math.max(-1, ...fronts.map(f => f.pos));
   const blockOK = n > 0 && extras.length % n === 0 && extras.every(e => e.pos > lastFront);
   const frontOrder = fronts.map(f => colorOf[urlKey(f.url)]).filter((c, i, a) => a.indexOf(c) === i);
+  const shotOf = im => p._shots && p._shots[urlKey(im.url)];
+  const checked = !!p._shots && imgs.filter(im => shotOf(im)).length >= imgs.length / 2;
+  const frontShirt = {};
+  colors.forEach(c => { const f = by[c].front, sh = f && shotOf(f); if (sh && sh.shirt) frontShirt[c] = sh.shirt; });
+  const byShirt = im => {
+    const sh = shotOf(im);
+    if (!sh || !sh.shirt || sh.view === 'other') return null;
+    let best = null, bd = 1e9;
+    Object.keys(frontShirt).forEach(c => { const d = colorDist(sh.shirt, frontShirt[c]); if (d < bd) { bd = d; best = c; } });
+    return bd < 60 ? best : null;
+  };
   let mapping = extras.length ? '' : 'none needed';
   extras.forEach((im, j) => {
     let c = named(im), how = 'alt text';
-    if (!c && runEven) { c = withFront.find(k => (run[k] || []).indexOf(im) !== -1); how = 'run'; }
+    if (!c && checked) { c = byShirt(im); how = 'photo colour'; }        // the photo check replaces upload-order guessing
+    else if (!c && runEven) { c = withFront.find(k => (run[k] || []).indexOf(im) !== -1); how = 'run'; }
     else if (!c && blockOK) { c = frontOrder[j % n]; how = 'block'; }
     if (c && by[c]) { by[c].extras.push(im); if (mapping.indexOf(how) === -1) mapping += (mapping ? '+' : '') + how; }
     else { im.orphan = true; if (mapping.indexOf('unknown') === -1) mapping += (mapping ? '+' : '') + 'unknown'; }
@@ -2677,32 +2692,140 @@ function detectSides(p, force) {
   if (has) {
     colors.forEach(c => {
       const b = by[c];
-      const tagged = b.extras.find(im => im.view === 'back');
-      if (tagged) { b.back = tagged; b.backSure = true; }
-      else if (b.extras.length) b.back = b.extras.find(im => im.view !== 'front') || null;   // best guess
-      if (b.front && b.front.view === 'back') {        // the seller made the back mockup the colour's main image
+      const tagged = b.extras.find(im => im.view === 'back' && EXPLICIT(im)) || b.extras.find(im => im.view === 'back');
+      if (tagged) { b.back = tagged; b.backSure = true; }   // no guessing: a wrong "Back" is worse than none
+      if (b.front && b.front.view === 'back' && EXPLICIT(b.front)) {   // the seller made the back mockup the colour's main image
         const realFront = b.extras.find(im => im.view === 'front') || (b.back !== b.front ? b.back : null);
         if (realFront) { b.back = b.front; b.front = realFront; b.backSure = true; }
       }
     });
     if (!colors.some(c => by[c].back)) {              // couldn't match colours: use an unmatched image, colour unknown
-      const o = extras.find(im => im.orphan && im.view === 'back') || extras.find(im => im.orphan && im.view !== 'front');
+      const o = extras.find(im => im.orphan && im.view === 'back');
       const c = withFront[0] || colors[0];
-      if (o && c) { by[c].back = o; by[c].backColorUnknown = true; by[c].backSure = o.view === 'back'; }
+      if (o && c) { by[c].back = o; by[c].backColorUnknown = true; by[c].backSure = true; }
     }
   }
   colors.forEach(c => { const b = by[c]; if (!b.front && variantImg[c]) b.front = { url: variantImg[c], alt: '', pos: 0, view: '' }; });
-  return { has, why, mapping: mapping || 'none needed', colors, by, imgs };
+  return { has, why, mapping: mapping || 'none needed', colors, by, imgs, checked };
+}
+
+/* ── Photo check: look at the pictures themselves to find the back views ──
+   A back mockup has one big design centred on the shirt; a front has a small
+   chest logo off to one side. Also measures the shirt colour so each back can
+   be matched to its colour. Only works when Shopify's image server lets the
+   page read the pixels; if not, it quietly does nothing. */
+function colorDist(a, b) { return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2); }
+function smallImageUrl(url, w) {
+  try { const u = new URL(url, location.href); u.searchParams.set('width', String(w)); return u.href; } catch (e) { return url; }
+}
+function readPixels(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const done = v => { clearTimeout(timer); resolve(v); };
+    const timer = setTimeout(() => done(null), 6000);
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const k = Math.min(1, 96 / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(8, Math.round(img.naturalWidth * k)), h = Math.max(8, Math.round(img.naturalHeight * k));
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, w, h);
+        done({ w, h, data: ctx.getImageData(0, 0, w, h).data });
+      } catch (e) { done(null); }          // the server didn't allow reading the pixels
+    };
+    img.onerror = () => done(null);
+    img.src = smallImageUrl(url, 160);
+  });
+}
+function classifyShot(px) {
+  const { w, h, data } = px;
+  const at = (x, y) => { const i = (y * w + x) * 4; return [data[i], data[i + 1], data[i + 2]]; };
+  const ring = Math.max(1, Math.round(Math.min(w, h) * 0.04));
+  const border = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (x < ring || y < ring || x >= w - ring || y >= h - ring) border.push(at(x, y));
+  const med = i => border.map(c => c[i]).sort((a, b) => a - b)[border.length >> 1];
+  const bg = [med(0), med(1), med(2)];
+  const clean = border.filter(c => colorDist(c, bg) < 30).length / border.length;
+  if (clean < 0.8 || (bg[0] + bg[1] + bg[2]) / 3 < 185) return { view: 'other' };      // a lifestyle photo, not a flat mockup
+  const fg = new Uint8Array(w * h);
+  let count = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (colorDist(at(x, y), bg) > 28) { fg[y * w + x] = 1; count++; }
+  const light = count < w * h * 0.12;                   // a white shirt on a white background
+  let x0, x1, y0, y1, shirt, inside;
+  if (light) {
+    x0 = Math.floor(w * 0.18); x1 = Math.floor(w * 0.82); y0 = Math.floor(h * 0.1); y1 = Math.floor(h * 0.92);
+    shirt = bg; inside = () => true;
+  } else {
+    x0 = w; x1 = 0; y0 = h; y1 = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (fg[y * w + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    inside = (x, y) => {                                 // away from the shirt's edges
+      for (const i of [-2, 0, 2]) for (const j of [-2, 0, 2]) {
+        const xx = x + i, yy = y + j;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h || !fg[yy * w + xx]) return false;
+      }
+      return true;
+    };
+    const bins = new Map();
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!fg[y * w + x] || !inside(x, y)) continue;
+      const c = at(x, y), key = Math.floor(c[0] / 24) + ',' + Math.floor(c[1] / 24) + ',' + Math.floor(c[2] / 24);
+      const b = bins.get(key) || [0, 0, 0, 0];
+      b[0] += c[0]; b[1] += c[1]; b[2] += c[2]; b[3]++;
+      bins.set(key, b);
+    }
+    let top = null;
+    bins.forEach(b => { if (!top || b[3] > top[3]) top = b; });
+    if (!top) return { view: 'other' };
+    shirt = [top[0] / top[3], top[1] / top[3], top[2] / top[3]];
+  }
+  const W = Math.max(1, x1 - x0), H = Math.max(1, y1 - y0);
+  let L = 0, R = 0, area = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const u = (x - x0) / W, v = (y - y0) / H;
+    if (u < 0.25 || u > 0.75 || v < 0.18 || v > 0.85 || !inside(x, y) || (!light && !fg[y * w + x])) continue;
+    area++;
+    if (colorDist(at(x, y), shirt) > 60) { if (u < 0.47) L++; else if (u > 0.53) R++; }
+  }
+  const cover = (L + R) / Math.max(1, area), balance = Math.min(L, R) / Math.max(1, Math.max(L, R));
+  return { view: cover >= 0.03 && balance >= 0.45 ? 'back' : 'front', shirt, cover: +cover.toFixed(3), balance: +balance.toFixed(2) };
+}
+// Check the pictures of every product that might have a back print (at most 40 pictures in all)
+async function inspectBackPhotos(products) {
+  const todo = [];
+  products.forEach(p => {
+    const imgs = (p.images && p.images.edges) || [];
+    const colors = {};
+    p.variants.edges.forEach(e => { colors[optColor(e.node)] = 1; });
+    if (imgs.length <= Object.keys(colors).length) return;          // one picture per colour: nothing to find
+    p._shots = p._shots || {};
+    imgs.forEach(e => todo.push([p, e.node.url]));
+  });
+  const jobs = todo.slice(0, 40);
+  if (todo.length > jobs.length) merchLog('photo check: only the first 40 of ' + todo.length + ' pictures were checked');
+  let read = 0;
+  await Promise.all(jobs.map(([p, url]) => readPixels(url).then(px => {
+    if (px) { read++; p._shots[urlKey(url)] = classifyShot(px); }
+  })));
+  if (jobs.length) merchLog('photo check: read ' + read + ' of ' + jobs.length + ' pictures' + (read ? '' : ' — Shopify didn\u2019t allow reading them; set alt text "Back" on the back photos instead'));
+  products.forEach(p => { if (p._shots && !Object.keys(p._shots).length) delete p._shots; });
+  return read > 0;
 }
 
 function reportSides(p, d) {
   if (!params.has('shopdebug')) return;
   merchLog(p.title + ' [' + (p.handle || 'no handle') + ', ' + fmtUsd(minPrice(p)) + '] → back print: ' + (d.has ? 'YES (' + d.why.join(', ') + ')' : 'no') + ' · colour order: ' + d.mapping);
+  if (p._shots) d.imgs.forEach(im => {
+    const sh = p._shots[urlKey(im.url)];
+    merchLog('     #' + im.pos + ' ' + (sh ? sh.view + (sh.cover != null ? ' (print ' + sh.cover + ', balance ' + sh.balance + ')' : '') : 'not read')
+      + (im.why && im.why !== 'photo check' ? ' · ' + im.why + ': ' + im.view : '') + ' · …' + urlKey(im.url).slice(-24));
+  });
   if (d.has) {
     d.colors.forEach(c => {
       const b = d.by[c];
       merchLog('   ' + c + ': front ' + (b.front ? '#' + b.front.pos : '—') + ' · back '
-        + (b.back ? '#' + b.back.pos + (b.backSure ? ' (' + (b.back.why || 'alt text') + ')' : ' (guess — pin with backImages if wrong)')
+        + (b.back ? '#' + b.back.pos + ' (' + (b.back.why || 'alt text') + ')'
           + (b.backColorUnknown ? ' (colour unknown)' : '') + ' · …' + urlKey(b.back.url).slice(-28) : 'not found'));
     });
   } else if (d.colors.length && d.colors.every(c => d.by[c].extras.length)) {
@@ -2779,6 +2902,11 @@ function groupMerch(products) {
 }
 
 // The front + back to show for a colour. Borrows another colour's back if this one has none.
+// the first colour with its own back picture (else the first colour)
+function backColor(card) {
+  const ks = Object.keys(card.colors);
+  return ks.find(k => card.colors[k].back && !card.colors[k].backColorUnknown) || ks[0];
+}
 function sidesFor(card, color) {
   const c = card.colors[color] || {};
   if (c.back) return { front: c.front, back: c.back, borrowed: '', unknown: !!c.backColorUnknown };
@@ -2837,7 +2965,7 @@ function contrastColor(c, first) {
   return best;
 }
 function cardSwap(c) {
-  const colors = Object.keys(c.colors), first = colors[0], f = c.colors[first];
+  const colors = Object.keys(c.colors), first = c.showBack ? backColor(c) : colors[0], f = c.colors[first];
   if (c.showBack) {
     const sd = sidesFor(c, first);
     if (sd.back) return { kind: 'back', a: f.front, b: sd.back, la: 'Front', lb: sd.borrowed ? 'Back · ' + sd.borrowed : 'Back' };
@@ -2891,8 +3019,10 @@ function pickSpotlight() {
     const i = MERCH.findIndex(c => c.rawTitles.concat(c.title).some(t => t.toLowerCase().indexOf(w) !== -1));
     if (i !== -1) return i;
   }
-  const b = MERCH.findIndex(c => c.showBack);
-  return b !== -1 ? b : 0;
+  const b = MERCH.findIndex(c => c.showBack);            // a back-print product with a back picture
+  if (b !== -1) return b;
+  const h = MERCH.findIndex(c => c.hasBack);              // a back-print product without one
+  return h !== -1 ? h : 0;
 }
 
 function renderSpotlight(idx) {
@@ -2900,7 +3030,7 @@ function renderSpotlight(idx) {
   if (idx < 0) { el.hidden = true; spot = null; return; }
   const c = MERCH[idx], colors = Object.keys(c.colors);
   const two = c.showBack;
-  spot = { idx, color: colors[0], side: two && !MERCH_CONFIG.frontFirst ? 'back' : 'front' };
+  spot = { idx, color: two ? backColor(c) : colors[0], side: two && !MERCH_CONFIG.frontFirst ? 'back' : 'front' };
   el.hidden = false;
   el.className = 'm-spot reveal ' + (two ? 'two' : 'one');
   const note = c.hasBack
@@ -3031,6 +3161,11 @@ async function loadMerch() {
   skels.hidden = false;
   try {
     const products = await fetchProducts();
+    // look at the pictures to find the real back views (capped so the shop never waits long)
+    let checkDone = false;
+    const check = inspectBackPhotos(products).then(found => { checkDone = true; return found; });
+    await Promise.race([check, new Promise(r => setTimeout(r, 3500))]);
+    if (!checkDone) check.then(found => { if (found && MERCH.length) { MERCH = groupMerch(products); renderMerch(); merchLog('photo check finished late — re-drawn'); } });
     MERCH = groupMerch(products);
     skels.hidden = true;
     if (!MERCH.length) {
@@ -3074,7 +3209,7 @@ function openMerchPanel(idx, view, color) {
   if (!c) return;
   const colors = Object.keys(c.colors);
   merchSel = {
-    idx, card: c, color: color && c.colors[color] ? color : colors[0], size: null,
+    idx, card: c, color: color && c.colors[color] ? color : (view === 'back' && c.showBack ? backColor(c) : colors[0]), size: null,
     view: view || (c.showBack && !MERCH_CONFIG.frontFirst ? 'back' : 'front'), extra: -1
   };
   $('#mpTitle').textContent = c.title;

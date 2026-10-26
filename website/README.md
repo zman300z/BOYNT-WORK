@@ -25,6 +25,8 @@ Merch loads live from Shopify. Two shirts are both called "Logo T-shirt"; the $5
   - the hat fades to another colour
 - on phones, where there's no hover, switches the cards back and forth by themselves every few seconds
 
+**How it finds the back photos:** Shopify doesn't say which picture is the back, so the site looks at the pictures themselves. A back view has one big design in the middle; a front view has the small chest logo off to one side. It also matches each back photo to its shirt colour. If a colour has no back photo, the site borrows another colour's and says so ("Back · shown in Blue Spruce"). If the site ever can't read the pictures, it doesn't guess. It shows the front with a "the logo is on the back" note instead. To make it certain either way, set the alt text "Back" on the back photos in Shopify (see the end of this section).
+
 It finds the back-print shirt from the setting `backPrint: ['$50']`, meaning any product with a $50 price. **If you change that shirt's price, change this setting too**, or swap it for words from its Shopify title or its handle. The site also works it out by itself from any of these:
 
 - a title containing "Front & Back"
@@ -32,7 +34,7 @@ It finds the back-print shirt from the setting `backPrint: ['$50']`, meaning any
 - image alt text containing "Back"
 - a same-named shirt that costs more and has a back photo for every colour
 
-To check what the site detected, add `?shopdebug` to the end of the site address. A report then appears in the merch section, with one line per product (title, handle and price) and per colour.
+To check what the site detected, add `?shopdebug` to the end of the site address. A report then appears in the merch section, with one line per product (title, handle and price), one line per picture (what the photo check saw) and one per colour (which picture is its front and back).
 
 Other `MERCH_CONFIG` settings in `source/index.html`:
 
