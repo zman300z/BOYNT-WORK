@@ -693,7 +693,17 @@ nav.scrolled .nav-shop:hover { background:rgba(26,22,18,.06); }
 .m-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 300px)); justify-content:center; gap:18px; }
 .m-card { position:relative; display:flex; flex-direction:column; background:#fff; color:var(--ink); border-radius:12px; overflow:hidden; box-shadow:0 18px 40px rgba(0,20,32,.28); transition:transform .35s var(--ease-out), box-shadow .35s; }
 .m-img { position:relative; aspect-ratio:1; background:#f3f3f1; overflow:hidden; }
-.m-img > img { width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
+.m-img > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:opacity .6s ease, transform .6s ease; }
+.m-img > .m-b { opacity:0; }
+/* hover (or keyboard focus, or the phone auto-swap) fades to the second picture */
+.m-swap.alt .m-b, .m-swap:focus-within .m-b { opacity:1; }
+.m-swap.alt .m-a, .m-swap:focus-within .m-a { opacity:0; }
+.m-view { position:absolute; left:10px; top:10px; z-index:2; display:grid; pointer-events:none; }
+.m-view > span { grid-area:1 / 1; justify-self:start; padding:5px 9px; border-radius:3px; background:rgba(26,22,18,.86); color:#fff; font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; transition:opacity .45s ease; }
+.m-view-b { opacity:0; }
+.m-view.is-sides .m-view-b { background:var(--gold); color:var(--ink); }
+.m-swap.alt .m-view-a, .m-swap:focus-within .m-view-a { opacity:0; }
+.m-swap.alt .m-view-b, .m-swap:focus-within .m-view-b { opacity:1; }
 .m-info { display:flex; flex-direction:column; gap:4px; padding:14px 16px 16px; flex:1; }
 .m-name { font:600 16px 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-transform:uppercase; }
 .m-open { all:unset; cursor:pointer; }
@@ -708,16 +718,15 @@ nav.scrolled .nav-shop:hover { background:rgba(26,22,18,.06); }
 @media (hover:hover) and (pointer:fine) {
   .m-card:hover { transform:translateY(-5px); box-shadow:0 26px 56px rgba(0,20,32,.36); }
   .m-card:hover .m-img > img { transform:scale(1.04); }
+  .m-swap:hover .m-b { opacity:1; }
+  .m-swap:hover .m-a { opacity:0; }
+  .m-swap:hover .m-view-a { opacity:0; }
+  .m-swap:hover .m-view-b { opacity:1; }
   .m-card:hover .m-cta { background:var(--ocean); }
 }
-.m-inset { position:absolute; right:8px; bottom:38px; z-index:2; width:32%; aspect-ratio:1; background:#fff; border:2px solid #fff; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.2); overflow:hidden; }
-.m-inset img { width:100%; height:100%; object-fit:contain; }
-.m-inset b { position:absolute; left:0; right:0; bottom:0; background:rgba(26,22,18,.86); color:#fff; font:600 9px/1.8 'Barlow Condensed',sans-serif; letter-spacing:1.5px; text-align:center; text-transform:uppercase; }
-.m-img .m-sidetag { bottom:38px; }
 .m-backstrip { position:absolute; left:0; right:0; bottom:0; z-index:2; display:flex; gap:6px; align-items:center; justify-content:center; padding:8px 6px; background:var(--gold); color:var(--ink); font:600 11px/1 'Barlow Condensed',sans-serif; letter-spacing:2px; text-transform:uppercase; }
 .m-backstrip svg { width:14px; height:14px; }
 .m-hasback .m-img > img { padding-bottom:30px; object-fit:contain; }
-.m-card.no-back .m-inset, .m-card.no-back .m-sidetag { display:none; }
 
 /* bridge back to the campaign */
 .m-bridge { margin:30px auto 0; display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:18px 22px; border:1px solid rgba(255,255,255,.22); border-radius:10px; background:rgba(4,18,31,.22); }
@@ -1879,25 +1888,28 @@ const SHOP_CONFIG = {
   apiVersion: '2025-10'
 };
 
-// ── MERCH: which tee has a photo on the back? ──────────────────────────────
-// The site works this out by itself (a Shopify title containing "Front & Back",
-// a "back-print" product tag, or image alt text containing "Back").
-// If it guesses wrong, fill these in:
-//   backPrint:   ['photo tee']  ← words from the product's Shopify title (or its handle) to FORCE the photo-on-back look
-//   noBackPrint: ['logo tee']   ← words to switch it OFF for a product
+// ── MERCH: which shirt has the logo on the back? ───────────────────────────
+// Both tees are called "Logo T-shirt"; the $50 one has the logo printed on the
+// back too. The site also works it out by itself (a title containing "Front &
+// Back", a "back-print" tag, image alt text containing "Back", or a same-named
+// shirt that costs more and has an extra back photo for every colour).
+// Each list below takes words from the Shopify title, the product's handle,
+// or a price like '$50':
+//   backPrint:   ['$50']        ← these products get the "logo on the back" look
+//   noBackPrint: ['hat']        ← switch it OFF for a product
 //   backImages:  ['a1b2c3d4']   ← any piece of an image's web address that IS a back view
 //                                  (Shopify admin → product → right-click the back mockup → Copy image address)
-//   frontFirst:  true           ← show the front first instead of the back
+//   frontFirst:  true           ← open the featured shirt on the front instead of the back
 //   spotlight:   false          ← no big featured product (or title words to feature a different one)
-//   backLabel:   'Photo on the back'  ← the words on the badge
+//   backLabel:   'Logo on the back'  ← the words on the gold badge
 // Add ?shopdebug to the end of the site address to see what it detected.
 const MERCH_CONFIG = {
-  backPrint: [],
+  backPrint: ['$50'],
   noBackPrint: [],
   backImages: [],
   frontFirst: false,
   spotlight: 'auto',
-  backLabel: 'Photo on the back'
+  backLabel: 'Logo on the back'
 };
 
 /* ==========================================================================
@@ -2460,6 +2472,7 @@ document.addEventListener('keydown', e => {
    MERCH — live from Shopify
    ========================================================================== */
 let merchOn = true;     // false while the shop is empty or couldn't load (hides every "Shop merch" link)
+const TEE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3.5 5.5 2 10l3 1.2V21h14v-9.8L22 10l-1.5-4.5L16 3c-.6 1.6-2.2 2.6-4 2.6S8.6 4.6 8 3z"/></svg>';
 const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 
 function merchLog(msg) {
@@ -2572,9 +2585,23 @@ function without(s, needles) {
   needles.forEach(n => { n = String(n || '').toLowerCase().trim(); if (n) t = t.split(n).join(' '); });
   return t.replace(new RegExp(RX_FB_TITLE.source, 'gi'), ' ');
 }
-function listHit(list, p) {
-  return (list || []).some(w => w && (p.handle === w || p.title.toLowerCase().indexOf(String(w).toLowerCase()) !== -1));
+function priceHit(w, p) {
+  const m = String(w).trim().match(/^\$\s*(\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const want = parseFloat(m[1]);
+  return p.variants.edges.some(({ node: v }) => Math.abs(parseFloat(v.price.amount) - want) < 0.5);
 }
+function listHit(list, p) {
+  return (list || []).some(w => {
+    if (!w) return false;
+    const ph = priceHit(w, p);
+    if (ph !== null) return ph;
+    return p.handle === w || p.title.toLowerCase().indexOf(String(w).toLowerCase()) !== -1;
+  });
+}
+function minPrice(p) { return Math.min.apply(null, p.variants.edges.map(e => parseFloat(e.node.price.amount))); }
+// "BOYNT Logo T-shirt | Light Text" and "Boynt logo tee" belong to the same family
+function familyKey(t) { return merchDisplayTitle(t).toLowerCase().replace(/t[\s-]*shirts?\b|\btees?\b/g, 'tee').replace(/[^a-z0-9]+/g, ' ').trim(); }
 function optColor(v) { return (v.selectedOptions.find(o => /^colou?rs?$/i.test(o.name)) || {}).value || 'Classic'; }
 function optSize(v) {
   const s = v.selectedOptions.find(o => /^size$/i.test(o.name));
@@ -2594,7 +2621,7 @@ function viewOf(im, p) {
   if (RX_FRONT.test(file)) { im.why = 'file name'; return 'front'; }
   return '';
 }
-function detectSides(p) {
+function detectSides(p, force) {
   p.title = p.title || '';
   p.handle = p.handle || '';
   const why = [];
@@ -2605,6 +2632,7 @@ function detectSides(p) {
     if ((p.tags || []).some(t => RX_FB_TAG.test(String(t).trim()))) why.push('tag');
     if (RX_FB_TITLE.test(p.title)) why.push('title');
     if (RX_FB_DESC.test(p.description || '')) why.push('description');
+    if (force) why.push(force);
   }
   const imgs = ((p.images && p.images.edges) || []).map((e, i) => ({ url: e.node.url, alt: e.node.altText || '', pos: i + 1 }));
   imgs.forEach(im => { im.view = viewOf(im, p); });
@@ -2669,7 +2697,7 @@ function detectSides(p) {
 
 function reportSides(p, d) {
   if (!params.has('shopdebug')) return;
-  merchLog(p.title + ' → back print: ' + (d.has ? 'YES (' + d.why.join(', ') + ')' : 'no') + ' · colour order: ' + d.mapping);
+  merchLog(p.title + ' [' + (p.handle || 'no handle') + ', ' + fmtUsd(minPrice(p)) + '] → back print: ' + (d.has ? 'YES (' + d.why.join(', ') + ')' : 'no') + ' · colour order: ' + d.mapping);
   if (d.has) {
     d.colors.forEach(c => {
       const b = d.by[c];
@@ -2689,10 +2717,27 @@ let spot = null;          // the featured product: { idx, color, side }
 
 function groupMerch(products) {
   const cards = {}, order = [];
-  products.forEach(p => {
-    const d = detectSides(p);
+  const det = products.map(p => detectSides(p));
+  // Same-named family (e.g. two "Logo T-shirt"s): if nothing in it is marked yet, the one that
+  // costs clearly more and has an extra (back) photo for every colour is the back-print one.
+  const families = {};
+  products.forEach((p, i) => { const k = familyKey(p.title); (families[k] = families[k] || []).push(i); });
+  Object.keys(families).forEach(k => {
+    const ix = families[k];
+    if (ix.length < 2 || ix.some(i => det[i].has) || ix.some(i => listHit(MERCH_CONFIG.noBackPrint, products[i]))) return;
+    const price = i => minPrice(products[i]);
+    const top = Math.max.apply(null, ix.map(price));
+    const tops = ix.filter(i => price(i) === top), rest = ix.filter(i => price(i) !== top);
+    if (tops.length !== 1 || !rest.length || top - Math.max.apply(null, rest.map(price)) < 3) return;
+    const t = tops[0], d = det[t];
+    const extrasEach = d.colors.length && d.colors.every(c => d.by[c].extras.length);
+    const restPlain = rest.every(i => det[i].colors.every(c => !det[i].by[c].extras.length));
+    if (extrasEach && restPlain) det[t] = detectSides(products[t], 'costs more than its same-named twin and has a back photo per colour');
+  });
+  products.forEach((p, pi) => {
+    const d = det[pi];
     reportSides(p, d);
-    const disp = merchDisplayTitle(p.title) || p.title, key = disp.toLowerCase();
+    const disp = merchDisplayTitle(p.title) || p.title, key = disp.toLowerCase() + (d.has ? '|back' : '');
     let card = cards[key];
     if (!card) {
       card = cards[key] = { title: disp, rawTitles: [], hasBack: false, backWhy: [], colors: {}, min: Infinity, max: 0,
@@ -2720,10 +2765,15 @@ function groupMerch(products) {
   });
   const backCards = order.filter(c => c.hasBack).length;
   order.forEach(c => {
-    c.backLabel = MERCH_CONFIG.backLabel || 'Photo on the back';
-    if (backCards > 1 && !c.rawTitles.some(t => /photo/i.test(t))) c.backLabel = 'Printed on the back';
-    c.photo = /photo/i.test(c.backLabel);
+    c.backLabel = MERCH_CONFIG.backLabel || 'Logo on the back';
+    const m = c.backLabel.match(/^(.+?)\s+on the back$/i);
+    c.thing = m ? m[1].toLowerCase() : '';             // "logo" — used in "the logo is on the back"
+    if (backCards > 1 && c.thing && !c.rawTitles.some(t => t.toLowerCase().indexOf(c.thing) !== -1)) { c.backLabel = 'Printed on the back'; c.thing = ''; }
     c.showBack = c.hasBack && Object.keys(c.colors).some(k => c.colors[k].back);   // back-image UI needs a real back image
+  });
+  // two cards with the same name: say which one is printed on the back
+  order.forEach(c => {
+    if (c.hasBack && order.some(o => o !== c && !o.hasBack && o.title.toLowerCase() === c.title.toLowerCase())) c.title += ' — Front & Back';
   });
   return order;
 }
@@ -2742,7 +2792,9 @@ function backTagText(card, sd) {
   if (sd.borrowed) return 'Back · shown in ' + sd.borrowed;
   return 'Back';
 }
-function backAlt(card) { return card.title + (card.photo ? ' — back, with photo print' : ' — back'); }
+function backAlt(card) { return card.title + ' — back' + (card.thing ? ', with the ' + card.thing + ' print' : ''); }
+function backIcon(card) { return card.thing === 'photo' ? CAM_ICON : TEE_ICON; }
+function capFirst(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
 function priceText(c) {
   if (!isFinite(c.min)) return 'Sold out';
   return c.max > c.min ? 'From ' + fmtUsd(c.min) : fmtUsd(c.min);
@@ -2765,25 +2817,70 @@ function colorDots(c, max) {
     + (colors.length > max ? '<span class="m-dot-more">+' + (colors.length - max) + '</span>' : '');
 }
 
+// The second picture a card fades to: the back (back-print shirt), a contrasting
+// colour (e.g. a light shirt with dark text after a dark one), or another view.
+function luminance(hex) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(x => x + x).join('');
+  const n = parseInt(h, 16);
+  if (isNaN(n)) return 128;
+  return 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+}
+function contrastColor(c, first) {
+  const L = luminance(colorDot(first));
+  let best = null, bestD = -1;
+  Object.keys(c.colors).forEach(k => {
+    if (k === first || !c.colors[k].front || c.colors[k].front === c.colors[first].front) return;
+    const d = Math.abs(luminance(colorDot(k)) - L);
+    if (d > bestD) { bestD = d; best = k; }
+  });
+  return best;
+}
+function cardSwap(c) {
+  const colors = Object.keys(c.colors), first = colors[0], f = c.colors[first];
+  if (c.showBack) {
+    const sd = sidesFor(c, first);
+    if (sd.back) return { kind: 'back', a: f.front, b: sd.back, la: 'Front', lb: sd.borrowed ? 'Back · ' + sd.borrowed : 'Back' };
+  }
+  const k = colors.length > 1 ? contrastColor(c, first) : null;
+  if (k) return { kind: 'color', a: f.front, b: c.colors[k].front, la: first, lb: k, colorB: k };
+  const extra = f.gallery.find(g => g.url !== f.front);
+  if (extra) return { kind: 'view', a: f.front, b: extra.url, la: '', lb: '' };
+  return { kind: '', a: f.front, b: '' };
+}
 function merchCardHTML(c, i) {
-  const colors = Object.keys(c.colors), first = c.colors[colors[0]];
-  const sd = sidesFor(c, colors[0]);
-  const bp = c.showBack && sd.back;
-  const strip = c.hasBack ? '<span class="m-backstrip">' + CAM_ICON + esc(c.backLabel) + '</span>' : '';
-  const img = bp
-    ? '<img class="m-main" src="' + esc(sd.back) + '" data-front="' + esc(first.front) + '" alt="' + esc(backAlt(c)) + '" loading="lazy" decoding="async">'
-      + '<span class="m-sidetag is-back">' + esc(backTagText(c, sd)) + '</span>'
-      + '<span class="m-inset"><img src="' + esc(first.front) + '" alt="' + esc(c.title) + ' — front" loading="lazy" decoding="async"><b>Front</b></span>'
-    : '<img class="m-main" src="' + esc(first.front) + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async">';
-  const label = bp ? ' data-view="back" aria-label="' + esc(c.title + ' — ' + c.backLabel.toLowerCase() + ' — view details') + '"' : '';
-  return '<article class="m-card reveal' + (bp ? ' m-bp' : '') + (c.hasBack ? ' m-hasback' : '') + '">'
-    + '<div class="m-img">' + img + strip + '</div>'
+  const colors = Object.keys(c.colors), sw = cardSwap(c);
+  const strip = c.hasBack ? '<span class="m-backstrip">' + backIcon(c) + esc(c.backLabel) + '</span>' : '';
+  const views = sw.la
+    ? '<span class="m-view' + (sw.kind === 'back' ? ' is-sides' : '') + '" aria-hidden="true"><span class="m-view-a">' + esc(sw.la) + '</span><span class="m-view-b">' + esc(sw.lb) + '</span></span>'
+    : '';
+  const img = '<img class="m-a" src="' + esc(sw.a) + '" alt="' + esc(c.title + (sw.kind === 'back' ? ' — front' : '')) + '" loading="lazy" decoding="async">'
+    + (sw.b ? '<img class="m-b" src="' + esc(sw.b) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '');
+  const aria = c.hasBack ? ' aria-label="' + esc(c.title + ' — ' + c.backLabel.toLowerCase() + ' — view details') + '"' : '';
+  return '<article class="m-card reveal' + (sw.b ? ' m-swap m-k-' + sw.kind : '') + (c.hasBack ? ' m-hasback' : '') + '"'
+    + (sw.colorB ? ' data-color-b="' + esc(sw.colorB) + '"' : '') + '>'
+    + '<div class="m-img">' + img + views + strip + '</div>'
     + '<div class="m-info">'
-    + '<h3 class="m-name"><button type="button" class="m-open" data-merch="' + i + '"' + label + '>' + esc(c.title) + '</button></h3>'
+    + '<h3 class="m-name"><button type="button" class="m-open" data-merch="' + i + '"' + aria + '>' + esc(c.title) + '</button></h3>'
     + '<p class="m-meta">' + (colors.length > 1 ? colors.length + ' colors' : esc(colors[0])) + ' <span class="m-dots">' + colorDots(c, 6) + '</span></p>'
     + '<p class="m-price">' + priceText(c) + '</p>'
     + '<span class="m-cta" aria-hidden="true">' + ctaText(c, false) + '</span>'
     + '</div></article>';
+}
+
+// Phones can't hover, so cards on screen take turns showing their second picture
+const cardSwapObs = new IntersectionObserver(entries => entries.forEach(en => { en.target._vis = en.isIntersecting; }), { threshold: 0.4 });
+let cardSwapTimers = [];
+function startCardSwaps() {
+  cardSwapTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  cardSwapTimers = [];
+  if (reduceMotion || window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  $$('#merchGrid .m-swap').forEach((card, i) => {
+    cardSwapObs.observe(card);
+    cardSwapTimers.push(setTimeout(() => {
+      cardSwapTimers.push(setInterval(() => { if (card._vis && !document.hidden) card.classList.toggle('alt'); }, 2800));
+    }, 900 + i * 700));
+  });
 }
 
 function pickSpotlight() {
@@ -2807,7 +2904,7 @@ function renderSpotlight(idx) {
   el.hidden = false;
   el.className = 'm-spot reveal ' + (two ? 'two' : 'one');
   const note = c.hasBack
-    ? '<p class="m-spot-note">' + CAM_ICON + '<span>' + (c.photo ? 'Printed on both sides — <strong>the photo is on the back.</strong>' : 'Printed on both sides — <strong>front and back.</strong>') + '</span></p>'
+    ? '<p class="m-spot-note">' + backIcon(c) + '<span>' + (c.thing ? 'Printed on both sides — <strong>the ' + esc(c.thing) + ' is on the back.</strong>' : 'Printed on both sides — <strong>front and back.</strong>') + '</span></p>'
     : '';
   const face = (side, cls) =>
     '<button type="button" class="m-face" data-face="' + side + '">'
@@ -2815,7 +2912,7 @@ function renderSpotlight(idx) {
     + (two ? '<span class="m-sidetag' + cls + '">' + (side === 'back' ? 'Back' : 'Front') + '</span>' : '') + '</button>';
   el.innerHTML =
     '<div class="m-spot-stage">'
-    + (two ? '<span class="m-ribbon">' + CAM_ICON + esc(c.backLabel) + '</span>' + face('back', ' is-back') + face('front', '') + '<span class="m-minicap" aria-hidden="true"></span>'
+    + (two ? '<span class="m-ribbon">' + backIcon(c) + esc(c.backLabel) + '</span>' + face('back', ' is-back') + face('front', '') + '<span class="m-minicap" aria-hidden="true"></span>'
            : face('front', ''))
     + '</div>'
     + (two ? '<div class="m-seg" role="group" aria-label="Which side"><button type="button" data-side="front">Front</button><button type="button" data-side="back">Back</button></div>' : '')
@@ -2868,7 +2965,7 @@ function setSpotSide(side) {
   const title = MERCH[spot.idx].title;
   $$('.m-face', el).forEach(f => {
     const isBig = f.dataset.face === side;
-    const what = f.dataset.face === 'back' ? 'Back of ' + title + (MERCH[spot.idx].photo ? ', with the photo print' : '') : 'Front of ' + title;
+    const what = f.dataset.face === 'back' ? 'Back of ' + title + (MERCH[spot.idx].thing ? ', with the ' + MERCH[spot.idx].thing + ' print' : '') : 'Front of ' + title;
     f.setAttribute('aria-label', what + (isBig || !el.classList.contains('two') ? ' — view details' : ' — tap to show this side'));
   });
 }
@@ -2892,11 +2989,12 @@ function renderMerch() {
   const rest = MERCH.map((c, i) => i).filter(i => i !== si);
   grid.hidden = !rest.length;
   grid.innerHTML = rest.map(i => merchCardHTML(MERCH[i], i)).join('');
-  $$('.m-bp .m-main', grid).forEach(img => img.addEventListener('error', () => {
+  $$('.m-b', grid).forEach(img => img.addEventListener('error', () => {
     const card = img.closest('.m-card');
-    card.classList.add('no-back');
-    img.src = img.dataset.front;
+    card.classList.remove('m-swap', 'alt');       // second picture won't load: just show the first
+    img.remove();
   }, { once: true }));
+  startCardSwaps();
   observeReveals($('#merch'));
   if (!reduceMotion && si >= 0) spotEntranceObs.observe($('#mSpot'));
 }
@@ -2959,7 +3057,15 @@ async function loadMerch() {
 document.addEventListener('click', e => {
   if (e.target.closest('.m-retry')) { loadMerch(); return; }
   const open = e.target.closest('.m-open[data-merch]');
-  if (open) openMerchPanel(+open.dataset.merch, open.dataset.view || '');
+  if (open) {
+    const card = open.closest('.m-card');
+    const showingB = card && card.classList.contains('m-swap') &&
+      (card.classList.contains('alt') || (window.matchMedia('(hover:hover) and (pointer:fine)').matches && card.matches(':hover')));
+    let view = '', color = '';
+    if (card && card.classList.contains('m-k-back')) view = 'back';
+    else if (showingB && card.dataset.colorB) color = card.dataset.colorB;
+    openMerchPanel(+open.dataset.merch, view, color);
+  }
 });
 
 /* ── Merch panel ─────────────────────────────────────────────────────────── */
@@ -3015,7 +3121,7 @@ function renderMerchPanel(how) {
     tag.textContent = '';
   } else if (view === 'back') {
     setPanelImage(sd.back, backAlt(card), how);
-    tag.textContent = sd.borrowed ? 'Back · shown in ' + sd.borrowed : (card.photo && !sd.unknown ? 'Back · photo print' : 'Back');
+    tag.textContent = sd.borrowed ? 'Back · shown in ' + sd.borrowed : (card.thing && !sd.unknown ? 'Back · ' + card.thing + ' print' : 'Back');
     tag.classList.add('is-back');
   } else {
     setPanelImage(sd.front, card.title + (sd.back ? ' — front' : ''), how);
@@ -3029,7 +3135,7 @@ function renderMerchPanel(how) {
     const btn = (v, src, label) =>
       '<button type="button" class="mp-side" data-view="' + v + '" aria-pressed="' + (s.extra < 0 && view === v) + '">'
       + '<img src="' + esc(src) + '" alt=""><span>' + label + '</span>' + debugTag(src) + '</button>';
-    sides.innerHTML = btn('front', sd.front, 'Front') + btn('back', sd.back, card.photo ? 'Back · photo' : 'Back');
+    sides.innerHTML = btn('front', sd.front, 'Front') + btn('back', sd.back, card.thing ? 'Back · ' + esc(card.thing) : 'Back');
   } else sides.innerHTML = '';
 
   // any other views of this colour
@@ -3040,7 +3146,7 @@ function renderMerchPanel(how) {
 
   const note = $('#mpBackNote');
   note.hidden = !card.hasBack;
-  note.innerHTML = CAM_ICON + '<span>' + (card.photo ? 'Photo printed on the back' : 'Printed on the back') + (sd.back ? ' — see both sides above.' : '.') + '</span>';
+  note.innerHTML = backIcon(card) + '<span>' + (card.thing ? esc(capFirst(card.thing)) + ' printed on the back' : 'Printed on the back') + (sd.back ? ' — see both sides above.' : '.') + '</span>';
 
   // colours
   $('#mpColorName').textContent = s.color;
