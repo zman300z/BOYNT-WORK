@@ -492,6 +492,37 @@ details.vrow .conj{margin:10px;background:var(--card2)}
 .suits span{display:inline-flex;align-items:center;gap:6px}
 .suits i{width:12px;height:12px;border-radius:3px;background:var(--suit)}
 
+
+/* bilingual labels: English first, French underneath */
+.bi{display:inline-grid;justify-items:center;line-height:1.12;gap:3px;text-align:center}
+.bi>small{font-size:.74em;font-weight:600;opacity:.78;letter-spacing:.01em;text-transform:none}
+.link .bi{justify-items:start;text-align:left}
+.h-fr{display:block;font-size:.44em;font-weight:650;letter-spacing:.02em;text-transform:none;opacity:.68;margin-top:6px;font-stretch:100%;line-height:1.2}
+.line-h .h-fr{font-size:.6em;margin-top:3px}
+.tk-big .h-fr{font-size:.4em;margin-top:4px;color:var(--ticket-mute);opacity:1}
+.fr-i{opacity:.72;font-weight:600}
+.chip .fr-i{font-weight:750}
+.tab .bi{gap:1px}
+.tab .bi>small{font-size:.86em;font-weight:600}
+.verdict small{display:block;text-transform:none;font-size:.62em;font-weight:700;opacity:.8;font-stretch:90%;margin-top:2px;letter-spacing:.02em}
+.milestone small{display:block;font-size:.42em;text-align:center;font-stretch:90%;letter-spacing:.02em}
+.here small{display:block;font-size:.88em;text-transform:none;letter-spacing:.02em;font-weight:700;opacity:.85}
+.kv span .bi,.tk-grid span .bi{justify-items:start;text-align:left}
+.kv span .bi>small,.tk-grid span .bi>small{font-size:.92em;opacity:.7;letter-spacing:.04em}
+.seg button .bi>small{font-size:.8em}
+.help{appearance:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--hair);background:var(--card);color:var(--ink);font-weight:850;font-size:1.05rem;cursor:pointer;flex:none}
+.help:hover{border-color:var(--ink)}
+.howtip{display:grid;gap:2px;background:color-mix(in srgb,var(--warn) 13%,var(--card));border-radius:12px;padding:10px 14px;font-size:.95rem}
+.howtip>b{font-size:.7rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:var(--warn)}
+.intro-h{font-size:1.8rem;font-stretch:76%;font-weight:850;text-transform:uppercase}
+.imap{position:relative;display:grid;gap:12px;padding:4px 0}
+.imap::before{content:"";position:absolute;left:8px;top:12px;bottom:12px;width:8px;border-radius:4px;background:var(--lcx)}
+.imap-s{display:grid;grid-template-columns:24px auto minmax(0,1fr);align-items:center;gap:10px}
+.imap .sdot{width:24px;height:24px;border-width:5px}
+.imap-s .qsub{font-size:.88rem}
+.howto{margin:0;padding-left:1.3em;display:grid;gap:12px}
+.howto li::marker{font-weight:850;color:var(--muted)}
+.demo .btn{flex:0 0 auto;cursor:default}
 /* toasts + fx */
 #toasts{position:fixed;left:0;right:0;top:calc(10px + env(safe-area-inset-top,0px));z-index:60;display:grid;justify-items:center;gap:8px;pointer-events:none;padding-inline:16px}
 .toast{background:var(--enamel);color:var(--enamel-ink);border-radius:12px;padding:10px 14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;animation:tin .25s ease;max-width:440px}
@@ -1218,7 +1249,7 @@ function cleanFr(fr){return fr.replace(/\s*\((m|f)\)/,"")}
 
 /* ---------- The map: lines (worlds) and stations (lessons) ---------- */
 const LINES=[
-{n:1,name:"Les bases",en:"Hello, the six people, and the four verbs you can't avoid",c:"#FFCD00",t:"#14161C",stations:[
+{n:1,ename:"The basics",name:"Les bases",en:"Hello, the six people, and the four verbs you can't avoid",c:"#FFCD00",t:"#14161C",stations:[
  {id:"bonjour",name:"Bonjour",en:"Hello, please, thank you",rule:"Bonjour by day, bonsoir at night. s'il vous plaît for anyone you don't know.",voc:["greet"],teach:[
   {h:"Start here. Zero French needed.",b:L_P("Every trip on this map begins with the words you'll say every single day. Tap any French line to hear it, then say it out loud. Your mouth needs the reps as much as your brain.")+L_EX([["Bonjour !","Hello / good morning (until about 6 p.m.)"],["Bonsoir !","Good evening"],["Salut !","Hi / bye, with friends only"],["Au revoir !","Goodbye"],["À bientôt !","See you soon"]])},
   {h:"The polite words",b:L_EX([["Merci.","Thank you."],["Merci beaucoup.","Thank you very much."],["S'il vous plaît.","Please (polite)."],["S'il te plaît.","Please (to a friend)."],["De rien.","You're welcome."],["Excusez-moi.","Excuse me."],["Pardon !","Sorry! (bumping into someone)"]])+L_TIP("s'il vous plaît literally means 'if it pleases you'. Use the vous version with anyone you don't know well.")+L_TRAP("bonne nuit is only for going to bed. Arriving somewhere at night? bonsoir.")},
@@ -1255,7 +1286,7 @@ const LINES=[
  ]},
  {id:"boss1",boss:{name:"Le Garçon de café",av:{hat:"none",stache:1,tie:"bow",hair:"slick",skin:"#F0C8A0",coat:"#14161C"},hello:["Vous désirez ?","What'll it be?"],hit:["Non, non, non…","Oui ? C'est tout ?","Pfff."],lose:["Bon… bravo.","Fine… well done."]},name:"Terminus",en:"Boss: Le Garçon de café",rule:"Everything on line 1. Three lives."}
 ]},
-{n:2,name:"Les verbes en -er",en:"One pattern that unlocks thousands of verbs",c:"#003CA6",t:"#FFFFFF",stations:[
+{n:2,ename:"-er verbs",name:"Les verbes en -er",en:"One pattern that unlocks thousands of verbs",c:"#003CA6",t:"#FFFFFF",stations:[
  {id:"parler",name:"Parler",en:"the -er method",rule:"Chop -er. Add -e, -es, -e, -ons, -ez, -ent.",verbs:["parler","aimer"],teach:[
   {h:"One method, thousands of verbs",b:L_P("Most French verbs end in <b>-er</b>, and nearly all of them follow one pattern. Learn this once and you can conjugate thousands of verbs.")+L_STEPS("How to do it",["Start with the infinitive: <b>parler</b> (to speak).","Chop off -er: <b>parl</b>.","Glue on the ending for your person."])+L_TABLE(["Person","Ending","parler"],[["je","-e","je parl<b>e</b>"],["tu","-es","tu parl<b>es</b>"],["il / elle / on","-e","il parl<b>e</b>"],["nous","-ons","nous parl<b>ons</b>"],["vous","-ez","vous parl<b>ez</b>"],["ils / elles","-ent","ils parl<b>ent</b>"]])},
   {h:"Hear it",b:L_TB("parler","aimer")+L_P("je becomes j' before a vowel: j'aime.")},
@@ -1283,7 +1314,7 @@ const LINES=[
  ]},
  {id:"boss2",boss:{name:"Le Contrôleur",av:{hat:"kepi",stache:0,tie:"long",glasses:1,skin:"#D9A47C",coat:"#003CA6"},hello:["Titre de transport, s'il vous plaît.","Ticket, please."],hit:["Ce n'est pas valable.","Amende !","Hmm. Non."],lose:["Bon voyage, alors.","Have a good trip, then."]},name:"Terminus",en:"Boss: Le Contrôleur",rule:"Every -er verb, on, negatives and the near future. Three lives."}
 ]},
-{n:3,name:"-ir et -re",en:"The other two regular families",c:"#837902",t:"#FFFFFF",stations:[
+{n:3,ename:"-ir and -re verbs",name:"-ir et -re",en:"The other two regular families",c:"#837902",t:"#FFFFFF",stations:[
  {id:"finir",name:"Finir",en:"the -iss- family",rule:"Singular -is, -is, -it. Plural -issons, -issez, -issent.",verbs:["finir","choisir","réussir","grandir","réfléchir","obéir","rougir","remplir","grossir","maigrir"],teach:[
   {h:"-ir verbs hiss",b:L_P("The second-biggest family. The singular forms are short. The plural forms grow an extra <b>-iss-</b>.")+L_STEPS("How to do it",["Start with <b>finir</b>. Chop off -ir: <b>fin</b>.","Singular: add -is, -is, -it.","Plural: add -issons, -issez, -issent."])+L_TB("finir","choisir")},
   {h:"Snake pit",b:L_TRAP("nous finons does not exist. Every plural form has -iss-. The singular never does.")+L_TIP("Singular is short and quiet. Plural hisses. More people, more hissing, like a snake pit.")+L_TIP("Many -ir verbs grow from adjectives: grand → grandir, rouge → rougir, gros → grossir, maigre → maigrir.")+L_VERBS(["finir","choisir","réussir","grandir","réfléchir","obéir","rougir","remplir","grossir","maigrir"])}
@@ -1301,7 +1332,7 @@ const LINES=[
  ]},
  {id:"boss3",boss:{name:"La Boulangère",av:{hat:"none",hair:"bun",apron:1,skin:"#F3D2B5",coat:"#837902"},hello:["Et avec ceci ?","Anything else?"],hit:["Ah non !","Ce n'est pas ça.","Hmm…"],lose:["Bonne journée !","Have a good day!"]},name:"Terminus",en:"Boss: La Boulangère",rule:"-ir and -re verbs, hear vs listen. Three lives."}
 ]},
-{n:4,name:"Changements",en:"Verbs that tweak their spelling",c:"#CF009E",t:"#FFFFFF",stations:[
+{n:4,ename:"Spelling changes",name:"Changements",en:"Verbs that tweak their spelling",c:"#CF009E",t:"#FFFFFF",stations:[
  {id:"gercer",name:"Mangeons",en:"-ger and -cer verbs",rule:"Only nous changes: mangeons, commençons.",verbs:["manger","partager","nager","voyager","mélanger","commencer","lancer","avancer","prononcer"],teach:[
   {h:"Only nous changes",b:L_P("These are regular -er verbs with one spelling patch so they're pronounced right.")+L_STEPS("How to do it",["Conjugate like a normal -er verb.","Is the subject <b>nous</b>? Patch it.","-ger: add an <b>e</b> → nous mang<b>e</b>ons.","-cer: c becomes <b>ç</b> → nous commen<b>ç</b>ons."])+L_TB("manger","commencer")},
   {h:"Why?",b:L_P("Before o, a plain g sounds like the g in 'go' and a plain c sounds like k. The patch keeps the soft sound.")+L_TRAP("The ç only goes before a, o or u. je commençe is wrong. So is vous mangeez. Only nous gets the patch.")}
@@ -1313,7 +1344,7 @@ const LINES=[
  ]},
  {id:"boss4",boss:{name:"Le Fromager",av:{hat:"beret",stache:1,apron:1,skin:"#E8B996",coat:"#CF009E"},hello:["Un petit morceau ?","A little piece?"],hit:["Mais non !","Quelle horreur.","Non."],lose:["Chapeau !","Hats off!"]},name:"Terminus",en:"Boss: Le Fromager",rule:"-ger, -cer and boot verbs. Three lives."}
 ]},
-{n:5,name:"À table",en:"The irregulars you need at a restaurant",c:"#FF7E2E",t:"#14161C",stations:[
+{n:5,ename:"At the table",name:"À table",en:"The irregulars you need at a restaurant",c:"#FF7E2E",t:"#14161C",stations:[
  {id:"prendre",name:"Prendre",en:"take, understand, learn",rule:"Plural drops the d: prenons. ils doubles the n: prennent.",verbs:["prendre","comprendre","apprendre"],teach:[
   {h:"prendre and family",b:L_TB("prendre","comprendre")+L_P("apprendre (to learn) works exactly the same: j'apprends, nous apprenons, ils apprennent.")},
   {h:"The pattern",b:`<ul class="rules"><li>Singular keeps the d: prend<b>s</b>, prend<b>s</b>, prend.</li><li>nous and vous drop it: pre<b>n</b>ons, pre<b>n</b>ez.</li><li>ils doubles the n: pre<b>nn</b>ent.</li></ul>`+L_TIP("At a café, prendre = to have: Je prends un café.")}
@@ -1332,7 +1363,7 @@ const LINES=[
  ]},
  {id:"boss5",boss:{name:"Le Sommelier",av:{hat:"none",hair:"slick",tie:"bow",glasses:1,skin:"#C98E6B",coat:"#7A1E2C"},hello:["Un verre de vin ?","A glass of wine?"],hit:["Quel dommage.","Non, monsieur.","Hmm."],lose:["Santé !","Cheers!"]},name:"Terminus",en:"Boss: Le Sommelier",rule:"prendre, the modals, boire, mettre, and ordering. Three lives."}
 ]},
-{n:6,name:"La cuisine",en:"Food words, genders, and du, de la, des",c:"#6ECA97",t:"#14161C",stations:[
+{n:6,ename:"Food and cooking",name:"La cuisine",en:"Food words, genders, and du, de la, des",c:"#6ECA97",t:"#14161C",stations:[
  {id:"marche",name:"Le marché",en:"meat, fish, staples",rule:"Learn every noun with its article. The article tells you the gender.",voc:["food1"],teach:[
   {h:"Learn the article too",b:L_P("Always learn a noun with its article. The article tells you the gender, and the gender decides every word around it. Blue = masculine (le, un). Pink = feminine (la, une).")+L_VOC(["food1"])+L_TIP("Words ending in -age and -eau are usually masculine: le fromage, le gâteau.")}
  ]},
@@ -1359,7 +1390,7 @@ const LINES=[
  ]},
  {id:"boss6",boss:{name:"Le Grand Chef",av:{hat:"toque",stache:1,skin:"#EDC09A",coat:"#F4F4F4"},hello:["Bienvenue dans ma cuisine !","Welcome to my kitchen!"],hit:["Catastrophe !","Non, non !","Recommencez !"],lose:["Magnifique !","Magnificent!"]},name:"Terminus",en:"Boss: Le Grand Chef",rule:"All the food words, genders and du, de la, des. Three lives."}
 ]},
-{n:7,name:"Irréguliers",en:"The rest of the irregulars you'll meet daily",c:"#FA9ABA",t:"#14161C",stations:[
+{n:7,ename:"More irregular verbs",name:"Irréguliers",en:"The rest of the irregulars you'll meet daily",c:"#FA9ABA",t:"#14161C",stations:[
  {id:"venir",name:"Venir",en:"come, come back, become",rule:"viens, viens, vient, venons, venez, viennent.",verbs:["venir","revenir","devenir"],teach:[
   {h:"venir and family",b:L_TB("venir")+L_P("revenir (come back) and devenir (become) copy it exactly.")},
   {h:"Bonus: the recent past",b:L_TIP("venir de + infinitive = to have just done: Je viens de manger = I just ate.")+L_TIP("ils viennent doubles the n, like ils prennent.")}
@@ -1387,7 +1418,7 @@ const LINES=[
  ]},
  {id:"boss7",boss:{name:"Le Chauffeur de taxi",av:{hat:"cap",shades:1,stache:1,skin:"#B98060",coat:"#2A2A2A"},hello:["On va où ?","Where to?"],hit:["Mauvaise direction !","Demi-tour !","Bof."],lose:["Vous êtes arrivé !","You've arrived!"]},name:"Terminus",en:"Boss: Le Chauffeur de taxi",rule:"Every irregular on line 7. Three lives."}
 ]},
-{n:8,name:"Pronominaux",en:"Reflexive verbs: things you do to yourself",c:"#E19BDF",t:"#14161C",stations:[
+{n:8,ename:"Reflexive verbs",name:"Pronominaux",en:"Reflexive verbs: things you do to yourself",c:"#E19BDF",t:"#14161C",stations:[
  {id:"refl1",name:"Je me lave",en:"the mini-pronouns",rule:"je me, tu te, il se, nous nous, vous vous, ils se.",verbs:["se laver","se coucher","se réveiller"],teach:[
   {h:"Doing it to yourself",b:L_P("A reflexive verb is an action you do to yourself. In the dictionary they start with <b>se</b>: se laver = to wash up. Je lave la voiture = I wash the car. Je <b>me</b> lave = I wash myself.")+L_TABLE(["Subject","Mini-pronoun","Example"],[["je","me (m')","je me lave"],["tu","te (t')","tu te laves"],["il / elle / on","se (s')","il se lave"],["nous","nous","nous nous lavons"],["vous","vous","vous vous lavez"],["ils / elles","se (s')","ils se lavent"]])},
   {h:"Hear it",b:L_TB("se laver")+L_TRAP("Nous nous lavons. Yes, nous twice. nous lavons means 'we wash (something)'.")}
@@ -1398,7 +1429,7 @@ const LINES=[
  ]},
  {id:"boss8",boss:{name:"La Concierge",av:{hat:"none",hair:"bun",glasses:1,skin:"#F0CDB0",coat:"#E19BDF"},hello:["Vous cherchez quelqu'un ?","Looking for someone?"],hit:["Tsss.","Pas du tout.","Encore ?"],lose:["Bonne soirée.","Good evening."]},name:"Terminus",en:"Boss: La Concierge",rule:"Reflexive verbs. Three lives."}
 ]},
-{n:9,name:"Les questions",en:"Three ways to ask, and the -t- trick",c:"#B6BD00",t:"#14161C",stations:[
+{n:9,ename:"Asking questions",name:"Les questions",en:"Three ways to ask, and the -t- trick",c:"#B6BD00",t:"#14161C",stations:[
  {id:"q3",name:"Trois façons",en:"three ways to ask",rule:"Raise your voice, add est-ce que, or flip with a hyphen.",teach:[
   {h:"Three ways",b:L_TABLE(["Style","Example","When"],[["Rising voice","Tu as faim ?","Casual speech"],["Est-ce que","Est-ce que tu as faim ?","Safe anywhere"],["Inversion","As-tu faim ?","Writing, polite speech"]])+L_TIP("est-ce que → est-ce qu' before a vowel: Est-ce qu'il vient ?")}
  ]},
@@ -1411,7 +1442,7 @@ const LINES=[
  ]},
  {id:"boss9",boss:{name:"L'Inspecteur",av:{hat:"fedora",stache:1,skin:"#D7A989",coat:"#5A5A3A"},hello:["J'ai quelques questions.","I have a few questions."],hit:["Suspect !","Mauvaise réponse.","Hmm hmm."],lose:["Affaire classée.","Case closed."]},name:"Terminus",en:"Boss: L'Inspecteur",rule:"Questions and inversion. Three lives."}
 ]},
-{n:10,name:"Le passé composé",en:"Talking about what already happened",c:"#C9910D",t:"#14161C",stations:[
+{n:10,ename:"The past tense",name:"Le passé composé",en:"Talking about what already happened",c:"#C9910D",t:"#14161C",stations:[
  {id:"pp1",name:"Mangé, fini",en:"regular participles",rule:"-er → -é, -ir → -i, -re → -u.",pp:["parler","manger","regarder","écouter","travailler","finir","choisir","réussir","vendre","attendre","perdre","répondre"],teach:[
   {h:"Step one: the participle",b:L_P("The passé composé (I ate, I have eaten) is two words: a helper verb + a past participle. First, the participle.")+L_TABLE(["Verb type","Ending","Example"],[["-er","-é","manger → mangé"],["-ir","-i","finir → fini"],["-re","-u","vendre → vendu"]])+L_TIP("-é, -er and -ez all sound like 'ay': mangé, manger, mangez. On paper, the spelling matters.")}
  ]},
@@ -1446,13 +1477,18 @@ const norm=s=>String(s).toLowerCase().replace(/[’‘`´]/g,"'").replace(/[ �
 const strip=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/œ/g,"oe");
 const reduced=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
 const lcStyle=L=>`--lc:${L.c};--lt:${L.t}`;
+/* English label first, the French for it underneath (buttons), beside it (chips), or below it (headings) */
+const bi=(en,fr)=>`<span class="bi"><span>${en}</span><small lang="fr">${fr}</small></span>`;
+const hbi=(en,fr)=>`${en}<small class="h-fr" lang="fr">${fr}</small>`;
+const lbi=(en,fr)=>en===fr?en:`${en}<span class="fr-i" lang="fr"> · ${fr}</span>`;
+const chipL=l=>Array.isArray(l)?lbi(T(l[0]),T(l[1])):T(l);
 const fmtTime=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 
 /* ---------- Store ---------- */
 const KEY="metro-verbes-v1";
-const fresh=()=>({v:1,xp:0,items:{},st:{},streak:{n:0,last:""},day:{d:"",xp:0},ach:{},set:{sound:true,voice:true,auto:true,goal:200,all:false},stats:{q:0,ok:0,typed:0,best:0,blitz:0,pat:0,patWins:0,rounds:0,bosses:0,perfect:0,exams:0,examBest:0}});
+const fresh=()=>({v:1,xp:0,items:{},st:{},streak:{n:0,last:""},day:{d:"",xp:0},ach:{},intro:0,tips:{},set:{sound:true,voice:true,auto:true,goal:200,all:false},stats:{q:0,ok:0,typed:0,best:0,blitz:0,pat:0,patWins:0,rounds:0,bosses:0,perfect:0,exams:0,examBest:0}});
 let S=fresh();
-try{const x=JSON.parse(localStorage.getItem(KEY)||"null");if(x&&x.v===1){const f=fresh();S=Object.assign(f,x,{set:Object.assign(f.set,x.set||{}),stats:Object.assign(f.stats,x.stats||{}),streak:Object.assign(f.streak,x.streak||{}),day:Object.assign(f.day,x.day||{}),items:x.items||{},st:x.st||{},ach:x.ach||{}})}}catch(e){}
+try{const x=JSON.parse(localStorage.getItem(KEY)||"null");if(x&&x.v===1){const f=fresh();S=Object.assign(f,x,{set:Object.assign(f.set,x.set||{}),stats:Object.assign(f.stats,x.stats||{}),streak:Object.assign(f.streak,x.streak||{}),day:Object.assign(f.day,x.day||{}),items:x.items||{},st:x.st||{},ach:x.ach||{},tips:x.tips||{}})}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const dstr=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const today=()=>dstr(new Date());
@@ -1576,7 +1612,7 @@ const FX={p:[],on:false,
   if(this.p.length)requestAnimationFrame(()=>this.tick());else{this.on=false;c.clearRect(0,0,innerWidth,innerHeight)}}
 };
 function toast(html){const el=document.createElement("div");el.className="toast";el.innerHTML=html;$("#toasts").appendChild(el);setTimeout(()=>el.classList.add("out"),2800);setTimeout(()=>el.remove(),3200)}
-function milestone(c){if(![5,10,15,20,30,40,50].includes(c))return;const el=document.createElement("div");el.className="milestone";el.textContent=c+" d'affilée !";document.body.appendChild(el);setTimeout(()=>el.remove(),1150);if(c>=10)FX.burst(40)}
+function milestone(c){if(![5,10,15,20,30,40,50].includes(c))return;const el=document.createElement("div");el.className="milestone";el.innerHTML=`${c} in a row!<small lang="fr">${c} d'affilée !</small>`;document.body.appendChild(el);setTimeout(()=>el.remove(),1150);if(c>=10)FX.burst(40)}
 
 /* ---------- Verb helpers ---------- */
 const PRO=["je","tu","il","nous","vous","ils"];
@@ -1609,7 +1645,7 @@ function conjWrongs(v,i){
 function mcBuild(correct,wrongs){const opts=shuffle([correct,...wrongs]);return{opts,correct:opts.indexOf(correct)}}
 
 /* ---------- Exercises ---------- */
-const LABEL={conj:"Présent",vm:"Sens",pp:"Participe passé",aux:"Auxiliaire",pc:"Passé composé",voc:"Vocabulaire",mcq:"Question",bld:"Phrase"};
+const LABEL={conj:["Present tense","Présent"],vm:["Meaning","Sens"],pp:["Past participle","Participe passé"],aux:["Helper verb","Auxiliaire"],pc:["Past tense","Passé composé"],voc:["Vocabulary","Vocabulaire"],mcq:["Question","Question"],bld:["Sentence","Phrase"]};
 const AGREE={je:["","e"],tu:["","e"],il:[""],elle:["e"],on:["","s","e","es"],nous:["s","es"],vous:["","e","s","es"],ils:["s"],elles:["es"]};
 const PCP=[["je",0],["tu",1],["il",2],["elle",2],["on",2],["nous",3],["vous",4],["ils",5],["elles",5]];
 function chooseMode(o,ctx){
@@ -1642,7 +1678,7 @@ const EXB={
    w=[w[0],...shuffle(w.slice(1))].slice(0,3);if(nv&&Math.random()<.5)w=shuffle(w);
    const show=e=>e?"-"+e:"(no ending)";
    const m=mcBuild(show(end),w.map(show));
-   Object.assign(ex,{kind:"mc",label:"Terminaison",opts:m.opts,correct:m.correct,prompt:`${proH}<span>${T(st)}<span class="blank"></span></span>`});
+   Object.assign(ex,{kind:"mc",tk:"tiles",label:["Ending","Terminaison"],opts:m.opts,correct:m.correct,prompt:`${proH}<span>${T(st)}<span class="blank"></span></span>`});
    ex.sub+=" · pick the ending";return ex;
   }
   if(mode==="type"){
@@ -1696,7 +1732,7 @@ const EXB={
   if(mode==="gender"){
    const bare=fr.replace(/^(le |la |les |l')/,"");
    const tip=/(age|eau|ment|isme)$/.test(bare)?" Words ending in -age, -eau, -ment are usually masculine.":/(tion|té|ette|ure|ée|ance|ence)$/.test(bare)?" Words ending in -tion, -té, -ette, -ure are usually feminine.":"";
-   return Object.assign(ex,{kind:"mc",label:"Genre",opts:["masculin · le, un","féminin · la, une"],correct:g==="m"?0:1,prompt:T(bare),sub:`${T(w.en)} · masculine or feminine?`,showWhy:true,why:`${fr}: ${g==="m"?"masculine":"feminine"}.${tip}`});
+   return Object.assign(ex,{kind:"mc",tk:"gender",label:["Gender","Genre"],opts:["masculin · le, un","féminin · la, une"],correct:g==="m"?0:1,prompt:T(bare),sub:`${T(w.en)} · masculine or feminine?`,showWhy:true,why:`${fr}: ${g==="m"?"masculine":"feminine"}.${tip}`});
   }
   if(mode==="type"){
    const c=fr.replace(/…/g,"").trim(),acc=[c,c.replace(/\s*\([^)]*\)/g,""),c.replace(/[()]/g,""),c.replace(/^(le |la |les |l')/i,"")];c.split(" / ").forEach(s=>acc.push(s));
@@ -1712,7 +1748,7 @@ const EXB={
   const[q,c,...rest]=o.q,why=rest.pop(),m=mcBuild(c,rest);
   const blank=/___/.test(q),trans=!blank&&/^[A-Z]/.test(q)&&/[.?!)]$/.test(q)&&!/[«→:]/.test(q);
   const filled=blank?q.replace("___",c).replace(/' /g,"'"):c;
-  return Object.assign(ex,{kind:"mc",opts:m.opts,correct:m.correct,prompt:T(q).split("___").join('<span class="blank"></span>'),small:true,sub:blank?"Fill the blank.":trans?"How do you say it in French?":"Choose the answer.",why,showWhy:true,full:looksFr(c)?filled.replace(/\s*\([^)]*\)\s*$/,""):null,fullShow:filled,label:ST[o.sid].name});
+  return Object.assign(ex,{kind:"mc",opts:m.opts,correct:m.correct,prompt:T(q).split("___").join('<span class="blank"></span>'),small:true,sub:blank?"Fill the blank.":trans?"How do you say it in French?":"Choose the answer.",why,showWhy:true,full:looksFr(c)?filled.replace(/\s*\([^)]*\)\s*$/,""):null,fullShow:filled});
  },
  bld(o,ex){
   const[en,fr,x,why]=o.q,mm=fr.match(/^(.*?)\s*([.?!])?$/),body=mm[1],end=mm[2]||"";
@@ -1734,7 +1770,7 @@ function buildMatch(m){
   else if(m.type==="voc")pairs=m.keys.map(k=>({l:cleanFr(ITEMS[k].w.fr),r:ITEMS[k].w.en,k}));
   else pairs=m.keys.map(k=>({l:ITEMS[k].v,r:V[ITEMS[k].v].pp,k}));
   const sub=m.type==="conj"?`<b>${T(m.v)}</b> · ${T(V[m.v].en)}`:m.type==="voc"?"French on the left, English on the right.":"Infinitive → past participle.";
-  return{kind:"match",label:"Associer",keys:pairs.map(p=>p.k),pairs,L:shuffle(pairs.map((_,i)=>i)),R:shuffle(pairs.map((_,i)=>i)),sel:null,done:new Set(),err:0,errK:new Set(),prompt:"Match the pairs",small:true,sub,table:m.type==="conj"?m.v:null,hi:-1};
+  return{kind:"match",label:["Match","Associer"],keys:pairs.map(p=>p.k),pairs,L:shuffle(pairs.map((_,i)=>i)),R:shuffle(pairs.map((_,i)=>i)),sel:null,done:new Set(),err:0,errK:new Set(),prompt:"Match the pairs",small:true,sub,table:m.type==="conj"?m.v:null,hi:-1};
 }
 
 /* ---------- Rounds ---------- */
@@ -1798,16 +1834,18 @@ function renderQ(){
 }
 function qHTML(ex){
   const chips=[];
-  if(ex.isNew&&!ex.retry)chips.push('<span class="chip new">Nouveau</span>');
-  chips.push(`<span class="chip">${T(ex.label)}</span>`);
-  if(ex.kind==="type")chips.push('<span class="chip">À écrire</span>');
-  if(ex.rev)chips.push('<span class="chip rev">Révision</span>');
-  if(ex.retry)chips.push('<span class="chip rev">Encore une fois</span>');
+  if(ex.isNew&&!ex.retry)chips.push(`<span class="chip new">${lbi("New","Nouveau")}</span>`);
+  chips.push(`<span class="chip">${chipL(ex.label)}</span>`);
+  if(ex.kind==="type")chips.push(`<span class="chip">${lbi("Type it","À écrire")}</span>`);
+  if(ex.rev)chips.push(`<span class="chip rev">${lbi("Review","Révision")}</span>`);
+  if(ex.retry)chips.push(`<span class="chip rev">${lbi("Again","Encore")}</span>`);
+  const tk=ex.tk||ex.kind,tn=S.tips[tk]||0,tip=TIPS[tk];
+  let tipH="";if(tip&&tn<2){S.tips[tk]=tn+1;tipH=`<div class="howtip"><b>${lbi("Tip","Astuce")}</b><span>${tip[0]}</span></div>`}
   let h=`<div class="qcard" id="qcard"><div class="qhead"><div class="qlabel">${chips.join("")}</div>${ex.say&&TTS.ok&&S.set.voice?`<button class="spkbtn" type="button" data-say="${esc(ex.say)}" aria-label="Listen"><span class="spk"></span></button>`:""}</div>
-   <div class="prompt${ex.small?" sm":""}">${ex.prompt}</div>${ex.sub?`<div class="qsub">${ex.sub}</div>`:""}</div><div class="answer" id="answer">`;
+   <div class="prompt${ex.small?" sm":""}">${ex.prompt}</div>${ex.sub?`<div class="qsub">${ex.sub}</div>`:""}</div>${tipH}<div class="answer" id="answer">`;
   if(ex.kind==="mc")h+=`<div class="opts${ex.opts.length===2?" two":""}">${ex.opts.map((o,i)=>`<button class="opt" type="button" data-i="${i}"><kbd>${i+1}</kbd><span>${T(o)}</span></button>`).join("")}</div>`;
-  if(ex.kind==="type")h+=`<div class="typerow"><input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="${esc(ex.ph||"")}" aria-label="Your answer"><button class="btn primary" id="chk" type="button">Vérifier</button></div><div class="accents">${["é","è","ê","à","â","ç","ë","î","ï","ô","û","ù","œ"].map(c=>`<button type="button" class="acc" tabindex="-1" data-c="${c}">${c}</button>`).join("")}</div><div class="qact"><button class="link" id="idk" type="button">Je ne sais pas (show me)</button><span class="qsub" style="font-size:.85rem">Enter to check</span></div>`;
-  if(ex.kind==="build")h+=`<div class="bline" id="bline"></div><div class="bank" id="bank">${ex.tokens.map((t,i)=>`<button type="button" class="tok" data-t="${i}">${T(t)}</button>`).join("")}</div><div class="qact"><button class="link" id="bclear" type="button">Effacer</button><button class="btn primary" id="chk" type="button">Vérifier</button></div>`;
+  if(ex.kind==="type")h+=`<div class="typerow"><input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="${esc(ex.ph||"")}" aria-label="Your answer"><button class="btn primary" id="chk" type="button">${bi("Check","Vérifier")}</button></div><div class="accents">${["é","è","ê","à","â","ç","ë","î","ï","ô","û","ù","œ"].map(c=>`<button type="button" class="acc" tabindex="-1" data-c="${c}">${c}</button>`).join("")}</div><div class="qact"><button class="link" id="idk" type="button">${bi("I don't know, show me","Je ne sais pas")}</button><span class="qsub" style="font-size:.85rem">Enter to check</span></div>`;
+  if(ex.kind==="build")h+=`<div class="bline" id="bline"></div><div class="bank" id="bank">${ex.tokens.map((t,i)=>`<button type="button" class="tok" data-t="${i}">${T(t)}</button>`).join("")}</div><div class="qact"><button class="link" id="bclear" type="button">${bi("Clear","Effacer")}</button><button class="btn primary" id="chk" type="button">${bi("Check","Vérifier")}</button></div>`;
   if(ex.kind==="match")h+=`<div class="match"><div class="mcol">${ex.L.map(i=>`<button type="button" class="mi" data-side="l" data-p="${i}">${T(ex.pairs[i].l)}</button>`).join("")}</div><div class="mcol">${ex.R.map(i=>`<button type="button" class="mi" data-side="r" data-p="${i}">${T(ex.pairs[i].r)}</button>`).join("")}</div></div>`;
   return h+"</div>";
 }
@@ -1854,8 +1892,9 @@ function tapMatch(b){
   if(ex.done.size===ex.pairs.length){ex.pairs.forEach(pp=>mark(pp.k,!ex.errK.has(pp.k),2));resolve(ex.err?"bad":"ok",null,{premarked:true,noRequeue:true})}
 }
 function requeue(e){if(R.ctx.noRequeue||e.m)return;e.tries=(e.tries||0)+1;if(e.tries>2)return;R.entries.splice(Math.min(R.idx+3+rnd(2),R.entries.length),0,Object.assign({},e,{retry:true,rev:false}))}
-const PRAISE=["Exact !","Parfait !","Bien joué !","C'est ça !","Bravo !","Très bien !","Impeccable !"];
-const MISS=["Pas tout à fait.","Raté.","Presque…","Non, regarde bien."];
+const PRAISE=[["Correct!","Exact !"],["Perfect!","Parfait !"],["Well done!","Bien joué !"],["That's it!","C'est ça !"],["Bravo!","Bravo !"],["Very good!","Très bien !"],["Spot on!","Impeccable !"]];
+const MISS=[["Not quite.","Pas tout à fait."],["Missed.","Raté."],["Almost…","Presque…"],["No, look closely.","Non, regarde bien."]];
+const TIPS={mc:["Tap the right answer. On a keyboard, 1 to 4 works too."],tiles:["Pick the ending that finishes the verb."],gender:["Every French noun is masculine (le) or feminine (la). Which is this one?"],type:["Type the French. Use the buttons under the box for accents like é and ç."],build:["Tap the words in the right order. Tap a word again to take it back."],match:["Tap a word on one side, then its partner on the other."]};
 function resolve(res,given,o){
   o=o||{};const ex=R.ex,e=R.entries[R.idx];R.state="fb";let gain=0;
   if(res==="ok"){R.combo++;R.best=Math.max(R.best,R.combo);if(!e.retry)R.ok1++;gain=Math.round(XPK[ex.kind]*mult(R.combo));if(!o.premarked)ex.keys.forEach(k=>mark(k,true));Snd.ok(R.combo);milestone(R.combo);if(R.boss)bossHit()}
@@ -1871,8 +1910,8 @@ function bossHit(){R.hp=Math.max(0,R.hp-1);const b=$("#hpb");if(b)b.style.width=
 function bossMiss(){R.hearts--;const h=$("#bossbar .hearts");if(h)h.innerHTML=heartsHTML(R.hearts);const t=$("#taunt");if(t)t.innerHTML=`« ${T(pick(R.boss.hit))} »`}
 function showFB(res,given,gain){
   const ex=R.ex,fb=$("#fbx");
-  const verdict=res==="ok"?pick(PRAISE):res==="accent"?"Presque ! Les accents.":pick(MISS);
-  let h=`<div class="fb-in"><div class="fb-h"><span class="verdict">${T(verdict)}</span>${gain?`<span class="fb-xp">+${gain} XP</span>`:""}</div>`;
+  const verdict=res==="ok"?pick(PRAISE):res==="accent"?["Almost! Check the accents.","Presque ! Les accents."]:pick(MISS);
+  let h=`<div class="fb-in"><div class="fb-h"><span class="verdict">${T(verdict[0])}<small lang="fr">${T(verdict[1])}</small></span>${gain?`<span class="fb-xp">+${gain} XP</span>`:""}</div>`;
   if(ex.kind==="match")h+=`<div class="fb-why">${ex.err?`${ex.err} mismatch${ex.err>1?"es":""}. Those pairs come back soon.`:"Every pair on the first try."}</div>`;
   else{
    if(res!=="ok"&&given!=null)h+=`<div class="fb-you">${res==="accent"?"You wrote":"Your answer"}: <s>${T(given)}</s></div>`;
@@ -1881,7 +1920,7 @@ function showFB(res,given,gain){
   }
   if(res!=="ok"&&ex.table)h+=conjTable(ex.table,ex.hi);
   const last=R.idx+1>=R.entries.length||(R.boss&&R.hearts<=0);
-  h+=`<button class="btn ${res==="ok"?"go":"primary"} wide" id="cont" type="button">${last?"Voir le ticket":"Continuer"}</button></div>`;
+  h+=`<button class="btn ${res==="ok"?"go":"primary"} wide" id="cont" type="button">${last?bi("See my results","Voir le ticket"):bi("Continue","Continuer")}</button></div>`;
   fb.className="fb lc "+(res==="ok"?"ok":res==="accent"?"acc":"bad");fb.style.cssText=lcStyle(R.line);fb.innerHTML=h;
   hydrate(fb);
   requestAnimationFrame(()=>fb.classList.add("on"));
@@ -1891,7 +1930,7 @@ function closeFB(){const f=$("#fbx");if(f){f.classList.remove("on")}}
 function nextQ(){if(!R||R.state!=="fb")return;R.state="next";R.idx++;renderQ()}
 function quitRound(){
   if(!R||R.idx===0){R=null;return go("map")}
-  openModal(`<div class="sheet-h"><div class="grow"><h2 class="h3">Get off at the next stop?</h2><p class="qsub">Every answer so far is saved to your review queue. You'll lose this round's XP and stars.</p></div></div><div class="row"><button class="btn" data-close type="button">Keep riding</button><button class="btn primary" id="qquit" type="button">Quit</button></div>`,R.line);
+  openModal(`<div class="sheet-h"><div class="grow"><h2 class="h3">Get off at the next stop?</h2><p class="qsub">Every answer so far is saved to your review queue. You'll lose this round's XP and stars.</p></div></div><div class="row"><button class="btn" data-close type="button">${bi("Keep going","Continuer")}</button><button class="btn primary" id="qquit" type="button">${bi("Quit","Quitter")}</button></div>`,R.line);
   $("#qquit").onclick=()=>{closeModal();closeFB();R=null;go("map")};
 }
 function endRound(done){
@@ -1915,7 +1954,7 @@ function endRound(done){
 function viewResults(){
   const r=R.result,L=R.line,s=R.st;
   const plaqueName=s?(s.boss?s.boss.name:s.name):R.mode==="exam"?"Examen blanc":R.mode==="review"?"Révision":"Mes erreurs";
-  let title=R.mode==="exam"?(r.grade>=16?"Très bien !":r.grade>=12?"Bien !":r.grade>=10?"Passable":"À revoir"):R.boss?(r.win?"Victoire !":"Perdu !"):pick(["Bravo !","Bien joué !","Arrivé !"]);
+  const title=R.mode==="exam"?(r.grade>=16?["Excellent!","Très bien !"]:r.grade>=12?["Good!","Bien !"]:r.grade>=10?["You passed","Passable"]:["Needs work","À revoir"]):R.boss?(r.win?["Victory!","Victoire !"]:["Defeated","Perdu !"]):pick([["Bravo!","Bravo !"],["Well done!","Bien joué !"],["You made it!","Arrivé !"]]);
   let msg="";
   if(R.boss)msg=r.win?`${R.boss.name}: « ${R.boss.lose[0]} » (${R.boss.lose[1]})`+(s.final?" You've reached the end of the network. Keep the review queue warm and replay any line for three stars.":" The next line is open."):"Out of lives. Your misses are now in Révision. Drill them, then come back.";
   else if(R.mode==="exam")msg=r.grade>=18?"Très bien. That's a teacher's 'excellent'.":r.grade>=14?"Bien. A solid grade. Drill the misses below.":r.grade>=10?"Passable. You're over the bar; the misses show where to aim.":"Under 10/20. Go back over the lessons for the misses below, then retake it.";
@@ -1925,25 +1964,25 @@ function viewResults(){
   let h=`<div class="wrap lc" style="${lcStyle(L)}"><div class="res">
    <div class="ticket"><div class="tk-top"><span>Ticket t+</span></div>
     <div class="tk-title"><span class="badge">${L.n}</span><span class="plaque">${T(plaqueName)}</span></div>
-    <div class="tk-big">${T(title)}</div>
+    <div class="tk-big">${hbi(T(title[0]),T(title[1]))}</div>
     ${R.mode==="station"?`<div class="tk-stars">${[1,2,3].map(i=>IC.star.replace("<svg",`<svg class="${i<=r.stars?"on":""}"`)).join("")}</div>`:""}
     ${R.mode==="exam"?`<div class="grade num">${r.grade}/20</div>`:""}
-    <div class="tk-grid"><div><b class="num">+${r.total}</b><span>XP</span></div><div><b class="num">${Math.round(r.acc*100)}%</b><span>first try</span></div><div><b class="num">${R.best}</b><span>best streak</span></div><div><b class="num">${fmtTime(r.secs)}</b><span>time</span></div></div>
+    <div class="tk-grid"><div><b class="num">+${r.total}</b><span>XP</span></div><div><b class="num">${Math.round(r.acc*100)}%</b><span>${bi("first try","du premier coup")}</span></div><div><b class="num">${R.best}</b><span>${bi("best streak","meilleure série")}</span></div><div><b class="num">${fmtTime(r.secs)}</b><span>${bi("time","temps")}</span></div></div>
     <div class="stamp">Composté ${dd}</div>
    </div>
    <p class="resmsg">${T(msg)}</p>`;
-  if(ms.length)h+=`<h2 class="h3">Review these</h2><ul class="misses">${ms.map(missLI).join("")}</ul>`;
+  if(ms.length)h+=`<h2 class="h3">${lbi("Review these","À revoir")}</h2><ul class="misses">${ms.map(missLI).join("")}</ul>`;
   h+=`<div class="row">`;
   const nextS=s?ORDER[ORDER.indexOf(s)+1]:null;
-  if(R.mode==="station"&&r.win&&nextS&&unlocked(nextS))h+=`<button class="btn go" id="rnext" type="button">Prochaine station</button>`;
-  if(ms.length)h+=`<button class="btn primary" id="rmiss" type="button">Drill my misses</button>`;
-  if(R.mode==="station")h+=`<button class="btn" id="ragain" type="button">${r.win?"Rejouer":"Réessayer"}</button>`;
-  if(R.mode==="exam")h+=`<button class="btn" id="rexam" type="button">New test</button>`;
-  h+=`<button class="btn" id="rmap" type="button">${R.mode==="exam"?"Jeux":"Le plan"}</button></div></div></div>`;
+  if(R.mode==="station"&&r.win&&nextS&&unlocked(nextS))h+=`<button class="btn go" id="rnext" type="button">${bi("Next stop","Prochaine station")}</button>`;
+  if(ms.length)h+=`<button class="btn primary" id="rmiss" type="button">${bi("Practice my mistakes","Revoir mes erreurs")}</button>`;
+  if(R.mode==="station")h+=`<button class="btn" id="ragain" type="button">${r.win?bi("Play again","Rejouer"):bi("Try again","Réessayer")}</button>`;
+  if(R.mode==="exam")h+=`<button class="btn" id="rexam" type="button">${bi("New test","Nouvel examen")}</button>`;
+  h+=`<button class="btn" id="rmap" type="button">${R.mode==="exam"?bi("Games","Jeux"):bi("Map","Le plan")}</button></div></div></div>`;
   $("#view").innerHTML=h;hydrate($("#view"));
   const b=id=>$(id);
   if(b("#rnext"))b("#rnext").onclick=()=>{go("map");openStation(nextS.id)};
-  if(b("#rmiss"))b("#rmiss").onclick=()=>startRound({mode:"drill",line:L,st:null,title:"Mes erreurs",entries:shuffle(ms.map(x=>x.keys[0])).map(k=>({k})),ctx:{}});
+  if(b("#rmiss"))b("#rmiss").onclick=()=>startRound({mode:"drill",line:L,st:null,title:"My mistakes · Mes erreurs",entries:shuffle(ms.map(x=>x.keys[0])).map(k=>({k})),ctx:{}});
   if(b("#ragain"))b("#ragain").onclick=()=>startStation(s.id);
   if(b("#rexam"))b("#rexam").onclick=openExam;
   b("#rmap").onclick=()=>go(R.mode==="exam"?"games":"map");
@@ -2021,24 +2060,25 @@ function renderTop(){
   $("#topin").innerHTML=`<div class="brand"><b>Métro Verbes</b><span>métro, boulot, verbes</span></div>
    <span class="pill" title="Day streak: ${st}"><svg viewBox="0 0 24 24" class="flame${st?"":" off"}">${IC.flame}</svg>${st}</span>
    <span class="ring" title="Today: ${dx} of ${g} XP"><svg viewBox="0 0 34 34"><circle class="rt" cx="17" cy="17" r="14"/><circle class="rf" cx="17" cy="17" r="14" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C*(1-pct)).toFixed(2)}"/></svg><b>${pct>=1?"✓":Math.round(pct*100)}</b></span>
-   <span class="lvl" title="Level ${L} · ${rankOf(L)}">${L}</span>`;
+   <span class="lvl" title="Level ${L} · ${rankOf(L)}">${L}</span><button class="help" type="button" id="helpb" aria-label="How to play">?</button>`;
+  $("#helpb").onclick=()=>openIntro(0);
 }
 function renderTabs(){
   const due=dueKeys().length;
-  $("#tabs").innerHTML=[["map","Plan",IC.map],["review","Révision",IC.review],["games","Jeux",IC.games],["carnet","Carnet",IC.book],["profile","Profil",IC.user]].map(([id,n,ic])=>`<button class="tab" type="button" data-nav="${id}" ${VIEW===id?'aria-current="page"':""}>${ic}<span>${n}</span>${id==="review"&&due?`<span class="dotb">${due>99?"99+":due}</span>`:""}</button>`).join("");
+  $("#tabs").innerHTML=[["map","Map","Plan",IC.map],["review","Review","Révision",IC.review],["games","Games","Jeux",IC.games],["carnet","Notebook","Carnet",IC.book],["profile","Profile","Profil",IC.user]].map(([id,n,fr,ic])=>`<button class="tab" type="button" data-nav="${id}" ${VIEW===id?'aria-current="page"':""}>${ic}${bi(n,fr)}${id==="review"&&due?`<span class="dotb">${due>99?"99+":due}</span>`:""}</button>`).join("");
 }
 
 /* ---------- Map ---------- */
 let mapScrolled=false;
 function viewMap(){
   const cur=currentStation();
-  let h=`<div class="wrap"><section class="hero"><h1>Le plan du métro</h1><p>Ride each line from its first station to the terminus. Every station is a short lesson plus a game; the boss at the end of each line opens the next one. Start knowing nothing; finish with the whole first-year verb system.</p>`;
-  if(cur){const L=cur.line;h+=`<div class="next lc" style="${lcStyle(L)}"><div class="nx"><small>Prochaine station</small><div class="nx-row"><span class="badge sm">${L.n}</span><span class="plaque">${T(cur.boss?cur.boss.name:cur.name)}</span></div><span class="qsub" style="font-size:.9rem">${T(cur.en)}</span></div><button class="btn go" type="button" data-play="${cur.id}">${cur.boss?"Affronter":(S.st[cur.id]&&S.st[cur.id].lesson)?"Jouer":"Commencer"}</button></div>`}
-  else h+=`<div class="next lc" style="${lcStyle(LINES[9])}"><div class="nx"><small>Terminus</small><b>Every line cleared.</b><span class="qsub">Chase three stars everywhere, and keep Révision at zero.</span></div></div>`;
+  let h=`<div class="wrap"><section class="hero"><h1>${hbi("The métro map","Le plan du métro")}</h1><p>${S.stats.rounds?"Pick up where you left off: your next stop is below. Done for the day? The Review tab keeps what you've learned from fading.":"New here? Tap the yellow <b>Start</b> button below. You'll get a 1-minute lesson, then about 12 quick questions. Every stop after that works the same way."}</p><div><button class="link" type="button" id="howb">${bi("How does this work?","Comment ça marche ?")}</button></div>`;
+  if(cur){const L=cur.line;h+=`<div class="next lc" style="${lcStyle(L)}"><div class="nx"><small>${lbi("Next stop","Prochaine station")}</small><div class="nx-row"><span class="badge sm">${L.n}</span><span class="plaque">${T(cur.boss?cur.boss.name:cur.name)}</span></div><span class="qsub" style="font-size:.9rem">${T(cur.en)}</span></div><button class="btn go" type="button" data-play="${cur.id}">${cur.boss?bi("Fight the boss","Affronter"):(S.st[cur.id]&&S.st[cur.id].lesson)?bi("Play","Jouer"):bi("Start","Commencer")}</button></div>`}
+  else h+=`<div class="next lc" style="${lcStyle(LINES[9])}"><div class="nx"><small>${lbi("End of the line","Terminus")}</small><b>Every line cleared.</b><span class="qsub">Chase three stars everywhere, and keep Review at zero.</span></div></div>`;
   h+=`</section>`;
   LINES.forEach((L,li)=>{
    const lu=lineUnlocked(li),done=L.stations.filter(s=>stars(s.id)).length;
-   h+=`<section class="line lc${lu?"":" locked"}" style="${lcStyle(L)}"><div class="line-h"><span class="badge">${L.n}</span><div><h2>${T(L.name)}</h2><p>${T(L.en)}</p></div><span class="lp">${done}/${L.stations.length}</span></div>`;
+   h+=`<section class="line lc${lu?"":" locked"}" style="${lcStyle(L)}"><div class="line-h"><span class="badge">${L.n}</span><div><h2>${hbi(T(L.ename),T(L.name))}</h2><p>${T(L.en)}</p></div><span class="lp">${done}/${L.stations.length}</span></div>`;
    if(!lu)h+=`<p class="lockmsg">Beat ${T(LINES[li-1].stations[LINES[li-1].stations.length-1].boss.name)} to open this line.</p>`;
    h+=`<ol class="stops">${L.stations.map(s=>stopHTML(s,cur)).join("")}</ol></section>`;
   });
@@ -2046,24 +2086,25 @@ function viewMap(){
   $("#view").innerHTML=h;hydrate($("#view"));
   $$("[data-st]").forEach(b=>b.onclick=()=>openStation(b.dataset.st));
   $$("[data-play]").forEach(b=>b.onclick=()=>playStation(b.dataset.play));
+  $("#howb").onclick=()=>openIntro(0);
   if(!mapScrolled&&cur&&cur.li>0){mapScrolled=true;const el=$(".stop.cur");if(el)setTimeout(()=>el.scrollIntoView({block:"center"}),50)}
   mapScrolled=true;
 }
 function stopHTML(s,cur){
   const un=unlocked(s),m=mastery(s),n=stars(s.id),isCur=cur===s;
   const cls=["stop",un?"":"locked",n?"done":"",isCur?"cur":"",s.boss?"boss":""].filter(Boolean).join(" ");
-  return`<li class="${cls}"><button type="button" data-st="${s.id}"><span class="sdot"></span><span class="st-name">${s.boss?`<span class="bossface">${avatar(s.boss.av)}</span>`:""}<span class="plaque">${T(s.boss?s.boss.name:s.name)}</span>${isCur?'<span class="here">Vous êtes ici</span>':""}</span><span class="st-sub">${T(s.en)}</span><span class="st-side">${starsHTML(n)}${s.boss?"":`<span class="mbar${m.gold?" gold":""}" title="${m.known} of ${m.total} learned"><i style="width:${Math.round(m.pct*100)}%"></i></span>`}</span></button></li>`;
+  return`<li class="${cls}"><button type="button" data-st="${s.id}"><span class="sdot"></span><span class="st-name">${s.boss?`<span class="bossface">${avatar(s.boss.av)}</span>`:""}<span class="plaque">${T(s.boss?s.boss.name:s.name)}</span>${isCur?'<span class="here">You are here<small lang="fr">Vous êtes ici</small></span>':""}</span><span class="st-sub">${T(s.en)}</span><span class="st-side">${starsHTML(n)}${s.boss?"":`<span class="mbar${m.gold?" gold":""}" title="${m.known} of ${m.total} learned"><i style="width:${Math.round(m.pct*100)}%"></i></span>`}</span></button></li>`;
 }
 function playStation(id){const s=ST[id];if(!unlocked(s))return openStation(id);if(s.teach&&!(S.st[id]&&S.st[id].lesson))return go("lesson",{id,then:"play"});startStation(id)}
 function openStation(id){
   const s=ST[id],L=s.line,un=unlocked(s),m=mastery(s),rec=S.st[id]||{};
-  let h=`<div class="sheet-h"><div class="grow"><div class="eyebrow"><span class="badge sm">${L.n}</span>Ligne ${L.n} · ${T(L.name)}</div><div><span class="plaque lg">${T(s.boss?s.boss.name:s.name)}</span></div><p class="qsub">${T(s.en)}</p></div><button class="xbtn" type="button" data-close aria-label="Close">${IC.x}</button></div>`;
+  let h=`<div class="sheet-h"><div class="grow"><div class="eyebrow"><span class="badge sm">${L.n}</span>${lbi("Line "+L.n,"Ligne "+L.n)} · ${T(L.ename)}</div><div><span class="plaque lg">${T(s.boss?s.boss.name:s.name)}</span></div><p class="qsub">${T(s.en)}</p></div><button class="xbtn" type="button" data-close aria-label="Close">${IC.x}</button></div>`;
   if(s.boss)h+=`<div class="bosscard"><span class="bossav">${avatar(s.boss.av)}</span><div class="bubble">« ${T(s.boss.hello[0])} »<small>${T(s.boss.hello[1])}</small></div></div>`;
   h+=`<div class="rule">${T(s.rule)}</div>`;
-  h+=s.boss?`<div class="kv"><div><b>3</b><span>lives</span></div><div><b>${s.final?20:15}</b><span>questions</span></div><div><b>${starsN(rec.stars)}</b><span>stars</span></div></div>`
-   :`<div class="kv"><div><b class="num">${m.known}/${m.total}</b><span>learned</span></div><div><b class="num">${m.due}</b><span>due now</span></div><div><b class="num">${rec.best||0}%</b><span>best round</span></div></div>`;
-  if(!un)h+=`<p class="qsub">Locked. ${s.si===0?`Beat the line ${L.n-1} terminus first.`:`Clear ${T(s.line.stations[s.si-1].name)} first.`} Studying for a test? Turn on “Unlock every station” in Profil.</p>`;
-  h+=`<div class="row">${s.teach?`<button class="btn" type="button" id="sLesson">${rec.lesson?"Revoir la leçon":"Leçon"}</button>`:""}<button class="btn go" type="button" id="sPlay" ${un?"":"disabled"}>${s.boss?"Affronter":"Jouer"}</button></div>`;
+  h+=s.boss?`<div class="kv"><div><b>3</b><span>${bi("lives","vies")}</span></div><div><b>${s.final?20:15}</b><span>${bi("questions","questions")}</span></div><div><b>${starsN(rec.stars)}</b><span>${bi("stars","étoiles")}</span></div></div>`
+   :`<div class="kv"><div><b class="num">${m.known}/${m.total}</b><span>${bi("learned","appris")}</span></div><div><b class="num">${m.due}</b><span>${bi("to review","à revoir")}</span></div><div><b class="num">${rec.best||0}%</b><span>${bi("best round","meilleur score")}</span></div></div>`;
+  if(!un)h+=`<p class="qsub">Locked. ${s.si===0?`Beat the line ${L.n-1} terminus first.`:`Clear ${T(s.line.stations[s.si-1].name)} first.`} Studying for a test? Turn on “Unlock every station” in Profile.</p>`;
+  h+=`<div class="row">${s.teach?`<button class="btn" type="button" id="sLesson">${rec.lesson?bi("Reread the lesson","Revoir la leçon"):bi("Lesson","Leçon")}</button>`:""}<button class="btn go" type="button" id="sPlay" ${un?"":"disabled"}>${s.boss?bi("Fight the boss","Affronter"):bi("Play","Jouer")}</button></div>`;
   openModal(h,L);
   if($("#sLesson"))$("#sLesson").onclick=()=>go("lesson",{id,then:"back"});
   $("#sPlay").onclick=()=>{closeModal();playStation(id)};
@@ -2078,7 +2119,7 @@ function drawLesson(){
   $("#view").innerHTML=`<div class="wrap lc" style="${lcStyle(L)}"><div class="lesson">
    <div class="ltop"><button class="xbtn" type="button" id="lx" aria-label="Close lesson">${IC.x}</button><div class="pips">${s.teach.map((_,i)=>`<i class="${i<=LS.i?"on":""}"></i>`).join("")}</div></div>
    <article class="lcard"><div class="eyebrow"><span class="badge sm">${L.n}</span><span class="plaque sm">${T(s.name)}</span> ${LS.i+1} / ${s.teach.length}</div><h2>${sl.h}</h2><div class="lbody">${sl.b}</div></article>
-   <div class="lnav">${LS.i>0?'<button class="btn" type="button" id="lprev">Précédent</button>':""}<button class="btn ${last?"go":"primary"}" type="button" id="lnext">${last?(LS.then==="play"?"C'est parti !":"Jouer maintenant"):"Suivant"}</button></div></div></div>`;
+   <div class="lnav">${LS.i>0?'<button class="btn" type="button" id="lprev">'+bi("Back","Précédent")+'</button>':""}<button class="btn ${last?"go":"primary"}" type="button" id="lnext">${last?(LS.then==="play"?bi("Let's go!","C'est parti !"):bi("Play now","Jouer maintenant")):bi("Next","Suivant")}</button></div></div></div>`;
   hydrate($("#view"));
   $("#lx").onclick=()=>go(LS.back);
   if($("#lprev"))$("#lprev").onclick=()=>{LS.i--;drawLesson();window.scrollTo(0,0)};
@@ -2096,11 +2137,11 @@ function viewReview(){
   const due=dueKeys().length,seenN=Object.values(S.items).filter(x=>x.n).length;
   const rows=ORDER.filter(s=>!s.boss&&mastery(s).seen).map(s=>{const m=mastery(s);return`<div class="mrow lc" style="${lcStyle(s.line)}"><span class="badge sm">${s.line.n}</span><span>${T(s.name)}</span><span class="mbar${m.gold?" gold":""}"><i style="width:${Math.round(m.pct*100)}%"></i></span><span class="pct num">${Math.round(m.pct*100)}%</span></div>`}).join("");
   const weak=Object.keys(S.items).filter(k=>ITEMS[k]&&S.items[k].w>0).sort((a,b)=>(S.items[b].w-S.items[b].r*.3)-(S.items[a].w-S.items[a].r*.3)).slice(0,8);
-  let h=`<div class="wrap"><section class="panel"><h1>Révision</h1><p class="sub">Spaced repetition. Every item you meet comes back right before you'd forget it: 10 minutes, an hour, a day, three days, nine. A few minutes here each day is what makes verbs stick for good.</p>
+  let h=`<div class="wrap"><section class="panel"><h1>${hbi("Review","Révision")}</h1><p class="sub">Spaced repetition. Every item you meet comes back right before you'd forget it: 10 minutes, an hour, a day, three days, nine. A few minutes here each day is what makes verbs stick for good.</p>
    <div class="card"><div class="bigstat"><b>${due}</b><span>${due===1?"item":"items"} due now</span></div>
-   ${seenN?`<div class="row"><button class="btn go" type="button" id="rv">${due?"Réviser maintenant":"Drill my weakest items"}</button></div>`:`<p class="qsub">Play your first station and its items will start showing up here.</p>`}</div>`;
-  if(weak.length)h+=`<div class="card"><h2 class="h3">Your toughest items</h2><ul class="misses" style="box-shadow:none">${weak.map(k=>missLI({keys:[k]})).join("")}</ul></div>`;
-  if(rows)h+=`<div class="card"><h2 class="h3">Learned, by station</h2><div class="mlist">${rows}</div></div>`;
+   ${seenN?`<div class="row"><button class="btn go" type="button" id="rv">${due?bi("Review now","Réviser maintenant"):bi("Practice my weakest items","Mes points faibles")}</button></div>`:`<p class="qsub">Play your first station and its items will start showing up here.</p>`}</div>`;
+  if(weak.length)h+=`<div class="card"><h2 class="h3">${lbi("Your toughest items","Les plus difficiles")}</h2><ul class="misses" style="box-shadow:none">${weak.map(k=>missLI({keys:[k]})).join("")}</ul></div>`;
+  if(rows)h+=`<div class="card"><h2 class="h3">${lbi("Learned, by stop","Par station")}</h2><div class="mlist">${rows}</div></div>`;
   h+=`</section></div>`;
   $("#view").innerHTML=h;hydrate($("#view"));
   if($("#rv"))$("#rv").onclick=startReview;
@@ -2110,17 +2151,17 @@ function startReview(){
   if(ks.length<10){const more=Object.keys(S.items).filter(k=>ITEMS[k]&&S.items[k].n&&!ks.includes(k)).sort((a,b)=>(S.items[a].b-S.items[b].b)||(S.items[b].w-S.items[a].w)||(S.items[a].due-S.items[b].due)).slice(0,15-ks.length);ks=ks.concat(more)}
   if(!ks.length)return;
   const li=Math.min(...ks.map(k=>{const s=ORDER.find(s=>!s.boss&&stationKeys(s).includes(k));return s?s.li:0}));
-  startRound({mode:"review",line:LINES[li],title:"Révision",entries:shuffle(ks).map(k=>({k})),ctx:{}});
+  startRound({mode:"review",line:LINES[li],title:"Review · Révision",entries:shuffle(ks).map(k=>({k})),ctx:{}});
 }
 
 /* ---------- Jeux ---------- */
 function viewGames(){
   const ex=S.stats.examBest;
-  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>Jeux</h1><p class="sub">Same French, different pressure. Everything here draws on the stations you've unlocked and feeds your review queue.</p>
+  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>${hbi("Games","Jeux")}</h1><p class="sub">Same French, different pressure. Everything here draws on the stations you've unlocked and feeds your review queue.</p>
    <div class="games">
-    <div class="card game"><div class="gart"><span style="font-weight:900;font-stretch:65%;font-size:3.2rem;color:var(--bad);line-height:1">60 s</span></div><h2>Blitz</h2><p>Rapid-fire multiple choice against the clock. Every 5 in a row adds 3 seconds. A miss costs 3.</p><p class="best num">Record: ${S.stats.blitz||"none yet"}</p><button class="btn go lc" style="--lc:#FF7E2E;--lt:#14161C" type="button" data-g="blitz">Jouer</button></div>
-    <div class="card game"><div class="gart">${patArt()}</div><h2>Patience</h2><p>Verb solitaire. Deal 24 cards from four verbs, then sort every form onto its person. Beat your best time.</p><p class="best num">Best time: ${S.stats.pat?fmtTime(S.stats.pat):"none yet"}</p><button class="btn go lc" style="--lc:#6ECA97;--lt:#14161C" type="button" data-g="patience">Jouer</button></div>
-    <div class="card game"><div class="gart"><span class="grade" style="font-size:2.6rem;transform:rotate(-6deg)">16/20</span></div><h2>Examen blanc</h2><p>A mock test. 20 questions, mostly typed, no second chances. Graded out of 20, like a French teacher would.</p><p class="best num">Best grade: ${ex?ex+"/20":"none yet"}</p><button class="btn primary" type="button" data-g="exam">Commencer</button></div>
+    <div class="card game"><div class="gart"><span style="font-weight:900;font-stretch:65%;font-size:3.2rem;color:var(--bad);line-height:1">60 s</span></div><h2>${hbi("Blitz","60 secondes")}</h2><p>Rapid-fire multiple choice against the clock. Every 5 in a row adds 3 seconds. A miss costs 3.</p><p class="best num">Record: ${S.stats.blitz||"none yet"}</p><button class="btn go lc" style="--lc:#FF7E2E;--lt:#14161C" type="button" data-g="blitz">${bi("Play","Jouer")}</button></div>
+    <div class="card game"><div class="gart">${patArt()}</div><h2>${hbi("Verb solitaire","Patience")}</h2><p>Verb solitaire. Deal 24 cards from four verbs, then sort every form onto its person. Beat your best time.</p><p class="best num">Best time: ${S.stats.pat?fmtTime(S.stats.pat):"none yet"}</p><button class="btn go lc" style="--lc:#6ECA97;--lt:#14161C" type="button" data-g="patience">${bi("Play","Jouer")}</button></div>
+    <div class="card game"><div class="gart"><span class="grade" style="font-size:2.6rem;transform:rotate(-6deg)">16/20</span></div><h2>${hbi("Mock test","Examen blanc")}</h2><p>A mock test. 20 questions, mostly typed, no second chances. Graded out of 20, like a French teacher would.</p><p class="best num">Best grade: ${ex?ex+"/20":"none yet"}</p><button class="btn primary" type="button" data-g="exam">${bi("Start","Commencer")}</button></div>
    </div></section></div>`;
   $$("[data-g]").forEach(b=>b.onclick=()=>({blitz:startBlitz,patience:startPatience,exam:openExam})[b.dataset.g]());
 }
@@ -2128,14 +2169,14 @@ function patArt(){const c=["#E8590C","#2F6BFF","#0D9A6A"];return`<div style="pos
 function openExam(){
   const ul=LINES.map((L,li)=>({L,li,ok:lineUnlocked(li)&&L.stations.some(s=>!s.boss&&mastery(s).seen)}));
   const sel=new Set(ul.filter(x=>x.ok).map(x=>x.li));
-  const draw=()=>{$("#exl").innerHTML=ul.map(x=>`<button type="button" class="lchip lc" style="${lcStyle(x.L)}" data-li="${x.li}" aria-pressed="${sel.has(x.li)}" ${x.ok?"":"disabled"}><span class="badge sm">${x.L.n}</span>${T(x.L.name)}</button>`).join("");$$("#exl .lchip").forEach(b=>b.onclick=()=>{const li=+b.dataset.li;sel.has(li)?sel.delete(li):sel.add(li);draw()});$("#exgo").disabled=!sel.size};
-  openModal(`<div class="sheet-h"><div class="grow"><div class="eyebrow">Examen blanc</div><h2 style="font-size:1.6rem;font-stretch:78%;text-transform:uppercase">Pick what's on the test</h2><p class="qsub">Only lines you've started are available. 20 questions, mostly typed, graded out of 20.</p></div><button class="xbtn" type="button" data-close aria-label="Close">${IC.x}</button></div><div class="chips" id="exl"></div><div class="row"><button class="btn primary" type="button" id="exgo">Commencer l'examen</button></div>`,LINES[9]);
+  const draw=()=>{$("#exl").innerHTML=ul.map(x=>`<button type="button" class="lchip lc" style="${lcStyle(x.L)}" data-li="${x.li}" aria-pressed="${sel.has(x.li)}" ${x.ok?"":"disabled"}><span class="badge sm">${x.L.n}</span>${T(x.L.ename)}</button>`).join("");$$("#exl .lchip").forEach(b=>b.onclick=()=>{const li=+b.dataset.li;sel.has(li)?sel.delete(li):sel.add(li);draw()});$("#exgo").disabled=!sel.size};
+  openModal(`<div class="sheet-h"><div class="grow"><div class="eyebrow">${lbi("Mock test","Examen blanc")}</div><h2 style="font-size:1.6rem;font-stretch:78%;text-transform:uppercase">Pick what's on the test</h2><p class="qsub">Only lines you've started are available. 20 questions, mostly typed, graded out of 20.</p></div><button class="xbtn" type="button" data-close aria-label="Close">${IC.x}</button></div><div class="chips" id="exl"></div><div class="row"><button class="btn primary" type="button" id="exgo">${bi("Start the test","Commencer l'examen")}</button></div>`,LINES[9]);
   draw();
   if(!sel.size)$("#exl").insertAdjacentHTML("afterend",'<p class="qsub">Play a station first, then come back for a mock test.</p>');
   $("#exgo").onclick=()=>{
    const ks=uniq(ORDER.filter(s=>!s.boss&&sel.has(s.li)).flatMap(stationKeys)).filter(k=>ITEMS[k].t!=="bld");
    const fill=shuffle(ks.filter(seen)).concat(shuffle(ks.filter(k=>!seen(k)))).slice(0,20);
-   closeModal();startRound({mode:"exam",line:LINES[Math.min(...sel)],title:"Examen blanc · 20 questions",entries:shuffle(fill).map(k=>({k})),ctx:{hard:true,noRequeue:true}});
+   closeModal();startRound({mode:"exam",line:LINES[Math.min(...sel)],title:"Mock test · Examen blanc · 20 questions",entries:shuffle(fill).map(k=>({k})),ctx:{hard:true,noRequeue:true}});
   };
 }
 
@@ -2158,7 +2199,7 @@ function nextBlitz(){
   while(!ex&&g++<20){let k=pick(BZ.pool);if(BZ.pool.length>1&&k===BZ.last)continue;BZ.last=k;ex=buildEx(k,{mcOnly:true});if(ex&&ex.kind!=="mc")ex=null}
   if(!ex)return endBlitz();
   BZ.ex=ex;BZ.lock=false;
-  $("#bzq").innerHTML=`<div class="qcard" id="bzcard"><div class="qlabel"><span class="chip">${T(ex.label)}</span>${BZ.combo>=2?`<span class="chip new">${BZ.combo} d'affilée</span>`:""}</div><div class="prompt${ex.small?" sm":""}">${ex.prompt}</div>${ex.sub?`<div class="qsub">${ex.sub}</div>`:""}</div><div class="opts${ex.opts.length===2?" two":""}">${ex.opts.map((o,i)=>`<button class="opt" type="button" data-i="${i}"><kbd>${i+1}</kbd><span>${T(o)}</span></button>`).join("")}</div>`;
+  $("#bzq").innerHTML=`<div class="qcard" id="bzcard"><div class="qlabel"><span class="chip">${chipL(ex.label)}</span>${BZ.combo>=2?`<span class="chip new">${lbi(BZ.combo+" in a row",BZ.combo+" d'affilée")}</span>`:""}</div><div class="prompt${ex.small?" sm":""}">${ex.prompt}</div>${ex.sub?`<div class="qsub">${ex.sub}</div>`:""}</div><div class="opts${ex.opts.length===2?" two":""}">${ex.opts.map((o,i)=>`<button class="opt" type="button" data-i="${i}"><kbd>${i+1}</kbd><span>${T(o)}</span></button>`).join("")}</div>`;
   hydrate($("#bzq"));
   $$("#bzq .opt").forEach(b=>b.onclick=()=>blitzAnswer(+b.dataset.i));
 }
@@ -2167,7 +2208,7 @@ function blitzAnswer(i){
   $$("#bzq .opt").forEach(b=>{b.disabled=true;const j=+b.dataset.i;if(j===ex.correct)b.classList.add("right");else if(j===i)b.classList.add("wrong")});
   ex.keys.forEach(k=>mark(k,ok,ok?2:null));
   const card=$("#bzcard");
-  if(ok){BZ.ok++;BZ.combo++;BZ.best=Math.max(BZ.best,BZ.combo);BZ.score+=Math.round(10*mult(BZ.combo));Snd.ok(BZ.combo);if(BZ.combo%5===0){BZ.end+=3000;toast("<b>+3 secondes</b>")}card.classList.add("flash-ok");setTimeout(nextBlitz,280)}
+  if(ok){BZ.ok++;BZ.combo++;BZ.best=Math.max(BZ.best,BZ.combo);BZ.score+=Math.round(10*mult(BZ.combo));Snd.ok(BZ.combo);if(BZ.combo%5===0){BZ.end+=3000;toast(`<b>${bi("+3 seconds","+3 secondes")}</b>`)}card.classList.add("flash-ok");setTimeout(nextBlitz,280)}
   else{BZ.combo=0;BZ.end-=3000;Snd.bad();card.classList.add("flash-bad");setTimeout(nextBlitz,950)}
   $("#bzs").textContent=BZ.score;
 }
@@ -2175,7 +2216,7 @@ function endBlitz(){
   if(!BZ||BZ.over)return;BZ.over=true;stopTimers();
   const rec=BZ.score>S.stats.blitz;S.stats.blitz=Math.max(S.stats.blitz,BZ.score);S.stats.best=Math.max(S.stats.best,BZ.best);
   const xp=Math.round(BZ.score/4);addXP(xp);bumpStreak();save();
-  $("#bzq").innerHTML=`<div class="ticket"><div class="tk-top"><span>Métro Verbes · Blitz</span></div><div class="tk-big">${rec&&BZ.score?"Nouveau record !":"Temps écoulé !"}</div><div class="tk-grid"><div><b class="num">${BZ.score}</b><span>score</span></div><div><b class="num">${BZ.ok}/${BZ.n}</b><span>correct</span></div><div><b class="num">${BZ.best}</b><span>best streak</span></div><div><b class="num">+${xp}</b><span>XP</span></div></div><div class="stamp">Record ${S.stats.blitz}</div></div><div class="row"><button class="btn go" type="button" id="bza">Rejouer</button><button class="btn" type="button" id="bzb">Jeux</button></div>`;
+  $("#bzq").innerHTML=`<div class="ticket"><div class="tk-top"><span>Métro Verbes · Blitz</span></div><div class="tk-big">${rec&&BZ.score?hbi("New record!","Nouveau record !"):hbi("Time's up!","Temps écoulé !")}</div><div class="tk-grid"><div><b class="num">${BZ.score}</b><span>score</span></div><div><b class="num">${BZ.ok}/${BZ.n}</b><span>correct</span></div><div><b class="num">${BZ.best}</b><span>best streak</span></div><div><b class="num">+${xp}</b><span>XP</span></div></div><div class="stamp">Record ${S.stats.blitz}</div></div><div class="row"><button class="btn go" type="button" id="bza">${bi("Play again","Rejouer")}</button><button class="btn" type="button" id="bzb">${bi("Games","Jeux")}</button></div>`;
   $("#bzc").querySelector("i").style.width="0%";$("#bzt").textContent="0";
   $("#bza").onclick=startBlitz;$("#bzb").onclick=()=>go("games");
   if(rec&&BZ.score){Snd.win();FX.burst(100)}
@@ -2196,7 +2237,7 @@ function startPatience(){
   Snd.chime();go("patience");
 }
 function viewPatience(){
-  $("#view").innerHTML=`<div class="wrap"><div class="pat"><div class="pat-h"><button class="xbtn" type="button" id="px" aria-label="Quit">${IC.x}</button><span class="plaque">Patience</span><span class="pt"><span id="ptime">0:00</span><span id="pmist">0 faute</span></span></div>
+  $("#view").innerHTML=`<div class="wrap"><div class="pat"><div class="pat-h"><button class="xbtn" type="button" id="px" aria-label="Quit">${IC.x}</button><span class="plaque">Patience</span><span class="pt"><span id="ptime">0:00</span><span id="pmist">0 mistakes</span></span></div>
    <p class="qsub">Tap a card, then the person it belongs to. Some forms fit two people (je parle, il parle): either works. A wrong pile costs 5 seconds.</p>
    <div class="found" id="found"></div><div class="tableau" id="tabl"></div><div class="suits">${PT.vs.map((v,i)=>`<span style="--suit:${SUITS[i]}"><i></i><b>${T(v)}</b> ${T(V[v].en)}</span>`).join("")}</div></div></div>`;
   $("#px").onclick=()=>go("games");
@@ -2204,15 +2245,15 @@ function viewPatience(){
   TIMER=setInterval(()=>{if(!PT||PT.over)return;const e=$("#ptime");if(e)e.textContent=fmtTime((Date.now()-PT.t0)/1000+PT.pen)},500);
 }
 function drawPat(){
-  $("#found").innerHTML=PLAB.map((p,i)=>`<button type="button" class="slot${PT.sel!=null?" ready":""}" data-s="${i}"><span class="plaque sm">${T(p)}</span><span class="lastf">${PT.last[i]?T(PT.last[i]):"&nbsp;"}</span><span class="cnt">${PT.cnt[i]} carte${PT.cnt[i]===1?"":"s"}</span><kbd>${i+1}</kbd></button>`).join("");
+  $("#found").innerHTML=PLAB.map((p,i)=>`<button type="button" class="slot${PT.sel!=null?" ready":""}" data-s="${i}"><span class="plaque sm">${T(p)}</span><span class="lastf">${PT.last[i]?T(PT.last[i]):"&nbsp;"}</span><span class="cnt">${PT.cnt[i]} card${PT.cnt[i]===1?"":"s"}</span><kbd>${i+1}</kbd></button>`).join("");
   $("#tabl").innerHTML=PT.cols.map((col,ci)=>`<div class="pcol">${col.length?col.slice(0,-1).map(()=>'<div class="pcard back"></div>').join("")+(()=>{const c=col[col.length-1];return`<button type="button" class="pcard face${PT.sel===ci?" sel":""}" style="--suit:${SUITS[c.vi]}" data-c="${ci}"><span class="pv">${T(c.v)}</span><span class="pf" style="--len:${Math.max(6,c.f.length)}">${T(c.f)}</span><span class="pv">&nbsp;</span></button>`})():'<div class="pcard empty"></div>'}</div>`).join("");
   $$("#tabl .pcard.face").forEach(b=>b.onclick=()=>{const ci=+b.dataset.c;PT.sel=PT.sel===ci?null:ci;Snd.tap();drawPat()});
   $$("#found .slot").forEach(b=>b.onclick=()=>placePat(+b.dataset.s));
-  $("#pmist").textContent=PT.mist+" faute"+(PT.mist===1?"":"s");
+  $("#pmist").textContent=PT.mist+" mistake"+(PT.mist===1?"":"s");
 }
 function placePat(s){
   if(!PT||PT.over)return;
-  if(PT.sel==null){toast("<b>Pick a card first</b>");return}
+  if(PT.sel==null){toast(`<b>${bi("Pick a card first","Choisissez une carte")}</b>`);return}
   const col=PT.cols[PT.sel],c=col[col.length-1],x=V[c.v];
   if(x.f[s]===c.f){
    col.pop();PT.cnt[s]++;PT.last[s]=c.f;PT.placed++;PT.sel=null;Snd.ok(PT.placed%12);
@@ -2225,7 +2266,7 @@ function placePat(s){
    const right=x.f.map((f,i)=>f===c.f?PLAB[i]:null).filter(Boolean).join(" or ");
    toast(`<div><b>${T(c.f)} → ${T(right)}</b><small>${T(c.v)}: ${T(joinPro(c.i===0?(vowel(c.f)?"j'":"je"):PRO[c.i],c.f))}</small></div>`);
    const card=$(`#tabl .pcard.face[data-c="${PT.sel}"]`);if(card){card.classList.remove("shake");void card.offsetWidth;card.classList.add("shake")}
-   $("#pmist").textContent=PT.mist+" faute"+(PT.mist===1?"":"s");
+   $("#pmist").textContent=PT.mist+" mistake"+(PT.mist===1?"":"s");
   }
   save();
 }
@@ -2235,7 +2276,7 @@ function endPat(){
   if(rec)S.stats.pat=t;S.stats.patWins++;
   const xp=60+Math.max(0,Math.round((180-t)/3))+(PT.mist?0:30);addXP(xp);bumpStreak();save();
   Snd.win();FX.burst(rec?140:80);
-  openModal(`<div class="ticket"><div class="tk-top"><span>Métro Verbes · Patience</span></div><div class="tk-big">${rec?"Nouveau record !":"Gagné !"}</div><div class="tk-grid"><div><b class="num">${fmtTime(t)}</b><span>time</span></div><div><b class="num">${PT.mist}</b><span>mistakes</span></div><div><b class="num">${fmtTime(S.stats.pat)}</b><span>best</span></div><div><b class="num">+${xp}</b><span>XP</span></div></div><div class="stamp">${PT.mist?"Composté":"Sans faute"}</div></div><div class="row"><button class="btn go" type="button" id="pa">Rejouer</button><button class="btn" type="button" id="pb">Jeux</button></div>`,LINES[5]);
+  openModal(`<div class="ticket"><div class="tk-top"><span>Métro Verbes · Patience</span></div><div class="tk-big">${rec?hbi("New record!","Nouveau record !"):hbi("You won!","Gagné !")}</div><div class="tk-grid"><div><b class="num">${fmtTime(t)}</b><span>time</span></div><div><b class="num">${PT.mist}</b><span>mistakes</span></div><div><b class="num">${fmtTime(S.stats.pat)}</b><span>best</span></div><div><b class="num">+${xp}</b><span>XP</span></div></div><div class="stamp">${PT.mist?"Composté":"Sans faute"}</div></div><div class="row"><button class="btn go" type="button" id="pa">${bi("Play again","Rejouer")}</button><button class="btn" type="button" id="pb">${bi("Games","Jeux")}</button></div>`,LINES[5]);
   $("#pa").onclick=()=>{closeModal();startPatience()};$("#pb").onclick=()=>{closeModal();go("games")};
   setTimeout(checkAch,600);
 }
@@ -2244,9 +2285,9 @@ function endPat(){
 const CN={tab:"verbs",q:""};
 const CATN={greet:"Greetings",pron:"Pronouns",food1:"Meat, fish, staples",food2:"Produce and sweets",drink:"Drinks",meals:"Meals and the restaurant",kitchen:"Kitchen and table",taste:"How it tastes",cook:"Cooking",qw:"Question words"};
 function viewCarnet(){
-  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>Carnet</h1><p class="sub">Every table, word and rule in the game, unlocked or not. Tap any French to hear it.</p>
-   <div class="seg" role="group" aria-label="Section">${[["verbs","Verbes"],["vocab","Vocabulaire"],["rules","Règles"]].map(([id,n])=>`<button type="button" data-ct="${id}" aria-pressed="${CN.tab===id}">${n}</button>`).join("")}</div>
-   <input class="search" id="cq" type="search" placeholder="Search: prendre, cheese, boot…" aria-label="Search the carnet">
+  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>${hbi("Notebook","Carnet")}</h1><p class="sub">Every table, word and rule in the game, unlocked or not. Tap any French to hear it.</p>
+   <div class="seg" role="group" aria-label="Section">${[["verbs","Verbs","Verbes"],["vocab","Words","Vocabulaire"],["rules","Rules","Règles"]].map(([id,n,fr])=>`<button type="button" data-ct="${id}" aria-pressed="${CN.tab===id}">${bi(n,fr)}</button>`).join("")}</div>
+   <input class="search" id="cq" type="search" placeholder="Search: prendre, cheese, boot…" aria-label="Search the notebook">
    <div id="clist" class="cgroup"></div></section></div>`;
   const q=$("#cq");q.value=CN.q;q.oninput=()=>{CN.q=q.value;drawCarnet()};
   $$("[data-ct]").forEach(b=>b.onclick=()=>{CN.tab=b.dataset.ct;$$("[data-ct]").forEach(x=>x.setAttribute("aria-pressed",x===b));drawCarnet()});
@@ -2259,14 +2300,14 @@ function drawCarnet(){
    LINES.forEach(L=>{
     const vs=L.stations.filter(s=>s.verbs).flatMap(s=>s.verbs).filter(v=>{if(shown.has(v))return false;const x=V[v];return hit(v+" "+x.en+" "+x.f.join(" ")+" "+x.pp)});
     vs.forEach(v=>shown.add(v));if(!vs.length)return;
-    h+=`<div class="cgroup-h lc" style="${lcStyle(L)}"><span class="badge sm">${L.n}</span><b class="h3">${T(L.name)}</b></div>`+vs.map(v=>`<details class="vrow lc" style="${lcStyle(L)}"><summary><b>${T(v)}</b><span>${T(V[v].en)}</span><em>${{er:"-er",ir:"-ir",re:"-re",ger:"-ger",cer:"-cer",boot:"boot",uire:"-uire",refl:"reflexive",irr:"irregular"}[V[v].fam]}</em></summary>${conjTable(v)}</details>`).join("");
+    h+=`<div class="cgroup-h lc" style="${lcStyle(L)}"><span class="badge sm">${L.n}</span><b class="h3">${lbi(T(L.ename),T(L.name))}</b></div>`+vs.map(v=>`<details class="vrow lc" style="${lcStyle(L)}"><summary><b>${T(v)}</b><span>${T(V[v].en)}</span><em>${{er:"-er",ir:"-ir",re:"-re",ger:"-ger",cer:"-cer",boot:"boot",uire:"-uire",refl:"reflexive",irr:"irregular"}[V[v].fam]}</em></summary>${conjTable(v)}</details>`).join("");
    });
   }else if(CN.tab==="vocab"){
    Object.keys(CATN).forEach(cat=>{const ws=VOCAB.filter(w=>w.cat===cat&&hit(w.fr+" "+w.en));if(!ws.length)return;
     h+=`<div class="cgroup-h"><b class="h3">${CATN[cat]}</b></div><div class="vtable">${ws.map(w=>`<button type="button" class="say" data-say="${esc(cleanFr(w.fr))}"><span class="gdot ${genderOf(w.fr)}"></span>${T(cleanFr(w.fr))}<small>${T(w.en)}</small></button>`).join("")}</div>`});
   }else{
    LINES.forEach(L=>{const ss=L.stations.filter(s=>!s.boss&&hit(s.name+" "+s.en+" "+s.rule));if(!ss.length)return;
-    h+=`<div class="cgroup-h lc" style="${lcStyle(L)}"><span class="badge sm">${L.n}</span><b class="h3">${T(L.name)}</b></div>`+ss.map(s=>`<div class="rulerow"><span class="plaque sm">${T(s.name)}</span><p>${T(s.rule)}</p>${s.teach?`<button class="link" type="button" data-les="${s.id}">Open the lesson</button>`:""}</div>`).join("")});
+    h+=`<div class="cgroup-h lc" style="${lcStyle(L)}"><span class="badge sm">${L.n}</span><b class="h3">${lbi(T(L.ename),T(L.name))}</b></div>`+ss.map(s=>`<div class="rulerow"><span class="plaque sm">${T(s.name)}</span><p>${T(s.rule)}</p>${s.teach?`<button class="link" type="button" data-les="${s.id}">${bi("Open the lesson","Ouvrir la leçon")}</button>`:""}</div>`).join("")});
   }
   $("#clist").innerHTML=h||`<p class="qsub">Nothing matches “${T(CN.q)}”.</p>`;
   hydrate($("#clist"));
@@ -2279,25 +2320,42 @@ function viewProfile(){
   const L=level(S.xp),a=need(L),b=need(L+1),pct=(S.xp-a)/(b-a);
   const cleared=ORDER.filter(s=>!s.boss&&stars(s.id)).length,total=ORDER.filter(s=>!s.boss).length;
   const acc=S.stats.q?Math.round(S.stats.ok/S.stats.q*100):0;
-  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>Profil</h1>
+  $("#view").innerHTML=`<div class="wrap"><section class="panel"><h1>${hbi("Profile","Profil")}</h1>
    <div class="card"><div class="lvcard"><span class="lvbig">${L}</span><div style="display:grid;gap:6px;flex:1;min-width:200px"><h2 style="font-size:1.6rem;font-stretch:78%;text-transform:uppercase">${rankOf(L)}</h2><span class="qsub num">${S.xp} XP · ${b-S.xp} to level ${L+1}</span><div class="xpbar"><i style="width:${Math.round(pct*100)}%"></i></div></div></div></div>
    <div class="sgrid">${[[S.stats.q,"answers"],[acc+"%","accuracy"],[S.stats.typed,"typed right"],[learnedCount(),"items learned"],[cleared+"/"+total,"stations"],[S.stats.bosses,"bosses beaten"],[S.stats.best,"best streak"],[streakNow()+" j","day streak"],[S.stats.blitz,"blitz record"],[S.stats.pat?fmtTime(S.stats.pat):"—","patience best"]].map(([v,k])=>`<div><b class="num">${v}</b><span>${k}</span></div>`).join("")}</div>
-   <div class="card"><h2 class="h3">Médailles</h2><div class="medals">${ACH.map(m=>`<div class="medal${S.ach[m.id]?" on":""}"><i>${IC.star}</i><b>${T(m.n)}</b><span>${T(m.d)}</span></div>`).join("")}</div></div>
-   <div class="card"><h2 class="h3">Réglages</h2>
+   <div class="card"><h2 class="h3">${lbi("Medals","Médailles")}</h2><div class="medals">${ACH.map(m=>`<div class="medal${S.ach[m.id]?" on":""}"><i>${IC.star}</i><b>${T(m.n)}</b><span>${T(m.d)}</span></div>`).join("")}</div></div>
+   <div class="card"><h2 class="h3">${lbi("Settings","Réglages")}</h2>
     <label class="set"><span>Sound effects<small>Chimes for right and wrong answers.</small></span><input type="checkbox" class="sw" id="s-sound" ${S.set.sound?"checked":""}></label>
     <label class="set"><span>French voice<small>${TTS.ok?(TTS.v?"Using "+esc(TTS.v.name)+".":"No French voice found on this device; your browser's default will try."):"This browser can't speak."}</small></span><input type="checkbox" class="sw" id="s-voice" ${S.set.voice?"checked":""}></label>
     <label class="set"><span>Read answers aloud<small>Hear the correct French after every question.</small></span><input type="checkbox" class="sw" id="s-auto" ${S.set.auto?"checked":""}></label>
     <div class="set"><span>Daily goal<small>XP per day for the ring in the top bar.</small></span><div class="seg">${[100,200,400].map(g=>`<button type="button" data-goal="${g}" aria-pressed="${S.set.goal===g}">${g}</button>`).join("")}</div></div>
     <label class="set"><span>Unlock every station<small>For cramming a specific topic before a test.</small></span><input type="checkbox" class="sw" id="s-all" ${S.set.all?"checked":""}></label>
-    <div class="set"><span>Test the voice<small>« Bonjour ! On y va ? »</small></span><button class="btn sm" type="button" id="s-test">Écouter</button></div>
-    <div class="set"><span>Reset progress<small>Erases XP, stars and your review queue in this browser.</small></span><button class="btn sm" type="button" id="s-reset">Reset</button></div>
+    <div class="set"><span>Test the voice<small>« Bonjour ! On y va ? »</small></span><button class="btn sm" type="button" id="s-test">${bi("Listen","Écouter")}</button></div>
+    <div class="set"><span>Reset progress<small>Erases XP, stars and your review queue in this browser.</small></span><button class="btn sm" type="button" id="s-reset">${bi("Reset","Réinitialiser")}</button></div>
    </div></section></div>`;
   hydrate($("#view"));
   const bindSw=(id,key,after)=>{$(id).onchange=e=>{S.set[key]=e.target.checked;save();if(after)after()}};
   bindSw("#s-sound","sound");bindSw("#s-voice","voice");bindSw("#s-auto","auto");bindSw("#s-all","all",()=>toast(S.set.all?"<b>Every station unlocked</b>":"<b>Back to normal unlocking</b>"));
   $$("[data-goal]").forEach(b=>b.onclick=()=>{S.set.goal=+b.dataset.goal;save();viewProfile();renderTop()});
   $("#s-test").onclick=()=>TTS.say("Bonjour ! On y va ?");
-  $("#s-reset").onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent="Tap again to erase";setTimeout(()=>{resetArm=false;const b=$("#s-reset");if(b)b.textContent="Reset"},4000);return}resetArm=false;S=fresh();save();mapScrolled=false;toast("<b>Progress erased</b>");go("map")};
+  $("#s-reset").onclick=e=>{if(!resetArm){resetArm=true;const rb=$("#s-reset");rb.textContent="Tap again to erase";setTimeout(()=>{resetArm=false;const b=$("#s-reset");if(b)b.innerHTML=bi("Reset","Réinitialiser")},4000);return}resetArm=false;S=fresh();save();mapScrolled=false;toast("<b>Progress erased</b>");go("map")};
+}
+
+/* ---------- How to play ---------- */
+const introMap=()=>`<div class="imap lc" style="${lcStyle(LINES[0])}">${[["Bonjour","Hello, please, thank you"],["Pronoms","The six people"],["Être","to be"]].map(([n,e])=>`<div class="imap-s"><span class="sdot"></span><span class="plaque sm">${n}</span><span class="qsub">${e}</span></div>`).join("")}</div>`;
+const INTRO=[
+ {h:["Welcome!","Bienvenue !"],b:()=>`<p>You're going to learn French from zero, verbs first. The game is laid out like the Paris métro:</p>${introMap()}<p>Each colored <b>line</b> is a topic. Each <b>stop</b> on it is one short lesson. Start at the top of line 1 and ride down.</p>`},
+ {h:["How a stop works","Comment ça marche"],b:()=>`<ol class="howto"><li><b>Read a 1-minute lesson.</b> Tap any French to hear it, then say it out loud.</li><li><b>Answer about 12 quick questions.</b> New words start as multiple choice. Once you know them, you type them.</li><li><b>Miss one?</b> It comes back a few questions later, with the full verb table so you can see the pattern.</li><li><b>Earn stars.</b> One star opens the next stop. A boss waits at the end of every line.</li></ol>`},
+ {h:["Come back each day","Revenez chaque jour"],b:()=>`<p>The <b>Review</b> tab brings back exactly what you're about to forget. Five minutes a day there is what makes verbs stick.</p><p>Every button is in English with its French underneath, so you learn those words too:</p><div class="row demo" aria-hidden="true"><span class="btn go">${bi("Play","Jouer")}</span><span class="btn">${bi("Next","Suivant")}</span></div><p class="qsub">Tap the <b>?</b> at the top any time to see this again.</p>`}
+];
+function openIntro(i){
+  if(!S.intro){S.intro=1;save()}
+  const last=i===INTRO.length-1,first=currentStation(),isNew=!S.stats.rounds&&first;
+  openModal(`<div class="sheet-h"><div class="grow"><div class="pips">${INTRO.map((_,j)=>`<i class="${j<=i?"on":""}"></i>`).join("")}</div></div><button class="xbtn" type="button" data-close aria-label="Close">${IC.x}</button></div>
+   <h2 class="intro-h">${hbi(INTRO[i].h[0],INTRO[i].h[1])}</h2><div class="lbody">${INTRO[i].b()}</div>
+   <div class="row">${i>0?`<button class="btn" type="button" id="introB">${bi("Back","Retour")}</button>`:""}<button class="btn ${last?"go":"primary"}" type="button" id="introN">${last?(isNew?bi("Start my first lesson","Commencer"):bi("Got it","Compris")):bi("Next","Suivant")}</button></div>`,LINES[0]);
+  if($("#introB"))$("#introB").onclick=()=>openIntro(i-1);
+  $("#introN").onclick=()=>{if(!last)return openIntro(i+1);closeModal();if(isNew)playStation(first.id)};
 }
 
 /* ---------- Global input ---------- */
@@ -2325,6 +2383,7 @@ document.addEventListener("keydown",e=>{
 /* ---------- Boot ---------- */
 dayXP();
 go("map");
+if(!S.intro)setTimeout(()=>openIntro(0),250);
 
 })();
 </script>
