@@ -1,0 +1,809 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body>
+<title>Verb Hammer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap">
+<style>
+/* Layout: one calm column, one thing on screen at a time. A study notebook: ballpoint-blue ink,
+   highlighter marks on the endings you must learn, green and red pen for right and wrong. */
+:root{
+  --bg:#F6F7F9; --page:#FFFFFF; --ink:#1A1E29; --muted:#5D6475; --line:#E2E5EB;
+  --pen:#2353C9; --pen-ink:#FFFFFF; --pen-soft:rgba(35,83,201,.09);
+  --hl:rgba(255,214,10,.48);
+  --ok:#137449; --ok-soft:rgba(19,116,73,.1); --bad:#BF3328; --bad-soft:rgba(191,51,40,.09); --warn:#8A5A00;
+  --f-head:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151C; --page:#1A1E28; --ink:#E8EBF2; --muted:#9BA3B5; --line:#2C3242;
+  --pen:#8EAEFF; --pen-ink:#0F1320; --pen-soft:rgba(142,174,255,.12);
+  --hl:rgba(255,214,10,.3);
+  --ok:#5DD39A; --ok-soft:rgba(93,211,154,.12); --bad:#FF8A80; --bad-soft:rgba(255,138,128,.11); --warn:#F2C35B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151C; --page:#1A1E28; --ink:#E8EBF2; --muted:#9BA3B5; --line:#2C3242;
+  --pen:#8EAEFF; --pen-ink:#0F1320; --pen-soft:rgba(142,174,255,.12);
+  --hl:rgba(255,214,10,.3);
+  --ok:#5DD39A; --ok-soft:rgba(93,211,154,.12); --bad:#FF8A80; --bad-soft:rgba(255,138,128,.11); --warn:#F2C35B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px}
+h1,h2,h3{font-family:var(--f-head);font-weight:700;margin:0;line-height:1.12;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px;border-radius:6px}
+mark{background:linear-gradient(transparent 12%,var(--hl) 12%,var(--hl) 88%,transparent 88%);color:inherit;padding:0 1px;border-radius:2px}
+[hidden]{display:none!important}
+
+.top{display:flex;align-items:center;gap:10px;margin-bottom:18px;min-height:40px}
+.home{appearance:none;border:0;background:none;padding:6px 0;font-family:var(--f-head);font-weight:700;font-size:1.15rem;cursor:pointer;color:var(--ink)}
+.top .sp{margin-left:auto;font-size:.88rem;color:var(--muted);text-align:right}
+.steps{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
+.steps span{font-size:.82rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--page);border:1.5px solid var(--line);color:var(--muted)}
+.steps span.on{background:var(--pen);border-color:var(--pen);color:var(--pen-ink)}
+.steps span.done{color:var(--ok);border-color:var(--ok)}
+
+.card{background:var(--page);border:1.5px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:16px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.title{font-size:clamp(1.9rem,7vw,2.5rem)}
+.title small{font-family:var(--f-body);font-weight:400;font-size:.5em;color:var(--muted);margin-left:6px}
+.rule{font-size:1.12rem;font-weight:700}
+.trick{border-left:4px solid var(--pen);padding:4px 0 4px 14px}
+.trick b{color:var(--pen)}
+.note{background:var(--pen-soft);border-radius:12px;padding:12px 14px}
+.note b{color:var(--pen)}
+
+/* tables */
+.tbl{border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.tbl-h{display:flex;gap:8px;align-items:baseline;padding:10px 14px;border-bottom:1.5px solid var(--line);background:var(--bg)}
+.tbl-h b{font-family:var(--f-head);font-size:1.25rem}
+.tbl-h span{color:var(--muted);font-size:.92rem}
+.tbl-g{display:grid;grid-template-columns:1fr 1fr}
+.cell{appearance:none;border:0;background:none;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:8px;align-items:baseline;font-size:1.2rem;min-width:0}
+.cell:nth-child(odd){border-right:1px solid var(--line)}
+.cell:nth-last-child(-n+2){border-bottom:0}
+.cell .p{color:var(--muted);font-size:.95rem;min-width:2.6em}
+.cell b{font-weight:700;overflow-wrap:anywhere}
+.cell:hover{background:var(--pen-soft)}
+.ends{width:100%;border-collapse:collapse;font-size:1.05rem}
+.ends th,.ends td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+.ends th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ends tr:last-child td{border-bottom:0}
+.ends td.e{font-weight:700;color:var(--pen);font-variant-numeric:tabular-nums}
+.wtbl{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 16px}
+.wtbl button{appearance:none;border:0;background:none;text-align:left;padding:7px 0;border-bottom:1px dashed var(--line);cursor:pointer;display:flex;gap:8px;align-items:baseline;min-width:0}
+.wtbl b{font-size:1.05rem}
+.wtbl small{color:var(--muted);margin-left:auto;text-align:right}
+.exs{display:grid;gap:4px}
+.exs button{appearance:none;border:0;background:none;text-align:left;cursor:pointer;padding:4px 0;display:grid}
+.exs b{font-size:1.05rem}
+.exs span{color:var(--muted);font-size:.95rem}
+
+/* buttons */
+.btn{appearance:none;border:1.5px solid var(--line);background:var(--page);color:var(--ink);border-radius:12px;padding:12px 18px;font-weight:700;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.15;text-align:center}
+.btn:hover{border-color:var(--muted)}
+.btn.go{background:var(--pen);border-color:var(--pen);color:var(--pen-ink)}
+.btn.go:hover{filter:brightness(1.07)}
+.btn.big{font-size:1.12rem;padding:15px 20px}
+.btn.sm{padding:8px 12px;font-size:.9rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.bi{display:inline-grid;justify-items:center;gap:1px}
+.bi small{font-weight:400;font-size:.78em;opacity:.78}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.btn{flex:1 1 180px}
+.link{appearance:none;border:0;background:none;color:var(--pen);font-weight:700;cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+
+/* hammer */
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pen);border-radius:5px;transition:width .25s}
+.count{display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.q{font-size:clamp(2rem,9vw,2.9rem);font-weight:700;line-height:1.15;display:flex;flex-wrap:wrap;gap:0 .3em;align-items:baseline}
+.q.sm{font-size:clamp(1.35rem,5.6vw,1.8rem)}
+.q .pro{color:var(--muted);font-weight:400}
+.blank{display:inline-block;min-width:2.4em;border-bottom:4px solid var(--pen);height:.9em}
+.qsub{color:var(--muted);font-size:1rem}
+.qsub b{color:var(--ink)}
+.ans{width:100%;font:700 1.5rem var(--f-body);color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px}
+.ans:focus{outline:none;border-color:var(--pen)}
+.ans.ok{border-color:var(--ok);background:var(--ok-soft)}
+.ans.bad{border-color:var(--bad);background:var(--bad-soft)}
+.accents{display:flex;flex-wrap:wrap;gap:6px}
+.acc{appearance:none;min-width:40px;height:40px;border-radius:9px;border:1.5px solid var(--line);background:var(--page);font-weight:700;font-size:1.05rem;cursor:pointer;color:var(--ink)}
+.fb{border-radius:12px;padding:12px 14px;display:grid;gap:4px;font-size:1.02rem}
+.fb.ok{background:var(--ok-soft)} .fb.ok b{color:var(--ok)}
+.fb.bad{background:var(--bad-soft)} .fb.bad b{color:var(--bad)}
+.fb .big{font-size:1.4rem;font-weight:700;color:var(--ink)}
+.fb small{color:var(--muted)}
+
+/* prove it */
+.fill{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.fill label{display:grid;gap:4px;min-width:0}
+.fill label span{font-size:.88rem;color:var(--muted);font-weight:700}
+.fill input{width:100%;min-width:0;font:700 1.15rem var(--f-body);color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:9px 10px}
+.fill input:focus{outline:none;border-color:var(--pen)}
+.fill input.ok{border-color:var(--ok);background:var(--ok-soft)}
+.fill input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.fill .fix{font-size:.9rem;color:var(--bad);font-weight:700}
+.fill:not(.list){grid-auto-flow:column;grid-template-rows:repeat(3,auto)}
+.fill.list{grid-template-columns:1fr}
+.fill.list label{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:10px}
+@media (max-width:420px){.fill:not(.list){grid-template-columns:1fr;grid-auto-flow:row;grid-template-rows:none}}
+
+/* home */
+.hero{display:grid;gap:10px;margin-bottom:18px}
+.hero h1{font-size:clamp(2.4rem,10vw,3.4rem)}
+.hero p{color:var(--muted);font-size:1.05rem}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 16px}
+@media (max-width:520px){.how{grid-template-columns:1fr}}
+.how div{background:var(--page);border:1.5px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:2px}
+.how b{font-family:var(--f-head);font-size:1.15rem}
+.how span{color:var(--muted);font-size:.92rem;line-height:1.35}
+.lessons{list-style:none;margin:16px 0 0;padding:0;background:var(--page);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.lessons li+li{border-top:1px solid var(--line)}
+.lessons button{appearance:none;border:0;background:none;width:100%;text-align:left;padding:12px 14px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:2px 12px;align-items:center;cursor:pointer}
+.lessons button:hover{background:var(--pen-soft)}
+.lessons .n{grid-row:1/3;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.lessons .done .n{background:var(--ok);border-color:var(--ok);color:var(--page)}
+.lessons .cur .n{border-color:var(--pen);color:var(--pen)}
+.lessons b{font-size:1.05rem}
+.lessons small{color:var(--muted);grid-column:2}
+.lessons em{grid-row:1/3;grid-column:3;font-style:normal;font-size:.8rem;font-weight:700;color:var(--pen)}
+.sect{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:14px 14px 4px;background:var(--bg)}
+.notes pre{white-space:pre-wrap;font-family:var(--f-body);font-size:.98rem;line-height:1.5;margin:0}
+.copied{color:var(--ok);font-weight:700;font-size:.9rem}
+textarea.copy{width:100%;min-height:200px;font:inherit;font-size:.9rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+"use strict";
+/* ================= DATA ================= */
+/* ---------- Verbs: present tense, past participle, helper ---------- */
+const V={};
+const ER=["e","es","e","ons","ez","ent"], IR=["is","is","it","issons","issez","issent"], RE=["s","s","","ons","ez","ent"];
+function add(inf,en,f,pp,aux,fam){V[inf]={inf,en,f,pp,aux:aux||"avoir",fam}}
+function er(inf,en,aux){const s=inf.slice(0,-2);add(inf,en,ER.map(e=>s+e),s+"é",aux,"er")}
+function ir(inf,en){const s=inf.slice(0,-2);add(inf,en,IR.map(e=>s+e),s+"i","avoir","ir")}
+function re(inf,en,aux){const s=inf.slice(0,-2);add(inf,en,RE.map(e=>s+e),s+"u",aux,"re")}
+function ger(inf,en){const s=inf.slice(0,-2),f=ER.map(e=>s+e);f[3]=s+"eons";add(inf,en,f,s+"é","avoir","ger")}
+function cer(inf,en){const s=inf.slice(0,-2),f=ER.map(e=>s+e);f[3]=s.slice(0,-1)+"çons";add(inf,en,f,s+"é","avoir","cer")}
+function boot(inf,en,bs){const b=inf.slice(0,-2);add(inf,en,[bs+"e",bs+"es",bs+"e",b+"ons",b+"ez",bs+"ent"],b+"é","avoir","boot")}
+function uire(inf,en){const s=inf.slice(0,-2);add(inf,en,[s+"s",s+"s",s+"t",s+"sons",s+"sez",s+"sent"],s+"t","avoir","uire")}
+function irr(inf,en,f,pp,aux){add(inf,en,f,pp,aux,"irr")}
+const RP=["me","te","se","nous","vous","se"];
+const vowel=s=>/^[aeiouyhâàäéèêëîïôöûùüœ]/i.test(s);
+function refl(inf,en,forms,pp){add(inf,en,forms.map((x,i)=>(i!==3&&i!==4&&vowel(x))?RP[i][0]+"'"+x:RP[i]+" "+x),pp,"être","refl");V[inf].bare=forms}
+
+irr("être","to be",["suis","es","est","sommes","êtes","sont"],"été");
+irr("avoir","to have",["ai","as","a","avons","avez","ont"],"eu");
+irr("aller","to go",["vais","vas","va","allons","allez","vont"],"allé","être");
+irr("faire","to do, to make",["fais","fais","fait","faisons","faites","font"],"fait");
+
+[["parler","to speak"],["aimer","to like, to love"],["regarder","to watch, to look at"],["écouter","to listen to"],["travailler","to work"],["habiter","to live (somewhere)"],["jouer","to play"],["chercher","to look for"],["trouver","to find"],["donner","to give"],["chanter","to sing"],["danser","to dance"],["étudier","to study"],["adorer","to adore"],["détester","to hate"],["penser","to think"],["oublier","to forget"],["demander","to ask"],["préparer","to prepare"],["commander","to order (food)"],["goûter","to taste"],["cuisiner","to cook (a person cooks)"],["laver","to wash (something)"]].forEach(v=>er(...v));
+[["arriver","to arrive"],["entrer","to enter"],["rentrer","to go back home"],["rester","to stay"],["tomber","to fall"],["monter","to go up"],["retourner","to return"]].forEach(v=>er(v[0],v[1],"être"));
+[["finir","to finish"],["choisir","to choose"],["réussir","to succeed, to pass"],["grandir","to grow up"],["obéir","to obey"],["réfléchir","to think it over"],["rougir","to blush"],["remplir","to fill"],["grossir","to gain weight"],["maigrir","to lose weight"]].forEach(v=>ir(...v));
+[["vendre","to sell"],["attendre","to wait for"],["entendre","to hear"],["répondre","to answer"],["perdre","to lose"],["rendre","to give back"]].forEach(v=>re(...v));
+re("descendre","to go down","être");
+[["manger","to eat"],["partager","to share"],["nager","to swim"],["voyager","to travel"],["mélanger","to mix"],["changer","to change"],["ranger","to tidy up"]].forEach(v=>ger(...v));
+[["commencer","to begin"],["lancer","to throw"],["avancer","to move forward"],["prononcer","to pronounce"],["placer","to place"]].forEach(v=>cer(...v));
+boot("acheter","to buy","achèt");boot("préférer","to prefer","préfèr");boot("espérer","to hope","espèr");boot("répéter","to repeat","répèt");
+boot("emmener","to take (someone) along","emmèn");boot("appeler","to call","appell");boot("jeter","to throw away","jett");
+boot("nettoyer","to clean","nettoi");boot("envoyer","to send","envoi");
+[["construire","to build"],["conduire","to drive"],["traduire","to translate"],["produire","to produce"],["détruire","to destroy"]].forEach(v=>uire(...v));
+
+irr("prendre","to take, to have (food)",["prends","prends","prend","prenons","prenez","prennent"],"pris");
+irr("comprendre","to understand",["comprends","comprends","comprend","comprenons","comprenez","comprennent"],"compris");
+irr("apprendre","to learn",["apprends","apprends","apprend","apprenons","apprenez","apprennent"],"appris");
+irr("boire","to drink",["bois","bois","boit","buvons","buvez","boivent"],"bu");
+irr("vouloir","to want",["veux","veux","veut","voulons","voulez","veulent"],"voulu");
+irr("pouvoir","can, to be able to",["peux","peux","peut","pouvons","pouvez","peuvent"],"pu");
+irr("devoir","must, to have to",["dois","dois","doit","devons","devez","doivent"],"dû");
+irr("mettre","to put, to set (the table)",["mets","mets","met","mettons","mettez","mettent"],"mis");
+irr("promettre","to promise",["promets","promets","promet","promettons","promettez","promettent"],"promis");
+irr("permettre","to allow",["permets","permets","permet","permettons","permettez","permettent"],"permis");
+irr("cuire","to cook (food cooks)",["cuis","cuis","cuit","cuisons","cuisez","cuisent"],"cuit");
+irr("servir","to serve",["sers","sers","sert","servons","servez","servent"],"servi");
+irr("sortir","to go out",["sors","sors","sort","sortons","sortez","sortent"],"sorti","être");
+irr("partir","to leave",["pars","pars","part","partons","partez","partent"],"parti","être");
+irr("dormir","to sleep",["dors","dors","dort","dormons","dormez","dorment"],"dormi");
+irr("venir","to come",["viens","viens","vient","venons","venez","viennent"],"venu","être");
+irr("revenir","to come back",["reviens","reviens","revient","revenons","revenez","reviennent"],"revenu","être");
+irr("devenir","to become",["deviens","deviens","devient","devenons","devenez","deviennent"],"devenu","être");
+irr("lire","to read",["lis","lis","lit","lisons","lisez","lisent"],"lu");
+irr("écrire","to write",["écris","écris","écrit","écrivons","écrivez","écrivent"],"écrit");
+irr("dire","to say, to tell",["dis","dis","dit","disons","dites","disent"],"dit");
+irr("voir","to see",["vois","vois","voit","voyons","voyez","voient"],"vu");
+irr("croire","to believe",["crois","crois","croit","croyons","croyez","croient"],"cru");
+irr("savoir","to know (a fact, how to)",["sais","sais","sait","savons","savez","savent"],"su");
+irr("connaître","to know (a person, a place)",["connais","connais","connaît","connaissons","connaissez","connaissent"],"connu");
+irr("vivre","to live, to be alive",["vis","vis","vit","vivons","vivez","vivent"],"vécu");
+irr("ouvrir","to open",["ouvre","ouvres","ouvre","ouvrons","ouvrez","ouvrent"],"ouvert");
+irr("naître","to be born",["nais","nais","naît","naissons","naissez","naissent"],"né","être");
+irr("mourir","to die",["meurs","meurs","meurt","mourons","mourez","meurent"],"mort","être");
+
+refl("se laver","to wash up",ER.map(e=>"lav"+e),"lavé");
+refl("se coucher","to go to bed",ER.map(e=>"couch"+e),"couché");
+refl("se réveiller","to wake up",ER.map(e=>"réveill"+e),"réveillé");
+refl("se lever","to get up",["lève","lèves","lève","levons","levez","lèvent"],"levé");
+refl("s'habiller","to get dressed",ER.map(e=>"habill"+e),"habillé");
+refl("se brosser","to brush (teeth, hair)",ER.map(e=>"bross"+e),"brossé");
+refl("se dépêcher","to hurry",ER.map(e=>"dépêch"+e),"dépêché");
+refl("s'amuser","to have fun",ER.map(e=>"amus"+e),"amusé");
+refl("se reposer","to rest",ER.map(e=>"repos"+e),"reposé");
+refl("se promener","to take a walk",["promène","promènes","promène","promenons","promenez","promènent"],"promené");
+refl("s'appeler","to be named",["appelle","appelles","appelle","appelons","appelez","appellent"],"appelé");
+refl("se disputer","to argue",ER.map(e=>"disput"+e),"disputé");
+
+/* Common wrong forms that tests love (used as multiple-choice distractors) */
+const TRAPS={
+ "être":{0:["sui","es"],3:["sommez","êtons"],4:["êtez","etes"],5:["sontent","ont"]},
+ "avoir":{0:["as","a"],2:["à","as"],3:["avez","sommes"],5:["sont","avent"]},
+ "aller":{0:["va","alle"],1:["va","alles"],3:["vons","allez"],5:["allent","vant"]},
+ "faire":{2:["fais","fai"],3:["faitons","fesons"],4:["faisez","faîtes"],5:["faisent","fons"]},
+ "prendre":{2:["prends","prent"],3:["prendons","prennons"],4:["prendez","prennez"],5:["prendent","prenent"]},
+ "comprendre":{3:["comprendons"],5:["comprendent","comprenent"]},
+ "apprendre":{3:["apprendons"],5:["apprendent","apprenent"]},
+ "boire":{3:["boivons","boyons"],4:["boivez","boyez"],5:["buvent","boient"]},
+ "vouloir":{0:["veus","voule"],1:["veus","veut"],3:["veulons"],5:["voulent","veuxent"]},
+ "pouvoir":{0:["peus","peut"],1:["peus","peut"],3:["peuvons"],5:["pouvent","peuent"]},
+ "devoir":{0:["devs","doit"],3:["doivons"],4:["doivez"],5:["devent","doient"]},
+ "mettre":{0:["met","mett"],2:["mets","mett"],3:["metons"],4:["metez"],5:["metent","mettont"]},
+ "promettre":{2:["promets"],3:["prometons"],5:["prometent"]},
+ "permettre":{2:["permets"],3:["permetons"],5:["permetent"]},
+ "servir":{0:["servis","serv"],2:["servit"],3:["servissons"],5:["servissent","serent"]},
+ "sortir":{0:["sortis","sort"],2:["sortit"],3:["sortissons"],5:["sortissent","sorent"]},
+ "partir":{0:["partis","part"],2:["partit"],3:["partissons"],5:["partissent","parent"]},
+ "dormir":{0:["dormis","dort"],2:["dormit"],3:["dormissons"],5:["dormissent","dorent"]},
+ "venir":{0:["vens","vient"],3:["viennons","venissons"],4:["viennez"],5:["venent","vienent"]},
+ "revenir":{3:["reviennons"],5:["revenent","revienent"]},
+ "devenir":{3:["deviennons"],5:["devenent","devienent"]},
+ "lire":{3:["lions","lirons"],4:["liez"],5:["lient","lirent"]},
+ "écrire":{3:["écrisons","écrions"],4:["écrisez"],5:["écrient","écrisent"]},
+ "dire":{3:["dions"],4:["disez","dîtes"],5:["dient","dirent"]},
+ "voir":{3:["voions","voirons"],4:["voiez"],5:["voyent","voyont"]},
+ "croire":{3:["croions"],4:["croiez"],5:["croyent","croyont"]},
+ "savoir":{0:["sait","savs"],3:["saisons"],5:["saivent","sachent"]},
+ "connaître":{2:["connais"],3:["connaîtons","connons"],5:["connaîtent","connent"]},
+ "vivre":{2:["vis","vive"],3:["vions"],5:["vient"]},
+ "ouvrir":{0:["ouvris","ouvrs"],2:["ouvrit"],3:["ouvrissons"],5:["ouvrissent"]},
+ "cuire":{3:["cuions","cuissons"],5:["cuient","cuissent"]},
+ "naître":{3:["naîtons"],5:["naîtent"]},
+ "mourir":{0:["mours","meure"],3:["meurons"],5:["mourent"]}
+};
+const PPTRAPS={"être":["êtu","étu"],"avoir":["avu","eut"],"faire":["fais","faisé"],"prendre":["prendu","prit"],"comprendre":["comprendu","comprit"],"apprendre":["apprendu","apprit"],
+ "boire":["boivé","buvu"],"vouloir":["voulé","veut"],"pouvoir":["pouvu","peut"],"devoir":["du","devu"],"mettre":["mettu","mit"],"promettre":["promettu","promit"],"permettre":["permettu","permit"],
+ "voir":["voyé","vi"],"lire":["lit","lisu"],"écrire":["écrivu","écri"],"dire":["disé","dis"],"savoir":["savu","sait"],"connaître":["connaissu","connaît"],"venir":["venir","venit"],
+ "revenir":["revenit","revenir"],"devenir":["devenit","devenir"],"ouvrir":["ouvri","ouvru"],"vivre":["vivu","vit"],"croire":["croyu","crut"],"naître":["naissu","naît"],"mourir":["mouru","meurt"],
+ "cuire":["cuisu","cuiu"],"servir":["servu","servit"],"sortir":["sortu","sortit"],"partir":["partu","partit"],"dormir":["dormu","dormit"],"construire":["construisu","construi"],
+ "conduire":["conduisu","conduisé"],"traduire":["traduisu","traduisé"],"produire":["produisu","produi"],"détruire":["détruisu","détrui"]};
+
+/* One-line memory hooks shown when you miss a form */
+const VHINT={
+ "être":"être is pure memory: suis, es, est, sommes, êtes, sont.",
+ "avoir":"ai, as, a, avons, avez, ont. j'ai, never je ai.",
+ "aller":"vais, vas, va, allons, allez, vont. Never allent.",
+ "faire":"fais, fais, fait, faisons, faites, font. vous faites, not faisez.",
+ "prendre":"Singular keeps the d (prends, prend). Plural drops it (prenons) and ils doubles the n: prennent.",
+ "comprendre":"Works exactly like prendre: comprenons, comprennent.",
+ "apprendre":"Works exactly like prendre: apprenons, apprennent.",
+ "boire":"bois, bois, boit, then buv- for nous and vous (buvons, buvez), then boivent.",
+ "vouloir":"x in je and tu: veux, veux, veut. Plural: voulons, voulez, veulent.",
+ "pouvoir":"x in je and tu: peux, peux, peut. Plural: pouvons, pouvez, peuvent.",
+ "devoir":"dois, dois, doit, devons, devez, doivent.",
+ "mettre":"One person, one t: mets, met. A crowd, two t's: mettons, mettent.",
+ "promettre":"Works like mettre: promets, promet, promettons.",
+ "permettre":"Works like mettre: permets, permet, permettons.",
+ "cuire":"cuis, cuis, cuit, then add s: cuisons, cuisez, cuisent.",
+ "servir":"Singular drops the v: sers, sers, sert. Plural keeps it: servons.",
+ "sortir":"Singular drops the t before the ending: sors, sors, sort. No -iss-.",
+ "partir":"Singular drops the t before the ending: pars, pars, part. No -iss-.",
+ "dormir":"Singular drops the m: dors, dors, dort. Plural keeps it: dormons.",
+ "venir":"viens, viens, vient, venons, venez, viennent (double n, like prennent).",
+ "revenir":"Works like venir: reviens, revenons, reviennent.",
+ "devenir":"Works like venir: deviens, devenons, deviennent.",
+ "lire":"lis, lis, lit, then add s: lisons, lisez, lisent.",
+ "écrire":"écris, écris, écrit, then a v appears: écrivons, écrivez, écrivent.",
+ "dire":"dis, dis, dit, disons, then the rebel: vous dites. ils disent.",
+ "voir":"i turns into y only for nous and vous: voyons, voyez. ils voient.",
+ "croire":"Like voir: crois, croit, croyons, croyez, croient.",
+ "savoir":"sais, sais, sait, savons, savez, savent.",
+ "connaître":"connais, connais, connaît (hat on the i before t), connaissons.",
+ "vivre":"vis, vis, vit, vivons, vivez, vivent.",
+ "ouvrir":"In the present, ouvrir wears -er endings: ouvre, ouvres, ouvre.",
+ "naître":"nais, nais, naît, naissons, naissez, naissent.",
+ "mourir":"meurs, meurs, meurt, mourons, mourez, meurent."
+};
+const FAMHINT={
+ er:"-er endings: e, es, e, ons, ez, ent.",
+ ir:"-ir endings: is, is, it, then -iss- for the plural: issons, issez, issent.",
+ re:"-re endings: s, s, (nothing), ons, ez, ent.",
+ ger:"-ger verb: only nous changes. Add an e to keep the g soft: -geons.",
+ cer:"-cer verb: only nous changes. c becomes ç before o: -çons.",
+ boot:"Boot verb: je, tu, il and ils change. nous and vous copy the infinitive.",
+ uire:"-uire endings: s, s, t, sons, sez, sent.",
+ refl:"The mini-pronoun matches the subject: me, te, se, nous, vous, se."
+};
+/* sound-alike guides for the first tables you meet */
+const SOUNDS={
+ "être":["swee","eh","eh","sum","et","sohn"],
+ "avoir":["zhay","ah","ah","ah-VOHN","ah-VAY","ZOHN"],
+ "aller":["vay","vah","vah","ah-LOHN","ah-LAY","vohn"],
+ "faire":["feh","feh","feh","fuh-ZOHN","fet","fohn"],
+ "parler":["parl","parl","parl","par-LOHN","par-LAY","parl"],
+ "finir":["fee-NEE","fee-NEE","fee-NEE","fee-nee-SOHN","fee-nee-SAY","fee-NEESS"],
+ "vendre":["vahn","vahn","vahn","vahn-DOHN","vahn-DAY","vahnd"]
+};
+
+/* ---------- Vocabulary ---------- */
+const VOCAB_RAW=`greet|bonjour|hello, good morning
+greet|bonsoir|good evening
+greet|salut|hi, bye (casual)
+greet|au revoir|goodbye
+greet|à bientôt|see you soon
+greet|merci|thank you
+greet|merci beaucoup|thank you very much
+greet|s'il vous plaît|please (polite)
+greet|s'il te plaît|please (to a friend)
+greet|de rien|you're welcome
+greet|excusez-moi|excuse me
+greet|pardon|sorry, pardon me
+greet|oui|yes
+greet|non|no
+greet|Comment ça va ?|How are you?
+greet|Ça va bien.|I'm doing well.
+greet|Je m'appelle…|My name is…
+greet|enchanté|nice to meet you
+pron|je|I
+pron|tu|you (one friend)
+pron|il|he
+pron|elle|she
+pron|on|we (casual), people
+pron|nous|we
+pron|vous|you (polite, or a group)
+pron|ils|they (any group with a man)
+pron|elles|they (all women)
+food1|le pain|bread
+food1|le fromage|cheese
+food1|le beurre|butter
+food1|l'œuf (m)|egg
+food1|la viande|meat
+food1|le poulet|chicken
+food1|le canard|duck
+food1|la volaille|poultry
+food1|l'agneau (m)|lamb
+food1|le bœuf|beef
+food1|le porc|pork
+food1|le jambon|ham
+food1|le poisson|fish
+food1|le saumon|salmon
+food1|le thon|tuna
+food1|les crevettes (f)|shrimp
+food1|les fruits de mer (m)|seafood
+food1|le riz|rice
+food1|les pâtes (f)|pasta
+food1|le sel|salt
+food1|le poivre|pepper
+food1|le sucre|sugar
+food1|l'huile (f)|oil
+food2|les légumes (m)|vegetables
+food2|la pomme de terre|potato
+food2|les frites (f)|fries
+food2|la carotte|carrot
+food2|la tomate|tomato
+food2|l'oignon (m)|onion
+food2|l'ail (m)|garlic
+food2|les haricots verts (m)|green beans
+food2|la salade|salad, lettuce
+food2|la pomme|apple
+food2|la fraise|strawberry
+food2|le raisin|grapes
+food2|le citron|lemon
+food2|la confiture|jam
+food2|le gâteau|cake
+food2|la tarte|pie, tart
+food2|la glace|ice cream
+food2|le chocolat|chocolate
+drink|l'eau (f)|water
+drink|le lait|milk
+drink|le vin|wine
+drink|la bière|beer
+drink|le café|coffee
+drink|le thé|tea
+drink|le jus d'orange|orange juice
+drink|le chocolat chaud|hot chocolate
+meals|le petit-déjeuner|breakfast
+meals|le déjeuner|lunch
+meals|le dîner|dinner
+meals|le goûter|afternoon snack
+meals|l'entrée (f)|starter, appetizer
+meals|le plat principal|main course
+meals|le dessert|dessert
+meals|la carte|the menu (list of dishes)
+meals|le menu|fixed-price set meal
+meals|l'addition (f)|the check, the bill
+meals|le serveur|waiter
+meals|le pourboire|tip
+meals|le marché|market
+meals|le plateau de fromages|cheese board
+kitchen|la poêle|frying pan
+kitchen|la casserole|saucepan
+kitchen|le four|oven
+kitchen|le micro-ondes|microwave
+kitchen|le frigo|fridge
+kitchen|le couteau|knife
+kitchen|la fourchette|fork
+kitchen|la cuillère|spoon
+kitchen|l'assiette (f)|plate
+kitchen|le verre|glass
+kitchen|la tasse|cup
+kitchen|le bol|bowl
+kitchen|la serviette|napkin
+taste|fade|bland
+taste|épicé|spicy
+taste|sucré|sweet
+taste|salé|salty
+taste|amer|bitter
+taste|savoureux|flavorful
+taste|délicieux|delicious
+taste|écœurant|sickeningly rich
+taste|dégoûtant|disgusting
+taste|tendre|tender
+taste|frais|fresh
+taste|surgelé|frozen
+taste|cru|raw
+taste|cuit|cooked
+taste|bio|organic
+cook|faire bouillir|to boil
+cook|faire sauter|to sauté, to stir-fry
+cook|griller|to grill
+cook|rôtir|to roast
+cook|couper|to cut
+cook|mélanger|to mix
+cook|ajouter|to add
+cook|verser|to pour
+cook|éplucher|to peel
+cook|goûter|to taste
+cook|à la vapeur|steamed
+qw|où|where
+qw|quand|when
+qw|comment|how
+qw|pourquoi|why
+qw|parce que|because
+qw|combien (de)|how much, how many
+qw|qui|who
+qw|qu'est-ce que|what (+ subject + verb)
+qw|quel / quelle|which, what (+ noun)`;
+const VOCAB=VOCAB_RAW.split("\n").map(l=>{const[cat,fr,en]=l.split("|");return{cat,fr,en}});
+
+
+/* du / de la / des bank: [sentence with ___, correct, wrong…, why] */
+const PART=[
+ ["Je mange ___ pain.","du","de la","de l'","des","pain is masculine and you eat some of it: du."],
+ ["Tu bois ___ eau ?","de l'","du","de la","des","eau starts with a vowel: de l'."],
+ ["Nous achetons ___ fraises.","des","du","de la","de","Plural, unknown amount: des."],
+ ["Elle prend ___ salade.","de la","du","de l'","des","salade is feminine: de la."],
+ ["Je ne mange pas ___ viande.","de","de la","du","la","After a negative, du, de la and des all become de."],
+ ["J'aime ___ fromage.","le","du","de","la","After aimer you mean cheese in general: le."],
+ ["Il déteste ___ crevettes.","les","des","de","du","After détester, use the definite article: les."],
+ ["Vous voulez ___ café ?","du","de la","des","de l'","Some coffee, masculine: du."],
+ ["On ajoute ___ huile.","de l'","du","de la","des","huile starts with a silent h: de l'."],
+ ["Il n'y a plus ___ lait.","de","du","le","des","ne… plus is a negative: plain de."],
+ ["Je voudrais un kilo ___ pommes.","de","des","les","du","Quantities take plain de."],
+ ["Ils boivent beaucoup ___ thé.","de","du","le","des","beaucoup de, never beaucoup du."],
+ ["Elle préfère ___ volaille.","la","de la","de","du","préférer talks about things in general: la."],
+ ["Nous mangeons ___ pâtes.","des","de","de la","du","pâtes is plural: des."],
+ ["Je ne bois pas ___ alcool.","d'","de l'","du","de","Negative + vowel: d'."],
+ ["Elle mange ___ pomme. (one apple)","une","de la","des","du","One whole countable thing: un / une."],
+ ["Une tasse ___ thé.","de","du","des","le","Containers and quantities take plain de."]
+];
+function genderOf(fr){return/\(m\)/.test(fr)?"m":/\(f\)/.test(fr)?"f":/^le /.test(fr)?"m":/^la /.test(fr)?"f":""}
+function cleanFr(fr){return fr.replace(/\s*\((m|f)\)/,"")}
+/* ================= VERB HAMMER ================= */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const uniq=a=>[...new Set(a)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const typo=s=>String(s).replace(/'/g,"\u2019").replace(/ ([?!:;])/g,"\u202F$1");
+const T=s=>typo(esc(s));
+const norm=s=>String(s).toLowerCase().replace(/[\u2019\u2018`´]/g,"'").replace(/[\u00A0\u202F]/g," ").replace(/[.!?,;:…()]/g," ").replace(/\s*'\s*/g,"'").replace(/\s+/g," ").trim();
+const strip=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/œ/g,"oe");
+const bi=(en,fr)=>`<span class="bi"><span>${en}</span><small lang="fr">${fr}</small></span>`;
+const lcp=a=>{let p=a[0];for(const s of a)while(!s.startsWith(p))p=p.slice(0,-1);return p};
+
+/* ---------- Saved progress (this browser only) ---------- */
+const KEY="verb-hammer-v1";
+const fresh=()=>({v:1,done:{},miss:{},hit:{}});
+let S=fresh();
+try{const x=JSON.parse(localStorage.getItem(KEY)||"null");if(x&&x.v===1)S=Object.assign(fresh(),x)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ---------- French voice ---------- */
+const TTS={ok:"speechSynthesis" in window,v:null,
+ find(){try{const vs=speechSynthesis.getVoices();this.v=vs.find(v=>/^fr[-_]FR/i.test(v.lang))||vs.find(v=>/^fr/i.test(v.lang))||null}catch(e){}},
+ say(t){if(!this.ok||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(t));u.lang="fr-FR";if(this.v)u.voice=this.v;u.rate=.9;speechSynthesis.speak(u)}catch(e){}}};
+if(TTS.ok){TTS.find();try{speechSynthesis.addEventListener("voiceschanged",()=>TTS.find())}catch(e){}}
+
+/* ---------- Verb helpers ---------- */
+const PRO=["je","tu","il","nous","vous","ils"];
+const PRO3=[["je"],["tu"],["il","elle","on"],["nous"],["vous"],["ils","elles"]];
+const PLAB=["je","tu","il / elle / on","nous","vous","ils / elles"];
+const joinPro=(p,f)=>p==="j'"?"j'"+f:p+" "+f;
+const pro0=f=>vowel(f)?"j'":"je";
+function stemFor(v){const x=V[v];if(["er","ir","re","ger"].includes(x.fam))return v.slice(0,-2);if(x.fam==="cer")return v.slice(0,-3);if(x.fam==="boot")return lcp(x.f);return null}
+function formHTML(v,i){
+  const x=V[v],f=x.f[i];
+  if(x.fam==="refl"){const m=f.match(/^(me |te |se |nous |vous |m'|t'|s')(.*)$/);return m?`<mark>${T(m[1].trim())}</mark>${m[1].endsWith("'")?"":" "}${T(m[2])}`:T(f)}
+  const st=stemFor(v);if(st&&f.startsWith(st)&&f.length>st.length)return T(st)+`<mark>${T(f.slice(st.length))}</mark>`;
+  return T(f);
+}
+function tableHTML(v){
+  const x=V[v];
+  const cell=i=>{const f=x.f[i],p=i===0?pro0(f):PLAB[i],sp=i===0?pro0(f):PRO[i];return`<button class="cell" type="button" data-say="${esc(joinPro(sp,f))}"><span class="p">${T(p)}</span><b>${formHTML(v,i)}</b></button>`};
+  return`<div class="tbl"><div class="tbl-h"><b>${T(v)}</b><span>${T(x.en)}</span></div><div class="tbl-g">${[0,3,1,4,2,5].map(cell).join("")}</div></div>`;
+}
+function tableText(v){const x=V[v],f=i=>joinPro(i===0?pro0(x.f[0]):PLAB[i],x.f[i]);return`${v.toUpperCase()} (${x.en})\n${[0,1,2].map(i=>f(i).padEnd(24)+f(i+3)).join("\n")}`}
+
+/* ---------- Lessons (in the order to learn them) ---------- */
+const VPP=["parler","finir","vendre","être","avoir","faire","prendre","boire","mettre","voir","lire","écrire","dire","vouloir","pouvoir","devoir","savoir","venir","ouvrir"];
+const VAUX=["aller","venir","arriver","partir","sortir","rester","tomber","naître","mourir","descendre","manger","faire","prendre","voir","finir","boire"];
+const LESSONS=[
+ {id:"pron",sec:"Start here",t:"The six people",fr:"Les pronoms",kind:"list",ask:"Type the French",
+  rule:"Every French verb changes its ending for each of these people. Learn them before anything else.",
+  trick:"je shrinks to j' before a vowel (j'aime). tu is one friend; vous is polite or more than one person. on is casual “we”.",
+  pairs:[["I","je"],["you (one friend)","tu"],["he","il"],["she","elle"],["we (casual)","on"],["we","nous"],["you (polite, or a group)","vous"],["they (with a man)","ils"],["they (all women)","elles"]]},
+ {id:"etre",sec:"The big four",kind:"verb",v:"être",rule:"être = to be. Totally irregular: just memorize the six forms.",trick:"vous êtes keeps its hat and never becomes êtez. es and est sound the same (eh).",ex:[["Je suis étudiant.","I'm a student."],["Nous sommes à Paris.","We're in Paris."],["Vous êtes sympa.","You're nice."]]},
+ {id:"avoir",kind:"verb",v:"avoir",rule:"avoir = to have. It also builds the past tense later, so lock it in now.",trick:"ils ont (eel-ZOHN) = they have. ils sont (eel-SOHN) = they are. Always j'ai, never je ai.",ex:[["J'ai faim.","I'm hungry (I have hunger)."],["Ils ont une voiture.","They have a car."],["Elle a vingt ans.","She's twenty."]]},
+ {id:"aller",kind:"verb",v:"aller",rule:"aller = to go. aller + an infinitive = “going to”: je vais manger.",trick:"Only nous and vous look like the infinitive (allons, allez). ils vont, never allent.",ex:[["Je vais au marché.","I'm going to the market."],["Nous allons manger.","We're going to eat."]]},
+ {id:"faire",kind:"verb",v:"faire",rule:"faire = to do, to make. Also chores and weather: il fait beau.",trick:"vous faites, not faisez. The -ont club: ils sont, ils ont, ils vont, ils font.",ex:[["Je fais la cuisine.","I'm cooking."],["Il fait froid.","It's cold out."]]},
+ {id:"er",sec:"Regular verbs",kind:"pattern",t:"Regular -er verbs",fr:"parler, aimer…",models:["parler"],ends:["e","es","e","ons","ez","ent"],chop:"-er",drill:["parler","aimer","regarder","écouter","travailler","jouer"],recall:"chanter",
+  rule:"Chop -er off the infinitive, then add the ending for the person.",trick:"je parle, tu parles, il parle and ils parlent all sound the same. The -s and -ent are silent.",ex:[["Nous parlons français.","We speak French."],["Elles aiment le chocolat.","They love chocolate."]]},
+ {id:"ir",kind:"pattern",t:"Regular -ir verbs",fr:"finir, choisir…",models:["finir"],ends:["is","is","it","issons","issez","issent"],chop:"-ir",drill:["finir","choisir","réussir","grandir"],recall:"remplir",
+  rule:"Chop -ir, then add the ending. The plural grows an -iss-.",trick:"More people, more hissing: finissons, finissez, finissent. The singular never has -iss-.",ex:[["Nous finissons à midi.","We finish at noon."],["Il choisit le gâteau.","He chooses the cake."]]},
+ {id:"re",kind:"pattern",t:"Regular -re verbs",fr:"vendre, attendre…",models:["vendre"],ends:["s","s","(nothing)","ons","ez","ent"],chop:"-re",drill:["vendre","attendre","répondre","entendre"],recall:"perdre",
+  rule:"Chop -re, then add the ending. il/elle/on gets no ending at all.",trick:"il vend, never vendt. attendre already means “wait for”: j'attends le bus.",ex:[["J'attends le bus.","I'm waiting for the bus."],["Il vend sa voiture.","He's selling his car."]]},
+ {id:"ger",sec:"Spelling changes",kind:"pattern",t:"-ger and -cer verbs",fr:"mangeons, commençons",models:["manger","commencer"],drill:["manger","partager","voyager","commencer","lancer"],recall:"nager",
+  rule:"Regular -er endings, but nous changes: -ger adds an e (mangeons), -cer gets a ç (commençons).",trick:"The e and the ç keep the sound soft before -ons. Only nous needs it.",ex:[["Nous mangeons à huit heures.","We eat at eight."],["Nous commençons.","We're starting."]]},
+ {id:"boot",kind:"pattern",t:"Boot verbs",fr:"achète, préfère, appelle",models:["acheter","appeler"],drill:["acheter","préférer","appeler","jeter"],recall:"répéter",
+  rule:"je, tu, il and ils change the stem (achète, préfère, appelle, jette). nous and vous copy the infinitive.",trick:"Shade the four changed forms in your notes: they make the shape of a boot. nous and vous stay outside it.",ex:[["J'achète du pain.","I buy bread."],["Nous achetons du pain.","We buy bread."]]},
+ {id:"prendre",sec:"Irregulars you'll use daily",kind:"verb",v:"prendre",rule:"prendre = to take, and “to have” for food: je prends un café.",trick:"Plural drops the d (prenons) and ils doubles the n (prennent). comprendre and apprendre work the same way.",ex:[["Je prends le métro.","I take the métro."],["Ils comprennent.","They understand."]]},
+ {id:"vouloir",kind:"verb",v:"vouloir",rule:"vouloir = to want. Follow it with an infinitive: je veux manger.",trick:"x, not s: je veux, tu veux. To order politely, say je voudrais.",ex:[["Je veux un café.","I want a coffee."],["Ils veulent partir.","They want to leave."]]},
+ {id:"pouvoir",kind:"verb",v:"pouvoir",rule:"pouvoir = can, to be able to. Followed by an infinitive.",trick:"Same shape as vouloir: peux, peux, peut, pouvons, pouvez, peuvent.",ex:[["Tu peux venir ?","Can you come?"],["Nous pouvons attendre.","We can wait."]]},
+ {id:"devoir",kind:"verb",v:"devoir",rule:"devoir = must, to have to. Followed by an infinitive.",trick:"dois, dois, doit, then devons, devez, then doivent.",ex:[["Je dois partir.","I have to leave."],["Elle doit travailler.","She has to work."]]},
+ {id:"boire",kind:"verb",v:"boire",rule:"boire = to drink.",trick:"Three stems: boi- (je, tu, il), buv- (nous, vous), boiv- (ils). Say it like a little song.",ex:[["Je bois de l'eau.","I drink water."],["Nous buvons du café.","We drink coffee."]]},
+ {id:"mettre",kind:"verb",v:"mettre",rule:"mettre = to put, to put on, to set (the table).",trick:"One person, one t (mets, met). A crowd, two t's (mettons, mettent).",ex:[["Je mets la table.","I set the table."],["Ils mettent leurs manteaux.","They put on their coats."]]},
+ {id:"venir",kind:"verb",v:"venir",rule:"venir = to come. venir de + infinitive = “just did”: je viens de manger.",trick:"ils viennent doubles the n, like ils prennent.",ex:[["Je viens de Paris.","I come from Paris."],["Ils viennent ce soir.","They're coming tonight."]]},
+ {id:"sortir",kind:"pattern",t:"sortir, partir, dormir, servir",fr:"je sors, je pars, je dors",models:["sortir","dormir"],drill:["sortir","partir","dormir","servir"],recall:"partir",
+  rule:"The singular drops the consonant before the ending: je sors, je pars, je dors, je sers. The plural keeps it.",trick:"They end in -ir but never take -iss-: nous sortons, not sortissons.",ex:[["Je dors beaucoup.","I sleep a lot."],["Nous sortons ce soir.","We're going out tonight."]]},
+ {id:"lire",kind:"verb",v:"lire",rule:"lire = to read.",trick:"lis, lis, lit, then an s appears: lisons, lisez, lisent.",ex:[["Elle lit un livre.","She's reading a book."],["Ils lisent la carte.","They read the menu."]]},
+ {id:"ecrire",kind:"verb",v:"écrire",rule:"écrire = to write.",trick:"écris, écris, écrit, then a v appears: écrivons, écrivez, écrivent.",ex:[["J'écris une lettre.","I'm writing a letter."],["Nous écrivons.","We're writing."]]},
+ {id:"dire",kind:"verb",v:"dire",rule:"dire = to say, to tell.",trick:"vous dites, not disez. Only three vous forms skip -ez: êtes, faites, dites.",ex:[["Vous dites oui.","You say yes."],["Il dit bonjour.","He says hello."]]},
+ {id:"voir",kind:"verb",v:"voir",rule:"voir = to see. croire (to believe) works exactly the same way.",trick:"i turns into y only for nous and vous: voyons, voyez. ils voient.",ex:[["Je vois la tour Eiffel.","I see the Eiffel Tower."],["Nous voyons la mer.","We see the sea."]]},
+ {id:"savoir",kind:"verb",v:"savoir",rule:"savoir = to know a fact, or how to do something: je sais nager.",trick:"For people and places, use connaître instead: je connais Paris.",ex:[["Je sais la réponse.","I know the answer."],["Elle sait cuisiner.","She knows how to cook."]]},
+ {id:"connaitre",kind:"verb",v:"connaître",rule:"connaître = to know a person or a place.",trick:"il connaît keeps the hat on the i before t. Plural adds -ss-: connaissons.",ex:[["Tu connais Marie ?","Do you know Marie?"],["Je connais ce restaurant.","I know this restaurant."]]},
+ {id:"refl",sec:"Reflexive verbs",kind:"pattern",t:"Reflexive verbs",fr:"je me lave, je m'habille",models:["se laver","s'habiller"],drill:["se laver","se lever","s'habiller","se coucher"],recall:"se réveiller",
+  rule:"Add a mini-pronoun that matches the subject: je me, tu te, il se, nous nous, vous vous, ils se.",trick:"me, te and se shrink before a vowel: je m'habille. Yes, nous nous lavons: nous twice.",ex:[["Je me lève à sept heures.","I get up at seven."],["Nous nous dépêchons.","We're hurrying."]]},
+ {id:"pp",sec:"The past tense",kind:"list",t:"Past participles",fr:"mangé, fini, pris…",ask:"Type the past participle",
+  rule:"Regular: -er → -é, -ir → -i, -re → -u. The irregular ones come in groups.",trick:"-u group: eu, bu, vu, lu, voulu, pu, dû, su, venu. -is group: pris, mis. -it group: fait, dit, écrit.",
+  pairs:VPP.map(v=>[v,V[v].pp])},
+ {id:"aux",kind:"list",t:"avoir or être?",fr:"j'ai mangé, je suis allé",ask:"Type the helper verb: avoir or être",
+  rule:"Most verbs use avoir: j'ai mangé. Sixteen verbs of movement and change use être: je suis allé(e).",trick:"DR & MRS VANDERTRAMP: devenir, revenir, monter, rester, sortir, venir, aller, naître, descendre, entrer, rentrer, tomber, retourner, arriver, mourir, partir.",
+  pairs:VAUX.map(v=>[v,V[v].aux])},
+ {id:"part",sec:"Food grammar",kind:"list",t:"du, de la, des",fr:"saying “some”",ask:"Type the missing word",
+  rule:"Some (unknown amount): du (masc.), de la (fem.), de l' (vowel), des (plural). After a negative: de. After aimer or détester: le, la, les.",trick:"Quantities take plain de: un kilo de pommes, beaucoup de sel.",
+  pairs:PART.map(p=>[p[0],p[1]])}
+];
+LESSONS.forEach((L,i)=>{L.i=i;if(L.kind==="verb"){L.t=L.v.charAt(0).toUpperCase()+L.v.slice(1);L.fr=V[L.v].en}});
+const LID={};LESSONS.forEach(L=>LID[L.id]=L);
+const isDone=L=>!!S.done[L.id];
+const nextLesson=()=>LESSONS.find(L=>!isDone(L))||null;
+
+/* ---------- Items: one thing to recall ---------- */
+function conjItem(v,i){return{k:`c:${v}:${i}`,v,i}}
+function listItem(L,j){const[q,a]=L.pairs[j];return{k:`l:${L.id}:${j}`,q,a,L}}
+function lessonItems(L){
+  if(L.kind==="verb")return[0,1,2,3,4,5].map(i=>Object.assign(conjItem(L.v,i),{need:2}));
+  if(L.kind==="pattern"){const out=[];[0,1,2,3,4,5].forEach(i=>shuffle(L.drill).slice(0,2).forEach(v=>out.push(Object.assign(conjItem(v,i),{need:1}))));return out}
+  return L.pairs.map((_,j)=>Object.assign(listItem(L,j),{need:L.pairs.length<=10?2:1}));
+}
+/* what to show and what to accept for an item */
+function face(it){
+  if(it.v){
+    const x=V[it.v],a=x.f[it.i],p=it.i===0?pro0(a):pick(PRO3[it.i]);
+    const acc=[a,joinPro(p,a)];if(it.i===2||it.i===5)PRO3[it.i].forEach(q=>acc.push(q+" "+a));
+    return{q:`<span class="pro">${T(p)}</span><span class="blank"></span>`,sm:false,sub:`<b>${T(it.v)}</b> · ${T(x.en)}`,accept:uniq(acc),answer:a,full:joinPro(p,a),say:joinPro(p,a)};
+  }
+  const L=it.L,blank=/___/.test(it.q),fill=blank?it.q.replace("___",it.a).replace(/' /g,"'"):"";
+  return{q:T(it.q).replace("___",'<span class="blank"></span>'),sm:it.q.length>14,sub:T(L.ask),accept:[it.a],answer:it.a,full:blank?fill:L.id==="pp"?`${it.q} → ${it.a}`:L.id==="aux"?`${it.q} → ${it.a}`:`${it.q} = ${it.a}`,say:blank?fill.replace(/\s*\([^)]*\)\s*$/,""):L.id==="pp"?`j'ai ${it.a}`:it.a};
+}
+function grade(given,accept){const g=norm(given),A=accept.map(norm);if(A.includes(g))return"ok";if(A.some(a=>strip(a)===strip(g)))return"accent";return"bad"}
+
+/* ---------- Screens ---------- */
+const app=$("#app");
+function render(html){app.innerHTML=html;window.scrollTo(0,0);typoNodes(app)}
+function typoNodes(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),ns=[];while(w.nextNode())ns.push(w.currentNode);ns.forEach(n=>{const p=n.parentNode;if(!p||/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName))return;const t=typo(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t})}
+const topBar=(L,step)=>`<div class="top"><button class="home" type="button" data-home>← Verb Hammer</button><span class="sp">${L?`Lesson ${L.i+1} of ${LESSONS.length}`:""}</span></div>${L&&step?`<div class="steps">${["1 · Note it","2 · Hammer it","3 · Prove it"].map((s,i)=>`<span class="${i+1===step?"on":i+1<step?"done":""}">${s}</span>`).join("")}</div>`:""}`;
+
+function home(){
+  const nx=nextLesson(),doneN=LESSONS.filter(isDone).length;
+  let list="",sec="";
+  LESSONS.forEach(L=>{
+   if(L.sec&&L.sec!==sec){sec=L.sec;list+=`<li class="sect">${T(sec)}</li>`}
+   list+=`<li class="${isDone(L)?"done":L===nx?"cur":""}"><button type="button" data-open="${L.id}"><span class="n">${isDone(L)?"✓":L.i+1}</span><b>${T(L.t)}</b><small>${T(L.fr)}</small>${L===nx?"<em>Up next</em>":""}</button></li>`;
+  });
+  render(`<div class="hero"><h1>Verb Hammer</h1><p>French verbs, hammered in. One small lesson at a time, with your notebook open.</p></div>
+   <div class="how"><div><b>1 · Note it</b><span>Copy the table, the rule and the trick into your notes. Say it out loud.</span></div><div><b>2 · Hammer it</b><span>Type each form until it's automatic. Misses come back until you get them.</span></div><div><b>3 · Prove it</b><span>Fill in the whole table from memory. Pass, and the lesson is done.</span></div></div>
+   <div class="row">${nx?`<button class="btn go big" type="button" data-open="${nx.id}">${bi(`${doneN?"Continue":"Start"}: Lesson ${nx.i+1} · ${T(nx.t)}`,doneN?"Continuer":"Commencer")}</button>`:`<button class="btn go big" type="button" data-review>${bi("Every lesson done. Review","Révision")}</button>`}</div>
+   <div class="row" style="margin-top:10px"><button class="btn" type="button" data-review ${doneN?"":"disabled"}>${bi(`Quick review${doneN?` (${doneN} lesson${doneN>1?"s":""})`:""}`,"Révision rapide")}</button><button class="btn" type="button" data-notes>${bi("My notes sheet","Mes notes")}</button></div>
+   <ul class="lessons">${list}</ul>
+   <p class="qsub" style="margin-top:14px;font-size:.88rem">${doneN} of ${LESSONS.length} lessons done. Progress is saved in this browser.</p>`);
+}
+
+function noteIt(L){
+  let body="";
+  if(L.kind==="verb")body=tableHTML(L.v);
+  else if(L.kind==="pattern"){
+   if(L.ends)body+=`<table class="ends"><thead><tr><th>Person</th><th>Ending</th><th>${T(L.models[0])}</th></tr></thead><tbody>${L.ends.map((e,i)=>`<tr><td>${PLAB[i]}</td><td class="e">${e==="(nothing)"?"(nothing)":"-"+e}</td><td>${joinPro(i===0?pro0(V[L.models[0]].f[0]):PRO[i],formHTML(L.models[0],i))}</td></tr>`).join("")}</tbody></table>`;
+   body+=L.models.map(tableHTML).join("");
+   body+=`<p class="qsub">Other verbs that work this way: ${L.drill.filter(v=>!L.models.includes(v)).map(v=>`<b>${T(v)}</b> (${T(V[v].en)})`).join(", ")}.</p>`;
+  }else body=`<div class="wtbl">${L.pairs.map(([q,a])=>`<button type="button" data-say="${esc(L.id==="pp"?"j'ai "+a:/___/.test(q)?q.replace("___",a).replace(/' /g,"'").replace(/\s*\([^)]*\)\s*$/,""):a)}"><b>${T(/___/.test(q)?q.replace("___",a.toUpperCase()):a)}</b><small>${/___/.test(q)?"":T(q)}</small></button>`).join("")}</div>`;
+  render(`${topBar(L,1)}<div class="card">
+   <div><div class="eyebrow">Lesson ${L.i+1}</div><h1 class="title">${T(L.t)}<small>${T(L.fr)}</small></h1></div>
+   <p class="rule">${T(L.rule)}</p>
+   ${body}
+   <div class="trick"><b>Memory trick:</b> ${T(L.trick)}</div>
+   ${L.ex?`<div class="exs">${L.ex.map(([f,e])=>`<button type="button" data-say="${esc(f)}"><b>${T(f)}</b><span>${T(e)}</span></button>`).join("")}</div>`:""}
+   <div class="note"><b>Write it down now.</b> Copy the table${L.kind==="list"?" (or list)":""}, the rule and the trick into your notes. Say each line out loud as you write it. Tap any French to hear it.</div>
+   <div class="row"><button class="btn" type="button" id="copy">${bi("Copy as text for my notes","Copier")}</button><button class="btn go" type="button" id="toHammer">${bi("I wrote it down. Hammer it","C'est noté")}</button></div>
+   <div id="copyOut"></div></div>`);
+  $("#copy").onclick=()=>copyText(lessonText(L),$("#copyOut"));
+  $("#toHammer").onclick=()=>hammer(L,lessonItems(L),()=>prove(L));
+}
+function lessonText(L){
+  let t=`LESSON ${L.i+1}: ${L.t} (${L.fr})\nRule: ${L.rule}\n`;
+  if(L.kind==="verb")t+="\n"+tableText(L.v)+"\n";
+  else if(L.kind==="pattern"){if(L.ends)t+=`\nEndings (chop ${L.chop}): ${L.ends.map((e,i)=>PRO[i]+" -"+e).join(", ").replace(/-\(nothing\)/,"(nothing)")}\n`;t+="\n"+L.models.map(tableText).join("\n\n")+"\n";t+=`\nAlso: ${L.drill.filter(v=>!L.models.includes(v)).join(", ")}\n`}
+  else t+="\n"+L.pairs.map(([q,a])=>/___/.test(q)?q.replace("___",a.toUpperCase()):`${q} → ${a}`).join("\n")+"\n";
+  t+=`\nTrick: ${L.trick}\n`;if(L.ex)t+=L.ex.map(([f,e])=>`• ${f}  (${e})`).join("\n")+"\n";
+  return t;
+}
+function copyText(txt,out){
+  const ok=()=>{out.innerHTML='<p class="copied">Copied. Paste it into your notes.</p>'};
+  const fail=()=>{out.innerHTML=`<p class="qsub">Copying isn't allowed here. Select the text below and copy it.</p><textarea class="copy" readonly>${esc(txt)}</textarea>`;const ta=out.querySelector("textarea");ta.focus();ta.select()};
+  try{navigator.clipboard.writeText(txt).then(ok,fail)}catch(e){fail()}
+}
+
+/* Hammer it: type until automatic. Wrong answers must be retyped, then come back. */
+let H=null;
+function hammer(L,items,then,opts){
+  H={L,items:items.map(o=>Object.assign({got:0},o)),q:[],then,opts:opts||{},cur:null,state:"ask"};
+  H.q=shuffle(H.items);drawHammer();
+}
+function hProg(){const need=H.items.reduce((t,i)=>t+i.need,0),got=H.items.reduce((t,i)=>t+Math.min(i.got,i.need),0);return{need,got,pct:need?got/need:1,left:H.items.filter(i=>i.got<i.need).length}}
+function drawHammer(){
+  if(!H.q.length){return H.then()}
+  const it=H.q[0],f=face(it);H.cur={it,f};H.state="ask";
+  const P=hProg(),L=H.L;
+  render(`${topBar(H.opts.review?null:L,H.opts.review?0:2)}
+   <div class="bar"><i style="width:${Math.round(P.pct*100)}%"></i></div><div class="count"><span>${H.opts.review?"Quick review":H.opts.fix?"Hammering your misses":T(L.t)}</span><span>${P.got} / ${P.need} hammered</span></div>
+   <div class="card" style="margin-top:12px">
+    <div class="q${f.sm?" sm":""}">${f.q}</div><div class="qsub">${f.sub}</div>
+    <input class="ans" id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer" placeholder="type it, then press Enter">
+    <div class="accents">${["é","è","ê","à","â","ç","ë","î","ï","ô","û","ù","œ"].map(c=>`<button class="acc" type="button" tabindex="-1" data-c="${c}">${c}</button>`).join("")}</div>
+    <div id="fb"></div>
+    <div class="row"><button class="btn" type="button" id="idk">${bi("Show me","Je ne sais pas")}</button><button class="btn go" type="button" id="chk">${bi("Check","Vérifier")}</button></div>
+   </div>`);
+  const inp=$("#ans");inp.focus({preventScroll:true});
+  inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submit()}};
+  $("#chk").onclick=submit;$("#idk").onclick=()=>{if(H.state==="ask")wrong("")};
+}
+function submit(){
+  const inp=$("#ans"),v=inp.value;
+  if(H.state==="next"){advance();return}
+  if(!v.trim()){inp.focus();return}
+  const{it,f}=H.cur;
+  if(H.state==="retype"){
+   if(grade(v,f.accept)==="ok"){H.state="next";inp.classList.remove("bad");inp.classList.add("ok");$("#fb").innerHTML=`<div class="fb ok"><b>Good. Now you've written it right.</b><small>It will come back in a moment. Press Enter.</small></div>`;setTimeout(()=>{if(H&&H.state==="next"&&H.cur.it===it)advance()},700)}
+   else{inp.select();$("#fb .fb small").textContent="Not yet. Copy it exactly, accents included."}
+   return;
+  }
+  const g=grade(v,f.accept);
+  if(g==="ok"){
+   it.got++;S.hit[it.k]=(S.hit[it.k]||0)+1;save();H.state="next";inp.classList.add("ok");inp.disabled=true;
+   $("#fb").innerHTML=`<div class="fb ok"><b>✓ Right</b><span class="big">${T(f.full)}</span></div>`;TTS.say(f.say);
+   setTimeout(()=>{if(H&&H.state==="next"&&H.cur.it===it)advance()},650);
+  }else wrong(v,g==="accent");
+}
+function wrong(v,accent){
+  const{it,f}=H.cur;it.got=0;S.miss[it.k]=(S.miss[it.k]||0)+1;save();
+  H.state="retype";const inp=$("#ans");inp.value="";inp.classList.add("bad");inp.placeholder="retype it to continue";inp.focus();
+  $("#fb").innerHTML=`<div class="fb bad"><b>${accent?"Almost: check the accents.":v?"✗ Not quite.":"Here it is."}</b><span class="big">${T(f.full)}</span>${v?`<small>You typed: ${T(v)}</small>`:""}<small>Type it once correctly to continue. It will come back until you get it right.</small></div>`;
+  TTS.say(f.say);
+}
+function advance(){
+  const it=H.q.shift();
+  if(it.got<it.need){const pos=Math.min(H.q.length,2+rnd(3));H.q.splice(pos,0,it)}
+  drawHammer();
+}
+
+/* Prove it: the whole table from memory */
+function proveSet(L){
+  if(L.kind==="verb")return{v:L.v,rows:[0,1,2,3,4,5].map(i=>conjItem(L.v,i))};
+  if(L.kind==="pattern")return{v:L.recall,rows:[0,1,2,3,4,5].map(i=>conjItem(L.recall,i))};
+  return{rows:shuffle(L.pairs.map((_,j)=>listItem(L,j))).slice(0,Math.min(10,L.pairs.length))};
+}
+function prove(L,set){
+  set=set||proveSet(L);H=null;
+  const head=set.v?`<p class="rule">${L.kind==="pattern"?`Now a verb you haven't drilled: conjugate <b>${T(set.v)}</b> (${T(V[set.v].en)}) from memory.`:`Write all six forms of <b>${T(set.v)}</b> from memory.`}</p>`:`<p class="rule">${T(L.ask)} for each one, from memory.</p>`;
+  const inputs=set.v?`<div class="fill">${[0,1,2,3,4,5].map(i=>`<label><span>${i===0?(vowel(V[set.v].f[0])?"j'":"je"):PLAB[i]}</span><input type="text" data-r="${i}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><span class="fix" hidden></span></label>`).join("")}</div>`
+   :`<div class="fill list">${set.rows.map((r,j)=>`<label><span>${T(r.q)}</span><input type="text" data-r="${j}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><span class="fix" hidden></span></label>`).join("")}</div>`;
+  render(`${topBar(L,3)}<div class="card"><div><div class="eyebrow">Lesson ${L.i+1} · Prove it</div><h1 class="title">${T(L.t)}</h1></div>${head}
+   <p class="qsub">No peeking at your notes. Accents count.</p>${inputs}
+   <div class="accents">${["é","è","ê","à","â","ç","ë","î","ï","ô","û","ù","œ"].map(c=>`<button class="acc" type="button" tabindex="-1" data-c="${c}">${c}</button>`).join("")}</div>
+   <div id="pfb"></div><div class="row" id="pAct"><button class="btn go" type="button" id="pChk">${bi("Check my answers","Vérifier")}</button></div></div>`);
+  const ins=$$(".fill input");ins[0].focus({preventScroll:true});
+  ins.forEach((inp,k)=>inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();if(ins[k+1])ins[k+1].focus();else check()}});
+  const rowItem=k=>set.v?conjItem(set.v,+ins[k].dataset.r):set.rows[+ins[k].dataset.r];
+  const check=()=>{
+   const missed=[];
+   ins.forEach((inp,k)=>{const it=rowItem(k),f=face(it),g=grade(inp.value,f.accept);inp.disabled=true;inp.classList.add(g==="ok"?"ok":"bad");
+    if(g!=="ok"){missed.push(it);S.miss[it.k]=(S.miss[it.k]||0)+1;const fx=inp.parentNode.querySelector(".fix");fx.hidden=false;fx.textContent="→ "+typo(f.answer)}else S.hit[it.k]=(S.hit[it.k]||0)+1});
+   save();
+   if(!missed.length){S.done[L.id]=Date.now();save();done(L);return}
+   $("#pfb").innerHTML=`<div class="fb bad"><b>${missed.length} to fix.</b><small>Correct them in your notes, then hammer just those until they stick, and try the table again.</small></div>`;
+   $("#pAct").innerHTML=`<button class="btn go" type="button" id="pFix">${bi(`Hammer my ${missed.length} miss${missed.length>1?"es":""}`,"Revoir mes erreurs")}</button>`;
+   $("#pFix").onclick=()=>hammer(L,missed.map(m=>Object.assign(m,{need:2})),()=>prove(L,set.v?proveSet(L):{rows:shuffle(set.rows)}),{fix:true});
+  };
+  $("#pChk").onclick=check;
+}
+function done(L){
+  const nx=LESSONS[L.i+1];
+  render(`${topBar(L,0)}<div class="card"><div class="eyebrow">Lesson ${L.i+1} done ✓</div><h1 class="title">${T(L.t)}: hammered in.<small>Bravo !</small></h1>
+   <div class="note"><b>One last step for your notes:</b> close this, and write the ${L.kind==="list"?"list":"table"} once more from memory. Then check it against your first copy. That's what makes it stick.</div>
+   <p class="qsub">Come back tomorrow and run a Quick review: it brings back the forms you missed most.</p>
+   <div class="row">${nx?`<button class="btn go big" type="button" data-open="${nx.id}">${bi(`Next: Lesson ${nx.i+1} · ${T(nx.t)}`,"Leçon suivante")}</button>`:""}<button class="btn" type="button" data-home>${bi("All lessons","Toutes les leçons")}</button></div></div>`);
+}
+
+/* Quick review: a mix from finished lessons, weakest first */
+function review(){
+  const pool=[];
+  LESSONS.filter(isDone).forEach(L=>{
+   if(L.kind==="verb")[0,1,2,3,4,5].forEach(i=>pool.push(conjItem(L.v,i)));
+   else if(L.kind==="pattern")L.drill.concat([L.recall]).forEach(v=>[0,1,2,3,4,5].forEach(i=>pool.push(conjItem(v,i))));
+   else L.pairs.forEach((_,j)=>pool.push(listItem(L,j)));
+  });
+  if(!pool.length)return home();
+  const w=it=>(S.miss[it.k]||0)*3-(S.hit[it.k]||0)*.5+Math.random()*2;
+  const pickd=pool.map(it=>({it,s:w(it)})).sort((a,b)=>b.s-a.s).slice(0,15).map(o=>Object.assign(o.it,{need:1}));
+  hammer(null,pickd,()=>{render(`${topBar(null)}<div class="card"><div class="eyebrow">Quick review done ✓</div><h1 class="title">All 15 hammered.</h1><p class="qsub">The ones you missed will lead the next review.</p><div class="row"><button class="btn go" type="button" data-review>${bi("Another round","Encore")}</button><button class="btn" type="button" data-home>${bi("All lessons","Toutes les leçons")}</button></div></div>`)},{review:true});
+}
+
+/* My notes sheet: every lesson as plain text */
+function notes(){
+  const all=LESSONS.map(lessonText).join("\n────────\n\n");
+  render(`${topBar(null)}<div class="card notes"><div><div class="eyebrow">My notes sheet</div><h1 class="title">Every rule and table<small>Mes notes</small></h1></div>
+   <p class="qsub">All ${LESSONS.length} lessons in plain text, ready to paste into a notes app or copy by hand.</p>
+   <div class="row"><button class="btn go" type="button" id="cAll">${bi("Copy all","Tout copier")}</button></div><div id="cOut"></div>
+   ${LESSONS.map(L=>`<div class="tbl"><div class="tbl-h"><b>${L.i+1}. ${T(L.t)}</b><span>${isDone(L)?"✓ done":""}</span></div><div style="padding:12px 14px"><pre>${esc(lessonText(L).split("\n").slice(1).join("\n").trim())}</pre></div></div>`).join("")}</div>`);
+  $("#cAll").onclick=()=>copyText(all,$("#cOut"));
+}
+
+/* ---------- Clicks ---------- */
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-say]");if(s){TTS.say(s.dataset.say);return}
+  const o=e.target.closest("[data-open]");if(o){noteIt(LID[o.dataset.open]);return}
+  if(e.target.closest("[data-home]")){H=null;home();return}
+  if(e.target.closest("[data-review]")){review();return}
+  if(e.target.closest("[data-notes]")){notes();return}
+  const a=e.target.closest(".acc");if(a){const i=document.activeElement&&document.activeElement.tagName==="INPUT"?document.activeElement:($("#ans")||$(".fill input:not(:disabled)"));if(!i||i.disabled)return;const st=i.selectionStart==null?i.value.length:i.selectionStart,en=i.selectionEnd==null?st:i.selectionEnd;i.value=i.value.slice(0,st)+a.dataset.c+i.value.slice(en);i.focus();i.setSelectionRange(st+1,st+1)}
+});
+document.addEventListener("mousedown",e=>{if(e.target.closest(".acc"))e.preventDefault()});
+
+home();
+
+})();
+</script>
+</body></html>
