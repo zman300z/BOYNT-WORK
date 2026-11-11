@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Undersong</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage"><canvas id="view"></canvas><canvas id="ui"></canvas><div id="err" hidden></div></div>
+<script>
+window.addEventListener('error', function (e) {
+  var el = document.getElementById('err'); if (!el) return;
+  el.hidden = false; el.textContent = 'Something broke: ' + (e.message || e) + (e.filename ? '  (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '');
+});
+</script>
+<script src="js/core.js"></script>
+<script src="js/input.js"></script>
+<script src="js/gfx.js"></script>
+<script src="js/world.js"></script>
+<script src="js/light.js"></script>
+<script src="js/backdrop.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/player.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

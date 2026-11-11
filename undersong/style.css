@@ -1,0 +1,9 @@
+/* UNDERSONG — one screen, one look: the canvas letterboxed on deep-water black. */
+:root { color-scheme: dark; --abyss: #02060c; --ink: #cfe9f5; --warn: #ffb199; }
+html, body { height: 100%; margin: 0; background: var(--abyss); color: var(--ink); overflow: hidden; }
+body { font: 14px/1.4 "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-user-select: none; user-select: none; }
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--abyss); cursor: none; touch-action: none; }
+#stage canvas { position: absolute; left: 0; top: 0; display: block; }
+#ui { pointer-events: none; }
+#err { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 8px 12px; font: 12px/1.4 ui-monospace, Consolas, Menlo, monospace;
+  color: var(--warn); background: rgba(20, 6, 8, 0.85); border: 1px solid rgba(255, 140, 120, 0.4); border-radius: 4px; z-index: 5; }
