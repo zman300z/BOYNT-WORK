@@ -426,6 +426,12 @@ void main(){
       viewC.parentNode.replaceChild(n, viewC); viewC = n;
     },
     fallback() { this.ok = false; this.gl = null; this.ctx2d = viewC.getContext('2d', { alpha: false }); },
+    // called when the graphics setting changes: 'low' draws straight to a 2D canvas, the others need GL back
+    applyQuality() {
+      if (G.settings.gfx === 'low' || this.ok || G.params.nofx) return;
+      this.replaceCanvas(); this.ctx2d = null; this.levels = []; this.gl = null;
+      this.init(); this.resize(G.sceneC.width, G.sceneC.height);
+    },
     prog(fs) {
       const gl = this.gl, p = gl.createProgram();
       for (const [type, src] of [[gl.VERTEX_SHADER, VS], [gl.FRAGMENT_SHADER, fs]]) {

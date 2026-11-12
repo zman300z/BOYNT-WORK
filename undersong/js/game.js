@@ -22,7 +22,8 @@
       G.world.prewarm(G.cam.x, G.cam.y);
       G.fx.tint = zone.def.tint; G.fx.sat = zone.def.sat;
       G.computeFlow(pl.x, pl.y);
-      if (G.populate) G.populate(zone);
+      G.scan.reset();
+      G.populate(zone);
     },
 
     clampCam() {
@@ -35,7 +36,8 @@
     updateWorld(dt) {
       G.lights.begin();
       pl.update(dt);
-      if (G.creatures) G.creatures.update(dt);
+      G.creatures.update(dt);
+      G.props.update(dt); G.decor.update(dt); G.scan.update(dt);
       G.shots.update(dt); G.eshots.update(dt); G.pickups.update(dt);
       G.particles.update(dt); G.backdrop.update(dt); G.lights.update(dt);
       this.flowT -= dt;
@@ -67,11 +69,12 @@
       G.backdrop.draw(ctx);
       cam.apply(ctx, S);
       ctx.globalCompositeOperation = 'source-over';
-      if (G.decor) G.decor.drawBack(ctx);
+      G.decor.drawBack(ctx);
       G.world.drawWalls(ctx);
-      if (G.decor) G.decor.draw(ctx);
+      G.decor.draw(ctx);
+      G.props.draw(ctx);
       G.pickups.draw(ctx);
-      if (G.creatures) G.creatures.draw(ctx);
+      G.creatures.draw(ctx);
       pl.draw(ctx);
       G.particles.drawLit(ctx);
       // light
@@ -85,9 +88,11 @@
       cam.apply(ctx, S);
       G.world.drawVeins(ctx, 0.75 + 0.25 * sin(G.time * 1.3));
       G.lights.drawBeam(ctx, 0.15 * (1 - min(1, G.lights.ambientLuma(pl.y) * 1.25)));
-      if (G.decor) G.decor.drawGlow(ctx);
+      G.decor.drawGlow(ctx);
+      G.props.drawGlow(ctx);
       G.pickups.drawGlow(ctx);
-      if (G.creatures) G.creatures.drawGlow(ctx);
+      G.creatures.drawGlow(ctx);
+      G.scan.draw(ctx);
       pl.drawGlow(ctx);
       G.particles.drawGlow(ctx);
       ctx.globalCompositeOperation = 'source-over';
@@ -129,6 +134,7 @@
     },
 
     boot() {
+      G.meta.load();
       G.post.init();
       G.resize();
       G.debug = !!G.params.debug;
