@@ -226,7 +226,7 @@
     update(d, dt, p) {
       for (const e of d.eels) {
         const dist = hypot(p.x - (d.x - d.ny * e.off), p.y - (d.y + d.nx * e.off));
-        const want = p.dead ? 1 : clamp((dist - 70) / 110, 0.05, 1);
+        const want = p.dead ? 1 : min(clamp((dist - 70) / 110, 0.05, 1), 1 - d.react * 0.95);
         e.e = damp(e.e, want, want < e.e ? 9 : 1.2 - e.lag, dt);
       }
       d.look = p.x > d.x ? 1 : -1;
@@ -263,7 +263,7 @@
     update(d, dt, p) {
       for (const w of d.w) {
         const wx = d.x - d.ny * w.off, wy = d.y + d.nx * w.off, near = !p.dead && G.dist2(p.x, p.y, wx, wy) < 58 * 58;
-        if (near) { if (w.e > 0.5) { G.sfx('pop', { x: wx, y: wy }); } w.e = damp(w.e, 0, 45, dt); w.wait = G.rr(1.1, 2.4); }
+        if (near || d.react > 0.6) { if (w.e > 0.5 && near) { G.sfx('pop', { x: wx, y: wy }); } w.e = damp(w.e, 0, 45, dt); w.wait = G.rr(1.1, 2.4); }
         else if (w.wait > 0) w.wait -= dt;
         else w.e = damp(w.e, 1, 1.6, dt);
       }
@@ -312,11 +312,11 @@
   });
 
   // ------------------------------------------------------------------ field notes
-  G.codexAdd('kelp', { name: 'Giant Kelp', latin: 'Macrocystis pyrifera', zone: 0, kind: 'flora', size: 'to 45 m', notes: 'Not a plant. An alga with ambitions. Grows half a metre on a good day and holds itself up with little gas-filled floats, which I respect: it found a way to stand in a place with nothing to stand on.' });
-  G.codexAdd('anemone', { name: 'Sea Anemone', latin: 'Heteractis magnifica', zone: 0, kind: 'flora', size: '20 cm', notes: 'An animal that decided to be a flower. Every tentacle is armed. It folds up when I get close, which I try not to take personally.' });
-  G.codexAdd('clownfish', { name: 'Clownfish', latin: 'Amphiprion ocellaris', zone: 0, kind: 'fauna', size: '8 cm', notes: 'Lives inside an anemone that would sting anyone else. Pays rent in housekeeping. Peeks out at me, hides, peeks again. We have been doing this for some time and I believe it is a game.' });
-  G.codexAdd('clam', { name: 'Giant Clam', latin: 'Tridacna gigas', zone: 0, kind: 'fauna', size: '1 m', notes: 'Farms algae in its own lips and lives a century on sunlight. Slams shut if I come near. A quick pulse from a distance sometimes shakes a pearl loose. It does not seem to miss it.' });
-  G.codexAdd('gardeneel', { name: 'Spotted Garden Eel', latin: 'Heteroconger hassi', zone: 0, kind: 'fauna', size: '40 cm', notes: 'A whole meadow of them, each in its own hole, all facing the current like an audience. They sink out of sight when I approach and rise when I leave. I have never seen one from closer than this.' });
-  G.codexAdd('xmas', { name: 'Christmas Tree Worm', latin: 'Spirobranchus giganteus', zone: 0, kind: 'fauna', size: '4 cm', notes: 'Two spiral plumes for breathing and catching food. Vanishes into the rock faster than I can register it. Comes back out when it is good and ready.' });
-  G.codexAdd('fan', { name: 'Sea Fan', latin: 'Gorgonia ventalina', zone: 0, kind: 'flora', size: '1.5 m', notes: 'A colony of thousands of tiny animals building one shared lattice, always at right angles to the current. Nobody is in charge. It works anyway.' });
+  G.codexAdd('kelp', { name: 'Giant Kelp', latin: 'Macrocystis pyrifera', zone: 0, kind: 'flora', size: 'to 45 m', decor: 'kelp', decorO: { len: 9 }, showR: 120, showY: 100, notes: 'Not a plant. An alga with ambitions. Grows half a metre on a good day and holds itself up with little gas-filled floats, which I respect: it found a way to stand in a place with nothing to stand on.' });
+  G.codexAdd('anemone', { name: 'Sea Anemone', latin: 'Heteractis magnifica', zone: 0, kind: 'flora', size: '20 cm', decor: 'anemone', showR: 34, showY: 12, notes: 'An animal that decided to be a flower. Every tentacle is armed. It folds up when I get close, which I try not to take personally.' });
+  G.codexAdd('clownfish', { name: 'Clownfish', latin: 'Amphiprion ocellaris', zone: 0, kind: 'fauna', size: '8 cm', decor: 'anemone', decorO: { tenant: true }, showR: 40, showY: 22, notes: 'Lives inside an anemone that would sting anyone else. Pays rent in housekeeping. Peeks out at me, hides, peeks again. We have been doing this for some time and I believe it is a game.' });
+  G.codexAdd('clam', { name: 'Giant Clam', latin: 'Tridacna gigas', zone: 0, kind: 'fauna', size: '1 m', decor: 'clam', showR: 26, showY: 6, notes: 'Farms algae in its own lips and lives a century on sunlight. Slams shut if I come near. A quick pulse from a distance sometimes shakes a pearl loose. It does not seem to miss it.' });
+  G.codexAdd('gardeneel', { name: 'Spotted Garden Eel', latin: 'Heteroconger hassi', zone: 0, kind: 'fauna', size: '40 cm', decor: 'eels', showR: 60, showY: 22, notes: 'A whole meadow of them, each in its own hole, all facing the current like an audience. They sink out of sight when I approach and rise when I leave. I have never seen one from closer than this.' });
+  G.codexAdd('xmas', { name: 'Christmas Tree Worm', latin: 'Spirobranchus giganteus', zone: 0, kind: 'fauna', size: '4 cm', decor: 'xmas', showR: 26, showY: 8, notes: 'Two spiral plumes for breathing and catching food. Vanishes into the rock faster than I can register it. Comes back out when it is good and ready.' });
+  G.codexAdd('fan', { name: 'Sea Fan', latin: 'Gorgonia ventalina', zone: 0, kind: 'flora', size: '1.5 m', decor: 'fan', showR: 62, showY: 52, notes: 'A colony of thousands of tiny animals building one shared lattice, always at right angles to the current. Nobody is in charge. It works anyway.' });
 })();

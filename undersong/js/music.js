@@ -87,7 +87,7 @@
 
   const M = G.music = {
     on: false, mode: null, cfg: null, pending: null, step: 0, next: 0, bar: 0, ci: -1, chord: CH.Dm9,
-    inten: 0, target: 0, found: 0, vol: 1, volTarget: 1,
+    inten: 0, target: 0, mask: 0, vol: 1, volTarget: 1,
     L: null, padVoices: [], melQ: [], evq: [], sfxNotes: [587, 880, 698, 659], lastMel: 9, table: null, tableScale: null,
     beatPhase: 0, lastBeatT: 0, stepLen: 0.2,
 
@@ -267,11 +267,11 @@
         else if (q.step < step) this.melQ.splice(i, 1);
       }
       // the motif: each found probe sounds its note once every two bars
-      if (this.found > 0 && cfg.motif) {
+      if (this.mask && cfg.motif) {
         const s32 = step & 31;
         if ((s32 & 3) === 2) {
           const i = s32 >> 2;
-          if (i < this.found && i < 7) {
+          if (i < 7 && (this.mask & (1 << i))) {
             const f = N(MOTIF[i]);
             A.tone({ at: t, f, t: 2.4, a: 0.006, v: 0.1, bus: L.motif, rev: 0, fm: { r: 2.003, i: 0.7, d: 0.4 } });
             A.tone({ at: t, f: f * 2.003, t: 1.2, v: 0.02, bus: L.motif, rev: 0 });

@@ -157,9 +157,9 @@
       u.fillStyle = g; u.beginPath(); u.arc(xr - 6, py, 5.5 + pop * 2, 0, TAU); u.fill();
       G.text(u, String(round(this.pearlShow)), xr - 18, py + 5, { size: 14 + pop * 3, font: 'mono', weight: 700, color: '#ffeaf6', align: 'right' });
       // the seven notes
-      const found = G.run ? G.run.notes : 0, ny = 108;
+      const mask = G.run ? G.run.noteMask : 0, ny = 108;
       for (let i = 0; i < 7; i++) {
-        const x = xr - 6 - (6 - i) * 13, on = i < found, pp = this.notePop === i ? this.notePopT : 0;
+        const x = xr - 6 - (6 - i) * 13, on = !!(mask & (1 << i)), pp = this.notePop === i ? this.notePopT : 0;
         u.beginPath(); u.arc(x, ny, 3.6 + pp * 5, 0, TAU);
         if (on) { u.fillStyle = i === 6 ? '#ffd98a' : '#c9b8ff'; u.fill(); }
         else { u.strokeStyle = i === 6 ? 'rgba(255,217,138,0.28)' : 'rgba(201,184,255,0.35)'; u.lineWidth = 1.1; u.stroke(); }
@@ -200,7 +200,7 @@
     },
 
     drawToasts(u, t) {
-      let y = G.H - 150;
+      let y = this.comm ? G.H - 216 : G.H - 150;
       for (let i = this.toasts.length - 1; i >= 0; i--) {
         const s = this.toasts[i], inn = min(1, s.t / 0.3), out = min(1, (s.life - s.t) / 0.4), al = G.ease.outCubic(inn) * out;
         G.font(u, 15, 'ui', 600);
@@ -261,7 +261,7 @@
       const f = G.props.focus;
       let label = null, key = null;
       if (f && f.def.prompt && G.game.state === 'play' && !G.game.overlay) { label = typeof f.def.prompt === 'function' ? f.def.prompt(f) : f.def.prompt; key = G.input.label('interact'); }
-      const y = G.H - 96;
+      const y = this.comm ? G.H - 172 : G.H - 96;
       if (label) {
         const tw = G.textWidth(u, label, { size: 12, font: 'mono', weight: 700, spacing: 1.5 }), kw = G.textWidth(u, key, { size: 12, font: 'mono', weight: 700 }) + 14;
         const w = tw + kw + 34, x = G.W / 2 - w / 2;

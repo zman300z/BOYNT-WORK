@@ -9,12 +9,12 @@
 
   // ------------------------------------------------------------------ sardine school (one entity, many fish)
   G.defCreature('school', {
-    r: 44, hp: 1, passive: true, hittable: false, noSep: true, noclip: true, codex: 'sardine', scanXp: 5, leash: 300, viewR: 260,
+    r: 44, hp: 1, passive: true, hittable: false, noSep: true, noclip: true, scanXp: 5, leash: 300, viewR: 260,
     init(c) {
       c.fish = [];
       const n = c.n || (16 + ((G.rand() * 12) | 0));
       for (let i = 0; i < n; i++) c.fish.push({ x: c.x + G.rr(-50, 50), y: c.y + G.rr(-40, 40), vx: G.rr(-30, 30), vy: G.rr(-30, 30), ph: G.rand() * TAU });
-      c.scare = 0; c.tint = c.tint || '#7fa8c8';
+      c.scare = 0; c.tint = c.tint || '#7fa8c8'; c.codexId = c.codexId || 'sardine';
     },
     think(c, dt, p) {
       ai.wander(c, 40, dt);
@@ -57,6 +57,12 @@
       ctx.globalAlpha = 1;
     },
   });
+
+  G.CREATURES.school.glow = function (c, ctx) {
+    if (!c.glowCol) return;
+    const t = G.time;
+    for (const f of c.fish) G.drawGlow(ctx, f.x, f.y, 6 + 2 * Math.sin(t * 4 + f.ph), c.glowCol, 0.7 * c.alpha);
+  };
 
   // ------------------------------------------------------------------ garibaldi: all conviction, no damage
   G.defCreature('garibaldi', {
@@ -216,6 +222,8 @@
   }
   G.defCreature('moray', {
     r: 14, hp: 72, hostile: true, dmg: 1, xp: 7, pearl: 0.28, fixed: true, color: '#c8dc6a', fleeStyle: 'retract', fleeTime: 0.6, mass: 60, noSep: true, viewR: 300,
+    showR: 60, showY: 46,
+    show(c) { c.ext = 62 + 22 * sin(c.t * 0.9); c.dirA = -PI / 2 + sin(c.t * 0.7) * 0.5; c.jaw = 0.25 + 0.3 * max(0, sin(c.t * 1.7)); },
     init(c) { c.bx = c.x; c.by = c.y; c.nx = c.nx === undefined ? 0 : c.nx; c.ny = c.ny === undefined ? -1 : c.ny; c.ext = 24; c.dirA = atan2(c.ny, c.nx); c.jaw = 0.15; c.cd = 0; c.reach = 0; c.touch = false; },
     think(c, dt, p) {
       const dxp = p.x - c.bx, dyp = p.y - c.by, dp = hypot(dxp, dyp) || 1, front = (dxp * c.nx + dyp * c.ny) / dp;
@@ -333,7 +341,7 @@
 
   // ------------------------------------------------------------------ green sea turtle (unbothered)
   G.defCreature('turtle', {
-    r: 30, hp: 99999, passive: true, sturdy: true, color: '#9fe0b0', scanXp: 10, scanTime: 1.7, mass: 40, leash: 9999, viewR: 160, noSep: true,
+    r: 30, hp: 99999, passive: true, sturdy: true, color: '#9fe0b0', scanXp: 10, scanTime: 1.7, mass: 40, leash: 9999, viewR: 160, noSep: true, showR: 46, showStill: true,
     init(c) { c.dir = G.rand() < 0.5 ? 1 : -1; c.look = 0; c.turnCd = 0; c.blink = 0; },
     onHit(c) { c.look = 1; c.blink = 1; return 'reflect'; },
     onFlare() { return false; },
@@ -427,7 +435,7 @@
 
   // ------------------------------------------------------------------ field notes
   const add = G.codexAdd;
-  add('sardine', { name: 'Pacific Sardine', latin: 'Sardinops sagax', zone: 0, kind: 'fauna', size: '20 cm', notes: 'Several hundred animals moving as one thought. There is no leader. Each one watches its nearest few neighbours, and that turns out to be enough. I find this the most reassuring fact I have collected so far.' });
+  add('sardine', { name: 'Pacific Sardine', latin: 'Sardinops sagax', zone: 0, kind: 'fauna', size: '20 cm', spec: { type: 'school', o: { n: 14 } }, notes: 'Several hundred animals moving as one thought. There is no leader. Each one watches its nearest few neighbours, and that turns out to be enough. I find this the most reassuring fact I have collected so far.' });
   add('garibaldi', { name: 'Garibaldi', latin: 'Hypsypops rubicundus', zone: 0, kind: 'fauna', size: '30 cm', notes: 'Guards a patch of algae about the size of a dinner plate against all comers, me included. I outweigh it forty times over. It has rammed me repeatedly. No damage. Enormous conviction.' });
   add('puffer', { name: 'Porcupinefish', latin: 'Diodon holocanthus', zone: 0, kind: 'fauna', size: '30 cm', notes: 'When alarmed it gulps water until it is a ball of spines, which is a fine answer to most questions. It throws a few for good measure. Afterwards it deflates and looks, I think, a little embarrassed.' });
   add('barracuda', { name: 'Great Barracuda', latin: 'Sphyraena barracuda', zone: 0, kind: 'fauna', size: '1.5 m', notes: 'Hangs perfectly still, and then is somewhere else. Drawn to shiny things. I am, regrettably, a shiny thing. It commits to a straight line, so the rock behind me has been a useful friend.' });
@@ -435,5 +443,5 @@
   add('moray', { name: 'Green Moray', latin: 'Gymnothorax funebris', zone: 0, kind: 'fauna', size: '2 m', notes: 'The constant gaping is just breathing. The lunge is the part to watch for. It also has a second set of jaws further down its throat, which I did not need to learn and am now passing on to you.' });
   add('crab', { name: 'Sally Lightfoot Crab', latin: 'Grapsus grapsus', zone: 0, kind: 'fauna', size: '8 cm', notes: 'Runs sideways in every direction at once and commits to none of them. When I get close it raises both claws. I have decided to read this as a wave.' });
   add('turtle', { name: 'Green Sea Turtle', latin: 'Chelonia mydas', zone: 0, kind: 'fauna', size: '1.2 m', notes: 'Has been making this commute since before the boat above us was built. My pulses skip off its shell. It looked at me once, slowly, the way you might look at weather.' });
-  add('cleaner', { name: 'Scarlet Cleaner Shrimp', latin: 'Lysmata amboinensis', zone: 0, kind: 'fauna', size: '6 cm', notes: 'Runs a clinic. Fish queue up, hold still and get groomed, and nobody eats anybody. It went over my hull seals for a while. I had not asked. It is the kindest thing that has happened to me today.' });
+  add('cleaner', { name: 'Scarlet Cleaner Shrimp', latin: 'Lysmata amboinensis', zone: 0, kind: 'fauna', size: '6 cm', prop: 'cleaner', showR: 34, showY: 4, notes: 'Runs a clinic. Fish queue up, hold still and get groomed, and nobody eats anybody. It went over my hull seals for a while. I had not asked. It is the kindest thing that has happened to me today.' });
 })();

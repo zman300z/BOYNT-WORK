@@ -7,7 +7,7 @@
   const _g = { x: 0, y: 0 };
 
   G.ents = { creatures: [], shots: [], eshots: [], pickups: [], props: [], decor: [] };
-  G.clearEnts = function () { for (const k in G.ents) G.ents[k].length = 0; };
+  G.clearEnts = function () { for (const k in G.ents) G.ents[k].length = 0; if (G.hazards) G.hazards.list.length = 0; };
 
   // ================================================================= player pulses
   const SH = G.shots = {
@@ -156,7 +156,7 @@
       const s = {
         x, y, vx: vx * calm, vy: vy * calm, r: o.r || 5, dmg: o.dmg || 1, life: o.life || 4.5, max: o.life || 4.5, t: 0,
         color: o.color || '#ff7a5c', kind: o.kind || 'orb', ax: o.ax || 0, ay: o.ay || 0, homing: o.homing || 0, wob: o.wob || 0,
-        bounce: o.bounce || 0, drag: o.drag || 0, grow: o.grow || 0, ph: G.rand() * TAU, dead: false, owner: o.owner || null,
+        bounce: o.bounce || 0, drag: o.drag || 0, grow: o.grow || 0, ph: G.rand() * TAU, dead: false, owner: o.owner || null, onEnd: o.onEnd || null,
       };
       G.ents.eshots.push(s);
       return s;
@@ -171,6 +171,7 @@
       if (s.dead) return;
       s.dead = true;
       if (!quiet) G.particles.sparks(s.x, s.y, 4, s.color, { s0: 40, s1: 160, life: 0.25 });
+      if (s.onEnd) s.onEnd(s);
     },
     update(dt) {
       const arr = G.ents.eshots, p = G.player;
@@ -326,6 +327,48 @@
         else if (k.kind === 'heal') G.drawGlow(ctx, k.x, k.y, 26 * tw, '#7dffb0', 0.5);
         else G.drawGlow(ctx, k.x, k.y, 24 * tw, '#ffd98a', 0.5);
       }
+    },
+  };
+
+  // ================================================================= telegraphed blasts
+  // A ring appears, fills for `delay` seconds, then goes off: hurts the probe if it is still inside.
+  const HZ = G.hazards = {
+    list: [],
+    // o: {x, y, r, delay, color, dmg, onFire(h), follow:{x,y} (track a moving thing until it fires), quiet}
+    add(o) { const h = Object.assign({ t: 0, delay: 0.9, color: '#ff9a6a', dmg: 1, r: 60, fired: false }, o); this.list.push(h); return h; },
+    update(dt) {
+      const arr = this.list, p = G.player;
+      for (let i = arr.length - 1; i >= 0; i--) {
+        const h = arr[i];
+        h.t += dt;
+        if (h.follow && !h.fired) { h.x = h.follow.x; h.y = h.follow.y; }
+        if (!h.fired && h.t >= h.delay) {
+          h.fired = true;
+          G.particles.ring(h.x, h.y, h.r * 0.3, h.r * 1.15, h.color, 0.3, 4);
+          G.particles.sparks(h.x, h.y, 10, h.color, { s0: 80, s1: 320, life: 0.3 });
+          G.lights.flash(h.x, h.y, h.r * 3.2, h.color, 0.25, 1);
+          if (!h.quiet && G.cam.sees(h.x, h.y, h.r)) { G.sfx('zap', { x: h.x, y: h.y }); G.cam.shake(0.12); }
+          if (h.dmg && !p.dead && G.dist2(p.x, p.y, h.x, h.y) < (h.r + p.r * 0.5) * (h.r + p.r * 0.5)) p.hurt(h.dmg, h.x, h.y);
+          if (h.onFire) h.onFire(h);
+        }
+        if (h.t > h.delay + 0.3) arr.splice(i, 1);
+      }
+    },
+    draw(ctx) {       // glow pass
+      const t = G.time;
+      for (const h of this.list) {
+        if (!G.cam.sees(h.x, h.y, h.r + 10)) continue;
+        if (!h.fired) {
+          const u = h.t / h.delay;
+          ctx.globalAlpha = 0.35 + 0.5 * u; ctx.strokeStyle = h.color; ctx.lineWidth = 2; ctx.setLineDash([9, 7]); ctx.lineDashOffset = -t * 60;
+          ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+          ctx.globalAlpha = 0.1 + 0.2 * u; ctx.fillStyle = h.color; ctx.beginPath(); ctx.arc(h.x, h.y, h.r * u, 0, TAU); ctx.fill();
+        } else {
+          const u = (h.t - h.delay) / 0.3;
+          ctx.globalAlpha = (1 - u) * 0.7; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(h.x, h.y, h.r * (1 - u * 0.2), 0, TAU); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
     },
   };
 

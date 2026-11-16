@@ -25,7 +25,7 @@ const fs = require('fs');
     const ctx = new OfflineAudioContext(2, SR * secs, SR);
     G.audio.init(ctx);
     if (o.kind === 'music') {
-      G.music.found = o.found; G.music.target = o.inten; G.music.inten = o.inten;
+      G.music.mask = (1 << o.found) - 1; G.music.target = o.inten; G.music.inten = o.inten;
       G.music.set(o.mode, true); G.music.start();
       for (let t = 0.1; t < secs; t += 0.1) ctx.suspend(t).then(() => { G.music.update(0.1); ctx.resume(); });
       G.music.update(0.1);

@@ -68,6 +68,12 @@
         if (d2 < rad * rad) { const f = (1 - sqrt(d2) / rad) * k; r.x[i] += vx * f + dx * f * 0.02; r.y[i] += vy * f + dy * f * 0.02; }
       }
     },
+    // does any joint of the rope (from index i0) come within `rad` of the point?
+    ropeNear(r, x, y, rad, i0) {
+      const r2 = rad * rad;
+      for (let i = i0 || 1; i < r.n; i++) { const dx = r.x[i] - x, dy = r.y[i] - y; if (dx * dx + dy * dy < r2) return true; }
+      return false;
+    },
     ropeDraw(ctx, r, w0, w1, color, alpha) {
       const n = r.n;
       ctx.strokeStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -252,6 +258,15 @@
     face(c, ang, rate, dt) { c.face = G.angDamp(c.face, ang, rate, dt); },
     faceVel(c, rate, dt) { if (c.vx * c.vx + c.vy * c.vy > 60) c.face = G.angDamp(c.face, atan2(c.vy, c.vx), rate, dt); },
     toPlayer(c, p) { return atan2(p.y - c.y, p.x - c.x); },
+    // walk along the rock surface (any way up). dir = +1/-1 along the tangent. keeps c.nx/c.ny current.
+    crawl(c, dir, speed, dt) {
+      const d = G.sdfGrad(c.x, c.y, _v);
+      c.nx = _v.x; c.ny = _v.y;
+      const want = c.r * 0.7;
+      c.x += _v.x * (want - d) * Math.min(1, dt * 20); c.y += _v.y * (want - d) * Math.min(1, dt * 20);
+      c.x += -c.ny * dir * speed * dt; c.y += c.nx * dir * speed * dt;
+      return d;
+    },
     // generic "notice the player" rule for hostiles
     notice(c, p, range, dt) {
       if (c.aggro) {
@@ -300,7 +315,7 @@
       G.sfx('flee', { x: c.x, y: c.y, size: clamp(c.r / 46, 0, 1) });
       if (big) { G.game.hitstop(0.06); G.cam.shake(0.25); }
       if (def.onFlee) def.onFlee(c);
-      if (G.meta) G.meta.count(def.codex || c.type);
+      if (G.meta) G.meta.count(c.codexId || def.codex || c.type);
       G.emit('dissuade', c);
     },
 
@@ -311,16 +326,20 @@
         const c = arr[i], def = c.def;
         if (c.dead) continue;
         c.t += dt;
-        const dx = p.x - c.x, dy = p.y - c.y;
-        c.pd = sqrt(dx * dx + dy * dy);
-        if (c.pd > 1500 && !c.boss && !c.fleeing) { c.awake = false; continue; }
+        const dx = p.x - c.x, dy = p.y - c.y, real = sqrt(dx * dx + dy * dy);
+        c.pd = real;
+        if (real > 1500 && !c.boss && !c.fleeing) { c.awake = false; continue; }
         c.awake = true;
+        // a decoy light pulls ordinary hostiles off the probe
+        let tgt = p;
+        const dq = G.decoy;
+        if (dq && !dq.dead && c.hostile && !c.boss && !c.def.fixed) { const dd = hypot(dq.x - c.x, dq.y - c.y); if (dd < 540) { tgt = dq; c.pd = dd; } }
         if (c.fleeing) { this.updateFlee(c, dt, p); continue; }
         c.flash = max(0, c.flash - dt * 5); c.vuln = max(0, c.vuln - dt); c.mark = max(0, c.mark - dt); c.hurtCd = max(0, c.hurtCd - dt);
         c.stT += dt;
         if (c !== SC.target) c.scan = max(0, c.scan - dt * 0.35);
         if (c.stun > 0) { c.stun -= dt; ai.brake(c, 3, dt); }
-        else if (def.think) def.think(c, dt, p);
+        else if (def.think) def.think(c, dt, tgt);
         if (c.kx || c.ky) {
           c.x += c.kx * dt; c.y += c.ky * dt;
           const k = exp(-7 * dt); c.kx *= k; c.ky *= k;
@@ -328,7 +347,7 @@
         }
         if (!def.fixed) { c.x += c.vx * dt; c.y += c.vy * dt; if (!def.noclip) G.collide(c, 0.3); }
         // touching the probe
-        if (!p.dead && c.touch && c.pd < c.r + p.r - 3) {
+        if (!p.dead && c.touch && real < c.r + p.r - 3) {
           if (p.dashT > 0 && p.st.dashDmg && c.hurtCd <= 0 && c.hittable) {
             c.hurtCd = 0.35;
             G.damageCreature(c, 14 * p.st.dashDmg, { x: p.x, y: p.y, vx: -dx, vy: -dy, aoe: true, knock: 2.2 });
@@ -475,7 +494,7 @@
   const SC = G.scan = {
     target: null, known: {}, label: null, labelT: 0,
     reset() { this.known = {}; this.target = null; },
-    idOf(e) { return e.def ? (e.def.codex || e.type) : e.codex; },
+    idOf(e) { return e.def ? (e.codexId || e.def.codex || e.type) : e.codex; },
     update(dt) {
       const p = G.player;
       this.labelT = max(0, this.labelT - dt);
