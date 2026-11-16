@@ -419,8 +419,9 @@
         if (def.glow) def.glow(c, ctx);
         if (c.flash > 0.03) {
           const keep = c.alpha;
-          c.alpha = c.flash * 0.85; def.draw(c, ctx); c.alpha = keep;
-          G.drawGlow(ctx, c.x, c.y, c.r * 2 + 8, '#ffffff', c.flash * 0.4);
+          // bosses are under fire constantly: keep their flash to a shimmer so they never white out
+          c.alpha = c.flash * (c.boss ? 0.2 : 0.85); def.draw(c, ctx); c.alpha = keep;
+          if (!c.boss) G.drawGlow(ctx, c.x, c.y, c.r * 2 + 8, '#ffffff', c.flash * 0.4);
         }
         if (c.stun > 0.05 && !c.fleeing) kit.stars(ctx, c.x, c.y - c.r - 8, c.r * 0.7 + 6, t + c.ph);
         if (c.vuln > 0 || c.mark > 0) {

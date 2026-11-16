@@ -202,7 +202,7 @@
         }
         if (!p.dead) {
           const dx = p.x - s.x, dy = p.y - s.y, rr = p.r + s.r - 3;
-          if (dx * dx + dy * dy < rr * rr && p.inv <= 0) { if (p.hurt(s.dmg, s.x, s.y)) this.kill(s); }
+          if (dx * dx + dy * dy < rr * rr) { if (s.dmg <= 0) this.kill(s); else if (p.inv <= 0 && p.hurt(s.dmg, s.x, s.y)) this.kill(s); }
         }
       }
       G.removeDead(arr);

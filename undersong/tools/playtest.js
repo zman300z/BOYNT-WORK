@@ -15,11 +15,11 @@ const path = require('path');
   let total = 0, last = null;
   while (total < maxT) {
     let r;
-    try { r = await page.evaluate(() => G.game.simulate(30, { untilDead: true })); }
+    try { r = await page.evaluate((through) => G.game.simulate(30, { untilDead: true, through }), /through/.test(extra)); }
     catch (e) { console.log('EVALUATE FAILED: ' + e.message.split('\n')[0]); break; }
     total += r.simSeconds; last = r;
     console.log(`t=${String(Math.round(total)).padStart(4)}s ${r.state.padEnd(7)} z${r.zone} ${String(r.depth).padStart(5)}m hull ${r.hull}/${r.maxHull} lv${r.level} pearls ${r.pearls} scans ${r.scans} diss ${r.dissuaded} boss ${r.boss || '-'} menu ${r.menu || '-'} ents ${r.creatures}/${r.eshots} (${r.realMs}ms)`);
-    if (r.state === 'dead' || r.state === 'ending') break;
+    if (r.state === 'dead' || (r.state === 'ending' && !/through/.test(extra)) || (/through/.test(extra) && r.state === 'title')) break;
     if (errors.length > 20) break;
   }
   const log = await page.evaluate(() => G.bot.log).catch(() => null);

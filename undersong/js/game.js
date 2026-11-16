@@ -172,6 +172,7 @@
       const cam = G.cam;
       let tx, ty;
       if (this.state === 'title') { const boat = G.props.find('boat'); tx = (boat ? boat.x + 110 : pl.x) - 300; ty = zone.surfaceY + 96; }
+      else if (this.state === 'ending' && G.ending && G.ending.cam) { tx = G.ending.cam.x; ty = G.ending.cam.y; }
       else if (this.bossOn && zone.boss && !zone.boss.dead) { const A = zone.arena; tx = lerp(pl.x, A.x, 0.45); ty = lerp(pl.y, A.y, 0.5); }
       else { const lead = min(pl.aimDist, 320) * 0.2; tx = pl.x + cos(pl.aim) * lead + pl.vx * 0.1; ty = pl.y + sin(pl.aim) * lead + pl.vy * 0.1; }
       cam.x = damp(cam.x, tx, 5.5, dt); cam.y = damp(cam.y, ty, 5.5, dt);

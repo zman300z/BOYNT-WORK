@@ -151,15 +151,17 @@
     update(pr, dt) { pr.ping = max(0, pr.ping - dt * 1.1); },
     pulse(pr) { pr.ping = 1; G.particles.ring(pr.x, pr.y, 8, 54, pr.col, 0.6, 2.5); G.lights.flash(pr.x, pr.y, 240, pr.col, 0.6, 0.8); },
     draw(pr, ctx) {
-      const y = pr.y + sin(G.time * 1.3 + pr.n) * 1.2;
-      ctx.fillStyle = '#6a5a3a'; ctx.beginPath(); ctx.ellipse(pr.x, pr.y + 9, 11, 3.6, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#2a323c'; ctx.beginPath(); ctx.arc(pr.x, y, 9.4, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#d8b04a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pr.x, y, 9.4, 0, TAU); ctx.stroke();
-      const g = ctx.createRadialGradient(pr.x - 2, y - 2.5, 0.5, pr.x, y, 7); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, pr.col); g.addColorStop(1, G.mixCss(pr.col, '#102030', 0.5));
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(pr.x, y, 6.6, 0, TAU); ctx.fill();
+      const y = pr.y - 6 + sin(G.time * 1.3 + pr.n) * 1.2;
+      // each one has been given its own little stand of warm stone
+      ctx.fillStyle = '#5a4a44'; ctx.beginPath(); ctx.moveTo(pr.x - 15, pr.y + 16); ctx.lineTo(pr.x - 10, pr.y + 5); ctx.lineTo(pr.x + 10, pr.y + 5); ctx.lineTo(pr.x + 15, pr.y + 16); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(pr.x, pr.y + 5, 12, 3.4, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a323c'; ctx.beginPath(); ctx.arc(pr.x, y, 12.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#e0b84e'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(pr.x, y, 12.5, 0, TAU); ctx.stroke();
+      const g = ctx.createRadialGradient(pr.x - 3, y - 3.5, 0.5, pr.x, y, 9.6); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, pr.col); g.addColorStop(1, G.mixCss(pr.col, '#102030', 0.5));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(pr.x, y, 9.2, 0, TAU); ctx.fill();
     },
-    glow(pr, ctx) { const t = G.time; G.drawGlow(ctx, pr.x, pr.y, 26 + pr.ping * 40 + sin(t * 2 + pr.n) * 3, pr.col, 0.55 + pr.ping * 0.45); },
-    light(pr) { G.lights.add(pr.x, pr.y, 200 + pr.ping * 160, pr.col, 0.5 + pr.ping * 0.4); },
+    glow(pr, ctx) { const t = G.time; G.drawGlow(ctx, pr.x, pr.y - 6, 40 + pr.ping * 46 + sin(t * 2 + pr.n) * 4, pr.col, 0.7 + pr.ping * 0.3); G.drawGlow(ctx, pr.x, pr.y - 6, 9, '#ffffff', 0.7); },
+    light(pr) { G.lights.add(pr.x, pr.y - 6, 250 + pr.ping * 170, pr.col, 0.6 + pr.ping * 0.4); },
   });
   G.on('motif', i => { if (!G.zone || !G.zone.cores) return; const pr = G.zone.cores[i]; if (pr) G.PROPS.core.pulse(pr); });
 
@@ -296,7 +298,7 @@
     boss: null, safeTop: 760, pockets: ['wreck', 'pod'],
     get hostiles() {
       const list = [{ type: 'amphipod', cost: 0.7, w: 5 }, { type: 'arm', cost: 2.4, w: 2.2, wall: true, sink: 0 }];
-      if (G.CREATURES.viper) list.push({ type: 'viper', cost: 2.2, w: 0.8 });
+      if (G.CREATURES.viperfish) list.push({ type: 'viperfish', cost: 2.2, w: 0.8 });
       return list;
     },
     budget: t => 3.2 + t * 3.6,

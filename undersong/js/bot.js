@@ -30,6 +30,7 @@
     drive(dt) {
       this.t += dt;
       I.fire = I.dash = I.flare = I.sonar = I.interact = I.pause = false; I.moveX = I.moveY = 0;
+      if (G.game.state === 'ending' && G.ending) { G.ending.botAdvance(); return; }
       if (this.menus(dt)) return;
       const p = G.player, zone = G.zone;
       if (!zone || G.game.state !== 'play' || p.dead || !p.control) return;
@@ -52,7 +53,7 @@
       for (const pr of G.ents.props) {
         if (pr.dead || pr.used || !pr.def.interact) continue;
         if (pr.def.canInteract && !pr.def.canInteract(pr, p)) continue;
-        if (pr.botSkip) continue;
+        if (pr.botSkip || (pr.price !== undefined && p.pearls < pr.price)) continue;
         const d = hypot(pr.x - p.x, pr.y - p.y);
         if (d < pd && G.los(p.x, p.y, pr.x, pr.y - 6)) { pd = d; prop = pr; }
       }
@@ -128,7 +129,7 @@
       if (p.hull < lastHull && !p.dead) bot.log.hits.push({ t: +G.run.time.toFixed(1), z: G.zone.idx, hull: p.hull, d: Math.round(G.world.depthAt(p.y)) });
       lastHull = p.hull;
       if (G.zone.idx !== lastZone) { bot.log.zones.push({ z: lastZone, t: +G.run.time.toFixed(1), lv: p.level, hull: p.hull, mods: p.modList.length }); lastZone = G.zone.idx; }
-      if (opts.untilDead && (this.state === 'dead' || this.state === 'ending')) break;
+      if (opts.untilDead && (this.state === 'dead' || (this.state === 'ending' && !opts.through) || (opts.through && this.state === 'title' && steps > 120))) break;
     }
     return {
       state: this.state, simSeconds: +(steps * dt).toFixed(1), realMs: Math.round(performance.now() - start), zone: G.zone.idx, depth: Math.round(G.world.depthAt(p.y)),

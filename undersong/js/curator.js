@@ -167,6 +167,7 @@
         } else {
           const L = arm.len * slack, sw = sin(t * 0.7 + arm.ph) * 0.16;
           gx = c.x + cos(arm.a + sw) * L; gy = c.y + sin(arm.a + sw) * L * (c.calm ? 0.8 : 1) + sin(t * 1.1 + arm.ph) * 22;
+          if (c.gift && i === 3) { gx = p.x - 4; gy = p.y - 20; rate = 1.4; arm.glow = 0.3; }      // one arm, very lightly
         }
         arm.tx = damp(arm.tx, gx, rate, dt); arm.ty = damp(arm.ty, gy, rate, dt);
         const ba = arm.a, bx = c.x + cos(ba) * 40, by = c.y + 38 + sin(ba) * 12;
