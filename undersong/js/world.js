@@ -169,7 +169,7 @@
     } else {
       zone.start = { x: x * CS, y: y * CS };
       tunnel(x, -4, x, y, 4.2, 5.5, 0, false);
-      disc(x, y, 8.5);
+      disc(x, y, 8.5); ellipse(x, y + 1, 15, 8.5);        // room for the Hermit's stall
     }
 
     const trench = !!def.trench;

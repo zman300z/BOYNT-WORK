@@ -21,6 +21,7 @@
       G.run = { seed, zone: 0, noteMask: 0, rerolls: G.meta.level('reroll'), time: 0, scans: 0, fresh: 0, dissuaded: 0, pods: 0, bosses: 0, maxDepth: 0, won: false, ending: null };
       G.music.mask = 0;
       G.story.reset(); G.hud.reset();
+      if (G.companions) G.companions.reset();
       pl.reset(0, 0);
       pl.paint = G.PAINTS.find(p => p.id === G.meta.data.paint) || G.PAINTS[0];
       pl.shades = !!(G.meta.data.shades && G.meta.data.shadesOn);

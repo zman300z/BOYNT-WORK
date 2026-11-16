@@ -260,7 +260,9 @@
     drawPrompt(u, t) {
       const f = G.props.focus;
       let label = null, key = null;
-      if (f && f.def.prompt && G.game.state === 'play' && !G.game.overlay) { label = typeof f.def.prompt === 'function' ? f.def.prompt(f) : f.def.prompt; key = G.input.label('interact'); }
+      if (f && f.def.prompt && G.game.state === 'play' && !G.menu.active()) { label = typeof f.def.prompt === 'function' ? f.def.prompt(f) : f.def.prompt; key = G.input.label('interact'); }
+      // looking at something in the Hermit's stock: show what it is
+      if (f && f.type === 'ware' && f.mod && G.game.state === 'play' && !G.menu.active()) G.drawModuleCard(u, f.mod, G.W - 292, 176, 250, 340, 0.35, 0.97, { price: f.price, afford: G.player.pearls >= f.price });
       const y = this.comm ? G.H - 172 : G.H - 96;
       if (label) {
         const tw = G.textWidth(u, label, { size: 12, font: 'mono', weight: 700, spacing: 1.5 }), kw = G.textWidth(u, key, { size: 12, font: 'mono', weight: 700 }) + 14;
@@ -269,7 +271,7 @@
         u.fillStyle = INK; G.roundRect(u, x + 8, y - 9, kw, 18, 4); u.fill();
         G.text(u, key, x + 8 + kw / 2, y + 4.5, { size: 12, font: 'mono', weight: 700, color: '#06121e', align: 'center' });
         G.text(u, label, x + 18 + kw, y + 4.5, { size: 12, font: 'mono', weight: 700, color: INK, spacing: 1.5 });
-      } else if (this.hintMsg && G.game.state === 'play' && !G.game.overlay) {
+      } else if (this.hintMsg && G.game.state === 'play' && !G.menu.active()) {
         const al = min(1, this.hintT / 0.5);
         G.text(u, this.hintMsg, G.W / 2, y + 4, { size: 12, font: 'mono', weight: 700, color: INK, align: 'center', spacing: 2, alpha: al * (0.7 + 0.3 * sin(t * 4)), shadow: 'rgba(0,10,20,0.7)' });
       }
