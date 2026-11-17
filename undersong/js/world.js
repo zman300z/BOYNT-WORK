@@ -43,7 +43,7 @@
     {
       id: 'abyss', name: 'THE ABYSS', sub: 'abyssopelagic', depth: [4000, 6000], cols: 170, rows: 448, pockets: 5, rough: 1.2,
       arenaRx: 42, arenaRy: 24,
-      water: [[40, 17, 26], [22, 9, 15]], amb: [[0.105, 0.07, 0.075], [0.075, 0.046, 0.054]], far: [[58, 25, 32], [36, 15, 21]],
+      water: [[40, 17, 26], [22, 9, 15]], amb: [[0.16, 0.1, 0.098], [0.12, 0.072, 0.074]], far: [[58, 25, 32], [36, 15, 21]],
       rockL: [182, 122, 116], rockD: [96, 60, 66], deep: [28, 15, 20], rim: [255, 196, 136], shadow: [2, 1, 2], aoA: 0.55,
       moss: [206, 174, 62], mossD: 5, mossA: 0.5, fleck: [255, 200, 120], strata: 0.3, veins: [255, 118, 36], veinA: 1,
       snow: [255, 190, 150], snowA: 0.45, tint: [1.05, 0.98, 0.95], sat: 1.12,
@@ -300,6 +300,7 @@
     zone.surf = new Float32Array(out);
   }
 
+  const EXIT_CLEAR = 22;        // px of clearance a cell needs to count as "the way on"
   function buildExitField(zone) {
     const { NW, NH, sd } = zone, d = new Uint16Array(NW * NH).fill(65535), q = zone.flowQ;
     let head = 0, tail = 0;
@@ -307,10 +308,10 @@
     d[s] = 0; q[tail++] = s;
     while (head < tail) {
       const n = q[head++], i = n % NW, j = (n / NW) | 0, nd = d[n] + 1;
-      if (i > 0 && d[n - 1] === 65535 && sd[n - 1] > 10) { d[n - 1] = nd; q[tail++] = n - 1; }
-      if (i < NW - 1 && d[n + 1] === 65535 && sd[n + 1] > 10) { d[n + 1] = nd; q[tail++] = n + 1; }
-      if (j > 0 && d[n - NW] === 65535 && sd[n - NW] > 10) { d[n - NW] = nd; q[tail++] = n - NW; }
-      if (j < NH - 1 && d[n + NW] === 65535 && sd[n + NW] > 10) { d[n + NW] = nd; q[tail++] = n + NW; }
+      if (i > 0 && d[n - 1] === 65535 && sd[n - 1] > EXIT_CLEAR) { d[n - 1] = nd; q[tail++] = n - 1; }
+      if (i < NW - 1 && d[n + 1] === 65535 && sd[n + 1] > EXIT_CLEAR) { d[n + 1] = nd; q[tail++] = n + 1; }
+      if (j > 0 && d[n - NW] === 65535 && sd[n - NW] > EXIT_CLEAR) { d[n - NW] = nd; q[tail++] = n - NW; }
+      if (j < NH - 1 && d[n + NW] === 65535 && sd[n + NW] > EXIT_CLEAR) { d[n + NW] = nd; q[tail++] = n + NW; }
     }
     zone.toExit = d;
   }

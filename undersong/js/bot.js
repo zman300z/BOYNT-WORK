@@ -44,6 +44,7 @@
         if (d > 560) continue;
         if (!c.aggro && d > 300 && !c.boss) continue;
         const pri = d - (c.boss ? 0 : c.type === 'part' ? -200 : 60);
+        if (c.botSkip) continue;
         if (pri < fd && (d < 120 || G.los(p.x, p.y, c.x, c.y))) { fd = pri; foe = c; }
       }
       // ---- where to go
@@ -58,13 +59,24 @@
         if (d < pd && G.los(p.x, p.y, pr.x, pr.y - 6)) { pd = d; prop = pr; }
       }
       const cleaner = !prop && p.hull < p.st.maxHull ? G.ents.props.find(pr => pr.type === 'cleaner' && !pr.used && hypot(pr.x - p.x, pr.y - p.y) < 480 && G.los(p.x, p.y, pr.x, pr.y - 20)) : null;
-      if (prop && !foe) { goalX = prop.x - p.x; goalY = prop.y - 14 - p.y; hasGoal = true; if (pd < prop.r + 40) I.interact = true; }
+      if (prop && !foe) {
+        goalX = prop.x - p.x; goalY = prop.y - 14 - p.y; hasGoal = true; if (pd < prop.r + 40) I.interact = true;
+        prop.botT = (prop.botT || 0) + dt;                    // accumulates even if line of sight flickers
+        if (prop.botT > 9) { prop.botSkip = true; this.note('gave up on ' + prop.type); }
+      }
       else if (cleaner && !foe) { const dx = cleaner.x - p.x, dy = cleaner.y - 30 - p.y; if (hypot(dx, dy) > 16) { goalX = dx; goalY = dy; hasGoal = true; } else hasGoal = true; }
       else if (G.game.bossOn && zone.boss) {
         // stay in the room, off the walls
         const A = zone.arena; goalX = (A.x - p.x) * 0.4; goalY = (A.y - p.y) * 0.4; hasGoal = hypot(goalX, goalY) > 60;
       } else if (G.exitDir(p.x, p.y, _v)) { goalX = _v.x; goalY = _v.y; hasGoal = true; }
       if (hasGoal) { const l = hypot(goalX, goalY) || 1; mx += goalX / l; my += goalY / l; }
+      // ---- a target whose health has not moved in a long while is out of reach: leave it
+      if (foe && !foe.boss) {
+        if (foe !== this.tgt) { this.tgt = foe; this.tgtHp = foe.hp; this.tgtT = 0; }
+        this.tgtT += dt;
+        if (foe.hp < this.tgtHp - 0.5) { this.tgtHp = foe.hp; this.tgtT = 0; }
+        if (this.tgtT > 12) { foe.botSkip = true; this.note('gave up on ' + foe.type); foe = null; }
+      }
       // ---- fighting
       if (foe) {
         const dx = foe.x - p.x, dy = foe.y - p.y, d = hypot(dx, dy) || 1, sp = p.st.speed, tt = d / sp;
@@ -91,6 +103,15 @@
         const k = (1 - d / 170) * 3.2 * this.skill, side = miss > 1 ? 1 : (G.rand() < 0.5 ? 1 : -1);
         mx += (miss > 1 ? px / miss : -s.vy / sv * side) * k; my += (miss > 1 ? py / miss : s.vx / sv * side) * k;
         if (d < 50 && p.dashCharge >= 1 && this.skill > 0.5) I.dash = true;
+      }
+      // telegraphed blasts: step out of a filling ring, dash if it is about to go
+      for (const h of G.hazards.list) {
+        if (h.fired) continue;
+        const dx = p.x - h.x, dy = p.y - h.y, d = hypot(dx, dy), margin = h.r + p.r + 20;
+        if (d >= margin) continue;
+        const left = h.delay - h.t, k = ((1 - d / margin) * 3 + (1 - clamp(left / h.delay, 0, 1)) * 2) * this.skill;
+        if (d > 1) { mx += dx / d * k; my += dy / d * k; } else mx += k;
+        if (left < 0.3 && d < h.r + p.r && p.dashCharge >= 1 && this.skill > 0.5) I.dash = true;
       }
       if (this.skill > 0.5 && p.flares > 0 && (close >= 4 || crowd >= 3 || (p.hull <= 2 && (close >= 2 || crowd >= 2)))) I.flare = true;
       // creatures winding up a charge straight at us: step aside
@@ -129,7 +150,8 @@
       if (p.hull < lastHull && !p.dead) bot.log.hits.push({ t: +G.run.time.toFixed(1), z: G.zone.idx, hull: p.hull, d: Math.round(G.world.depthAt(p.y)) });
       lastHull = p.hull;
       if (G.zone.idx !== lastZone) { bot.log.zones.push({ z: lastZone, t: +G.run.time.toFixed(1), lv: p.level, hull: p.hull, mods: p.modList.length }); lastZone = G.zone.idx; }
-      if (opts.untilDead && (this.state === 'dead' || (this.state === 'ending' && !opts.through) || (opts.through && this.state === 'title' && steps > 120))) break;
+      if (this.state === 'ending') this._sawEnding = true;
+      if (opts.untilDead && (this.state === 'dead' || (this.state === 'ending' && !opts.through) || (opts.through && this.state === 'title' && this._sawEnding))) break;
     }
     return {
       state: this.state, simSeconds: +(steps * dt).toFixed(1), realMs: Math.round(performance.now() - start), zone: G.zone.idx, depth: Math.round(G.world.depthAt(p.y)),

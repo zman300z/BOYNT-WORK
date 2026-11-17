@@ -341,7 +341,8 @@
         if (c !== SC.target) c.scan = max(0, c.scan - dt * 0.35);
         if (c.stun > 0) { c.stun -= dt; ai.brake(c, 3, dt); }
         else if (def.think) def.think(c, dt, tgt);
-        if (c.kx || c.ky) {
+        if (def.fixed) c.kx = c.ky = 0;
+        else if (c.kx || c.ky) {
           c.x += c.kx * dt; c.y += c.ky * dt;
           const k = exp(-7 * dt); c.kx *= k; c.ky *= k;
           if (abs(c.kx) + abs(c.ky) < 2) c.kx = c.ky = 0;
