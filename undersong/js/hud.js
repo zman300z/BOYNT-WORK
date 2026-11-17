@@ -202,7 +202,7 @@
     drawToasts(u, t) {
       let y = this.comm ? G.H - 216 : G.H - 150;
       for (let i = this.toasts.length - 1; i >= 0; i--) {
-        const s = this.toasts[i], inn = min(1, s.t / 0.3), out = min(1, (s.life - s.t) / 0.4), al = G.ease.outCubic(inn) * out;
+        const s = this.toasts[i], inn = min(1, s.t / 0.3), out = min(1, (s.life - s.t) / 0.4), al = G.ease.outCubic(inn) * out * (1 - (G.map ? G.map.k : 0));
         G.font(u, 15, 'ui', 600);
         const tw = u.measureText(s.title).width;
         G.font(u, 12, 'serif', 400, true);
@@ -227,7 +227,7 @@
       const sp = SPEAKERS[m.who] || SPEAKERS.sys, w = 470, x = 28, lh = 21;
       const o = { size: 15, font: sp.font, weight: sp.font === 'mono' ? 400 : 500 };
       const lines = G.wrapText(u, m.text, w - 36, o), h = 38 + lines.length * lh;
-      const y = G.H - 30 - h, inn = G.ease.outCubic(min(1, m.t / 0.25));
+      const y = G.H - 30 - h, inn = G.ease.outCubic(min(1, m.t / 0.25)) * (G.menu.pausing() ? 0.3 : 1);
       u.globalAlpha = inn;
       u.fillStyle = G.UI.PANEL; G.roundRect(u, x, y + (1 - inn) * 10, w, h, 8); u.fill();
       u.fillStyle = sp.color; u.fillRect(x, y + 10 + (1 - inn) * 10, 2.5, h - 20);

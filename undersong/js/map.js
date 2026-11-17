@@ -49,10 +49,11 @@
       const zone = this.zone, p = G.player, a = this.k, t = G.time;
       const sc = min(600 / zone.H, 520 / zone.W), w = zone.W * sc, h = zone.H * sc, x0 = G.W / 2 - w / 2, y0 = (G.H - h) / 2 + 6;
       u.globalAlpha = a;
-      u.fillStyle = 'rgba(3,10,20,0.86)'; G.roundRect(u, x0 - 26, y0 - 44, w + 52, h + 76, 12); u.fill();
-      u.strokeStyle = G.UI.LINE; u.lineWidth = 1; G.roundRect(u, x0 - 26, y0 - 44, w + 52, h + 76, 12); u.stroke();
-      G.text(u, zone.def.name, x0 - 6, y0 - 20, { size: 10, font: 'mono', weight: 700, color: G.UI.DIM, spacing: 3 });
-      G.text(u, G.fmtInt(G.world.depthAt(p.y)) + ' M', x0 + w + 6, y0 - 20, { size: 10, font: 'mono', weight: 700, color: G.UI.INK, align: 'right', spacing: 2 });
+      const pw = max(w + 52, 400), px = G.W / 2 - pw / 2;
+      u.fillStyle = 'rgba(3,10,20,0.9)'; G.roundRect(u, px, y0 - 44, pw, h + 76, 12); u.fill();
+      u.strokeStyle = G.UI.LINE; u.lineWidth = 1; G.roundRect(u, px, y0 - 44, pw, h + 76, 12); u.stroke();
+      G.text(u, zone.def.name, px + 20, y0 - 20, { size: 10, font: 'mono', weight: 700, color: G.UI.DIM, spacing: 3 });
+      G.text(u, G.fmtInt(G.world.depthAt(p.y)) + ' M', px + pw - 20, y0 - 20, { size: 10, font: 'mono', weight: 700, color: G.UI.INK, align: 'right', spacing: 2 });
       u.imageSmoothingEnabled = false;
       u.drawImage(this.shown, x0, y0, w, h);
       u.imageSmoothingEnabled = true;

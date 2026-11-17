@@ -34,7 +34,10 @@
         if (it === cur) continue;
         const dx = it.x + it.w / 2 - cx, dy = it.y + it.h / 2 - cy, along = dx * nx + dy * ny;
         if (along < 8) continue;
-        const across = abs(dx * ny) + abs(dy * nx), score = along + across * 2.5;
+        // sideways gap between the two boxes: zero when they line up, so a left-aligned list of
+        // different-width labels steps one row at a time
+        const gap = ny ? max(0, it.x - (cur.x + cur.w), cur.x - (it.x + it.w)) : max(0, it.y - (cur.y + cur.h), cur.y - (it.y + it.h));
+        const score = along + gap * 3 + abs(ny ? dx : dy) * 0.15;
         if (score < bs) { bs = score; best = it; }
       }
       if (best) { this.focus = best.id; G.sfx('hover'); }
@@ -103,6 +106,8 @@
       const s = { id, def, t: 0, closing: 0, data: data || {} };
       this.stack.push(s);
       im.focus = null;
+      // the keypress that opened a screen must not also act on it (Escape is both 'pause' and 'back')
+      I.back = I.pause = I.confirm = false;
       if (def.open) def.open(s);
       return s;
     },
@@ -278,7 +283,7 @@
         G.para(u, d.desc, px, 600, 480, { size: 14, color: UI.INK, alpha: a, lh: 20 });
         G.text(u, d.flavor, px, 656, { size: 12, font: 'serif', italic: true, color: UI.DIM, alpha: a });
       }
-      G.text(u, `${I.label('move')} swim   ${I.label('fire')} pulse   ${I.label('dash')} dash   ${I.label('flare')} flare   ${I.label('sonar')} sonar   ${I.label('interact')} use   ${I.label('map')} chart`, x, G.H - 44, { size: 10, font: 'mono', color: UI.DIM, spacing: 1, alpha: a });
+      G.text(u, `${I.label('move')} swim   ${I.label('fire')} pulse   ${I.label('dash')} dash   ${I.label('flare')} flare   ${I.label('sonar')} sonar   ${I.label('interact')} use   ${I.label('map')} chart`, G.W - 40, G.H - 44, { size: 10, font: 'mono', color: UI.DIM, spacing: 1, alpha: a, align: 'right' });
     },
   };
 
@@ -299,7 +304,7 @@
       S.music = im.slider(u, 's_mu', x, y, w, S.music, 'MUSIC'); y += 44;
       S.sfx = im.slider(u, 's_fx', x, y, w, S.sfx, 'EFFECTS'); y += 56;
       if (before !== S.master + S.music + S.sfx) G.audio.setVolumes();
-      if (im.option(u, 's_gfx', x, y, w, 'GRAPHICS', S.gfx.toUpperCase())) { S.gfx = GFX[(GFX.indexOf(S.gfx) + 1) % 3]; G.post.applyQuality(); G.forceResize(); } y += 40;
+      if (im.option(u, 's_gfx', x, y, w, 'GRAPHICS', S.gfx.toUpperCase())) { S.gfx = GFX[(GFX.indexOf(S.gfx) + 1) % 3]; S.gfxManual = true; G.post.applyQuality(); G.forceResize(); } y += 40;
       if (im.option(u, 's_shake', x, y, w, 'SCREEN SHAKE', S.shake === 0 ? 'OFF' : S.shake < 1 ? 'GENTLE' : 'FULL')) S.shake = SHAKE[(SHAKE.indexOf(S.shake) + 1) % 3]; y += 40;
       if (im.option(u, 's_flash', x, y, w, 'BRIGHT FLASHES', S.flashes ? 'ON' : 'OFF')) S.flashes = !S.flashes; y += 40;
       if (im.option(u, 's_calm', x, y, w, 'CALM SEAS', S.calm ? 'ON' : 'OFF')) { S.calm = !S.calm; G.player.recalc(); if (S.calm && G.game.state === 'play') G.player.hull = min(G.player.st.maxHull, G.player.hull + 3); } y += 40;

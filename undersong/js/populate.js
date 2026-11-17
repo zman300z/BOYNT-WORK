@@ -87,8 +87,10 @@
     if (content.decorAt) for (let i = 0; i < n; i++) content.decorAt(zone, rng, s[i * 4], s[i * 4 + 1], s[i * 4 + 2], s[i * 4 + 3]);
 
     // ---- side pockets
-    const kinds = (content.pockets || ['pod', 'cleaner', 'wreck', 'pod', 'nest', 'pod']).slice(0, zone.pockets.length);
-    // the wreck goes in the lower half when it can
+    const wanted = content.pockets || ['pod', 'cleaner', 'wreck', 'pod', 'nest', 'pod'];
+    const kinds = wanted.slice(0, zone.pockets.length);
+    // every zone owes the player its wreck: if the cave came out short of pockets, the last one gets it
+    if (wanted.includes('wreck') && !kinds.includes('wreck') && kinds.length) kinds[kinds.length - 1] = 'wreck';
     zone.pockets.forEach((pk, i) => { pk.kind = kinds[i] || 'pod'; });
     for (const pk of zone.pockets) {
       const fl = H.surface(rng, pk.x, pk.y + pk.r * 0.4, pk.r * 1.1, 'floor', 40) || { x: pk.x, y: pk.y + pk.r * 0.5, nx: 0, ny: -1 };
@@ -97,6 +99,13 @@
       else if (pk.kind === 'cleaner') G.props.add('cleaner', px, py + 4);
       else if (pk.kind === 'wreck') G.props.add('wreck', px, py, { n: zone.idx, nx: fl.nx, ny: fl.ny });
       else if (pk.kind === 'nest') { G.props.add('pod', px, py, { rare: true }); H.encounter(zone, rng, pk.x, pk.y, pk.r, content.budget(pk.t) * 1.5, pk.t); }
+    }
+    if (wanted.includes('wreck') && !zone.pockets.length) {        // no pockets at all: leave it beside the route
+      const pp = zone.path.filter(p => p.y > zone.pxH * 0.4 && p.y < A.gateY - 300);
+      for (let tries = 0; tries < 6 && pp.length; tries++) {
+        const q = pp[(rng() * pp.length) | 0], fl = H.surface(rng, q.x, q.y + q.r * 0.5, q.r * 1.4, 'floor', 30);
+        if (fl) { G.props.add('wreck', fl.x + fl.nx * 22, fl.y + fl.ny * 22, { n: zone.idx, nx: fl.nx, ny: fl.ny }); break; }
+      }
     }
 
     // ---- rooms and tunnels

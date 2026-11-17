@@ -60,7 +60,7 @@
     garden: {
       bpm: 72, prog: ['Dm11', 'F', 'C', 'Dm11'], bars: 2, pad: 1, cut: 1300, bass: 0.6,
       arp: { vol: 0.38, pat: [0, 2, 4, 5, 4, 2, 3, 1], every: 2, oct: 2, decay: 0.6, wave: 'sine' },
-      mel: { vol: 0.5, prob: 0.5, inst: 'bell' }, perc: 0, percAt: 2, motif: 1.1,
+      mel: { vol: 0.5, prob: 0.5, inst: 'bell' }, perc: 0, percAt: 2, motif: 1.1, voices: true,
     },
     shop: {
       bpm: 88, prog: ['F', 'C', 'Dm9', 'C'], bars: 1, pad: 0.5, cut: 1300, bass: 0.6, bassPat: 'x.....x.x.......',
@@ -75,12 +75,12 @@
     curator: {
       bpm: 116, prog: ['Dm11', 'F', 'C', 'G'], bars: 2, pad: 0.8, cut: 1500, bass: 0.9, bassPat: 'x..x..x.x..x..x.',
       arp: { vol: 0.4, pat: [0, 2, 4, 5, 4, 2, 3, 1, 0, 2, 4, 5, 3, 2, 4, 1], every: 1, oct: 2, decay: 0.16, wave: 'triangle' },
-      mel: { vol: 0.5, prob: 0.4, inst: 'bell' }, kick: 'x...x...x...x...', hat: '..x...x...x...x.', snare: '....x.......x..x', perc: 1, percAt: -1, motif: 1.3,
+      mel: { vol: 0.5, prob: 0.4, inst: 'bell' }, kick: 'x...x...x...x...', hat: '..x...x...x...x.', snare: '....x.......x..x', perc: 1, percAt: -1, motif: 1.3, voices: true,
     },
     ending: {
       bpm: 74, prog: ['Dm13', 'Gmaj'], bars: 2, pad: 1.1, cut: 1900, bass: 0.7, scale: DOR,
       arp: { vol: 0.42, pat: [0, 2, 4, 6, 5, 4, 2, 4], every: 2, oct: 2, decay: 0.7, wave: 'sine' },
-      mel: { vol: 0.6, prob: 0.75, inst: 'bell' }, kick: 'x.......x.......', perc: 0.5, percAt: -1, motif: 1.2,
+      mel: { vol: 0.6, prob: 0.75, inst: 'bell' }, kick: 'x.......x.......', perc: 0.5, percAt: -1, motif: 1.2, voices: true,
     },
     dead: { bpm: 50, prog: ['Dm9'], bars: 4, pad: 0.6, cut: 380, bass: 0.6, perc: 0, percAt: 2, motif: 0.4 },
   };
@@ -266,12 +266,14 @@
         if (q.step === step) { this.playMel(q, t); this.melQ.splice(i, 1); }
         else if (q.step < step) this.melQ.splice(i, 1);
       }
-      // the motif: each found probe sounds its note once every two bars
-      if (this.mask && cfg.motif) {
+      // the motif: each found probe sounds its note once every two bars.
+      // Where the six cores are actually present (garden, the fight, the ending) all six sing.
+      const mask = this.mask | (cfg.voices ? 63 : 0);
+      if (mask && cfg.motif) {
         const s32 = step & 31;
         if ((s32 & 3) === 2) {
           const i = s32 >> 2;
-          if (i < 7 && (this.mask & (1 << i))) {
+          if (i < 7 && (mask & (1 << i))) {
             const f = N(MOTIF[i]);
             A.tone({ at: t, f, t: 2.4, a: 0.006, v: 0.1, bus: L.motif, rev: 0, fm: { r: 2.003, i: 0.7, d: 0.4 } });
             A.tone({ at: t, f: f * 2.003, t: 1.2, v: 0.02, bus: L.motif, rev: 0 });

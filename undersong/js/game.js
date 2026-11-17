@@ -196,7 +196,6 @@
       if (I.pause && !G.menu.active() && !pl.dead) { I.pause = false; G.menu.open('pause'); }
       if (!pl.dead && zone.idx < 4 && pl.y > zone.pxH - 26) this.startDescent();
       G.story.update(dt);
-      G.map.update(rdt);
       // music follows the room
       let mode = MUSIC[zone.idx];
       if (this.bossOn && b) mode = b.def.music || 'boss';
@@ -251,7 +250,9 @@
         this.updateWorld(dt);
       }
       G.menu.update(rdt);
-      G.hud.update(rdt);
+      // while a menu holds the game, the radio and toasts hold too
+      G.hud.update(frozen ? 0 : rdt);
+      if (G.zone) G.map.update(rdt);
       G.cam.update(rdt); G.fx.update(rdt);
       // screen mood
       const zone = G.zone;
@@ -362,8 +363,24 @@
       }
     },
 
+    // a safety net for slower machines: over six seconds of play, if most frames miss ~45 fps, step down once
+    perf: { t: 0, n: 0, slow: 0, done: false },
+    autoQuality(raw) {
+      const P = this.perf, S = G.settings;
+      if (P.done || S.gfxManual || S.gfx !== 'high' || G.params.bot || G.params.nofx || this.state !== 'play' || G.menu.active() || document.hidden || raw > 0.25) return;
+      P.t += raw; P.n++; if (raw > 1 / 45) P.slow++;
+      if (P.t < 6) return;
+      if (P.n > 60 && P.slow / P.n > 0.6) {
+        P.done = true; S.gfx = 'medium'; G.post.applyQuality(); G.forceResize(); G.meta.save();
+        G.hud.toast('Graphics set to medium', 'for a smoother dive. Settings can change it back.', { color: G.UI.DIM, life: 4.5 });
+      }
+      P.t = 0; P.n = 0; P.slow = 0;
+    },
+
     frame(now) {
-      const rdt = min(0.05, max(0.001, (now - this.last) / 1000)); this.last = now;
+      const raw = (now - this.last) / 1000;
+      this.autoQuality(raw);
+      const rdt = min(0.05, max(0.001, raw)); this.last = now;
       G.rdt = rdt; G.time += rdt; G.frame++;
       this.fps += (1 / rdt - this.fps) * 0.05;
       I.update(rdt);

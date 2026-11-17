@@ -35,10 +35,13 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) G.emit('blur'); });
 
   function setMouse(e) {
-    const r = G.viewRect;
-    if (!r) return;
-    I.mouse.x = (e.clientX - r.x) / r.w * G.W;
-    I.mouse.y = (e.clientY - r.y) / r.h * G.H;
+    // read the canvas's position at event time: robust to scrolling, frames and late layout
+    const c = G.uiC;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    I.mouse.x = (e.clientX - r.left) / r.width * G.W;
+    I.mouse.y = (e.clientY - r.top) / r.height * G.H;
     I.mouse.moved = G.time; I.mouse.seen = true; I.usingPad = false;
   }
   window.addEventListener('mousemove', setMouse);

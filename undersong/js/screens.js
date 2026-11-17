@@ -65,7 +65,7 @@
   ];
   SCREENS.death = {
     pause: false,
-    open(s) { s.data.line = EPITAPHS[(G.rand() * EPITAPHS.length) | 0]; s.data.hullNo = G.meta.data.stats.dives; },
+    open(s) { s.data.line = EPITAPHS[(G.rand() * EPITAPHS.length) | 0]; s.data.hullNo = G.meta.data.stats.dives; G.hud.comm = null; G.hud.commQ.length = 0; G.hud.hintMsg = null; },
     draw(s, u, a) {
       const r = G.run, p = G.player, cx = G.W / 2;
       G.veil(u, a, 0.74);
