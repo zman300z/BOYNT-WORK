@@ -12,7 +12,7 @@ Nothing in this game gets killed. Your pulse emitter doesn't hurt anything; it p
 
 Open **`dist/undersong.html`** in a browser. It is one self-contained file: no install, no internet needed. `index.html` runs the same game from the source files.
 
-- Works in Chrome, Edge, Firefox and Safari. Keyboard and mouse is best; gamepads work too.
+- Made for desktop browsers and tested in Chrome; it uses only standard web features, so Edge, Firefox and Safari should work but haven't been tested. Keyboard and mouse is best; gamepads work too. There are no touch controls.
 - Headphones recommended. The soundtrack is generated as you play.
 - Progress (banked pearls, workshop upgrades, field notes) is saved in the browser.
 - If it's too hard, turn on **Calm Seas** in Settings: more hull, softer creatures, slower projectiles.
