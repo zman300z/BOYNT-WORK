@@ -34,6 +34,7 @@
     stay: 'Months later, on a boat called Halcyon, a hydrophone picks up a chord with nothing missing. Somebody listening starts to laugh, and does not stop for a while.',
   };
 
+  const WAIT = 300;          // how far above the shelf Wick waits during the ending
   const E = G.ending = {
     on: false, phase: 'talk', lines: PRE, page: 0, pt: 0, shown: 0, t: 0, choice: null, keeper: null, cam: null, depth: 8848, upT: 0, credT: 0, skip: false, bubbles: [], noorI: 0, noorT: 0, noorLine: '',
 
@@ -41,8 +42,11 @@
       const zone = G.zone, p = G.player, sh = zone.shelf || { x: p.x, y: p.y };
       G.game.state = 'ending'; this.on = true; p.control = false; p.inv = 99;
       this.phase = 'talk'; this.lines = PRE; this.page = 0; this.pt = 0; this.shown = 0; this.t = 0; this.choice = null; this.keeper = keeper || null; this.skip = false;
-      this.cam = { x: sh.x, y: sh.y - 250 };
-      G.cam.tzoom = 0.92;
+      // frame both of them: Wick waiting above the shelf, and the keeper's eyes
+      // and keep Wick above the band of words at the bottom of the screen (~440px down)
+      const ky = keeper ? keeper.hy : sh.y - 600, wy = sh.y - WAIT, z = clamp(440 / (wy - ky + 200), 0.6, 0.92);
+      this.cam = { x: sh.x, y: wy - 80 / z };
+      G.cam.tzoom = z;
       G.menu.stack.length = 0; G.hud.reset();
       G.run.won = true;
       G.meta.catalog('curator'); G.meta.catalog('cores');
@@ -96,7 +100,7 @@
       const p = G.player, zone = G.zone, sh = zone.shelf;
       this.t += rdt;
       // Wick drifts to a place above the shelf and waits there
-      if (sh && this.phase !== 'ascent') { const tx = sh.x - 30, ty = sh.y - 150; p.ax += (tx - p.x) * 5 - p.vx * 3; p.ay += (ty - p.y) * 5 - p.vy * 3; p.aim = Math.atan2(sh.y - p.y, sh.x + 60 - p.x); }
+      if (sh && this.phase !== 'ascent') { const tx = sh.x - 30, ty = sh.y - WAIT; p.ax += (tx - p.x) * 5 - p.vx * 3; p.ay += (ty - p.y) * 5 - p.vy * 3; p.aim = Math.atan2(sh.y - p.y, sh.x + 60 - p.x); }
       const press = (I.mouse.pressed[0] || I.confirm || this.skip);
       if (this.phase === 'talk') {
         this.pt += rdt;
