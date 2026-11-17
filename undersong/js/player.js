@@ -314,7 +314,7 @@
     },
 
     hurt(n, sx, sy) {
-      if (this.dead || this.inv > 0 || G.game.god) return false;
+      if (this.dead || this.inv > 0 || G.game.god || G.game.state !== 'play') return false;
       const st = this.st;
       if (this.plateReady) {
         this.plateReady = false; this.plateT = max(8, 22 - st.plating * 4); this.inv = 0.7;

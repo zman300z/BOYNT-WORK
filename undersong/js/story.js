@@ -42,11 +42,12 @@
     },
     // Noor speaks, as much of her as gets through
     noor(text, o) {
+      if (G.game.state !== 'play') return;
       const g = this.link();
       if (g >= 0.97) return;
       G.hud.say('noor', text, Object.assign({ garble: g }, o || {}));
     },
-    wick(text, o) { G.hud.say('wick', text, o); },
+    wick(text, o) { if (G.game.state === 'play') G.hud.say('wick', text, o); },
     hermit(kind, zone) {
       const pool = kind === 'greet' ? [HERMIT.greet[zone] || HERMIT.greet[1]] : HERMIT[kind];
       G.hud.say('hermit', pool[(G.rand() * pool.length) | 0], { now: kind !== 'greet' });

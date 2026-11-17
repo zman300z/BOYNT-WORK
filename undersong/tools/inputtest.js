@@ -10,6 +10,14 @@ const path = require('path');
   p.on('pageerror', e => errs.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   const step = (name, v) => { log.push(name + ': ' + JSON.stringify(v)); };
+  // a level-up can open at any moment (scanning gives glow): answer it like a player would, by picking a card
+  const settle = async () => {
+    for (let i = 0; i < 4; i++) {
+      const top = await p.evaluate(() => G.menu.top() && G.menu.top().id);
+      if (top !== 'levelup') return;
+      await p.keyboard.press('1'); await p.waitForTimeout(900);
+    }
+  };
   await p.goto('file://' + path.resolve(__dirname, '..', 'index.html') + '?nofx&seed=7');
   await p.waitForTimeout(1500);
   step('screen at load', await p.evaluate(() => G.menu.top() && G.menu.top().id));
@@ -34,10 +42,12 @@ const path = require('path');
   step('dashing', await p.evaluate(() => G.player.dashT > 0 || G.player.dashCharge < 1));
   await p.keyboard.press('q'); await p.waitForTimeout(150);
   step('sonar pings', await p.evaluate(() => G.sonar.pings.length));
+  await settle();
   await p.keyboard.down('Tab'); await p.waitForTimeout(600);
   await p.screenshot({ path: path.join(out, 'in_map.png') });
   step('chart open', await p.evaluate(() => +G.map.k.toFixed(2)));
   await p.keyboard.up('Tab');
+  await settle();
   await p.keyboard.press('Escape'); await p.waitForTimeout(500);
   step('paused', await p.evaluate(() => G.menu.top() && G.menu.top().id));
   await p.screenshot({ path: path.join(out, 'in_pause.png') });

@@ -11,6 +11,9 @@
     G.stext(u, 'UNDERSONG', x, y, size, Object.assign({ color: '#ffffff', lw: size * 0.055, alpha: a }, o));
   }
 
+  // a phone or tablet with no fine pointer: there are no touch controls for swimming
+  const TOUCH_ONLY = (() => { try { return matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches; } catch (e) { return false; } })();
+
   // ================================================================= splash (needs one click so the browser lets us make sound)
   SCREENS.splash = {
     update(s) {
@@ -26,6 +29,7 @@
       G.text(u, 'a small light, descending', G.W / 2, 380, { size: 17, font: 'serif', italic: true, color: UI.DIM, align: 'center', alpha: a * clamp(s.t - 1, 0, 1) });
       G.text(u, 'CLICK TO BEGIN', G.W / 2, 470, { size: 12, font: 'mono', weight: 700, color: UI.INK, align: 'center', spacing: 5, alpha: a * (0.55 + 0.45 * sin(G.time * 3)) * clamp(s.t - 1.4, 0, 1) });
       G.text(u, 'headphones recommended', G.W / 2, 498, { size: 12, font: 'serif', italic: true, color: UI.DIM, align: 'center', alpha: a * clamp(s.t - 1.8, 0, 1) * 0.8 });
+      if (TOUCH_ONLY) G.text(u, 'Undersong is played with a keyboard and mouse, or a gamepad. On this screen you can look around, but not swim.', G.W / 2, 560, { size: 14, font: 'serif', italic: true, color: UI.WARN, align: 'center', alpha: a * clamp(s.t - 2.2, 0, 1) });
     },
   };
 
