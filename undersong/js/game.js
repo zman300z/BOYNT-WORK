@@ -269,7 +269,7 @@
       G.music.update(rdt);
       const zi = zone.idx, surf = zi === 0 ? clamp(1 - (pl.y - zone.surfaceY) / 520, 0, 1) : 0;
       G.audio.amb.update(rdt, (zi + G.world.depth01(pl.y)) / 5, surf);
-      G.world.update(3);
+      G.world.update(4);
       if (G.debug) this.debugKeys();
     },
 

@@ -460,6 +460,8 @@
     }
     const data = ch.img.data, vdata = ch.vimg ? ch.vimg.data : null;
     const L = P.rockL, D = P.rockD, DP = P.deep, RM = P.rim, SH = P.shadow, MS = P.moss, FK = P.fleck, VN = P.veins;
+    // colour the full shading converges to once depth passes ~112px: 90% deep tone, light mostly flattened
+    const DR = D[0] * 0.1 + DP[0] * 0.9, DG = D[1] * 0.1 + DP[1] * 0.9, DB = D[2] * 0.1 + DP[2] * 0.9;
     const aoA = P.aoA * 255, strata = P.strata, mossD = P.mossD, mossA = P.mossA, veinA = P.veinA || 0;
     const x0 = ch.x, y0 = ch.y;
     let any = !ch.empty;
@@ -477,6 +479,16 @@
         const spanEnd = min(CH, px + CS - (px % CS));
         if (a > AO && b > AO && c > AO && d > AO) { o += (spanEnd - px) * 4; px = spanEnd; continue; }
         any = true;
+        if (a < -112 && b < -112 && c < -112 && d < -112) {
+          for (; px < spanEnd; px++, o += 4) {
+            const wxI = x0 + px, nA = N1[((wyI & 255) << 8) | (wxI & 255)];
+            let lum = 0.81 + 0.1 * (0.88 + 0.26 * (nA - 0.5)), r = DR, g = DG, bl = DB;
+            const h = G.hash2(wxI, wyI, 77);
+            if (h < 0.0016) { const k = 0.3 + h * 300; r += (FK[0] - r) * k; g += (FK[1] - g) * k; bl += (FK[2] - bl) * k; lum = 1; }
+            data[o] = r * lum; data[o + 1] = g * lum; data[o + 2] = bl * lum; data[o + 3] = 255;
+          }
+          continue;
+        }
         for (; px < spanEnd; px++, o += 4) {
           const wx = x0 + px + 0.5, wxI = x0 + px;
           const tx = clampX ? 1 : wx / CS - i;
@@ -581,9 +593,9 @@
     update(budgetMs) {
       const zone = G.zone, cam = G.cam;
       if (!zone) return;
-      const m = 300;
-      const cx0 = max(0, floor((cam.left - m) / CH)), cx1 = min(ceil(zone.pxW / CH) - 1, floor((cam.right + m) / CH));
-      const cy0 = max(0, floor((cam.top - m) / CH)), cy1 = min(ceil(zone.pxH / CH) - 1, floor((cam.bottom + m * 1.6) / CH));
+      const m = 300, p = G.player, lx = clamp(p.vx * 0.9, -500, 500), ly = clamp(p.vy * 0.9, -500, 500);
+      const cx0 = max(0, floor((cam.left - m + min(0, lx)) / CH)), cx1 = min(ceil(zone.pxW / CH) - 1, floor((cam.right + m + max(0, lx)) / CH));
+      const cy0 = max(0, floor((cam.top - m + min(0, ly)) / CH)), cy1 = min(ceil(zone.pxH / CH) - 1, floor((cam.bottom + m * 1.6 + max(0, ly)) / CH));
       const stamp = G.time;
       for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) getChunk(zone, cx, cy, true).used = stamp;
       const q = zone.queue;
