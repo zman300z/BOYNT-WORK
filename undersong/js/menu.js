@@ -123,7 +123,11 @@
     },
     draw(u) {
       const top = this.top();
-      for (const s of this.stack) {
+      // a full-page screen hides the menus underneath it (the world still shows through, dimly)
+      let first = 0;
+      for (let i = 0; i < this.stack.length; i++) if (this.stack[i].def.page && !this.stack[i].closing && this.stack[i].t > 0.2) first = i;
+      for (let i = first; i < this.stack.length; i++) {
+        const s = this.stack[i];
         const a = min(1, s.t / 0.22) * (s.closing ? max(0, 1 - s.closing / 0.2) : 1);
         im.begin(s === top);
         s.def.draw(s, u, a, s === top);
@@ -274,14 +278,14 @@
         G.para(u, d.desc, px, 600, 480, { size: 14, color: UI.INK, alpha: a, lh: 20 });
         G.text(u, d.flavor, px, 656, { size: 12, font: 'serif', italic: true, color: UI.DIM, alpha: a });
       }
-      G.text(u, `${I.label('move')} swim   ${I.label('fire')} pulse   ${I.label('dash')} dash   ${I.label('flare')} flare   ${I.label('sonar')} sonar   ${I.label('interact')} use`, x, G.H - 44, { size: 10, font: 'mono', color: UI.DIM, spacing: 1, alpha: a });
+      G.text(u, `${I.label('move')} swim   ${I.label('fire')} pulse   ${I.label('dash')} dash   ${I.label('flare')} flare   ${I.label('sonar')} sonar   ${I.label('interact')} use   ${I.label('map')} chart`, x, G.H - 44, { size: 10, font: 'mono', color: UI.DIM, spacing: 1, alpha: a });
     },
   };
 
   // ================================================================= settings
   const GFX = ['low', 'medium', 'high'], SHAKE = [0, 0.5, 1];
   SCREENS.settings = {
-    pause: true,
+    pause: true, page: true,
     update(s) { if (I.back) { I.back = false; G.sfx('back'); G.menu.close(s); } },
     closed() { G.meta.save(); },
     draw(s, u, a) {

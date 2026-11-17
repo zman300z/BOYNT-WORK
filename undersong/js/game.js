@@ -83,7 +83,7 @@
       this.state = 'play'; this.tether = false; pl.control = true; this.fade = 0; this.fadeTo = 0;
       G.meta.data.stats.dives = max(3, G.meta.data.stats.dives);
       const n = levels === undefined ? idx * 4 : levels;
-      for (let i = 0; i < n; i++) { const ids = G.offerModules(1); if (ids.length) pl.addModule(ids[0]); pl.level++; }
+      for (let i = 0; i < n; i++) { const ids = G.offerModules(1); if (ids.length) pl.addModule(ids[0]); pl.level++; pl.xpNext = floor(pl.xpNext * 1.12 + 6); }
       pl.hull = pl.st.maxHull;
       G.music.set(MUSIC[idx], true);
     },
@@ -196,6 +196,7 @@
       if (I.pause && !G.menu.active() && !pl.dead) { I.pause = false; G.menu.open('pause'); }
       if (!pl.dead && zone.idx < 4 && pl.y > zone.pxH - 26) this.startDescent();
       G.story.update(dt);
+      G.map.update(rdt);
       // music follows the room
       let mode = MUSIC[zone.idx];
       if (this.bossOn && b) mode = b.def.music || 'boss';
@@ -225,6 +226,7 @@
           const def = G.zone.def;
           G.hud.title(def.name, def.sub + '  ·  ' + G.fmtInt(def.depth[0]) + ' – ' + G.fmtInt(def.depth[1]) + ' m');
           G.story.zoneStart(G.zone.idx);
+          if (pl.hull < pl.st.maxHull) pl.heal(1);          // a breather between zones
           G.emit('zoneStart', G.zone.idx);
         }
       }
@@ -351,6 +353,7 @@
       }
       G.hud.show = damp(G.hud.show, this.state === 'play' && !G.menu.pausing() ? 1 : 0, 8, G.rdt);
       G.hud.draw(u);
+      if (this.state === 'play') G.map.draw(u);
       G.menu.draw(u);
       if (G.ending && this.state === 'ending') G.ending.draw(u);
       G.hud.drawCursor(u, G.menu.active() || this.state !== 'play');

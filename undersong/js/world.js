@@ -17,7 +17,7 @@
   // depth: metres shown on the HUD at top/bottom of the zone. amb: ambient light multiplier top/bottom.
   G.ZONES = [
     {
-      id: 'shallows', name: 'THE SHALLOWS', sub: 'sunlight zone', depth: [0, 200], cols: 170, rows: 372, pockets: 5, rough: 1,
+      id: 'shallows', name: 'THE SHALLOWS', sub: 'sunlight zone', depth: [0, 200], cols: 170, rows: 420, pockets: 5, rough: 1,
       arenaRx: 38, arenaRy: 22,
       water: [[70, 200, 214], [12, 86, 136]], amb: [[1, 1, 1], [0.74, 0.84, 0.95]], far: [[44, 150, 176], [24, 112, 152]],
       rockL: [150, 120, 128], rockD: [72, 58, 86], deep: [30, 28, 54], rim: [255, 238, 196], shadow: [6, 38, 70], aoA: 0.42,
@@ -25,7 +25,7 @@
       snow: [200, 240, 255], snowA: 0.35, tint: [1.0, 1.0, 1.0], sat: 1.06,
     },
     {
-      id: 'twilight', name: 'THE TWILIGHT', sub: 'mesopelagic', depth: [200, 1000], cols: 170, rows: 400, pockets: 5, rough: 1.05,
+      id: 'twilight', name: 'THE TWILIGHT', sub: 'mesopelagic', depth: [200, 1000], cols: 170, rows: 448, pockets: 5, rough: 1.05,
       arenaRx: 40, arenaRy: 24,
       water: [[20, 92, 160], [10, 42, 100]], amb: [[0.62, 0.72, 0.92], [0.2, 0.27, 0.46]], far: [[20, 70, 130], [12, 46, 100]],
       rockL: [110, 134, 192], rockD: [52, 66, 120], deep: [16, 22, 56], rim: [190, 226, 255], shadow: [3, 10, 32], aoA: 0.5,
@@ -33,7 +33,7 @@
       snow: [170, 210, 255], snowA: 0.5, tint: [0.97, 1.0, 1.04], sat: 1.05,
     },
     {
-      id: 'midnight', name: 'THE MIDNIGHT', sub: 'bathypelagic', depth: [1000, 4000], cols: 170, rows: 416, pockets: 6, rough: 1.1,
+      id: 'midnight', name: 'THE MIDNIGHT', sub: 'bathypelagic', depth: [1000, 4000], cols: 170, rows: 464, pockets: 6, rough: 1.1,
       arenaRx: 40, arenaRy: 24,
       water: [[12, 38, 80], [6, 18, 46]], amb: [[0.16, 0.19, 0.3], [0.065, 0.08, 0.135]], far: [[16, 40, 80], [10, 26, 58]],
       rockL: [124, 138, 196], rockD: [60, 70, 122], deep: [16, 20, 46], rim: [196, 224, 255], shadow: [1, 3, 10], aoA: 0.55,
@@ -41,7 +41,7 @@
       snow: [150, 200, 255], snowA: 0.6, tint: [0.96, 1.0, 1.06], sat: 1.1, glowWake: '#59e6ff',
     },
     {
-      id: 'abyss', name: 'THE ABYSS', sub: 'abyssopelagic', depth: [4000, 6000], cols: 170, rows: 400, pockets: 5, rough: 1.2,
+      id: 'abyss', name: 'THE ABYSS', sub: 'abyssopelagic', depth: [4000, 6000], cols: 170, rows: 448, pockets: 5, rough: 1.2,
       arenaRx: 42, arenaRy: 24,
       water: [[40, 17, 26], [22, 9, 15]], amb: [[0.105, 0.07, 0.075], [0.075, 0.046, 0.054]], far: [[58, 25, 32], [36, 15, 21]],
       rockL: [182, 122, 116], rockD: [96, 60, 66], deep: [28, 15, 20], rim: [255, 196, 136], shadow: [2, 1, 2], aoA: 0.55,

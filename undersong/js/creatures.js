@@ -304,8 +304,9 @@
       const def = c.def, p = G.player;
       c.fleeing = 0.0001; c.hittable = false; c.aggro = false; c.hp = 0;
       if (!c.passive) {
-        G.pickups.loot(c.x, c.y, def.xp, G.rand() < (def.pearl || 0) + p.st.luck * 0.03 ? 1 + (def.pearlN || 0) : 0);
-        if (G.rand() < (def.heal || 0.02)) G.pickups.spawn('heal', c.x, c.y, 1);
+        // deeper water pays better
+        G.pickups.loot(c.x, c.y, Math.round(def.xp * (1 + 0.3 * G.zone.idx)), G.rand() < (def.pearl || 0) + p.st.luck * 0.03 ? 1 + (def.pearlN || 0) : 0);
+        if (!c.minion && G.rand() < (def.heal || 0.035)) G.pickups.spawn('heal', c.x, c.y, 1);
       }
       const big = c.r > 30;
       G.particles.bubbles(c.x, c.y, min(26, 6 + c.r * 0.5), c.r * 0.8, 150);

@@ -178,7 +178,7 @@
   }
 
   SCREENS.codex = {
-    pause: true,
+    pause: true, page: true,
     open(s) { s.data.tab = G.zone && G.game.state === 'play' ? G.zone.idx : 0; s.data.sel = null; s.data.scroll = 0; },
     update(s) { if (I.back) { I.back = false; G.sfx('back'); G.menu.close(s); } },
     draw(s, u, a) {
@@ -201,17 +201,17 @@
       });
       // entries
       const list = G.CODEX_ORDER.filter(id => { const e = G.CODEX[id]; return d.tab === 5 ? e.kind === 'echo' : e.kind !== 'echo' && e.zone === d.tab; });
-      const lx = 70, ly = 176, cols = 2, cw = 250, rh = 46;
+      const lx = 70, ly = 172, cols = 2, cw = 250, rh = 43;
       list.forEach((id, i) => {
-        const e = G.CODEX[id], seen = !!md.codex[id], x = lx + (i % cols) * (cw + 12), y = ly + floor(i / cols) * (rh + 8);
+        const e = G.CODEX[id], seen = !!md.codex[id], x = lx + (i % cols) * (cw + 12), y = ly + floor(i / cols) * (rh + 6);
         if (y > G.H - 70) return;
         const r = im.reg('ce' + id, x, y, cw, rh), on = d.sel === id;
         u.globalAlpha = a;
         u.fillStyle = on ? 'rgba(127,230,255,0.16)' : `rgba(150,215,255,${0.035 + r.k * 0.08})`; G.roundRect(u, x, y, cw, rh, 8); u.fill();
         if (on) { u.strokeStyle = 'rgba(127,230,255,0.8)'; u.lineWidth = 1.2; G.roundRect(u, x, y, cw, rh, 8); u.stroke(); }
         u.globalAlpha = 1;
-        G.text(u, seen ? e.name : '? ? ?', x + 16, y + 21, { size: 14, weight: 600, color: seen ? UI.INK : UI.DIM, alpha: a });
-        G.text(u, seen ? e.latin : 'not yet observed', x + 16, y + 37, { size: 11, font: 'serif', italic: true, color: UI.DIM, alpha: a * 0.9 });
+        G.text(u, seen ? e.name : '? ? ?', x + 16, y + 19, { size: 14, weight: 600, color: seen ? UI.INK : UI.DIM, alpha: a });
+        G.text(u, seen ? e.latin : 'not yet observed', x + 16, y + 35, { size: 11, font: 'serif', italic: true, color: UI.DIM, alpha: a * 0.9 });
         if (seen && e.boss) G.text(u, '★', x + cw - 22, y + 29, { size: 14, color: UI.GOLD, alpha: a });
         if (r.hit) { d.sel = id; G.sfx('select'); }
       });
@@ -238,7 +238,7 @@
       } else {
         G.para(u, d.sel ? 'Something lives here that I have not had a proper look at yet. Keep the lamp on it for a moment and I will write it up.' : 'Hold the lamp on anything new and it ends up here. Pick an entry to read it.', px + pw / 2, py + ph / 2 - 10, 380, { size: 15, font: 'serif', italic: true, color: UI.DIM, align: 'center', alpha: a, lh: 23 });
       }
-      if (im.button(u, 'c_back', 70, G.H - 60, 150, 34, 'BACK', { alpha: a, sound: 'back' })) G.menu.close(s);
+      if (im.button(u, 'c_back', 70, G.H - 52, 150, 34, 'BACK', { alpha: a, sound: 'back' })) G.menu.close(s);
     },
   };
 
@@ -259,7 +259,7 @@
 
   // ================================================================= workshop
   SCREENS.workshop = {
-    pause: true,
+    pause: true, page: true,
     update(s) { if (I.back) { I.back = false; G.sfx('back'); G.menu.close(s); } },
     draw(s, u, a) {
       const md = G.meta.data, W = G.meta.WORKSHOP, p = G.player;

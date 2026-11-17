@@ -368,7 +368,7 @@
       while (this.xp >= this.xpNext) {
         this.xp -= this.xpNext;
         this.level++;
-        this.xpNext = floor(this.xpNext * 1.19 + 7);
+        this.xpNext = floor(this.xpNext * 1.12 + 6);
         this.pendingLevels++;
         G.emit('levelup', this);
       }
